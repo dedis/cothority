@@ -18707,6 +18707,50 @@ public final class ByzCoinProto {
      */
     com.google.protobuf.ByteString
         getContractidBytes();
+
+    /**
+     * <pre>
+     * Args holds all data necessary to delete the instance.
+     * </pre>
+     *
+     * <code>repeated .byzcoin.Argument args = 2;</code>
+     */
+    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument> 
+        getArgsList();
+    /**
+     * <pre>
+     * Args holds all data necessary to delete the instance.
+     * </pre>
+     *
+     * <code>repeated .byzcoin.Argument args = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.ByzCoinProto.Argument getArgs(int index);
+    /**
+     * <pre>
+     * Args holds all data necessary to delete the instance.
+     * </pre>
+     *
+     * <code>repeated .byzcoin.Argument args = 2;</code>
+     */
+    int getArgsCount();
+    /**
+     * <pre>
+     * Args holds all data necessary to delete the instance.
+     * </pre>
+     *
+     * <code>repeated .byzcoin.Argument args = 2;</code>
+     */
+    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder> 
+        getArgsOrBuilderList();
+    /**
+     * <pre>
+     * Args holds all data necessary to delete the instance.
+     * </pre>
+     *
+     * <code>repeated .byzcoin.Argument args = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder getArgsOrBuilder(
+        int index);
   }
   /**
    * <pre>
@@ -18727,6 +18771,7 @@ public final class ByzCoinProto {
     }
     private Delete() {
       contractid_ = "";
+      args_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
@@ -18759,6 +18804,15 @@ public final class ByzCoinProto {
               contractid_ = bs;
               break;
             }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                args_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument>();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              args_.add(
+                  input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.parser(), extensionRegistry));
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -18774,6 +18828,9 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+          args_ = java.util.Collections.unmodifiableList(args_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -18846,6 +18903,61 @@ public final class ByzCoinProto {
       }
     }
 
+    public static final int ARGS_FIELD_NUMBER = 2;
+    private java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument> args_;
+    /**
+     * <pre>
+     * Args holds all data necessary to delete the instance.
+     * </pre>
+     *
+     * <code>repeated .byzcoin.Argument args = 2;</code>
+     */
+    public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument> getArgsList() {
+      return args_;
+    }
+    /**
+     * <pre>
+     * Args holds all data necessary to delete the instance.
+     * </pre>
+     *
+     * <code>repeated .byzcoin.Argument args = 2;</code>
+     */
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder> 
+        getArgsOrBuilderList() {
+      return args_;
+    }
+    /**
+     * <pre>
+     * Args holds all data necessary to delete the instance.
+     * </pre>
+     *
+     * <code>repeated .byzcoin.Argument args = 2;</code>
+     */
+    public int getArgsCount() {
+      return args_.size();
+    }
+    /**
+     * <pre>
+     * Args holds all data necessary to delete the instance.
+     * </pre>
+     *
+     * <code>repeated .byzcoin.Argument args = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.Argument getArgs(int index) {
+      return args_.get(index);
+    }
+    /**
+     * <pre>
+     * Args holds all data necessary to delete the instance.
+     * </pre>
+     *
+     * <code>repeated .byzcoin.Argument args = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder getArgsOrBuilder(
+        int index) {
+      return args_.get(index);
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -18857,6 +18969,12 @@ public final class ByzCoinProto {
         memoizedIsInitialized = 0;
         return false;
       }
+      for (int i = 0; i < getArgsCount(); i++) {
+        if (!getArgs(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -18866,6 +18984,9 @@ public final class ByzCoinProto {
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, contractid_);
+      }
+      for (int i = 0; i < args_.size(); i++) {
+        output.writeMessage(2, args_.get(i));
       }
       unknownFields.writeTo(output);
     }
@@ -18878,6 +18999,10 @@ public final class ByzCoinProto {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, contractid_);
+      }
+      for (int i = 0; i < args_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, args_.get(i));
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -18900,6 +19025,8 @@ public final class ByzCoinProto {
         result = result && getContractid()
             .equals(other.getContractid());
       }
+      result = result && getArgsList()
+          .equals(other.getArgsList());
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -18914,6 +19041,10 @@ public final class ByzCoinProto {
       if (hasContractid()) {
         hash = (37 * hash) + CONTRACTID_FIELD_NUMBER;
         hash = (53 * hash) + getContractid().hashCode();
+      }
+      if (getArgsCount() > 0) {
+        hash = (37 * hash) + ARGS_FIELD_NUMBER;
+        hash = (53 * hash) + getArgsList().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -19048,6 +19179,7 @@ public final class ByzCoinProto {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
+          getArgsFieldBuilder();
         }
       }
       @java.lang.Override
@@ -19055,6 +19187,12 @@ public final class ByzCoinProto {
         super.clear();
         contractid_ = "";
         bitField0_ = (bitField0_ & ~0x00000001);
+        if (argsBuilder_ == null) {
+          args_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+        } else {
+          argsBuilder_.clear();
+        }
         return this;
       }
 
@@ -19087,6 +19225,15 @@ public final class ByzCoinProto {
           to_bitField0_ |= 0x00000001;
         }
         result.contractid_ = contractid_;
+        if (argsBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+            args_ = java.util.Collections.unmodifiableList(args_);
+            bitField0_ = (bitField0_ & ~0x00000002);
+          }
+          result.args_ = args_;
+        } else {
+          result.args_ = argsBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -19141,6 +19288,32 @@ public final class ByzCoinProto {
           contractid_ = other.contractid_;
           onChanged();
         }
+        if (argsBuilder_ == null) {
+          if (!other.args_.isEmpty()) {
+            if (args_.isEmpty()) {
+              args_ = other.args_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+            } else {
+              ensureArgsIsMutable();
+              args_.addAll(other.args_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.args_.isEmpty()) {
+            if (argsBuilder_.isEmpty()) {
+              argsBuilder_.dispose();
+              argsBuilder_ = null;
+              args_ = other.args_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+              argsBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getArgsFieldBuilder() : null;
+            } else {
+              argsBuilder_.addAllMessages(other.args_);
+            }
+          }
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -19150,6 +19323,11 @@ public final class ByzCoinProto {
       public final boolean isInitialized() {
         if (!hasContractid()) {
           return false;
+        }
+        for (int i = 0; i < getArgsCount(); i++) {
+          if (!getArgs(i).isInitialized()) {
+            return false;
+          }
         }
         return true;
       }
@@ -19272,6 +19450,318 @@ public final class ByzCoinProto {
         contractid_ = value;
         onChanged();
         return this;
+      }
+
+      private java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument> args_ =
+        java.util.Collections.emptyList();
+      private void ensureArgsIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          args_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument>(args_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Argument, ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder> argsBuilder_;
+
+      /**
+       * <pre>
+       * Args holds all data necessary to delete the instance.
+       * </pre>
+       *
+       * <code>repeated .byzcoin.Argument args = 2;</code>
+       */
+      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument> getArgsList() {
+        if (argsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(args_);
+        } else {
+          return argsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <pre>
+       * Args holds all data necessary to delete the instance.
+       * </pre>
+       *
+       * <code>repeated .byzcoin.Argument args = 2;</code>
+       */
+      public int getArgsCount() {
+        if (argsBuilder_ == null) {
+          return args_.size();
+        } else {
+          return argsBuilder_.getCount();
+        }
+      }
+      /**
+       * <pre>
+       * Args holds all data necessary to delete the instance.
+       * </pre>
+       *
+       * <code>repeated .byzcoin.Argument args = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.Argument getArgs(int index) {
+        if (argsBuilder_ == null) {
+          return args_.get(index);
+        } else {
+          return argsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <pre>
+       * Args holds all data necessary to delete the instance.
+       * </pre>
+       *
+       * <code>repeated .byzcoin.Argument args = 2;</code>
+       */
+      public Builder setArgs(
+          int index, ch.epfl.dedis.lib.proto.ByzCoinProto.Argument value) {
+        if (argsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureArgsIsMutable();
+          args_.set(index, value);
+          onChanged();
+        } else {
+          argsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Args holds all data necessary to delete the instance.
+       * </pre>
+       *
+       * <code>repeated .byzcoin.Argument args = 2;</code>
+       */
+      public Builder setArgs(
+          int index, ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder builderForValue) {
+        if (argsBuilder_ == null) {
+          ensureArgsIsMutable();
+          args_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          argsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Args holds all data necessary to delete the instance.
+       * </pre>
+       *
+       * <code>repeated .byzcoin.Argument args = 2;</code>
+       */
+      public Builder addArgs(ch.epfl.dedis.lib.proto.ByzCoinProto.Argument value) {
+        if (argsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureArgsIsMutable();
+          args_.add(value);
+          onChanged();
+        } else {
+          argsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Args holds all data necessary to delete the instance.
+       * </pre>
+       *
+       * <code>repeated .byzcoin.Argument args = 2;</code>
+       */
+      public Builder addArgs(
+          int index, ch.epfl.dedis.lib.proto.ByzCoinProto.Argument value) {
+        if (argsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureArgsIsMutable();
+          args_.add(index, value);
+          onChanged();
+        } else {
+          argsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Args holds all data necessary to delete the instance.
+       * </pre>
+       *
+       * <code>repeated .byzcoin.Argument args = 2;</code>
+       */
+      public Builder addArgs(
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder builderForValue) {
+        if (argsBuilder_ == null) {
+          ensureArgsIsMutable();
+          args_.add(builderForValue.build());
+          onChanged();
+        } else {
+          argsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Args holds all data necessary to delete the instance.
+       * </pre>
+       *
+       * <code>repeated .byzcoin.Argument args = 2;</code>
+       */
+      public Builder addArgs(
+          int index, ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder builderForValue) {
+        if (argsBuilder_ == null) {
+          ensureArgsIsMutable();
+          args_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          argsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Args holds all data necessary to delete the instance.
+       * </pre>
+       *
+       * <code>repeated .byzcoin.Argument args = 2;</code>
+       */
+      public Builder addAllArgs(
+          java.lang.Iterable<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.Argument> values) {
+        if (argsBuilder_ == null) {
+          ensureArgsIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, args_);
+          onChanged();
+        } else {
+          argsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Args holds all data necessary to delete the instance.
+       * </pre>
+       *
+       * <code>repeated .byzcoin.Argument args = 2;</code>
+       */
+      public Builder clearArgs() {
+        if (argsBuilder_ == null) {
+          args_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+          onChanged();
+        } else {
+          argsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Args holds all data necessary to delete the instance.
+       * </pre>
+       *
+       * <code>repeated .byzcoin.Argument args = 2;</code>
+       */
+      public Builder removeArgs(int index) {
+        if (argsBuilder_ == null) {
+          ensureArgsIsMutable();
+          args_.remove(index);
+          onChanged();
+        } else {
+          argsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Args holds all data necessary to delete the instance.
+       * </pre>
+       *
+       * <code>repeated .byzcoin.Argument args = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder getArgsBuilder(
+          int index) {
+        return getArgsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <pre>
+       * Args holds all data necessary to delete the instance.
+       * </pre>
+       *
+       * <code>repeated .byzcoin.Argument args = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder getArgsOrBuilder(
+          int index) {
+        if (argsBuilder_ == null) {
+          return args_.get(index);  } else {
+          return argsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <pre>
+       * Args holds all data necessary to delete the instance.
+       * </pre>
+       *
+       * <code>repeated .byzcoin.Argument args = 2;</code>
+       */
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder> 
+           getArgsOrBuilderList() {
+        if (argsBuilder_ != null) {
+          return argsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(args_);
+        }
+      }
+      /**
+       * <pre>
+       * Args holds all data necessary to delete the instance.
+       * </pre>
+       *
+       * <code>repeated .byzcoin.Argument args = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder addArgsBuilder() {
+        return getArgsFieldBuilder().addBuilder(
+            ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * Args holds all data necessary to delete the instance.
+       * </pre>
+       *
+       * <code>repeated .byzcoin.Argument args = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder addArgsBuilder(
+          int index) {
+        return getArgsFieldBuilder().addBuilder(
+            index, ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * Args holds all data necessary to delete the instance.
+       * </pre>
+       *
+       * <code>repeated .byzcoin.Argument args = 2;</code>
+       */
+      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder> 
+           getArgsBuilderList() {
+        return getArgsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Argument, ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder> 
+          getArgsFieldBuilder() {
+        if (argsBuilder_ == null) {
+          argsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Argument, ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder>(
+                  args_,
+                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  getParentForChildren(),
+                  isClean());
+          args_ = null;
+        }
+        return argsBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -43154,64 +43644,65 @@ public final class ByzCoinProto {
       "atures\030\007 \003(\014\"<\n\005Spawn\022\022\n\ncontractid\030\001 \002(" +
       "\t\022\037\n\004args\030\002 \003(\0132\021.byzcoin.Argument\"N\n\006In" +
       "voke\022\022\n\ncontractid\030\001 \002(\t\022\017\n\007command\030\002 \002(" +
-      "\t\022\037\n\004args\030\003 \003(\0132\021.byzcoin.Argument\"\034\n\006De" +
-      "lete\022\022\n\ncontractid\030\001 \002(\t\"\'\n\010Argument\022\014\n\004" +
-      "name\030\001 \002(\t\022\r\n\005value\030\002 \002(\014\"?\n\021ClientTrans" +
-      "action\022*\n\014instructions\030\001 \003(\0132\024.byzcoin.I" +
-      "nstruction\"S\n\010TxResult\0225\n\021clienttransact" +
-      "ion\030\001 \002(\0132\032.byzcoin.ClientTransaction\022\020\n" +
-      "\010accepted\030\002 \002(\010\"z\n\013StateChange\022\023\n\013statea" +
-      "ction\030\001 \002(\021\022\022\n\ninstanceid\030\002 \002(\014\022\022\n\ncontr" +
-      "actid\030\003 \002(\t\022\r\n\005value\030\004 \002(\014\022\016\n\006darcid\030\005 \002" +
-      "(\014\022\017\n\007version\030\006 \002(\004\"#\n\004Coin\022\014\n\004name\030\001 \002(" +
-      "\014\022\r\n\005value\030\002 \002(\004\"\036\n\020StreamingRequest\022\n\n\002" +
-      "id\030\001 \002(\014\"8\n\021StreamingResponse\022#\n\005block\030\001" +
-      " \001(\0132\024.skipchain.SkipBlock\"X\n\017PaginateRe" +
-      "quest\022\017\n\007startid\030\001 \002(\014\022\020\n\010pagesize\030\002 \002(\004" +
-      "\022\020\n\010numpages\030\003 \002(\004\022\020\n\010backward\030\004 \002(\010\"\204\001\n" +
-      "\020PaginateResponse\022$\n\006blocks\030\001 \003(\0132\024.skip" +
-      "chain.SkipBlock\022\022\n\npagenumber\030\002 \002(\004\022\020\n\010b" +
-      "ackward\030\003 \002(\010\022\021\n\terrorcode\030\004 \002(\004\022\021\n\terro" +
-      "rtext\030\005 \003(\t\"A\n\rDownloadState\022\021\n\tbyzcoini" +
-      "d\030\001 \002(\014\022\r\n\005nonce\030\002 \002(\004\022\016\n\006length\030\003 \002(\021\"]" +
-      "\n\025DownloadStateResponse\022&\n\tkeyvalues\030\001 \003" +
-      "(\0132\023.byzcoin.DBKeyValue\022\r\n\005nonce\030\002 \002(\004\022\r" +
-      "\n\005total\030\003 \001(\021\"(\n\nDBKeyValue\022\013\n\003key\030\001 \002(\014" +
-      "\022\r\n\005value\030\002 \002(\014\"j\n\017StateChangeBody\022\023\n\013st" +
-      "ateaction\030\001 \002(\021\022\022\n\ncontractid\030\002 \002(\t\022\r\n\005v" +
-      "alue\030\003 \002(\014\022\017\n\007version\030\004 \002(\004\022\016\n\006darcid\030\005 " +
-      "\002(\014\";\n\021GetSignerCounters\022\021\n\tsignerids\030\001 " +
-      "\003(\t\022\023\n\013skipchainid\030\002 \002(\014\"@\n\031GetSignerCou" +
-      "ntersResponse\022\024\n\010counters\030\001 \003(\004B\002\020\001\022\r\n\005i" +
-      "ndex\030\002 \001(\004\"N\n\022GetInstanceVersion\022\023\n\013skip" +
-      "chainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022\017\n\007ver" +
-      "sion\030\003 \002(\004\"A\n\026GetLastInstanceVersion\022\023\n\013" +
-      "skipchainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\"[\n" +
-      "\032GetInstanceVersionResponse\022)\n\013statechan" +
-      "ge\030\001 \002(\0132\024.byzcoin.StateChange\022\022\n\nblocki" +
-      "ndex\030\002 \002(\021\"@\n\025GetAllInstanceVersion\022\023\n\013s" +
-      "kipchainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\"Z\n\035" +
-      "GetAllInstanceVersionResponse\0229\n\014statech" +
-      "anges\030\001 \003(\0132#.byzcoin.GetInstanceVersion" +
-      "Response\"T\n\030CheckStateChangeValidity\022\023\n\013" +
-      "skipchainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022\017\n" +
-      "\007version\030\003 \002(\004\"_\n CheckStateChangeValidi" +
-      "tyResponse\022*\n\014statechanges\030\001 \003(\0132\024.byzco" +
-      "in.StateChange\022\017\n\007blockid\030\002 \002(\014\"F\n\021Resol" +
-      "veInstanceID\022\023\n\013skipchainid\030\001 \002(\014\022\016\n\006dar" +
-      "cid\030\002 \002(\014\022\014\n\004name\030\003 \002(\t\"(\n\022ResolvedInsta" +
-      "nceID\022\022\n\ninstanceid\030\001 \002(\014\"!\n\014DebugReques" +
-      "t\022\021\n\tbyzcoinid\030\001 \001(\014\"k\n\rDebugResponse\022/\n" +
-      "\010byzcoins\030\001 \003(\0132\035.byzcoin.DebugResponseB" +
-      "yzcoin\022)\n\004dump\030\002 \003(\0132\033.byzcoin.DebugResp" +
-      "onseState\"v\n\024DebugResponseByzcoin\022\021\n\tbyz" +
-      "coinid\030\001 \002(\014\022%\n\007genesis\030\002 \001(\0132\024.skipchai" +
-      "n.SkipBlock\022$\n\006latest\030\003 \001(\0132\024.skipchain." +
-      "SkipBlock\"J\n\022DebugResponseState\022\013\n\003key\030\001" +
-      " \002(\014\022\'\n\005state\030\002 \002(\0132\030.byzcoin.StateChang" +
-      "eBody\":\n\022DebugRemoveRequest\022\021\n\tbyzcoinid" +
-      "\030\001 \002(\014\022\021\n\tsignature\030\002 \002(\014B\'\n\027ch.epfl.ded" +
-      "is.lib.protoB\014ByzCoinProto"
+      "\t\022\037\n\004args\030\003 \003(\0132\021.byzcoin.Argument\"=\n\006De" +
+      "lete\022\022\n\ncontractid\030\001 \002(\t\022\037\n\004args\030\002 \003(\0132\021" +
+      ".byzcoin.Argument\"\'\n\010Argument\022\014\n\004name\030\001 " +
+      "\002(\t\022\r\n\005value\030\002 \002(\014\"?\n\021ClientTransaction\022" +
+      "*\n\014instructions\030\001 \003(\0132\024.byzcoin.Instruct" +
+      "ion\"S\n\010TxResult\0225\n\021clienttransaction\030\001 \002" +
+      "(\0132\032.byzcoin.ClientTransaction\022\020\n\010accept" +
+      "ed\030\002 \002(\010\"z\n\013StateChange\022\023\n\013stateaction\030\001" +
+      " \002(\021\022\022\n\ninstanceid\030\002 \002(\014\022\022\n\ncontractid\030\003" +
+      " \002(\t\022\r\n\005value\030\004 \002(\014\022\016\n\006darcid\030\005 \002(\014\022\017\n\007v" +
+      "ersion\030\006 \002(\004\"#\n\004Coin\022\014\n\004name\030\001 \002(\014\022\r\n\005va" +
+      "lue\030\002 \002(\004\"\036\n\020StreamingRequest\022\n\n\002id\030\001 \002(" +
+      "\014\"8\n\021StreamingResponse\022#\n\005block\030\001 \001(\0132\024." +
+      "skipchain.SkipBlock\"X\n\017PaginateRequest\022\017" +
+      "\n\007startid\030\001 \002(\014\022\020\n\010pagesize\030\002 \002(\004\022\020\n\010num" +
+      "pages\030\003 \002(\004\022\020\n\010backward\030\004 \002(\010\"\204\001\n\020Pagina" +
+      "teResponse\022$\n\006blocks\030\001 \003(\0132\024.skipchain.S" +
+      "kipBlock\022\022\n\npagenumber\030\002 \002(\004\022\020\n\010backward" +
+      "\030\003 \002(\010\022\021\n\terrorcode\030\004 \002(\004\022\021\n\terrortext\030\005" +
+      " \003(\t\"A\n\rDownloadState\022\021\n\tbyzcoinid\030\001 \002(\014" +
+      "\022\r\n\005nonce\030\002 \002(\004\022\016\n\006length\030\003 \002(\021\"]\n\025Downl" +
+      "oadStateResponse\022&\n\tkeyvalues\030\001 \003(\0132\023.by" +
+      "zcoin.DBKeyValue\022\r\n\005nonce\030\002 \002(\004\022\r\n\005total" +
+      "\030\003 \001(\021\"(\n\nDBKeyValue\022\013\n\003key\030\001 \002(\014\022\r\n\005val" +
+      "ue\030\002 \002(\014\"j\n\017StateChangeBody\022\023\n\013stateacti" +
+      "on\030\001 \002(\021\022\022\n\ncontractid\030\002 \002(\t\022\r\n\005value\030\003 " +
+      "\002(\014\022\017\n\007version\030\004 \002(\004\022\016\n\006darcid\030\005 \002(\014\";\n\021" +
+      "GetSignerCounters\022\021\n\tsignerids\030\001 \003(\t\022\023\n\013" +
+      "skipchainid\030\002 \002(\014\"@\n\031GetSignerCountersRe" +
+      "sponse\022\024\n\010counters\030\001 \003(\004B\002\020\001\022\r\n\005index\030\002 " +
+      "\001(\004\"N\n\022GetInstanceVersion\022\023\n\013skipchainid" +
+      "\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022\017\n\007version\030\003 " +
+      "\002(\004\"A\n\026GetLastInstanceVersion\022\023\n\013skipcha" +
+      "inid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\"[\n\032GetIns" +
+      "tanceVersionResponse\022)\n\013statechange\030\001 \002(" +
+      "\0132\024.byzcoin.StateChange\022\022\n\nblockindex\030\002 " +
+      "\002(\021\"@\n\025GetAllInstanceVersion\022\023\n\013skipchai" +
+      "nid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\"Z\n\035GetAllI" +
+      "nstanceVersionResponse\0229\n\014statechanges\030\001" +
+      " \003(\0132#.byzcoin.GetInstanceVersionRespons" +
+      "e\"T\n\030CheckStateChangeValidity\022\023\n\013skipcha" +
+      "inid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022\017\n\007versio" +
+      "n\030\003 \002(\004\"_\n CheckStateChangeValidityRespo" +
+      "nse\022*\n\014statechanges\030\001 \003(\0132\024.byzcoin.Stat" +
+      "eChange\022\017\n\007blockid\030\002 \002(\014\"F\n\021ResolveInsta" +
+      "nceID\022\023\n\013skipchainid\030\001 \002(\014\022\016\n\006darcid\030\002 \002" +
+      "(\014\022\014\n\004name\030\003 \002(\t\"(\n\022ResolvedInstanceID\022\022" +
+      "\n\ninstanceid\030\001 \002(\014\"!\n\014DebugRequest\022\021\n\tby" +
+      "zcoinid\030\001 \001(\014\"k\n\rDebugResponse\022/\n\010byzcoi" +
+      "ns\030\001 \003(\0132\035.byzcoin.DebugResponseByzcoin\022" +
+      ")\n\004dump\030\002 \003(\0132\033.byzcoin.DebugResponseSta" +
+      "te\"v\n\024DebugResponseByzcoin\022\021\n\tbyzcoinid\030" +
+      "\001 \002(\014\022%\n\007genesis\030\002 \001(\0132\024.skipchain.SkipB" +
+      "lock\022$\n\006latest\030\003 \001(\0132\024.skipchain.SkipBlo" +
+      "ck\"J\n\022DebugResponseState\022\013\n\003key\030\001 \002(\014\022\'\n" +
+      "\005state\030\002 \002(\0132\030.byzcoin.StateChangeBody\":" +
+      "\n\022DebugRemoveRequest\022\021\n\tbyzcoinid\030\001 \002(\014\022" +
+      "\021\n\tsignature\030\002 \002(\014B\'\n\027ch.epfl.dedis.lib." +
+      "protoB\014ByzCoinProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -43336,7 +43827,7 @@ public final class ByzCoinProto {
     internal_static_byzcoin_Delete_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_Delete_descriptor,
-        new java.lang.String[] { "Contractid", });
+        new java.lang.String[] { "Contractid", "Args", });
     internal_static_byzcoin_Argument_descriptor =
       getDescriptor().getMessageTypes().get(18);
     internal_static_byzcoin_Argument_fieldAccessorTable = new
