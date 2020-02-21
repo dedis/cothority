@@ -2,6 +2,7 @@
 package service
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
@@ -149,6 +150,44 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 		return nil, err
 	}
 
+	// Check for the Election update case
+	if len(req.Election.ID) > 0 {
+		if !bytes.Equal(req.Election.Master, req.ID) {
+			return nil, errors.New("master id mismatch")
+		}
+
+		cur, err := lib.GetElection(s.skipchain, req.Election.ID, false, 0)
+		if err != nil {
+			return nil, err
+		}
+
+		// Check that voting has not started.
+		box, err := cur.Box(s.skipchain)
+		if err != nil {
+			return nil, err
+		}
+		if len(box.Ballots) != 0 {
+			return nil, errors.New("election has started, no modifications allowed")
+		}
+
+		// Update cur with new values from req
+		cur.Name = req.Election.Name
+		cur.Candidates = req.Election.Candidates
+		cur.MaxChoices = req.Election.MaxChoices
+		cur.Subtitle = req.Election.Subtitle
+		cur.MoreInfo = req.Election.MoreInfo
+		cur.Start = req.Election.Start
+		cur.End = req.Election.End
+		cur.Theme = req.Election.Theme
+		cur.Footer = req.Election.Footer
+
+		transaction := lib.NewTransaction(cur, req.User)
+		if _, err := lib.Store(s.skipchain, req.Election.ID, transaction, s.ServerIdentity().GetPrivate()); err != nil {
+			return nil, err
+		}
+		return &evoting.OpenReply{ID: cur.ID, Key: cur.Key}, nil
+	}
+
 	genesis, err := lib.NewSkipchain(s.skipchain, master.Roster, false)
 	if err != nil {
 		return nil, err
@@ -263,7 +302,7 @@ func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciper
 
 	// Try to find it in cache first
 	if res := s.sciperGet(sciper); res != nil {
-		log.Lvl3("Got vcard (cache hit): ", res)
+		log.Lvl3("Got vcard (cache hit)", res)
 		return res, nil
 	}
 
@@ -396,7 +435,7 @@ func (s *Service) GetBox(req *evoting.GetBox) (*evoting.GetBoxReply, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &evoting.GetBoxReply{Box: box}, nil
+	return &evoting.GetBoxReply{Box: box, Election: election}, nil
 }
 
 // GetMixes message handler. It is the caller's responsibility to check the proof

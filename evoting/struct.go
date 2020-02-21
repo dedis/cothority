@@ -129,7 +129,8 @@ type GetBox struct {
 
 // GetBoxReply message.
 type GetBoxReply struct {
-	Box *lib.Box // Box of encrypted ballots.
+	Box      *lib.Box      // Box of encrypted ballots.
+	Election *lib.Election // The current config of the election.
 }
 
 // GetMixes message.

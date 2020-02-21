@@ -3,6 +3,9 @@ package lib
 import (
 	"errors"
 	"fmt"
+	"io"
+	"sort"
+	"strings"
 
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/onet/v3"
@@ -50,13 +53,13 @@ type Election struct {
 	End        int64             // End (termination) datetime as unix timestamp.
 
 	Theme  string // Theme denotes the CSS class for selecting background color of card title.
-	Footer footer // Footer denotes the Election footer
+	Footer Footer // Footer denotes the Election footer
 
 	Voted skipchain.SkipBlockID // Voted denotes if a user has already cast a ballot for this election.
 }
 
-// footer denotes the fields for the election footer
-type footer struct {
+// Footer denotes the fields for the election footer
+type Footer struct {
 	Text         string // Text is for storing footer content.
 	ContactTitle string // ContactTitle stores the title of the Contact person.
 	ContactPhone string // ContactPhone stores the phone number of the Contact person.
@@ -67,28 +70,47 @@ type footer struct {
 func GetElection(s *skipchain.Service, id skipchain.SkipBlockID,
 	checkVoted bool, user uint32) (*Election, error) {
 
-	search, err := s.GetSingleBlockByIndex(
-		&skipchain.GetSingleBlockByIndex{Genesis: id, Index: 1},
-	)
-	block := search.SkipBlock
-	if err != nil {
-		return nil, err
-	}
+	var election *Election
+	index := 1
+	for {
+		search, err := s.GetSingleBlockByIndex(
+			&skipchain.GetSingleBlockByIndex{Genesis: id, Index: index},
+		)
+		if err != nil {
+			return nil, err
+		}
 
-	// transaction := UnmarshalTransaction(reply.Update[1].Data)
-	transaction := UnmarshalTransaction(block.Data)
-	if transaction == nil || transaction.Election == nil {
-		return nil, fmt.Errorf("no election structure in %s", id.Short())
+		transaction := UnmarshalTransaction(search.SkipBlock.Data)
+		if transaction == nil {
+			return nil, fmt.Errorf("no election structure in %s", id.Short())
+		}
+		// Found last Election tx, exit.
+		if transaction.Election == nil {
+			break
+		}
+		election = transaction.Election
+		err = election.setStage(s)
+		if err != nil {
+			return nil, err
+		}
+
+		// Stop looping at the end of the chain.
+		if len(search.SkipBlock.ForwardLink) == 0 {
+			break
+		}
+		// otherwise try the next index.
+		index++
 	}
-	election := transaction.Election
-	err = election.setStage(s)
-	if err != nil {
-		return nil, err
+	if election == nil {
+		return nil, errors.New("no election found")
 	}
 	// check for voted only if required. We cache things in localStorage
 	// on the frontend
 	if checkVoted {
-		err = election.setVoted(s, user)
+		err := election.setVoted(s, user)
+		if err != nil {
+			return election, err
+		}
 	}
 	return election, nil
 }
@@ -306,4 +328,42 @@ func (e *Election) IsUser(user uint32) bool {
 // IsCreator checks if a given user is the creator of the election.
 func (e *Election) IsCreator(user uint32) bool {
 	return user == e.Creator
+}
+
+func (e *Election) String() string {
+	str := new(strings.Builder)
+
+	fmt.Fprintf(str, "Election %x on master %x\n", e.ID, e.Master)
+	fmt.Fprintf(str, "Creator: %v\n", e.Creator)
+	fmt.Fprintf(str, "Name:\n")
+	printLang(str, e.Name)
+	fmt.Fprintf(str, "Subtitle:\n")
+	printLang(str, e.Subtitle)
+	fmt.Fprintf(str, "Candidates: %v\n", e.Candidates)
+	fmt.Fprintf(str, "MaxChoices: %v\n", e.MaxChoices)
+	fmt.Fprintf(str, "MoreInfo: %v\n", e.MoreInfo)
+	fmt.Fprintf(str, "Theme: %v\n", e.Theme)
+	fmt.Fprintf(str, "Footer Text: %v\n", e.Footer.Text)
+	fmt.Fprintf(str, "Footer ContactTitle: %v\n", e.Footer.ContactTitle)
+	fmt.Fprintf(str, "Footer ContactPhone: %v\n", e.Footer.ContactPhone)
+	fmt.Fprintf(str, "Footer ContactEmail: %v\n", e.Footer.ContactEmail)
+	fmt.Fprintf(str, "Start: %v\n", e.Start)
+	fmt.Fprintf(str, "End: %v\n", e.End)
+	fmt.Fprintf(str, "Election pubkey: %v\n", e.Key)
+	fmt.Fprintf(str, "Authentication server pubkey: %v\n", e.MasterKey)
+	fmt.Fprintf(str, "Stage: %v\n", e.Stage)
+	fmt.Fprintf(str, "Voters: %v\n", e.Users)
+
+	return str.String()
+}
+
+func printLang(w io.Writer, x map[string]string) {
+	var l []string
+	for lang := range x {
+		l = append(l, lang)
+	}
+	sort.Strings(l)
+	for _, lang := range l {
+		fmt.Fprintf(w, "  %v: %v\n", lang, x[lang])
+	}
 }
