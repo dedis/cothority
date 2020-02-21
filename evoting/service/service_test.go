@@ -239,6 +239,14 @@ func TestService(t *testing.T) {
 	vote(idUser2, bufCand1)
 	vote(idUser3, bufCand2)
 
+	// Try to decrypt before shuffling; will fail
+	_, err = s0.Decrypt(&evoting.Decrypt{
+		ID:        replyOpen.ID,
+		User:      idAdmin,
+		Signature: idAdminSig,
+	})
+	require.Error(t, err)
+
 	// Shuffle on non-leader
 	log.Lvl1("Shuffling s1")
 	_, err = s1.Shuffle(&evoting.Shuffle{

@@ -160,15 +160,12 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 		if err != nil {
 			return nil, err
 		}
-		log.LLvlf2("cur election: %#v", cur)
 
 		// Check that voting has not started.
-		println("Check that voting has not started.")
 		box, err := cur.Box(s.skipchain)
 		if err != nil {
 			return nil, err
 		}
-		println("Check that voting has not started.", len(box.Ballots))
 		if len(box.Ballots) != 0 {
 			return nil, errors.New("election has started, no modifications allowed")
 		}
