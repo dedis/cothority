@@ -16,9 +16,9 @@ use them. It should grow over time as more parts of the system are implemented.
 
 ## Short summary of ByzCoin
 
-- ByzCoin is a **distributed ledger**: a database that is 
+- ByzCoin is a **distributed ledger**: a database that is
   distributed across several nodes, and where the authority to add changes
-  to the database us decentralized.
+  to the database is decentralized.
 - To ensure that updates to the database are strictly ordered, ByzCoin
   uses a **blockchain** called a **Skipchain**: every node has its local copy of the ledger
   (database). Every change to the ledger is packed into a block that is
