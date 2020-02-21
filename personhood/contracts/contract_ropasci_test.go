@@ -10,7 +10,6 @@ import (
 	"go.dedis.ch/cothority/v3/calypso"
 
 	"go.dedis.ch/kyber/v3/util/random"
-	"golang.org/x/xerrors"
 
 	"go.dedis.ch/protobuf"
 
@@ -36,8 +35,7 @@ func TestContractRoPaSci(t *testing.T) {
 		for move2 := 0; move2 <= 2; move2++ {
 			cRPS := &ContractRoPaSci{}
 			// Creates
-			tr, err := newTestRPS(rost, move1, 100)
-			require.NoError(t, err)
+			tr := newTestRPS(t, rost, move1, 100)
 			coin1expected := tr.initial - tr.stake
 			coin2expected := tr.initial - tr.stake
 
@@ -97,8 +95,7 @@ func TestContractRoPaSciCalypso(t *testing.T) {
 		for move2 := 0; move2 <= 2; move2++ {
 			cRPS := &ContractRoPaSci{}
 			// Creates
-			tr, err := newTestRPS(rost, move1, 100)
-			require.NoError(t, err)
+			tr := newTestRPS(t, rost, move1, 100)
 			coin1expected := tr.initial - tr.stake
 			coin2expected := tr.initial - tr.stake
 
@@ -172,29 +169,20 @@ type testRPS struct {
 }
 
 // newTestRPS creates a new test-structure for RoPaSci games, including an LTS.
-func newTestRPS(s *rstSimul, firstMove int, stake uint64) (tr testRPS,
-	err error) {
+func newTestRPS(t *testing.T, s *rstSimul, firstMove int, stake uint64) (tr testRPS) {
+	var err error
+
 	tr.initial = 1e6
 	tr.coin1, err = s.createCoin("RoPaSci", tr.initial)
-	if err != nil {
-		err = xerrors.Errorf("couldn't create 1st coin: %+v", err)
-	}
+	require.NoError(t, err, "couldn't create 1st coin")
 	tr.coin2, err = s.createCoin("RoPaSci", tr.initial)
-	if err != nil {
-		err = xerrors.Errorf("couldn't create 2nd coin: %+v", err)
-	}
+	require.NoError(t, err, "couldn't create 2nd coin")
 	tr.firstMove = firstMove
 	tr.stake = stake
 	_, tr.stakeCoin1, err = s.withdrawCoin(tr.coin1, stake)
-	if err != nil {
-		err = xerrors.Errorf("couldn't withdraw stake 1: %+v", err)
-		return
-	}
+	require.NoError(t, err, "couldn't withdraw stake 1")
 	_, tr.stakeCoin2, err = s.withdrawCoin(tr.coin2, stake)
-	if err != nil {
-		err = xerrors.Errorf("couldn't withdraw stake 2: %+v", err)
-		return
-	}
+	require.NoError(t, err, "couldn't withdraw stake 2")
 	// Only take 28 random bytes so that it also fits into the calypsoWrite
 	tr.prehash = append([]byte{byte(firstMove)},
 		random.Bits(27*8, true, random.New())...)

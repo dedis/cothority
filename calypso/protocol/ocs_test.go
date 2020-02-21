@@ -71,16 +71,16 @@ func ocs(t *testing.T, nbrNodes, threshold, keylen, fail int, refuse bool) {
 	// 1 - setting up - in real life uses Setup-protocol
 	// Store the dkgs in the services
 	dkgs, err := CreateDKGs(tSuite.(dkg.Suite), nbrNodes, threshold)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	services := local.GetServices(servers, testServiceID)
 	for i := range services {
 		services[i].(*testService).Shared, _, err = dkgprotocol.NewSharedSecret(dkgs[i])
-		require.Nil(t, err)
+		require.NoError(t, err)
 	}
 
 	// Get the collective public key
 	dks, err := dkgs[0].DistKeyShare()
-	require.Nil(t, err)
+	require.NoError(t, err)
 	X := dks.Public()
 
 	// 2 - writer - Encrypt a symmetric key and publish U, Cs
@@ -102,7 +102,7 @@ func ocs(t *testing.T, nbrNodes, threshold, keylen, fail int, refuse bool) {
 		s.Pause()
 	}
 	pi, err := services[0].(*testService).createOCS(tree, threshold)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	protocol := pi.(*OCS)
 	protocol.U = U
 	protocol.Xc = xc.Public
@@ -134,7 +134,7 @@ func ocs(t *testing.T, nbrNodes, threshold, keylen, fail int, refuse bool) {
 
 	// 6 - reader - gets the resulting symmetric key, encrypted under Xc
 	keyHat, err := DecodeKey(suite, X, Cs, XhatEnc, xc.Private)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	require.Equal(t, k, keyHat)
 }
@@ -200,8 +200,7 @@ func EncodeKey(suite suites.Suite, X kyber.Point, key []byte) (U kyber.Point, Cs
 	log.Lvl3("U is:", U.String())
 
 	for len(key) > 0 {
-		var kp kyber.Point
-		kp = suite.Point().Embed(key, suite.RandomStream())
+		kp := suite.Point().Embed(key, suite.RandomStream())
 		log.Lvl3("Keypoint:", kp.String())
 		log.Lvl3("X:", X.String())
 		Cs = append(Cs, suite.Point().Add(C, kp))

@@ -41,7 +41,7 @@ func init() {
 
 func TestCoin_Spawn(t *testing.T) {
 	// Testing spawning of a new coin and checking it has zero coins in it.
-	ct := newCT("spawn:coin")
+	ct := newCT(t, "spawn:coin")
 	ct.setSignatureCounter(gsigner.Identity().String(), 0)
 
 	inst := byzcoin.Instruction{
@@ -58,7 +58,7 @@ func TestCoin_Spawn(t *testing.T) {
 	c, _ := contractCoinFromBytes(nil)
 	sc, co, err := c.Spawn(ct, inst, []byzcoin.Coin{})
 
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(sc))
 
 	ca := inst.DeriveID("")
@@ -69,7 +69,7 @@ func TestCoin_Spawn(t *testing.T) {
 
 func TestCoin_InvokeMint(t *testing.T) {
 	// Test that a coin can be minted
-	ct := newCT("invoke:mint")
+	ct := newCT(t, "invoke:mint")
 	ct.setSignatureCounter(gsigner.Identity().String(), 0)
 
 	coAddr := byzcoin.InstanceID{}
@@ -100,7 +100,7 @@ func TestCoin_InvokeMint(t *testing.T) {
 	}
 
 	sc, co, err := ct.getContract(inst.InstanceID).Invoke(ct, inst, []byzcoin.Coin{})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 0, len(co))
 	require.Equal(t, 1, len(sc))
 	require.Equal(t, byzcoin.NewStateChange(byzcoin.Update, coAddr, ContractCoinID, ciOne, gdarc.GetBaseID()),
@@ -112,9 +112,9 @@ func TestCoin_InvokeOverflow(t *testing.T) {
 		Value: ^uint64(0),
 	}
 	ciBuf, err := protobuf.Encode(&ci)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
-	ct := newCT("invoke:mint")
+	ct := newCT(t, "invoke:mint")
 	ct.setSignatureCounter(gsigner.Identity().String(), 0)
 
 	coAddr := byzcoin.InstanceID{}
@@ -138,7 +138,7 @@ func TestCoin_InvokeOverflow(t *testing.T) {
 }
 
 func TestCoin_InvokeStoreFetch(t *testing.T) {
-	ct := newCT("invoke:store", "invoke:fetch")
+	ct := newCT(t, "invoke:store", "invoke:fetch")
 	ct.setSignatureCounter(gsigner.Identity().String(), 0)
 
 	coAddr := byzcoin.InstanceID{}
@@ -159,7 +159,7 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 	c2 := byzcoin.Coin{Name: notOlCoin, Value: 1}
 
 	sc, co, err := ct.getContract(inst.InstanceID).Invoke(ct, inst, []byzcoin.Coin{c1, c2})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(co))
 	require.Equal(t, co[0].Name, notOlCoin)
 	require.Equal(t, 1, len(sc))
@@ -177,14 +177,14 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 	}
 
 	// Try once with not enough coins available.
-	sc, co, err = ct.getContract(inst.InstanceID).Invoke(ct, inst, nil)
+	_, _, err = ct.getContract(inst.InstanceID).Invoke(ct, inst, nil)
 	require.Error(t, err)
 
 	// Apply the changes to the mock trie.
 	ct.Store(coAddr, ciOne, ContractCoinID, gdarc.GetBaseID())
 
 	sc, co, err = ct.getContract(inst.InstanceID).Invoke(ct, inst, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(co))
 	require.Equal(t, co[0].Name, CoinName)
 	require.Equal(t, uint64(1), co[0].Value)
@@ -195,7 +195,7 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 
 func TestCoin_InvokeTransfer(t *testing.T) {
 	// Test that a coin can be transferred
-	ct := newCT("invoke:transfer")
+	ct := newCT(t, "invoke:transfer")
 	ct.setSignatureCounter(gsigner.Identity().String(), 0)
 
 	coAddr1 := byzcoin.InstanceID{}
@@ -220,7 +220,7 @@ func TestCoin_InvokeTransfer(t *testing.T) {
 		SignerCounter:    []uint64{1},
 	}
 
-	sc, co, err := ct.getContract(inst.InstanceID).Invoke(ct, inst, []byzcoin.Coin{})
+	_, _, err := ct.getContract(inst.InstanceID).Invoke(ct, inst, []byzcoin.Coin{})
 	require.Error(t, err)
 
 	inst = byzcoin.Instruction{
@@ -236,8 +236,8 @@ func TestCoin_InvokeTransfer(t *testing.T) {
 		SignerCounter:    []uint64{1},
 	}
 
-	sc, co, err = ct.getContract(inst.InstanceID).Invoke(ct, inst, []byzcoin.Coin{})
-	require.Nil(t, err)
+	sc, co, err := ct.getContract(inst.InstanceID).Invoke(ct, inst, []byzcoin.Coin{})
+	require.NoError(t, err)
 	require.Equal(t, 0, len(co))
 	require.Equal(t, 2, len(sc))
 	require.Equal(t, byzcoin.NewStateChange(byzcoin.Update, coAddr2, ContractCoinID, ciOne, gdarc.GetBaseID()), sc[0])
@@ -254,7 +254,7 @@ type cvTest struct {
 var gdarc *darc.Darc
 var gsigner darc.Signer
 
-func newCT(rStr ...string) *cvTest {
+func newCT(t *testing.T, rStr ...string) *cvTest {
 	ct := &cvTest{
 		make(map[string][]byte),
 		make(map[string]string),
@@ -269,7 +269,7 @@ func newCT(rStr ...string) *cvTest {
 	}
 	gdarc = darc.NewDarc(rules, []byte{})
 	dBuf, err := gdarc.ToProto()
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	ct.Store(byzcoin.NewInstanceID(gdarc.GetBaseID()), dBuf, "darc", gdarc.GetBaseID())
 	return ct
 }

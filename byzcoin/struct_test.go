@@ -63,10 +63,10 @@ func TestStateChangeStorage_Init(t *testing.T) {
 
 		return nil
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	err = scs.calculateSize()
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, size, scs.size)
 }
 
@@ -83,7 +83,7 @@ func TestStateChangeStorage_SimpleCase(t *testing.T) {
 
 	sb := createBlock()
 	err := scs.append(ss, sb)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// check the size remains the same with already seen state changes
 	size := scs.size
@@ -92,14 +92,14 @@ func TestStateChangeStorage_SimpleCase(t *testing.T) {
 	require.Equal(t, size, scs.size)
 
 	entries, err := scs.getAll(ss[0].InstanceID, sb.SkipChainID())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 10, len(entries))
 
 	for i := 0; i < 10; i++ {
 		require.Equal(t, uint64(i), entries[i].StateChange.Version)
 		e, ok, err := scs.getByVersion(ss[0].InstanceID, uint64(i), sb.SkipChainID())
 
-		require.Nil(t, err)
+		require.NoError(t, err)
 		require.True(t, ok)
 		require.Equal(t, e.StateChange.Value, entries[i].StateChange.Value)
 	}
@@ -107,10 +107,10 @@ func TestStateChangeStorage_SimpleCase(t *testing.T) {
 	fakeID := genID().Slice()
 	_, ok, err := scs.getByVersion(fakeID, 0, sb.SkipChainID())
 	require.False(t, ok)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	sce, ok, err := scs.getLast(ss[0].InstanceID, sb.SkipChainID())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, ok)
 	require.Equal(t, uint64(9), sce.StateChange.Version)
 }
@@ -137,12 +137,12 @@ func TestStateChangeStorage_GetByBlock(t *testing.T) {
 				Value:      []byte{},
 			}
 			err := store.append(StateChanges{sc}, sbs[i])
-			require.Nil(t, err)
+			require.NoError(t, err)
 		}
 	}
 
 	sce, err := store.getByBlock(sbs[n-1].SkipChainID(), 0)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, k, len(sce))
 }
 
@@ -167,26 +167,26 @@ func TestStateChangeStorage_MultiSkipChain(t *testing.T) {
 				Value:      []byte{},
 			}
 			err := store.append(StateChanges{sc}, chains[i])
-			require.Nil(t, err)
+			require.NoError(t, err)
 		}
 	}
 
 	for _, chain := range chains {
 		sce, err := store.getAll(iid, chain.SkipChainID())
-		require.Nil(t, err)
+		require.NoError(t, err)
 		require.Equal(t, k, len(sce))
 
 		sce, err = store.getByBlock(chain.SkipChainID(), k-1)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		require.Equal(t, 1, len(sce))
 
 		e, ok, err := store.getLast(iid, chain.SkipChainID())
-		require.Nil(t, err)
+		require.NoError(t, err)
 		require.True(t, ok)
 		require.Equal(t, uint64(k-1), e.StateChange.Version)
 
 		e, ok, err = store.getByVersion(iid, uint64(1), chain.SkipChainID())
-		require.Nil(t, err)
+		require.NoError(t, err)
 		require.True(t, ok)
 		require.Equal(t, uint64(1), e.StateChange.Version)
 	}
@@ -212,7 +212,7 @@ func TestStateChangeStorage_MaxSize(t *testing.T) {
 		Value:      make([]byte, 200),
 	}
 	buf, err := protobuf.Encode(&sc)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	store.maxSize = len(buf) * size
 
@@ -220,7 +220,7 @@ func TestStateChangeStorage_MaxSize(t *testing.T) {
 		sc.Version = uint64(i)
 		sb1.Index = i
 		err = store.append(StateChanges{sc}, sb1)
-		require.Nil(t, err)
+		require.NoError(t, err)
 	}
 
 	sc.InstanceID = iid2
@@ -229,11 +229,11 @@ func TestStateChangeStorage_MaxSize(t *testing.T) {
 		sc.Version = uint64(i)
 		sb2.Index = i
 		err = store.append(StateChanges{sc}, sb2)
-		require.Nil(t, err)
+		require.NoError(t, err)
 	}
 
 	entries, err := store.getAll(iid2, sb2.SkipChainID())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, size, len(entries))
 
 	for i := 0; i < size; i++ {
@@ -241,7 +241,7 @@ func TestStateChangeStorage_MaxSize(t *testing.T) {
 	}
 
 	entries, err = store.getAll(iid1, sb1.SkipChainID())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 0, len(entries))
 }
 
@@ -275,11 +275,11 @@ func TestStateChangeStorage_MaxNbrBlock(t *testing.T) {
 		}
 
 		err := store.append(scs, sb)
-		require.Nil(t, err)
+		require.NoError(t, err)
 	}
 
 	entries, err := store.getAll(iids[k-1], sb.SkipChainID())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, l*store.maxNbrBlock, len(entries))
 	require.Equal(t, n/l-store.maxNbrBlock, entries[0].BlockIndex)
 }
@@ -329,11 +329,11 @@ func generateStateChanges(n int) StateChanges {
 
 func generateDB(t *testing.T) (*stateChangeStorage, string) {
 	tmpDB, err := ioutil.TempFile("", "tmpDB")
-	require.Nil(t, err)
+	require.NoError(t, err)
 	tmpDB.Close()
 
 	db, err := bbolt.Open(tmpDB.Name(), 0600, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	scs := stateChangeStorage{db: db, bucket: []byte("scstest")}
 	db.Update(func(tx *bbolt.Tx) error {

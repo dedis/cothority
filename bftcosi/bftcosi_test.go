@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
@@ -55,7 +55,7 @@ func TestBftCoSi(t *testing.T) {
 
 	// Register test protocol using BFTCoSi
 	onet.GlobalProtocolRegister(TestProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, verify)
+		return NewBFTCoSiProtocol(n, verify(t))
 	})
 
 	log.Lvl2("Simple count")
@@ -69,7 +69,7 @@ func TestThreshold(t *testing.T) {
 
 	// Register test protocol using BFTCoSi
 	onet.GlobalProtocolRegister(TestProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, verify)
+		return NewBFTCoSiProtocol(n, verify(t))
 	})
 
 	tests := []struct{ h, t int }{
@@ -89,9 +89,9 @@ func TestThreshold(t *testing.T) {
 
 		// Start the protocol
 		node, err := local.CreateProtocol(TestProtocolName, tree)
-		log.ErrFatal(err)
+		require.NoError(t, err)
 		bc := node.(*ProtocolBFTCoSi)
-		assert.Equal(t, thr, bc.allowedExceptions, "hosts was %d", hosts)
+		require.Equal(t, thr, bc.allowedExceptions, "hosts was %d", hosts)
 		bc.Done()
 		local.CloseAll()
 	}
@@ -102,7 +102,7 @@ func TestCheckRefuse(t *testing.T) {
 
 	// Register test protocol using BFTCoSi
 	onet.GlobalProtocolRegister(TestProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, verifyRefuse)
+		return NewBFTCoSiProtocol(n, verifyRefuse(t))
 	})
 
 	for refuseCount := 1; refuseCount <= 3; refuseCount++ {
@@ -116,7 +116,7 @@ func TestCheckRefuseMore(t *testing.T) {
 
 	// Register test protocol using BFTCoSi
 	onet.GlobalProtocolRegister(TestProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, verifyRefuseMore)
+		return NewBFTCoSiProtocol(n, verifyRefuseMore(t))
 	})
 
 	for _, n := range []int{3, 4, 13} {
@@ -134,7 +134,7 @@ func TestCheckRefuseBit(t *testing.T) {
 
 	// Register test protocol using BFTCoSi
 	onet.GlobalProtocolRegister(TestProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, verifyRefuseBit)
+		return NewBFTCoSiProtocol(n, verifyRefuseBit(t))
 	})
 
 	wg := sync.WaitGroup{}
@@ -160,7 +160,7 @@ func TestCheckRefuseParallel(t *testing.T) {
 
 	// Register test protocol using BFTCoSi
 	onet.GlobalProtocolRegister(TestProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, verifyRefuseBit)
+		return NewBFTCoSiProtocol(n, verifyRefuseBit(t))
 	})
 
 	wg := sync.WaitGroup{}
@@ -188,12 +188,12 @@ func TestNodeFailure(t *testing.T) {
 
 	// Register test protocol using BFTCoSi
 	onet.GlobalProtocolRegister(TestProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, verify)
+		return NewBFTCoSiProtocol(n, verify(t))
 	})
 
 	nbrHostsArr := []int{5, 7, 10}
 	for _, nbrHosts := range nbrHostsArr {
-		if err := runProtocolOnceGo(nbrHosts, TestProtocolName, 0, true, nbrHosts/3, nbrHosts-1); err != nil {
+		if err := runProtocolOnceGo(t, nbrHosts, TestProtocolName, 0, true, nbrHosts/3, nbrHosts-1); err != nil {
 			t.Fatalf("%d/%s/%d/%t: %s", nbrHosts, TestProtocolName, 0, true, err)
 		}
 	}
@@ -208,12 +208,12 @@ func runProtocol(t *testing.T, name string, refuseCount int) {
 }
 
 func runProtocolOnce(t *testing.T, nbrHosts int, name string, refuseCount int, succeed bool) {
-	if err := runProtocolOnceGo(nbrHosts, name, refuseCount, succeed, 0, nbrHosts-1); err != nil {
+	if err := runProtocolOnceGo(t, nbrHosts, name, refuseCount, succeed, 0, nbrHosts-1); err != nil {
 		t.Fatalf("%d/%s/%d/%t: %s", nbrHosts, name, refuseCount, succeed, err)
 	}
 }
 
-func runProtocolOnceGo(nbrHosts int, name string, refuseCount int, succeed bool, killCount int, bf int) error {
+func runProtocolOnceGo(t *testing.T, nbrHosts int, name string, refuseCount int, succeed bool, killCount int, bf int) error {
 	log.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
 	local := onet.NewLocalTest(tSuite)
 	local.Check = onet.CheckNone
@@ -234,8 +234,7 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int, succeed bool,
 	}
 
 	// Register the function generating the protocol instance
-	var root *ProtocolBFTCoSi
-	root = node.(*ProtocolBFTCoSi)
+	root := node.(*ProtocolBFTCoSi)
 	root.Msg = msg
 	cMux.Lock()
 	counter := &Counter{refuseCount: refuseCount}
@@ -243,7 +242,7 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int, succeed bool,
 	root.Data = []byte(strconv.Itoa(counters.size() - 1))
 	log.Lvl3("Added counter", counters.size()-1, refuseCount)
 	cMux.Unlock()
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	// function that will be called when protocol is finished by the root
 	root.RegisterOnDone(func() {
 		done <- true
@@ -287,62 +286,68 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int, succeed bool,
 }
 
 // Verify function that returns true if the length of the data is 1.
-func verify(m []byte, d []byte) bool {
-	c, err := strconv.Atoi(string(d))
-	log.ErrFatal(err)
-	counter := counters.get(c)
-	counter.Lock()
-	counter.veriCount++
-	log.Lvl4("Verification called", counter.veriCount, "times")
-	counter.Unlock()
-	if len(d) == 0 {
-		log.Error("Didn't receive correct data")
-		return false
+func verify(t *testing.T) VerificationFunction {
+	return func(m []byte, d []byte) bool {
+		c, err := strconv.Atoi(string(d))
+		require.NoError(t, err)
+		counter := counters.get(c)
+		counter.Lock()
+		counter.veriCount++
+		log.Lvl4("Verification called", counter.veriCount, "times")
+		counter.Unlock()
+		if len(d) == 0 {
+			log.Error("Didn't receive correct data")
+			return false
+		}
+		return true
 	}
-	return true
 }
 
 // Verify-function that will refuse if we're the `refuseCount`ed call.
-func verifyRefuse(m []byte, d []byte) bool {
-	c, err := strconv.Atoi(string(d))
-	log.ErrFatal(err)
-	counter := counters.get(c)
-	counter.Lock()
-	defer counter.Unlock()
-	counter.veriCount++
-	if counter.veriCount == counter.refuseCount {
-		log.Lvl2("Refusing for count==", counter.refuseCount)
-		return false
+func verifyRefuse(t *testing.T) VerificationFunction {
+	return func(m []byte, d []byte) bool {
+		c, err := strconv.Atoi(string(d))
+		require.NoError(t, err)
+		counter := counters.get(c)
+		counter.Lock()
+		defer counter.Unlock()
+		counter.veriCount++
+		if counter.veriCount == counter.refuseCount {
+			log.Lvl2("Refusing for count==", counter.refuseCount)
+			return false
+		}
+		log.Lvl3("Verification called", counter.veriCount, "times")
+		log.Lvl3("Ignoring message:", string(m))
+		if len(d) == 0 {
+			log.Error("Didn't receive correct data")
+			return false
+		}
+		return true
 	}
-	log.Lvl3("Verification called", counter.veriCount, "times")
-	log.Lvl3("Ignoring message:", string(m))
-	if len(d) == 0 {
-		log.Error("Didn't receive correct data")
-		return false
-	}
-	return true
 }
 
 // Verify-function that will refuse for all calls >= `refuseCount`.
-func verifyRefuseMore(m []byte, d []byte) bool {
-	c, err := strconv.Atoi(string(d))
-	log.ErrFatal(err)
-	counter := counters.get(c)
-	counter.Lock()
-	defer counter.Unlock()
-	counter.veriCount++
-	if counter.veriCount <= counter.refuseCount {
-		log.Lvlf2("Refusing for %d<=%d", counter.veriCount,
-			counter.refuseCount)
-		return false
+func verifyRefuseMore(t *testing.T) VerificationFunction {
+	return func(m []byte, d []byte) bool {
+		c, err := strconv.Atoi(string(d))
+		require.NoError(t, err)
+		counter := counters.get(c)
+		counter.Lock()
+		defer counter.Unlock()
+		counter.veriCount++
+		if counter.veriCount <= counter.refuseCount {
+			log.Lvlf2("Refusing for %d<=%d", counter.veriCount,
+				counter.refuseCount)
+			return false
+		}
+		log.Lvl3("Verification called", counter.veriCount, "times")
+		log.Lvl3("Ignoring message:", string(m))
+		if len(d) == 0 {
+			log.Error("Didn't receive correct data")
+			return false
+		}
+		return true
 	}
-	log.Lvl3("Verification called", counter.veriCount, "times")
-	log.Lvl3("Ignoring message:", string(m))
-	if len(d) == 0 {
-		log.Error("Didn't receive correct data")
-		return false
-	}
-	return true
 }
 
 func bitCount(x int) int {
@@ -355,21 +360,23 @@ func bitCount(x int) int {
 }
 
 // Verify-function that will refuse if the `called` bit is 0.
-func verifyRefuseBit(m []byte, d []byte) bool {
-	c, err := strconv.Atoi(string(d))
-	log.ErrFatal(err)
-	counter := counters.get(c)
-	counter.Lock()
-	defer counter.Unlock()
-	log.Lvl4("Counter", c, counter.refuseCount, counter.veriCount)
-	myBit := uint(counter.veriCount)
-	counter.veriCount++
-	if counter.refuseCount&(1<<myBit) != 0 {
-		log.Lvl2("Refusing for myBit ==", myBit)
-		return false
+func verifyRefuseBit(t *testing.T) VerificationFunction {
+	return func(m []byte, d []byte) bool {
+		c, err := strconv.Atoi(string(d))
+		require.NoError(t, err)
+		counter := counters.get(c)
+		counter.Lock()
+		defer counter.Unlock()
+		log.Lvl4("Counter", c, counter.refuseCount, counter.veriCount)
+		myBit := uint(counter.veriCount)
+		counter.veriCount++
+		if counter.refuseCount&(1<<myBit) != 0 {
+			log.Lvl2("Refusing for myBit ==", myBit)
+			return false
+		}
+		log.Lvl3("Verification called", counter.veriCount, "times")
+		return true
 	}
-	log.Lvl3("Verification called", counter.veriCount, "times")
-	return true
 }
 
 func min(a, b int) int {

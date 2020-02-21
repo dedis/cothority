@@ -30,11 +30,11 @@ func TestClient_CreateGenesis(t *testing.T) {
 	defer l.CloseAll()
 	c := newTestClient(l)
 	_, err := c.CreateGenesis(roster, 1, 1, VerificationNone, []byte{1, 2, 3})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	_, err = c.CreateGenesis(roster, 1, 0, VerificationNone, &testData{})
 	require.NotNil(t, err)
 	_, err = c.CreateGenesis(roster, 1, 1, VerificationNone, &testData{})
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func TestClient_CreateGenesisCorrupted(t *testing.T) {
@@ -109,7 +109,7 @@ func TestClient_GetUpdateChain(t *testing.T) {
 	var err error
 	sbs[0], err = makeGenesisRosterArgs(s, onet.NewRoster(roster.List[0:2]),
 		nil, VerificationNone, 2, 3)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 
 	log.Lvl1("Initialize skipchain.")
 
@@ -119,14 +119,14 @@ func TestClient_GetUpdateChain(t *testing.T) {
 		service := local.Services[servers[i].ServerIdentity.ID][skipchainSID].(*Service)
 		log.Lvl2("Storing skipblock", i, servers[i].ServerIdentity, newSB.Roster.List)
 		reply, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbs[i-1].Hash, NewBlock: newSB})
-		require.Nil(t, err)
+		require.NoError(t, err)
 		require.NotNil(t, reply.Latest)
 		sbs[i] = reply.Latest
 	}
 
 	for i := 0; i < sbCount; i++ {
 		sbc, err := c.GetUpdateChain(sbs[i].Roster, sbs[i].Hash)
-		require.Nil(t, err)
+		require.NoError(t, err)
 
 		require.True(t, len(sbc.Update) > 0, "Empty update-chain")
 		if !sbc.Update[0].Equal(sbs[i]) {
@@ -237,7 +237,7 @@ func TestClient_StoreSkipBlockCorrupted(t *testing.T) {
 	service.StoreSkipBlockReply = &StoreSkipBlockReply{}
 
 	_, err := c.StoreSkipBlock(genesis, ro, []byte{})
-	require.Nil(t, err) // empty reply
+	require.NoError(t, err) // empty reply
 
 	service.StoreSkipBlockReply.Previous = NewSkipBlock()
 	_, err = c.StoreSkipBlock(genesis, ro, []byte{})
@@ -260,14 +260,14 @@ func TestClient_GetAllSkipchains(t *testing.T) {
 	c := newTestClient(l)
 	log.Lvl1("Creating chain with one extra block")
 	sb1, err := c.CreateGenesis(ro, 1, 1, VerificationNone, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	r, err := c.StoreSkipBlock(sb1, ro, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 1, r.Latest.Index)
 
 	// See if it works with only one chain in the system?
 	sbs, err := c.GetAllSkipchains(ro.List[0])
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Expect 2 blocks here because GetAllSkipchains is broken and actually
 	// returns all the blocks.
@@ -285,20 +285,20 @@ func TestClient_GetAllSkipChainIDs(t *testing.T) {
 
 	log.Lvl1("Creating chain 1 with one extra block")
 	sb1, err := c.CreateGenesis(ro, 1, 1, VerificationNone, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	r1, err := c.StoreSkipBlock(sb1, ro, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 1, r1.Latest.Index)
 
 	log.Lvl1("Creating chain 2 with one extra block")
 	sb2, err := c.CreateGenesis(ro, 1, 1, VerificationNone, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	r2, err := c.StoreSkipBlock(sb2, ro, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 1, r2.Latest.Index)
 
 	reply, err := c.GetAllSkipChainIDs(ro.List[0])
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 2, len(reply.IDs))
 
 	// We don't know what order they come back out, but they both have to be there.
@@ -324,7 +324,7 @@ func TestClient_GetSingleBlock(t *testing.T) {
 	service.SkipBlock = sb
 
 	ret, err := c.GetSingleBlock(ro, sb.Hash)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, ret.Hash, sb.Hash)
 
 	service.SkipBlock = NewSkipBlock()
@@ -351,10 +351,10 @@ func TestClient_GetSingleBlockByIndex(t *testing.T) {
 	blocks := make([]*SkipBlock, nbrBlocks)
 	var err error
 	blocks[0], err = c.CreateGenesis(roster, 2, 4, VerificationNone, nil)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	for i := 1; i < nbrBlocks; i++ {
 		reply, err := c.StoreSkipBlock(blocks[0], roster, nil)
-		log.ErrFatal(err)
+		require.NoError(t, err)
 		blocks[i] = reply.Latest
 	}
 
@@ -367,7 +367,7 @@ func TestClient_GetSingleBlockByIndex(t *testing.T) {
 	// 0
 	sb1 := blocks[0]
 	search, err := c.GetSingleBlockByIndex(roster, sb1.Hash, 0)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	require.True(t, sb1.Equal(search.SkipBlock))
 	require.Equal(t, links[0], len(search.Links))
 	require.True(t, sb1.SkipChainID().Equal(search.Links[0].To))
@@ -377,7 +377,7 @@ func TestClient_GetSingleBlockByIndex(t *testing.T) {
 	for i := 1; i < nbrBlocks; i++ {
 		log.Lvl1("Creating new block", i)
 		search, err = c.GetSingleBlockByIndex(roster, sb1.SkipChainID(), i)
-		log.ErrFatal(err)
+		require.NoError(t, err)
 		require.True(t, blocks[i].Hash.Equal(search.SkipBlock.Hash))
 		require.Equal(t, links[i], len(search.Links))
 		for _, link := range search.Links[1:] {
@@ -433,7 +433,7 @@ func TestClient_CreateLinkPrivate(t *testing.T) {
 	defer ls.local.CloseAll()
 	require.Equal(t, 0, len(ls.service.Storage.Clients))
 	err := ls.client.CreateLinkPrivate(ls.server.ServerIdentity, ls.servPriv, ls.pub)
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func TestClient_SettingAuthentication(t *testing.T) {
@@ -441,7 +441,7 @@ func TestClient_SettingAuthentication(t *testing.T) {
 	defer ls.local.CloseAll()
 	require.Equal(t, 0, len(ls.service.Storage.Clients))
 	err := ls.client.CreateLinkPrivate(ls.si, ls.servPriv, ls.pub)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(ls.service.Storage.Clients))
 }
 
@@ -451,13 +451,13 @@ func TestClient_Follow(t *testing.T) {
 	require.Equal(t, 0, len(ls.service.Storage.Clients))
 	priv0 := ls.servPriv
 	err := ls.client.CreateLinkPrivate(ls.si, priv0, ls.pub)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	priv1 := ls.local.GetPrivate(ls.servers[1])
 	err = ls.client.CreateLinkPrivate(ls.roster.List[1], priv1, ls.servers[1].ServerIdentity.Public)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	priv2 := ls.local.GetPrivate(ls.servers[2])
 	err = ls.client.CreateLinkPrivate(ls.roster.List[2], priv2, ls.servers[2].ServerIdentity.Public)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	log.Lvl1(ls.roster)
 
 	// Verify that server1 doesn't allow a new skipchain using server0 and server1
@@ -467,18 +467,18 @@ func TestClient_Follow(t *testing.T) {
 
 	roster0 := onet.NewRoster([]*network.ServerIdentity{ls.si})
 	genesis, err := ls.client.CreateGenesisSignature(roster0, 1, 1, VerificationNone, nil, priv0)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Now server1 follows skipchain from server0, so it should allow a new skipblock,
 	// but not a new skipchain
 	log.Lvl1("(0) Following skipchain-id only")
 	err = ls.client.AddFollow(ls.roster.List[1], priv1, genesis.SkipChainID(),
 		FollowID, NewChainStrictNodes, "")
-	require.Nil(t, err)
+	require.NoError(t, err)
 	block1, err := ls.client.StoreSkipBlockSignature(genesis, roster01, nil, priv0)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	genesis1, err := ls.client.CreateGenesisSignature(roster01, 1, 1, VerificationNone, nil, priv0)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	_, err = ls.client.StoreSkipBlockSignature(genesis1, roster01, nil, priv0)
 	require.NotNil(t, err)
 
@@ -487,13 +487,13 @@ func TestClient_Follow(t *testing.T) {
 	log.Lvl1("(1) Following roster of skipchain")
 	err = ls.client.AddFollow(ls.roster.List[1], priv1, genesis.SkipChainID(),
 		FollowSearch, NewChainStrictNodes, "")
-	require.Nil(t, err)
+	require.NoError(t, err)
 	block2, err := ls.client.StoreSkipBlockSignature(block1.Latest, roster01, nil, priv0)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	genesis2, err := ls.client.CreateGenesisSignature(roster01, 1, 1, VerificationNone, nil, priv0)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	_, err = ls.client.StoreSkipBlockSignature(genesis2, roster01, nil, priv0)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Finally test with third server
 	log.Lvl1("(1) Following skipchain-id only on server2")
@@ -503,11 +503,11 @@ func TestClient_Follow(t *testing.T) {
 	log.Lvl1("(2) Following skipchain-id only on server2")
 	err = ls.client.AddFollow(ls.roster.List[2], priv2, genesis.SkipChainID(),
 		FollowLookup, NewChainStrictNodes, ls.server.Address().NetworkAddress())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	_, err = ls.client.StoreSkipBlockSignature(block2.Latest, ls.roster, nil, priv0)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	_, err = ls.client.CreateGenesisSignature(ls.roster, 1, 1, VerificationNone, nil, priv0)
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func TestClient_DelFollow(t *testing.T) {
@@ -515,14 +515,14 @@ func TestClient_DelFollow(t *testing.T) {
 	defer ls.local.CloseAll()
 
 	sb, err := ls.client.CreateGenesis(ls.roster, 1, 1, VerificationNone, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	err = ls.client.AddFollow(ls.server.ServerIdentity, ls.priv, sb.SkipChainID(),
 		FollowID, NewChainNone, "")
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(ls.service.Storage.FollowIDs))
 
 	err = ls.client.DelFollow(ls.server.ServerIdentity, ls.priv, sb.SkipChainID())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 0, len(ls.service.Storage.FollowIDs))
 }
 
@@ -531,18 +531,18 @@ func TestClient_ListFollow(t *testing.T) {
 	defer ls.local.CloseAll()
 
 	sb1, err := ls.client.CreateGenesis(ls.roster, 1, 1, VerificationNone, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	err = ls.client.AddFollow(ls.server.ServerIdentity, ls.priv, sb1.SkipChainID(),
 		FollowID, NewChainNone, "")
-	require.Nil(t, err)
+	require.NoError(t, err)
 	sb2, err := ls.client.CreateGenesis(ls.roster, 1, 1, VerificationNone, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	err = ls.client.AddFollow(ls.server.ServerIdentity, ls.priv, sb2.SkipChainID(),
 		FollowLookup, NewChainNone, ls.server.ServerIdentity.Address.NetworkAddress())
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	list, err := ls.client.ListFollow(ls.server.ServerIdentity, ls.priv)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(*list.Follow))
 	require.Equal(t, 1, len(*list.FollowIDs))
 }
@@ -601,7 +601,7 @@ func TestClient_ParallelWrite(t *testing.T) {
 	cl := newTestClient(l)
 	msg := []byte("genesis")
 	gen, err := cl.CreateGenesis(ro, 2, 10, VerificationStandard, msg)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	s := l.Services[svrs[0].ServerIdentity.ID][sid].(*Service)
 
@@ -615,7 +615,7 @@ func TestClient_ParallelWrite(t *testing.T) {
 
 			for j := 0; j < numWrites; j++ {
 				_, err := cl.StoreSkipBlock(gen, nil, msg)
-				require.Nil(t, err)
+				require.NoError(t, err)
 			}
 			wg.Done()
 		}(i)
@@ -629,7 +629,7 @@ func TestClient_ParallelWrite(t *testing.T) {
 
 	// Read the chain back, check it.
 	reply, err := cl.GetUpdateChain(ro, gen.SkipChainID())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	for i, sb := range reply.Update {
 		if i == 0 {
 			require.True(t, sb.SkipChainID().Equal(gen.Hash))

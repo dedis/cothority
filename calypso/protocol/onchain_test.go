@@ -26,11 +26,11 @@ func TestOnchain(t *testing.T) {
 	nbrPeers := 5
 	threshold := 3
 	dkgs, err := CreateDKGs(suite.(dkg.Suite), nbrPeers, threshold)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 
 	// Get aggregate public share
 	dks, err := dkgs[0].DistKeyShare()
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	X := dks.Public()
 
 	// 5.1.2 - Encryption
@@ -52,7 +52,7 @@ func TestOnchain(t *testing.T) {
 	Ui := make([]*share.PubShare, nbrPeers)
 	for i := range Ui {
 		dks, err := dkgs[i].DistKeyShare()
-		log.ErrFatal(err)
+		require.NoError(t, err)
 		v := suite.Point().Mul(dks.Share.V, U)
 		v.Add(v, suite.Point().Mul(dks.Share.V, xc.Public))
 		Ui[i] = &share.PubShare{
@@ -63,15 +63,15 @@ func TestOnchain(t *testing.T) {
 
 	// XhatEnc is the re-encrypted share under the reader's public key
 	XhatEnc, err := share.RecoverCommit(suite, Ui, threshold, nbrPeers)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 
 	// Decrypt XhatEnc
 	keyHat, err := DecodeKey(suite, X, Cs, XhatEnc, xc.Private)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 
 	// Extract the message - keyHat is the recovered key
 	log.Lvl2(encData)
-	dataHat, err := aeadOpen(keyHat, encData)
+	dataHat, err := aeadOpen(t, keyHat, encData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -187,7 +187,7 @@ func aeadSeal(symKey, data []byte) ([]byte, error) {
 	return encData, nil
 }
 
-func aeadOpen(key, ciphertext []byte) ([]byte, error) {
+func aeadOpen(t *testing.T, key, ciphertext []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil,
@@ -198,7 +198,7 @@ func aeadOpen(key, ciphertext []byte) ([]byte, error) {
 	if err != nil {
 		return nil, xerrors.Errorf("creating aesgcm instance: %v", err)
 	}
-	log.ErrFatal(err)
+	require.NoError(t, err)
 
 	if len(ciphertext) < 12 {
 		return nil, xerrors.New("ciphertext too short")

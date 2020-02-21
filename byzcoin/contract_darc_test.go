@@ -21,11 +21,11 @@ func TestSecureDarc(t *testing.T) {
 	_, roster, _ := local.GenTree(3, true)
 
 	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{}, signer.Identity())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	gDarc := &genesisMsg.GenesisDarc
 	genesisMsg.BlockInterval = time.Second
 	cl, _, err := NewLedger(genesisMsg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	restrictedSigner := darc.NewSignerEd25519(nil, nil)
 	unrestrictedSigner := darc.NewSignerEd25519(nil, nil)
@@ -78,6 +78,7 @@ func TestSecureDarc(t *testing.T) {
 	log.Lvl1("spawn a darc with a version > 0 - fail")
 	secDarc.Version = 1
 	secDarcBuf, err = secDarc.ToProto()
+	require.NoError(t, err)
 	ctx, err = cl.CreateTransaction(Instruction{
 		InstanceID: NewInstanceID(gDarc.GetBaseID()),
 		Spawn: &Spawn{
@@ -101,6 +102,7 @@ func TestSecureDarc(t *testing.T) {
 		require.NoError(t, secDarc2.EvolveFrom(secDarc))
 		require.NoError(t, secDarc2.Rules.AddRule("spawn:coin", secDarc.Rules.Get(invokeEvolveUnrestricted)))
 		secDarc2Buf, err := secDarc2.ToProto()
+		require.NoError(t, err)
 		ctx2, err := cl.CreateTransaction(Instruction{
 			InstanceID: NewInstanceID(secDarc.GetBaseID()),
 			Invoke: &Invoke{
@@ -126,6 +128,7 @@ func TestSecureDarc(t *testing.T) {
 		// changing the signer to something else, then it should fail
 		require.NoError(t, secDarc2.Rules.UpdateRule(invokeEvolveUnrestricted, []byte(restrictedSigner.Identity().String())))
 		secDarc2Buf, err := secDarc2.ToProto()
+		require.NoError(t, err)
 		ctx2, err := cl.CreateTransaction(Instruction{
 			InstanceID: NewInstanceID(secDarc.GetBaseID()),
 			Invoke: &Invoke{
@@ -151,6 +154,7 @@ func TestSecureDarc(t *testing.T) {
 		secDarc2 := secDarc.Copy()
 		require.NoError(t, secDarc2.EvolveFrom(secDarc))
 		secDarc2Buf, err := secDarc2.ToProto()
+		require.NoError(t, err)
 		ctx2, err := cl.CreateTransaction(Instruction{
 			InstanceID: NewInstanceID(secDarc.GetBaseID()),
 			Invoke: &Invoke{
@@ -186,6 +190,7 @@ func TestSecureDarc(t *testing.T) {
 		require.NoError(t, myDarc2.EvolveFrom(&myDarc))
 		require.NoError(t, myDarc2.Rules.AddRule("spawn:coin", myDarc.Rules.Get(invokeEvolveUnrestricted)))
 		myDarc2Buf, err := myDarc2.ToProto()
+		require.NoError(t, err)
 		ctx2, err := cl.CreateTransaction(Instruction{
 			InstanceID: NewInstanceID(myDarc.GetBaseID()),
 			Invoke: &Invoke{
@@ -210,6 +215,7 @@ func TestSecureDarc(t *testing.T) {
 		require.NoError(t, myDarc2.EvolveFrom(&myDarc))
 		require.NoError(t, myDarc2.Rules.AddRule("spawn:coin", myDarc2.Rules.Get(invokeEvolveUnrestricted)))
 		myDarc2Buf, err := myDarc2.ToProto()
+		require.NoError(t, err)
 		ctx2, err := cl.CreateTransaction(Instruction{
 			InstanceID: NewInstanceID(myDarc.GetBaseID()),
 			Invoke: &Invoke{

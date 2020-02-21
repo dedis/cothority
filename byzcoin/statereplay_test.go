@@ -17,7 +17,7 @@ func TestService_StateReplay(t *testing.T) {
 	n := 2
 	for i := 0; i < n; i++ {
 		tx, err := createClientTxWithTwoInstrWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, uint64(i*2+1))
-		require.Nil(t, err)
+		require.NoError(t, err)
 
 		_, err = s.service().AddTransaction(&AddTxRequest{
 			Version:       CurrentVersion,
@@ -25,7 +25,7 @@ func TestService_StateReplay(t *testing.T) {
 			Transaction:   tx,
 			InclusionWait: 10,
 		})
-		require.Nil(t, err)
+		require.NoError(t, err)
 	}
 
 	cb := func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
@@ -49,7 +49,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 	defer s.local.CloseAll()
 
 	tx, err := createClientTxWithTwoInstrWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, uint64(1))
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	_, err = s.service().AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
@@ -57,7 +57,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 		Transaction:   tx,
 		InclusionWait: 10,
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// 1. error when fetching the genesis block
 	cb := func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
@@ -129,6 +129,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 
 		dHead.TrieRoot = []byte{1, 2, 3}
 		buf, err := protobuf.Encode(&dHead)
+		require.NoError(t, err)
 		sb.Data = buf
 		return sb, nil
 	}
@@ -154,6 +155,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 			},
 		})
 		buf, err := protobuf.Encode(&dBody)
+		require.NoError(t, err)
 		sb.Payload = buf
 
 		var dHead DataHeader
@@ -164,6 +166,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 
 		dHead.ClientTransactionHash = dBody.TxResults.Hash()
 		buf, err = protobuf.Encode(&dHead)
+		require.NoError(t, err)
 		sb.Data = buf
 		return sb, nil
 	}

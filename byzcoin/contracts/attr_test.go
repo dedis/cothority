@@ -36,8 +36,6 @@ type contractAttrValue struct {
 	value []byte
 }
 
-func notImpl(what string) error { return xerrors.Errorf("this contract does not implement %v", what) }
-
 func (c contractAttrValue) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
@@ -168,7 +166,7 @@ func TestAttrCustomRule(t *testing.T) {
 
 	genesisMsg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
 		[]string{"spawn:" + contractAttrValueID}, signer.Identity())
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	gDarc := &genesisMsg.GenesisDarc
 	// We are only allowed to invoke when the value contains a certain prefix and suffix
@@ -177,7 +175,7 @@ func TestAttrCustomRule(t *testing.T) {
 	genesisMsg.BlockInterval = time.Second
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	myvalue := []byte("abcdefgxyz")
 	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
@@ -317,7 +315,7 @@ func TestAttrBlockIndex(t *testing.T) {
 
 	genesisMsg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
 		[]string{"spawn:" + contractAttrValueID}, signer.Identity())
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	gDarc := &genesisMsg.GenesisDarc
 	// We are only allowed to invoke when the value contains a certain prefix and suffix
@@ -325,7 +323,7 @@ func TestAttrBlockIndex(t *testing.T) {
 	genesisMsg.BlockInterval = time.Second
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	myvalue := []byte("abcdefgxyz")
 	ctx, err := cl.CreateTransaction(byzcoin.Instruction{

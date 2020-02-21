@@ -20,13 +20,13 @@ func TestValue_Spawn(t *testing.T) {
 
 	genesisMsg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
 		[]string{"spawn:value"}, signer.Identity())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	gDarc := &genesisMsg.GenesisDarc
 
 	genesisMsg.BlockInterval = time.Second
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	myvalue := []byte("1234")
 	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
@@ -44,12 +44,12 @@ func TestValue_Spawn(t *testing.T) {
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransaction(ctx)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	pr, err := cl.WaitProof(byzcoin.NewInstanceID(ctx.Instructions[0].DeriveID("").Slice()), 2*genesisMsg.BlockInterval, myvalue)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, pr.InclusionProof.Match(ctx.Instructions[0].DeriveID("").Slice()))
 	v0, _, _, err := pr.Get(ctx.Instructions[0].DeriveID("").Slice())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, myvalue, v0)
 
 	local.WaitDone(genesisMsg.BlockInterval)
@@ -66,13 +66,13 @@ func TestValue_Invoke(t *testing.T) {
 
 	genesisMsg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
 		[]string{"spawn:value", "invoke:value.update"}, signer.Identity())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	gDarc := &genesisMsg.GenesisDarc
 
 	genesisMsg.BlockInterval = time.Second
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	myvalue := []byte("1234")
 	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
@@ -90,15 +90,15 @@ func TestValue_Invoke(t *testing.T) {
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransaction(ctx)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
 	pr, err := cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, myvalue)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, pr.InclusionProof.Match(myID.Slice()))
 
 	v0, _, _, err := pr.Get(myID.Slice())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, myvalue, v0)
 
 	local.WaitDone(genesisMsg.BlockInterval)
@@ -123,14 +123,14 @@ func TestValue_Invoke(t *testing.T) {
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransaction(ctx)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, myvalue)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, pr.InclusionProof.Match(myID.Slice()))
 
 	v0, _, _, err = pr.Get(myID.Slice())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, myvalue, v0)
 
 	local.WaitDone(genesisMsg.BlockInterval)

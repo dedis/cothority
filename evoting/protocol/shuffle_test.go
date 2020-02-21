@@ -166,7 +166,7 @@ func runShuffle(t *testing.T, n int) {
 
 	select {
 	case err := <-shuffle.Finished:
-		require.Nil(t, err)
+		require.NoError(t, err)
 		box, _ := election.Box(services[0].(*shuffleService).skipchain)
 		mixes, _ := election.Mixes(services[0].(*shuffleService).skipchain)
 

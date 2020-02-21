@@ -120,7 +120,7 @@ func (s *rstSimul) setCoin(id byzcoin.InstanceID, value uint64) error {
 	coin.Value = value
 	coinBuf, err := protobuf.Encode(&coin)
 	if err != nil {
-		err = xerrors.Errorf("couldn't encode coin: %+v", err)
+		return xerrors.Errorf("couldn't encode coin: %+v", err)
 	}
 	s.values[string(id[:])] = byzcoin.StateChangeBody{
 		StateAction: byzcoin.Update,
@@ -141,8 +141,9 @@ func (s *rstSimul) getCoin(id byzcoin.InstanceID) (coin byzcoin.Coin, err error)
 	if sc.ContractID != contracts.ContractCoinID {
 		err = xerrors.Errorf("id doesn't point to a coin, but to '%s'",
 			sc.ContractID)
+		return
 	}
-	if err := protobuf.Decode(sc.Value, &coin); err != nil {
+	if err = protobuf.Decode(sc.Value, &coin); err != nil {
 		err = xerrors.Errorf("couldn't decode coin: %+v", err)
 	}
 	return
