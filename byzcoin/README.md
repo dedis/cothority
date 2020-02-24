@@ -19,12 +19,12 @@ use them. It should grow over time as more parts of the system are implemented.
 - ByzCoin is a **distributed ledger**: a database that is
   distributed across several nodes, and where the authority to add changes
   to the database is decentralized.
-- To ensure that updates to the database are strictly ordered, ByzCoin
-  uses a **blockchain** called a **Skipchain**: every node has its local copy of the ledger
-  (database). Every change to the ledger is packed into a block that is
-  cryptographically chained to the previous one, and forward links in
-  the chain represent consensus among the verifiers that these changes
-  belong in the database.
+- To ensure that updates to the database are strictly ordered, ByzCoin uses a
+  **blockchain** called a **[Skipchain](../skipchain/README.md)**: every node
+  has its local copy of the ledger (database). Every change to the ledger is
+  packed into a block that is cryptographically chained to the previous one, and
+  forward links in the chain represent consensus among the verifiers that these
+  changes belong in the database.
 - In ByzCoin, the data are organised as instances of **Smart
   Contracts**, where a smart contract can be seen as a class and an
   instance an object of this class. In ByzCoin, one can *Spawn* a new
