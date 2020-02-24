@@ -84,7 +84,7 @@ describe("ByzCoinRPC Tests", () => {
         }
         expect(history.length).toBe(2);
         expect(history[1]).toBe("1-new");
-
+// Creating a new Darc, this should not update the history
         const newDarc = Darc.createBasic([SIGNER], [SIGNER],
             Buffer.from("darc 2"));
         await di.spawnDarcAndWait(newDarc, [SIGNER], 2);
