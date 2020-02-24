@@ -2193,7 +2193,7 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction,
 	var statesTemp StateChanges
 	var cin []Coin
 	for _, instr := range tx.Instructions {
-		scs, cout, err := s.executeInstruction(gs, cin, instr, h, scID)
+		scs, cout, err := s.executeInstruction(gs, cin, instr, h)
 		if err != nil {
 			_, _, cid, _, err2 := sst.GetValues(instr.InstanceID.Slice())
 			if err2 != nil {
@@ -2304,7 +2304,9 @@ func (s *Service) GetContractInstance(contractName string, in []byte) (Contract,
 	return c, nil
 }
 
-func (s *Service) executeInstruction(gs GlobalState, cin []Coin, instr Instruction, ctxHash []byte, scID skipchain.SkipBlockID) (scs StateChanges, cout []Coin, err error) {
+func (s *Service) executeInstruction(gs GlobalState, cin []Coin,
+	instr Instruction, ctxHash []byte) (scs StateChanges, cout []Coin,
+	err error) {
 	defer func() {
 		if re := recover(); re != nil {
 			err = xerrors.Errorf("executing instr: %v", re)
@@ -2313,7 +2315,7 @@ func (s *Service) executeInstruction(gs GlobalState, cin []Coin, instr Instructi
 
 	contents, _, contractID, _, err := gs.GetValues(instr.InstanceID.Slice())
 	if !xerrors.Is(err, errKeyNotSet) && err != nil {
-		err = xerrors.Errorf("Couldn't get contract type of instruction: %v", err)
+		err = xerrors.Errorf("couldn't get contract type of instruction: %v", err)
 		return
 	}
 

@@ -713,16 +713,6 @@ searchLatest:
 	return xerrors.New("didn't get the same blocks from everybody within 10 seconds")
 }
 
-// GetLatestTimestamp returns the timestamp of the latest known block
-func (c *Client) GetLatestTimestamp() (int64, error) {
-	header, err := decodeBlockHeader(c.getLatestKnownBlock())
-	if err != nil {
-		return 0, xerrors.Errorf("Failed to decode skipchain header: %v", err)
-	}
-
-	return header.Timestamp, nil
-}
-
 // Debug can be used to dump things from a byzcoin service. If byzcoinID is nil, it will return all
 // existing byzcoin instances. If byzcoinID is given, it will return all instances for that ID.
 func Debug(url string, byzcoinID *skipchain.SkipBlockID) (*DebugResponse, error) {

@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -351,11 +352,7 @@ func (client *Client) Call(account *EvmAccount,
 	}
 
 	// Compute timestamp for the EVM
-	timestamp, err := client.bcClient.GetLatestTimestamp()
-	if err != nil {
-		return nil, xerrors.Errorf("failed to retrieve ByzCoin "+
-			"timestamp: %v", err)
-	}
+	timestamp := time.Now().UnixNano()
 	// timestamp in ByzCoin is in [ns], whereas in EVM it is in [s]
 	evmTs := timestamp / 1e9
 

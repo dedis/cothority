@@ -116,18 +116,18 @@ func TestAttrBevm(t *testing.T) {
 			"spawn:" + valueContractID,
 		}, signer.Identity(),
 	)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	gDarc := &genesisMsg.GenesisDarc
 	genesisMsg.BlockInterval = time.Second
 
 	// Create new ledger
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Spawn a new BEvm instance
 	bevmID, err := NewBEvm(cl, signer, gDarc)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	log.LLvlf2("bevmID = %v", bevmID)
 
 	// Create a new BEvm client
@@ -137,23 +137,24 @@ func TestAttrBevm(t *testing.T) {
 
 	// Initialize an EVM account
 	acct, err := NewEvmAccount(testPrivateKeys[0])
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Credit the account
 	err = bevmClient.CreditAccount(big.NewInt(5*WeiPerEther), acct.Address)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Deploy a Verify contract (see Verify.sol in `testdata/Verify`)
 	verifyContract, err := NewEvmContract(
 		"Verify", getContractData(t, "Verify", "abi"),
 		getContractData(t, "Verify", "bin"))
-	require.Nil(t, err)
+	require.NoError(t, err)
 	verifyInstance, err := bevmClient.Deploy(txParams.GasLimit,
 		txParams.GasPrice, 0, acct, verifyContract)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Add rule to the DARC guarding "update" on the value contract with the
-	// `Verify.isGreater()` method
+	// `Verify.isGreater()` ethereum method defined in
+	// bevm/testdata/Verify/Verify.sol
 	newDarc := gDarc.Copy()
 	newDarc.EvolveFrom(gDarc)
 	darcAction := "invoke:" + valueContractID + ".update"
@@ -183,7 +184,7 @@ func TestAttrBevm(t *testing.T) {
 		SignerCounter: []uint64{getNextCounter(t, cl, signer)},
 	})
 	require.NoError(t, err)
-	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+	require.NoError(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.NoError(t, err)
@@ -224,7 +225,7 @@ func TestAttrBevm(t *testing.T) {
 		SignerCounter: []uint64{getNextCounter(t, cl, signer)},
 	})
 	require.NoError(t, err)
-	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+	require.NoError(t, ctx.FillSignersAndSignWith(signer))
 
 	resp, err := cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
@@ -244,7 +245,7 @@ func TestAttrBevm(t *testing.T) {
 		SignerCounter: []uint64{getNextCounter(t, cl, signer)},
 	})
 	require.NoError(t, err)
-	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+	require.NoError(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.NoError(t, err)
@@ -263,7 +264,7 @@ func TestAttrBevm(t *testing.T) {
 		SignerCounter: []uint64{getNextCounter(t, cl, signer)},
 	})
 	require.NoError(t, err)
-	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+	require.NoError(t, ctx.FillSignersAndSignWith(signer))
 
 	resp, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)

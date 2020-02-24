@@ -200,25 +200,25 @@ func Test_Time(t *testing.T) {
 
 	// Retrieve stored time
 	storedTime, err := bevmClient.Call(a, timeTestInstance, "getStoredTime")
-	require.Nil(t, err)
+	require.NoError(t, err)
 	// Unitialized -- 0
 	assertBigInt0(t, storedTime.(*big.Int))
 
 	// Store current time
 	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a,
 		timeTestInstance, "storeCurrentTime")
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Retrieve stored time
 	storedTime, err = bevmClient.Call(a, timeTestInstance, "getStoredTime")
-	require.Nil(t, err)
+	require.NoError(t, err)
 	// Should be within 2 sec of `now`
 	require.GreaterOrEqual(t, now+2, storedTime.(*big.Int).Int64())
 	require.GreaterOrEqual(t, storedTime.(*big.Int).Int64(), now)
 
 	// Retrieve current time
 	currentTime, err := bevmClient.Call(a, timeTestInstance, "getCurrentTime")
-	require.Nil(t, err)
+	require.NoError(t, err)
 	// Should be within 2 sec of `now`
 	require.GreaterOrEqual(t, now+2, currentTime.(*big.Int).Int64())
 	require.GreaterOrEqual(t, currentTime.(*big.Int).Int64(), now)
