@@ -27,7 +27,7 @@ use them. It should grow over time as more parts of the system are implemented.
   belong in the database.
 - In ByzCoin, the data are organised as instances of **Smart
   Contracts**, where a smart contract can be seen as a class and an
-  instance an object of this class. In ByzCoin, one can *Spawn* a new
+  instance as an object of this class. In ByzCoin, one can *Spawn* a new
   instance of a contract, *Invoke* a command (or method) on an existing
   instance, or *Delete* an instance. *Spawn*, *Invoke*, and *Delete*
   represent all the possible actions a user can do to update the ledger.
