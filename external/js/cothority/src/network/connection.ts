@@ -87,7 +87,7 @@ export class WebSocketConnection implements IConnection {
         if (url.username !== "" || url.password !== "") {
             throw new Error("addr contains authentication, which is not supported");
         }
-        if (url.pathname !== "/" || url.search !== "" || url.hash !== "") {
+        if (url.search !== "" || url.hash !== "") {
             throw new Error("addr contains more data than the origin");
         }
 
@@ -104,7 +104,7 @@ export class WebSocketConnection implements IConnection {
 
     /** @inheritdoc */
     getURL(): string {
-        return this.url.origin;
+        return this.url.href;
     }
 
     /** @inheritdoc */
@@ -153,7 +153,7 @@ export class WebSocketConnection implements IConnection {
 
         return new Observable((sub) => {
             const url = new URL(this.url.href);
-            url.pathname = `/${this.service}/${message.$type.name.replace(/.*\./, "")}`;
+            url.pathname =  `${url.pathname}/${this.service}/${message.$type.name.replace(/.*\./, "")}`;
             Log.lvl4(`Socket: new WebSocket(${url.href})`);
             const ws = factory(url.href);
             const bytes = Buffer.from(message.$type.encode(message).finish());
