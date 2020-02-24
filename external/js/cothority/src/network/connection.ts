@@ -153,7 +153,11 @@ export class WebSocketConnection implements IConnection {
 
         return new Observable((sub) => {
             const url = new URL(this.url.href);
-            url.pathname =  `${url.pathname}/${this.service}/${message.$type.name.replace(/.*\./, "")}`;
+            let prefix = "";
+            if (url.pathname !== "/") {
+                prefix = url.pathname;
+            }
+            url.pathname =  `${prefix}/${this.service}/${message.$type.name.replace(/.*\./, "")}`;
             Log.lvl4(`Socket: new WebSocket(${url.href})`);
             const ws = factory(url.href);
             const bytes = Buffer.from(message.$type.encode(message).finish());
