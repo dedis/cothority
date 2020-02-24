@@ -92,7 +92,7 @@ describe("ByzCoinRPC Tests", () => {
             expect(history.length).toBe(2);
             await wait100ms();
         }
-
+// Getting a new proofObservable on the previously updated Darc should return the latest version of the Darc
         const latestProof = (await rpc.proofObservable(darc.getBaseID())).getValue();
         expect(latestProof.stateChangeBody.version.equals(Long.fromNumber(1)))
             .toBeTruthy();
