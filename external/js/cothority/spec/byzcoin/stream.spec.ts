@@ -1,8 +1,7 @@
+import { Log } from "../../src";
 import ByzCoinRPC from "../../src/byzcoin/byzcoin-rpc";
 import { PaginateRequest, PaginateResponse } from "../../src/byzcoin/proto/stream";
-import { WebSocketAdapter } from "../../src/network";
 import { WebSocketConnection } from "../../src/network/connection";
-import { SkipchainRPC } from "../../src/skipchain";
 import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/conondes";
 
 describe("Stream Tests", () => {
@@ -23,16 +22,15 @@ describe("Stream Tests", () => {
 
         const msg = new PaginateRequest({startid: rpc.genesisID, pagesize: 1, numpages: 1,  backward: false});
 
-        const foo = {
-            onClose: (code: number, reason: string) => {
-                expect(code).toEqual(1000);
+        conn.sendStream<PaginateResponse>(msg, PaginateResponse).subscribe({
+            complete: () => {
                 done();
             },
-            onError: (err: Error) => {
+            error: (err: Error) => {
                 fail("onError should not be called: " + err.message);
                 done();
             },
-            onMessage: (message: PaginateResponse, ws: WebSocketAdapter) => {
+            next: ([message, ws]) => {
                 expect(message.blocks.length).toEqual(1);
                 expect(message.blocks[0].hash).toEqual(rpc.genesisID);
                 expect(message.backward).toBe(false);
@@ -41,9 +39,7 @@ describe("Stream Tests", () => {
                 expect(message.pagenumber.toString()).toEqual("0");
                 ws.close(1000);
             },
-        };
-
-        conn.sendStream<PaginateResponse>(msg, PaginateResponse, foo.onMessage, foo.onClose, foo.onError);
+        });
     });
 
     afterAll( () => {

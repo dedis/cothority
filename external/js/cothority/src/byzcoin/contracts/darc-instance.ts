@@ -175,7 +175,7 @@ export default class DarcInstance extends Instance {
         ];
 
         await this.spawnInstanceAndWait(DarcInstance.contractID, args, signers, wait);
-        return DarcInstance.fromByzcoin(this.rpc, d.getBaseID());
+        return DarcInstance.fromByzcoin(this.rpc, d.getBaseID(), wait);
     }
 
     /**

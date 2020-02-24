@@ -1,4 +1,5 @@
 import { Message, util } from "protobufjs/light";
+import { Observable } from "rxjs";
 import Log from "../log";
 import { Nodes } from "./nodes";
 import { Roster } from "./proto";
@@ -51,14 +52,10 @@ export interface IConnection {
      * Send a message to the distant peer
      * @param message Protobuf compatible message
      * @param reply Protobuf type of the reply
-     * @param onMessage function called when a message is received
-     * @param onClose function called when the connection closes
-     * @param onError function called when an error occurs
      */
-    sendStream<T extends Message>(message: Message, reply: typeof Message,
-                                  onMessage: (data: T, ws: WebSocketAdapter) => void,
-                                  onClose: (code: number, reason: string) => void,
-                                  onError: (err: Error) => void): WebSocketAdapter;
+    sendStream<T extends Message>(message: Message, reply: typeof Message):
+        Observable<[T, WebSocketAdapter]>;
+
     /**
      * Sets how many nodes will be contacted in parallel
      * @deprecated - don't use IConnection for that, but rather directly a
@@ -117,61 +114,14 @@ export class WebSocketConnection implements IConnection {
 
     /** @inheritdoc */
     async send<T extends Message>(message: Message, reply: typeof Message): Promise<T> {
-        if (!message.$type) {
-            return Promise.reject(new Error(`message "${message.constructor.name}" is not registered`));
-        }
-
-        if (!reply.$type) {
-            return Promise.reject(new Error(`message "${reply}" is not registered`));
-        }
-
-        return new Promise((resolve, reject) => {
-            const url = new URL(this.url.href);
-            url.pathname = `/${this.service}/${message.$type.name.replace(/.*\./, "")}`;
-            Log.lvl4(`Socket: new WebSocket(${url.href})`);
-            const ws = factory(url.href);
-            const bytes = Buffer.from(message.$type.encode(message).finish());
-
-            const timer = setTimeout(() => ws.close(1000, "timeout"), this.timeout);
-
-            ws.onOpen(() => {
-                Log.lvl3("Sending message to", url.href);
-                ws.send(bytes);
-            });
-
-            ws.onMessage((data: Buffer) => {
-                clearTimeout(timer);
-                const buf = Buffer.from(data);
-                Log.lvl4("Getting message with length:", buf.length);
-
-                try {
-                    const ret = reply.decode(buf) as T;
-
-                    resolve(ret);
-                } catch (err) {
-                    if (err instanceof util.ProtocolError) {
-                        reject(err);
-                    } else {
-                        reject(
-                            new Error(`Error when trying to decode the message "${reply.$type.name}": ${err.message}`),
-                        );
-                    }
-                }
-
-                ws.close(1000);
-            });
-
-            ws.onClose((code: number, reason: string) => {
-                // nativescript-websocket on iOS doesn't return error-code 1002 in case of error, but sets the 'reason'
-                // to non-null in case of error.
-                if (code !== 1000 || reason) {
-                    reject(new Error(reason));
-                }
-            });
-
-            ws.onError((err: Error) => {
-                clearTimeout(timer);
-                reject(new Error(`error in websocket ${url.href}: ${err.message}`));
+        return new Promise((complete, error) => {
+            this.sendStream(message, reply).subscribe({
+                complete,
+                error,
+                next: ([m, ws]) => {
+                    complete(m as T);
+                    ws.close(1000);
+                },
             });
         });
     }
@@ -191,67 +141,69 @@ export class WebSocketConnection implements IConnection {
     }
 
     /** @inheritdoc */
-    sendStream<T extends Message>(message: Message, reply: typeof Message,
-                                  onMessage: (data: T, ws: WebSocketAdapter) => void,
-                                  onClose: (code: number, reason: string) => void,
-                                  onError: (err: Error) => void): WebSocketAdapter {
+    sendStream<T extends Message>(message: Message, reply: typeof Message):
+        Observable<[T, WebSocketAdapter]> {
 
         if (!message.$type) {
-            onError(new Error(`message "${message.constructor.name}" is not registered`));
-            return;
+            throw new Error(`message "${message.constructor.name}" is not registered`);
         }
-
         if (!reply.$type) {
-            onError(new Error(`message "${reply}" is not registered`));
-            return;
+            throw new Error(`message "${reply.constructor.name}" is not registered`);
         }
 
-        const path = `${this.getURL()}/${this.service}/${message.$type.name.replace(/.*\./, "")}`;
-        Log.lvl4(`Socket: new WebSocket(${path})`);
-        const ws = factory(path);
-        const bytes = Buffer.from(message.$type.encode(message).finish());
-        const timer = setTimeout(() => ws.close(1000, "timeout"), this.timeout);
-        ws.onOpen(() => {
-            Log.lvl3("Sending message to", path);
-            ws.send(bytes);
-        });
+        return new Observable((sub) => {
+            const url = new URL(this.url.href);
+            url.pathname = `/${this.service}/${message.$type.name.replace(/.*\./, "")}`;
+            Log.lvl4(`Socket: new WebSocket(${url.href})`);
+            const ws = factory(url.href);
+            const bytes = Buffer.from(message.$type.encode(message).finish());
+            const timer = setTimeout(() => ws.close(1000, "timeout"), this.timeout);
 
-        ws.onMessage((data: Buffer) => {
-            clearTimeout(timer);
-            const buf = Buffer.from(data);
-            Log.lvl4("Getting message with length:", buf.length);
+            ws.onOpen(() => {
+                Log.lvl3("Sending message to", url.href);
+                ws.send(bytes);
+            });
 
-            try {
-                const ret = reply.decode(buf) as T;
-                onMessage(ret, ws);
-            } catch (err) {
-                if (err instanceof util.ProtocolError) {
-                    onError(err);
-                } else {
-                    onError(
-                        new Error(`Error when trying to decode the message "${reply.$type.name}": ${err.message}`),
-                    );
+            ws.onMessage((data: Buffer) => {
+                clearTimeout(timer);
+                const buf = Buffer.from(data);
+                Log.lvl4("Getting message with length:", buf.length);
+
+                try {
+                    const ret = reply.decode(buf) as T;
+                    sub.next([ret, ws]);
+                } catch (err) {
+                    if (err instanceof util.ProtocolError) {
+                        sub.error(err);
+                    } else {
+                        sub.error(
+                            new Error(`Other error: ${err}`),
+                        );
+                    }
                 }
-            }
+            });
+
+            ws.onClose((code: number, reason: string) => {
+                // nativescript-websocket on iOS doesn't return error-code 1002 in case of error, but sets the 'reason'
+                // to non-null in case of error.
+                if (code !== 1000 || (reason && reason !== "")) {
+                    sub.error(new Error(reason));
+                } else {
+                    sub.complete();
+                }
+            });
+
+            ws.onError((err: Error) => {
+                clearTimeout(timer);
+
+                if (err !== undefined) {
+                    sub.error(new Error(`error in websocket ${url.href}: ${err.message}`));
+                } else {
+                    sub.complete();
+                }
+            });
+
         });
-
-        ws.onClose((code: number, reason: string) => {
-            // nativescript-websocket on iOS doesn't return error-code 1002 in case of error, but sets the 'reason'
-            // to non-null in case of error.
-            if (code !== 1000 || reason) {
-                onError(new Error(reason));
-            } else {
-                onClose(code, reason);
-            }
-        });
-
-        ws.onError((err: Error) => {
-            clearTimeout(timer);
-
-            onError(new Error("error in websocket " + path + ": " + err));
-        });
-
-        return ws;
     }
 }
 
@@ -373,44 +325,10 @@ export class RosterWSConnection implements IConnection {
     }
 
     /** @inheritdoc */
-    sendStream<T extends Message>(message: Message, reply: typeof Message,
-                                  onMessage: (data: T, ws: WebSocketAdapter) => void,
-                                  onClose: (code: number, reason: string) => void,
-                                  onError: (err: Error) => void): WebSocketAdapter {
-
-        const errors: string[] = [];
-        const msgNbr = this.msgNbr;
-        this.msgNbr++;
+    sendStream<T extends Message>(message: Message, reply: typeof Message):
+        Observable<[T, WebSocketAdapter]> {
         const list = this.nodes.newList(this.service, this.parallel);
-        const pool = list.active;
-
-        Log.lvl3(`${this.connNbr}/${msgNbr}`, "sending", message.constructor.name, "with list:",
-            pool.map((conn) => conn.getURL()));
-
-        // Get the first reply - need to take care not to return a reject too soon, else
-        // all other promises will be ignored.
-        // The promises that never 'resolve' or 'reject' will later be collected by GC:
-        // https://stackoverflow.com/questions/36734900/what-happens-if-we-dont-resolve-or-reject-the-promise
-        let ws: WebSocketAdapter;
-        pool.map((conn) => {
-            do {
-                const idStr = `${this.connNbr}/${msgNbr.toString()}: ${conn.getURL()}`;
-                try {
-                    Log.lvl3(idStr, "sending");
-                    ws = conn.sendStream(message, reply, onMessage, onClose, onError);
-                    Log.lvl3(idStr, "received OK");
-                    if (list.done(conn) === 0) {
-                        Log.lvl3(idStr, "first to receive");
-                    }
-                    return;
-                } catch (e) {
-                    Log.lvl3(idStr, "has error", e);
-                    onError(e);
-                    conn = list.replace(conn);
-                }
-            } while (conn !== undefined);
-        });
-        return ws;
+        return list.active[0].sendStream(message, reply);
     }
 
     /**
