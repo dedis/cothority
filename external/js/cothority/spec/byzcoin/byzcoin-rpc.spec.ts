@@ -61,7 +61,7 @@ describe("ByzCoinRPC Tests", () => {
         const darc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster, "initial");
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL, cache);
 
-        const instUpdate = await rpc.proofObservable(darc.getBaseID());
+        const instUpdate = await rpc.instanceObservable(darc.getBaseID());
         const history: string[] = [];
         instUpdate.subscribe((inst) => {
             const d = Darc.decode(inst.value);
@@ -93,7 +93,7 @@ describe("ByzCoinRPC Tests", () => {
             await wait100ms();
         }
 // Getting a new proofObservable on the previously updated Darc should return the latest version of the Darc
-        const latestProof = (await rpc.proofObservable(darc.getBaseID())).getValue();
+        const latestProof = (await rpc.instanceObservable(darc.getBaseID())).getValue();
         expect(latestProof.stateChangeBody.version.equals(Long.fromNumber(1)))
             .toBeTruthy();
 

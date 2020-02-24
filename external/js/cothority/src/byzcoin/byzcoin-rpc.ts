@@ -200,7 +200,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * @param id of the instance to return
      * @throws an error if the instance does not exist
      */
-    async proofObservable(id: InstanceID): Promise<BehaviorSubject<Proof>> {
+    async instanceObservable(id: InstanceID): Promise<BehaviorSubject<Proof>> {
         const bs = this.cache.get(id);
         if (bs !== undefined) {
             return bs;
