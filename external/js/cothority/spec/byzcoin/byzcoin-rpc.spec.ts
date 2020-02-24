@@ -68,7 +68,7 @@ describe("ByzCoinRPC Tests", () => {
             history.push(`${d.version}-${d.description.toString()}`);
         });
         expect(history[0]).toBe("0-initial");
-
+// Evolving the Darc we observe, we expect the history to be updated
         const di = await DarcInstance.fromByzcoin(rpc, darc.getBaseID());
         const newDI = new Darc({
             ...darc.evolve(),
