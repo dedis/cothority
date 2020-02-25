@@ -148,6 +148,11 @@ describe("WebSocketAdapter Tests", () => {
         expect(conn2.getURL()).toBe("wss://a:1234");
     });
 
+    it("should support having an URL with a pathname", async () => {
+        const conn = new WebSocketConnection("ws://a:1234/path", "");
+        expect(conn.getURL()).toBe("ws://a:1234/path");
+    });
+
 });
 
 describe("WebSocketAdapter Tests with sendStream", () => {
