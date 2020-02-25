@@ -181,7 +181,7 @@ export default class SkipchainRPC {
             const last = newBlocks[newBlocks.length - 1];
             let isInRoster = false;
             for (const n of last.roster.list) {
-                if (new URL(n.getWebSocketAddress()).href === new URL(this.conn.getURL()).href) {
+                if (n.getWebSocketAddress() === this.conn.getURL()) {
                     isInRoster = true;
                     break;
                 }
