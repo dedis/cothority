@@ -173,13 +173,7 @@ export class WebSocketConnection implements IConnection {
                     const ret = reply.decode(buf) as T;
                     sub.next([ret, ws]);
                 } catch (err) {
-                    if (err instanceof util.ProtocolError) {
-                        sub.error(err);
-                    } else {
-                        sub.error(
-                            new Error(`Other error: ${err}`),
-                        );
-                    }
+                    sub.error(err);
                 }
             });
 
