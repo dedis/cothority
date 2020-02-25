@@ -110,12 +110,9 @@ export class WebSocketConnection implements IConnection {
 
     /** @inheritdoc */
     getURL(): string {
-        // Retro compatibility: in the case there is no pathname we don't want
-        // the extra "/", thus using url.origin
-        if (this.url.pathname === "/") {
-            return this.url.origin;
-        }
-        return this.url.href;
+        // Retro compatibility: this.url always ends with a slash, but the old
+        // behavior needs no trailing slash
+        return this.url.href.slice(0, -1);
     }
 
     /** @inheritdoc */
