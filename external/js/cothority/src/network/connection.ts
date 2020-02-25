@@ -84,6 +84,12 @@ export class WebSocketConnection implements IConnection {
         } else {
             url = addr;
         }
+        // We want any pathname to contain a "/" at the end. This is motivated
+        // by the fact that URL will not allow you to have an empty pathname,
+        // which will always equal to "/" if there isn't any
+        if (url.pathname.slice(-1) !== "/") {
+            url.pathname = url.pathname + "/";
+        }
         if (url.username !== "" || url.password !== "") {
             throw new Error("addr contains authentication, which is not supported");
         }
@@ -153,11 +159,7 @@ export class WebSocketConnection implements IConnection {
 
         return new Observable((sub) => {
             const url = new URL(this.url.href);
-            let prefix = "";
-            if (url.pathname !== "/") {
-                prefix = url.pathname;
-            }
-            url.pathname =  `${prefix}/${this.service}/${message.$type.name.replace(/.*\./, "")}`;
+            url.pathname =  `${url.pathname}${this.service}/${message.$type.name.replace(/.*\./, "")}`;
             Log.lvl4(`Socket: new WebSocket(${url.href})`);
             const ws = factory(url.href);
             const bytes = Buffer.from(message.$type.encode(message).finish());
