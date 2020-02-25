@@ -130,14 +130,14 @@ describe("WebSocketAdapter Tests", () => {
         });
 
         const conn = new LeaderConnection(roster, "");
-        expect(conn.getURL()).toBe("ws://a:1235/");
+        expect(conn.getURL()).toBe("ws://a:1235");
 
         expect(() => new LeaderConnection(new Roster(), "")).toThrow();
     });
 
     it("should switch to wss in https context", async () => {
         const conn = new WebSocketConnection("ws://a:1234", "");
-        expect(conn.getURL()).toBe("ws://a:1234/");
+        expect(conn.getURL()).toBe("ws://a:1234");
 
         globalThis.location = {
             ...globalThis.location,
@@ -145,7 +145,7 @@ describe("WebSocketAdapter Tests", () => {
         };
 
         const conn2 = new WebSocketConnection("ws://a:1234", "");
-        expect(conn2.getURL()).toBe("wss://a:1234/");
+        expect(conn2.getURL()).toBe("wss://a:1234");
     });
 
 });
