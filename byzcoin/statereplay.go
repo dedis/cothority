@@ -147,14 +147,14 @@ func (s *Service) ReplayStateContLog(id skipchain.SkipBlockID,
 					txAccepted++
 					var scsTmp StateChanges
 					scsTmp, sst, err = s.processOneTx(sst, tx.ClientTransaction,
-						id)
+						id, dHead.Timestamp)
 					if err != nil {
 						return nil, replayError(sb, err)
 					}
 
 					scs = append(scs, scsTmp...)
 				} else {
-					_, _, err = s.processOneTx(sst, tx.ClientTransaction, id)
+					_, _, err = s.processOneTx(sst, tx.ClientTransaction, id, dHead.Timestamp)
 					if err == nil {
 						return nil, replayError(sb, xerrors.New("refused transaction passes"))
 					}

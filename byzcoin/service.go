@@ -1016,8 +1016,13 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 	var err error
 	var txRes TxResults
 
+	// Determine new block timestamp.
+	// It will be passed to createStateChanges() so that instructions can
+	// access it if needed.
+	timestamp := time.Now().UnixNano()
+
 	log.Lvl3("Creating state changes")
-	mr, txRes, scs, _ = s.createStateChanges(sst, scID, tx, noTimeout, version)
+	mr, txRes, scs, _ = s.createStateChanges(sst, scID, tx, noTimeout, version, timestamp)
 	if len(txRes) == 0 {
 		return nil, xerrors.New("no transactions")
 	}
@@ -1033,7 +1038,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		TrieRoot:              mr,
 		ClientTransactionHash: txRes.Hash(),
 		StateChangesHash:      scs.Hash(),
-		Timestamp:             time.Now().UnixNano(),
+		Timestamp:             timestamp,
 		Version:               version,
 	}
 	sb.Data, err = protobuf.Encode(header)
@@ -1105,7 +1110,8 @@ func (s *Service) createUpgradeVersionBlock(scID skipchain.SkipBlockID, version 
 	}
 
 	sst := st.MakeStagingStateTrie()
-	mr, txRes, scs, _ := s.createStateChanges(sst, scID, []TxResult{}, noTimeout, version)
+	timestamp := time.Now().UnixNano()
+	mr, txRes, scs, _ := s.createStateChanges(sst, scID, []TxResult{}, noTimeout, version, timestamp)
 
 	sb.Payload, err = protobuf.Encode(&DataBody{TxResults: TxResults{}})
 	if err != nil {
@@ -1116,7 +1122,7 @@ func (s *Service) createUpgradeVersionBlock(scID skipchain.SkipBlockID, version 
 		TrieRoot:              mr,
 		ClientTransactionHash: txRes.Hash(),
 		StateChangesHash:      scs.Hash(),
-		Timestamp:             time.Now().UnixNano(),
+		Timestamp:             timestamp,
 		Version:               version,
 	})
 	if err != nil {
@@ -1580,7 +1586,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	}
 
 	log.Lvlf2("%s Updating %d transactions for %x on index %v", s.ServerIdentity(), len(body.TxResults), sb.SkipChainID(), sb.Index)
-	_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), sb.SkipChainID(), body.TxResults, noTimeout, header.Version)
+	_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), sb.SkipChainID(), body.TxResults, noTimeout, header.Version, header.Timestamp)
 
 	log.Lvlf3("%s Storing index %d with %d state changes %v", s.ServerIdentity(), sb.Index, len(scs), scs.ShortStrings())
 	// Update our global state using all state changes.
@@ -1981,7 +1987,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 			return false
 		}
 	}
-	mtr, txOut, scs, _ := s.createStateChanges(sst, newSB.SkipChainID(), body.TxResults, noTimeout, header.Version)
+	mtr, txOut, scs, _ := s.createStateChanges(sst, newSB.SkipChainID(), body.TxResults, noTimeout, header.Version, header.Timestamp)
 
 	// Check that the locally generated list of accepted/rejected txs match the list
 	// the leader proposed.
@@ -2077,7 +2083,7 @@ func txSize(txr ...TxResult) (out int) {
 // State caching is implemented here, which is critical to performance, because
 // on the leader it reduces the number of contract executions by 1/3 and on
 // followers by 1/2.
-func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipBlockID, txIn TxResults, timeout time.Duration, version Version) (
+func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipBlockID, txIn TxResults, timeout time.Duration, version Version, timestamp int64) (
 	merkleRoot []byte, txOut TxResults, states StateChanges, sstTemp *stagingStateTrie) {
 	// Make sure that we're using the correct implementation for the
 	// version of the byzcoin protocol.
@@ -2109,7 +2115,7 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 
 		var sstTempC *stagingStateTrie
 		var statesTemp StateChanges
-		statesTemp, sstTempC, err = s.processOneTx(sstTemp, tx.ClientTransaction, scID)
+		statesTemp, sstTempC, err = s.processOneTx(sstTemp, tx.ClientTransaction, scID, timestamp)
 		if err != nil {
 			tx.Accepted = false
 			txOut = append(txOut, tx)
@@ -2172,17 +2178,22 @@ func (s *Service) addError(tx ClientTransaction, err error) {
 // also returns the temporary StateTrie with the StateChanges applied. Any data
 // from the trie should be read from sst and not the service.
 func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction,
-	scID skipchain.SkipBlockID) (StateChanges, *stagingStateTrie, error) {
+	scID skipchain.SkipBlockID, timestamp int64) (StateChanges, *stagingStateTrie, error) {
 
 	// Make a new trie for each instruction. If the instruction is
 	// sucessfully implemented and changes applied, then keep it
 	// otherwise dump it.
 	sst = sst.Clone()
+
+	// convert ReadOnlyStateTrie to a GlobalState so that contracts may cast it if they wish
+	roSC := newROSkipChain(s.skService(), scID)
+	gs := globalState{sst, roSC, &currentBlockInfo{timestamp}}
+
 	h := tx.Instructions.Hash()
 	var statesTemp StateChanges
 	var cin []Coin
 	for _, instr := range tx.Instructions {
-		scs, cout, err := s.executeInstruction(sst, cin, instr, h, scID)
+		scs, cout, err := s.executeInstruction(gs, cin, instr, h)
 		if err != nil {
 			_, _, cid, _, err2 := sst.GetValues(instr.InstanceID.Slice())
 			if err2 != nil {
@@ -2293,20 +2304,18 @@ func (s *Service) GetContractInstance(contractName string, in []byte) (Contract,
 	return c, nil
 }
 
-func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Instruction, ctxHash []byte, scID skipchain.SkipBlockID) (scs StateChanges, cout []Coin, err error) {
+func (s *Service) executeInstruction(gs GlobalState, cin []Coin,
+	instr Instruction, ctxHash []byte) (scs StateChanges, cout []Coin,
+	err error) {
 	defer func() {
 		if re := recover(); re != nil {
 			err = xerrors.Errorf("executing instr: %v", re)
 		}
 	}()
 
-	// convert ReadOnlyStateTrie to a GlobalState so that contracts may cast it if they wish
-	roSC := newROSkipChain(s.skService(), scID)
-	gs := globalState{st, roSC}
-
 	contents, _, contractID, _, err := gs.GetValues(instr.InstanceID.Slice())
 	if !xerrors.Is(err, errKeyNotSet) && err != nil {
-		err = xerrors.Errorf("Couldn't get contract type of instruction: %v", err)
+		err = xerrors.Errorf("couldn't get contract type of instruction: %v", err)
 		return
 	}
 
@@ -2813,7 +2822,7 @@ func (s *Service) repairStateTrie(from *skipchain.SkipBlock, st *stateTrie) erro
 			return xerrors.Errorf("decoding body: %v", err)
 		}
 
-		_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), from.SkipChainID(), body.TxResults, noTimeout, header.Version)
+		_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), from.SkipChainID(), body.TxResults, noTimeout, header.Version, header.Timestamp)
 
 		// Update our global state using all state changes.
 		if st.GetIndex()+1 != from.Index {

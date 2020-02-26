@@ -219,6 +219,8 @@ message Invoke {
 message Delete {
   // ContractID represents the kind of contract that is being deleted.
   required string contractid = 1;
+  // Args holds all data necessary to delete the instance.
+  repeated Argument args = 2;
 }
 
 // Argument is a name/value pair that will be passed to the contract.

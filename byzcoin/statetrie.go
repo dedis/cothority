@@ -18,6 +18,7 @@ var errKeyNotSet = xerrors.New("key not set")
 type GlobalState interface {
 	ReadOnlyStateTrie
 	ReadOnlySkipChain
+	TimeReader
 }
 
 // ReadOnlyStateTrie is the read-only interface for StagingStateTrie and
@@ -50,9 +51,15 @@ type ReadOnlySkipChain interface {
 	GetBlockByIndex(idx int) (*skipchain.SkipBlock, error)
 }
 
+// TimeReader is an interface allowing to access time-related information
+type TimeReader interface {
+	GetCurrentBlockTimestamp() int64
+}
+
 type globalState struct {
 	ReadOnlyStateTrie
 	ReadOnlySkipChain
+	TimeReader
 }
 
 var _ GlobalState = (*globalState)(nil)
@@ -333,6 +340,14 @@ func (s *roSkipChain) GetBlockByIndex(idx int) (*skipchain.SkipBlock, error) {
 		return nil, xerrors.Errorf("reading block: %v", err)
 	}
 	return reply.SkipBlock, nil
+}
+
+type currentBlockInfo struct {
+	timestamp int64
+}
+
+func (info *currentBlockInfo) GetCurrentBlockTimestamp() int64 {
+	return info.timestamp
 }
 
 type metadataReader interface {

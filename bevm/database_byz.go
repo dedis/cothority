@@ -38,6 +38,77 @@ func (db *ByzDatabase) Close() {}
 
 // ---------------------------------------------------------------------------
 
+// StateTrieByzDatabase is the ByzDatabase version specialized for client
+// (read-only) use, retrieving information using a read-only StateTrie
+type StateTrieByzDatabase struct {
+	ByzDatabase
+	rst byzcoin.ReadOnlyStateTrie
+}
+
+// NewStateTrieByzDatabase creates a new ByzDatabase for client use
+func NewStateTrieByzDatabase(bevmIID byzcoin.InstanceID,
+	rst byzcoin.ReadOnlyStateTrie) (
+	*StateTrieByzDatabase, error) {
+	return &StateTrieByzDatabase{
+		ByzDatabase: ByzDatabase{
+			bevmIID: bevmIID,
+		},
+		rst: rst,
+	}, nil
+}
+
+// ethdb.Database interface implementation (client version)
+
+// Put implements Putter.Put()
+func (db *StateTrieByzDatabase) Put(key []byte, value []byte) error {
+	return xerrors.New("Put() not allowed on StateTrieByzDatabase")
+}
+
+// Retrieve the value from a BEVM value instance
+func (db *StateTrieByzDatabase) getBEvmValue(key []byte) ([]byte, error) {
+	instID := db.getValueInstanceID(key)
+
+	// Retrieve the value associated to the key
+	value, _, _, _, err := db.rst.GetValues(instID[:])
+	if err != nil {
+		return nil, xerrors.Errorf("failed to retrieve BEvmValue "+
+			"instance for EVM state DB: %v", err)
+	}
+
+	return value, nil
+}
+
+// Has implements Has()
+func (db *StateTrieByzDatabase) Has(key []byte) (bool, error) {
+	_, err := db.getBEvmValue(key)
+
+	return (err == nil), nil
+}
+
+// Get implements Get()
+func (db *StateTrieByzDatabase) Get(key []byte) ([]byte, error) {
+	value, err := db.getBEvmValue(key)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to get EVM State DB value for "+
+			"key '%v': %v", key, err)
+	}
+
+	return value, nil
+}
+
+// Delete implements Deleter.Delete()
+func (db *StateTrieByzDatabase) Delete(key []byte) error {
+	return xerrors.New("Delete() not allowed on StateTrieByzDatabase")
+}
+
+// NewBatch implements NewBatch()
+func (db *StateTrieByzDatabase) NewBatch() ethdb.Batch {
+	// NewBatch() not allowed on StateTrieByzDatabase
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+
 // ClientByzDatabase is the ByzDatabase version specialized for client
 // (read-only) use, retrieving information using ByzCoin proofs
 type ClientByzDatabase struct {

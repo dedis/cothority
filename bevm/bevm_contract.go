@@ -256,7 +256,17 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 				"transaction: %v", err)
 		}
 
-		txReceipt, err := sendTx(&ethTx, stateDb)
+		// Retrieve the TimeReader (we are actually called with a GlobalState)
+		tr, ok := rst.(byzcoin.TimeReader)
+		if !ok {
+			return nil, nil, xerrors.Errorf("internal error: cannot convert " +
+				"ReadOnlyStateTrie to TimeReader")
+		}
+
+		// Compute the timestamp for the EVM, converting [ns] to [s]
+		evmTs := uint64(tr.GetCurrentBlockTimestamp() / 1e9)
+
+		txReceipt, err := sendTx(&ethTx, stateDb, evmTs)
 		if err != nil {
 			return nil, nil,
 				xerrors.Errorf("failed to send transaction to EVM: %v", err)
@@ -300,7 +310,7 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 }
 
 // Helper function that sends a transaction to the EVM
-func sendTx(tx *types.Transaction, stateDb *state.StateDB) (
+func sendTx(tx *types.Transaction, stateDb *state.StateDB, timestamp uint64) (
 	*types.Receipt, error) {
 
 	// Gets parameters defined in params
@@ -318,12 +328,11 @@ func sendTx(tx *types.Transaction, stateDb *state.StateDB) (
 	var bc core.ChainContext
 
 	// Header represents a block header in the Ethereum blockchain.
-	var header *types.Header
-	header = &types.Header{
+	header := &types.Header{
 		Number:     big.NewInt(0),
 		Difficulty: big.NewInt(0),
 		ParentHash: common.Hash{0},
-		Time:       0,
+		Time:       timestamp,
 	}
 
 	// Apply transaction to the general EVM state
