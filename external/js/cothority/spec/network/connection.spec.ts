@@ -139,13 +139,23 @@ describe("WebSocketAdapter Tests", () => {
         const conn = new WebSocketConnection("ws://a:1234", "");
         expect(conn.getURL()).toBe("ws://a:1234");
 
-        globalThis.location = {
-            ...globalThis.location,
-            protocol: "https:",
-        };
+        const oldLocation = globalThis.location;
+        try {
+            globalThis.location = {
+                ...globalThis.location,
+                protocol: "https:",
+            };
 
-        const conn2 = new WebSocketConnection("ws://a:1234", "");
-        expect(conn2.getURL()).toBe("wss://a:1234");
+            const conn2 = new WebSocketConnection("ws://a:1234", "");
+            expect(conn2.getURL()).toBe("wss://a:1234");
+        } finally {
+            globalThis.location = oldLocation;
+        }
+    });
+
+    it("should support having an URL with a pathname", async () => {
+        const conn = new WebSocketConnection("ws://a:1234/path", "");
+        expect(conn.getURL()).toBe("ws://a:1234/path");
     });
 
 });
