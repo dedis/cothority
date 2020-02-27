@@ -212,15 +212,15 @@ func Test_Time(t *testing.T) {
 	// Retrieve stored time
 	storedTime, err = bevmClient.Call(a, timeTestInstance, "getStoredTime")
 	require.NoError(t, err)
-	// Should be within 2 sec of `now`
-	require.GreaterOrEqual(t, now+2, storedTime.(*big.Int).Int64())
+	// Should be within 5 sec of `now`
+	require.GreaterOrEqual(t, now+5, storedTime.(*big.Int).Int64())
 	require.GreaterOrEqual(t, storedTime.(*big.Int).Int64(), now)
 
 	// Retrieve current time
 	currentTime, err := bevmClient.Call(a, timeTestInstance, "getCurrentTime")
 	require.NoError(t, err)
-	// Should be within 2 sec of `now`
-	require.GreaterOrEqual(t, now+2, currentTime.(*big.Int).Int64())
+	// Should be within 5 sec of `now`
+	require.GreaterOrEqual(t, now+5, currentTime.(*big.Int).Int64())
 	require.GreaterOrEqual(t, currentTime.(*big.Int).Int64(), now)
 }
 
