@@ -2122,6 +2122,10 @@ func TestService_DownloadState(t *testing.T) {
 //   1. what if a leader fails and wants to catch up
 //   2. if the catchupFetchDBEntries = 1, it fails
 func TestService_DownloadStateRunning(t *testing.T) {
+
+	// Disabled because it is flaky. See issue.
+	t.Skip("https://github.com/dedis/cothority/issues/2129")
+
 	cda := catchupDownloadAll
 	defer func() {
 		catchupDownloadAll = cda

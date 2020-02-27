@@ -215,7 +215,7 @@ func dkgInfo(c *cli.Context) error {
 	if err != nil {
 		return xerrors.New("couldn't decode info: " + err.Error())
 	}
-	log.Info("lts-roster is: ", ltsInfo.Roster.List)
+	log.Info("lts-roster is:", ltsInfo.Roster.List)
 	return nil
 }
 
