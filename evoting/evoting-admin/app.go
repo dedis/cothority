@@ -97,20 +97,21 @@ func main() {
 		if *argJSON {
 			e := reply.Election
 			j := &jsonElection{
-				Name:        e.Name,
-				Creator:     e.Creator,
-				Users:       e.Users,
-				Candidates:  e.Candidates,
-				MaxChoices:  e.MaxChoices,
-				Subtitle:    e.Subtitle,
-				MoreInfo:    e.MoreInfo,
-				Start:       time.Unix(e.Start, 0),
-				End:         time.Unix(e.End, 0),
-				Theme:       e.Theme,
-				FooterText:  e.Footer.Text,
-				FooterTitle: e.Footer.ContactTitle,
-				FooterPhone: e.Footer.ContactPhone,
-				FooterEmail: e.Footer.ContactEmail,
+				Name:         e.Name,
+				Creator:      e.Creator,
+				Users:        e.Users,
+				Candidates:   e.Candidates,
+				MaxChoices:   e.MaxChoices,
+				Subtitle:     e.Subtitle,
+				MoreInfo:     e.MoreInfo,
+				MoreInfoLang: e.MoreInfoLang,
+				Start:        time.Unix(e.Start, 0),
+				End:          time.Unix(e.End, 0),
+				Theme:        e.Theme,
+				FooterText:   e.Footer.Text,
+				FooterTitle:  e.Footer.ContactTitle,
+				FooterPhone:  e.Footer.ContactPhone,
+				FooterEmail:  e.Footer.ContactEmail,
 			}
 			b, err := json.Marshal(j)
 			if err != nil {
@@ -159,6 +160,7 @@ func main() {
 		e.MaxChoices = j.MaxChoices
 		e.Subtitle = j.Subtitle
 		e.MoreInfo = j.MoreInfo
+		e.MoreInfoLang = j.MoreInfoLang
 		e.Start = j.Start.Unix()
 		e.End = j.End.Unix()
 		e.Theme = j.Theme
@@ -300,12 +302,13 @@ type jsonElection struct {
 	Creator uint32            // Creator is the election responsible.
 	Users   []uint32          // Users is the list of registered voters.
 
-	Candidates []uint32          // Candidates is the list of candidate scipers.
-	MaxChoices int               // MaxChoices is the max votes in allowed in a ballot.
-	Subtitle   map[string]string // Description in string format. lang-code, value pair
-	MoreInfo   string            // MoreInfo is the url to AE Website for the given election.
-	Start      time.Time         // Start denotes the election start unix timestamp
-	End        time.Time         // End (termination) datetime as unix timestamp.
+	Candidates   []uint32          // Candidates is the list of candidate scipers.
+	MaxChoices   int               // MaxChoices is the max votes in allowed in a ballot.
+	Subtitle     map[string]string // Description in string format. lang-code, value pair
+	MoreInfo     string            // MoreInfo is the url to AE Website for the given election.
+	MoreInfoLang map[string]string
+	Start        time.Time // Start denotes the election start unix timestamp
+	End          time.Time // End (termination) datetime as unix timestamp.
 
 	Theme       string // Theme denotes the CSS class for selecting background color of card title.
 	FooterText  string

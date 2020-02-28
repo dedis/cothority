@@ -87,6 +87,10 @@ func TestService(t *testing.T) {
 			"en": "name in english",
 			"fr": "name in french",
 		},
+		MoreInfoLang: map[string]string{
+			"en": "https://epfl.ch/elections",
+			"fr": "httsp://epfl.ch/votations",
+		},
 		Creator: idAdmin,
 		Users:   []uint32{idUser1, idUser2, idUser3, idAdmin},
 		Roster:  roster,

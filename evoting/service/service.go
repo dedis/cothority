@@ -176,6 +176,7 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 		cur.MaxChoices = req.Election.MaxChoices
 		cur.Subtitle = req.Election.Subtitle
 		cur.MoreInfo = req.Election.MoreInfo
+		cur.MoreInfoLang = req.Election.MoreInfoLang
 		cur.Start = req.Election.Start
 		cur.End = req.Election.End
 		cur.Theme = req.Election.Theme
