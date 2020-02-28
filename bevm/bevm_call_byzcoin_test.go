@@ -191,7 +191,7 @@ func Test_BEvmCallsByzcoin(t *testing.T) {
 		callBcInstance, "spawnValue",
 		darcID, myValueContractID, initValue[0])
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "'spawn:MyValueContract' does not exist")
+	require.Contains(t, err.Error(), "refused")
 
 	// Add rules to the DARC guarding "spawn", "invoke.update" and "delete" on
 	// the value contract with the address of the deployed CallByzcoin contract

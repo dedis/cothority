@@ -4,7 +4,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"go.dedis.ch/cothority/v3/byzcoin"
-	"go.dedis.ch/cothority/v3/darc"
 	"golang.org/x/xerrors"
 )
 
@@ -144,41 +143,93 @@ func unpackEvent(contractAbi abi.ABI, eventID common.Hash,
 	return event.Name, eventData, err
 }
 
-func processInstrs(instrs byzcoin.Instructions, signers []darc.Signer,
-	rst byzcoin.ReadOnlyStateTrie, cin []byzcoin.Coin) ([]byzcoin.Coin,
-	[]byzcoin.StateChange, error) {
+func convertArgs(eventArgs []struct {
+	Name  string
+	Value []byte
+}) byzcoin.Arguments {
+	args := byzcoin.Arguments{}
 
-	for i := range instrs {
-		instrs[i].SignerIdentities = []darc.Identity{signers[i].Identity()}
-		instrs[i].SignerCounter = []uint64{1} // FIXME: should increment?
+	for _, arg := range eventArgs {
+		args = append(args, arg)
 	}
 
-	instrs.SetVersion(rst.GetVersion())
+	return args
+}
 
-	gs, ok := rst.(byzcoin.GlobalState)
-	if !ok {
-		return nil, nil, xerrors.Errorf("internal error: cannot convert " +
-			"rst to gs")
-	}
+func getInstrForEvent(name string, iface interface{}) (
+	*byzcoin.Instruction, error) {
+	var instr *byzcoin.Instruction
 
-	cout := cin
-	var stateChanges []byzcoin.StateChange
-
-	for i, instr := range instrs {
-		err := instr.SignWith([]byte{}, signers[i])
-		if err != nil {
-			return nil, nil, xerrors.Errorf("failed to sign instruction "+
-				"from EVM: %v", err)
+	switch name {
+	case byzcoinSpawnEvent:
+		event, ok := iface.(struct {
+			InstanceID [32]byte
+			ContractID string
+			Args       []struct {
+				Name  string
+				Value []byte
+			}
+		})
+		if !ok {
+			return nil, xerrors.Errorf("failed to cast 'spawn' event")
 		}
 
-		sc, c, err := gs.ExecuteInstruction(gs, cout, instr, nil)
-		if err != nil {
-			return nil, nil, xerrors.Errorf("failed to execute instruction "+
-				"from EVM: %v", err)
+		instr = &byzcoin.Instruction{
+			InstanceID: event.InstanceID,
+			Spawn: &byzcoin.Spawn{
+				ContractID: event.ContractID,
+				Args:       convertArgs(event.Args),
+			},
 		}
-		cout = c
-		stateChanges = append(stateChanges, sc...)
+
+	case byzcoinInvokeEvent:
+		event, ok := iface.(struct {
+			InstanceID [32]byte
+			ContractID string
+			Command    string
+			Args       []struct {
+				Name  string
+				Value []byte
+			}
+		})
+		if !ok {
+			return nil, xerrors.Errorf("failed to cast 'invoke' event")
+		}
+
+		instr = &byzcoin.Instruction{
+			InstanceID: event.InstanceID,
+			Invoke: &byzcoin.Invoke{
+				ContractID: event.ContractID,
+				Command:    event.Command,
+				Args:       convertArgs(event.Args),
+			},
+		}
+
+	case byzcoinDeleteEvent:
+		event, ok := iface.(struct {
+			InstanceID [32]byte
+			ContractID string
+			Args       []struct {
+				Name  string
+				Value []byte
+			}
+		})
+		if !ok {
+			return nil, xerrors.Errorf("failed to cast 'delete' event")
+		}
+
+		instr = &byzcoin.Instruction{
+			InstanceID: event.InstanceID,
+			Delete: &byzcoin.Delete{
+				ContractID: event.ContractID,
+				Args:       convertArgs(event.Args),
+			},
+		}
+
+	default:
+		return nil, xerrors.Errorf("internal error: event '%s' not handled",
+			name)
 	}
 
-	return cout, stateChanges, nil
+	return instr, nil
 }

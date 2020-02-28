@@ -464,6 +464,12 @@ func (instr Instruction) GetType() InstrType {
 	return InvalidInstrType
 }
 
+// SetVersion makes sure the underlying data will use the implementation
+// of the given version.
+func (instr *Instruction) SetVersion(version Version) {
+	instr.version = version
+}
+
 // Instructions is a slice of Instruction
 type Instructions []Instruction
 
@@ -601,6 +607,8 @@ func (sc *StateChange) Op() trie.OpType {
 		return trie.OpSet
 	case Remove:
 		return trie.OpDel
+	case GenerateInstruction:
+		return trie.Nop
 	}
 	return 0
 }
@@ -646,6 +654,8 @@ const (
 	Update
 	// Remove allows to delete an existing key-value association.
 	Remove
+	// GenerateInstruction allows to generate an instruction
+	GenerateInstruction
 )
 
 // String returns a readable output of the action.
@@ -657,6 +667,8 @@ func (sc StateAction) String() string {
 		return "Update"
 	case Remove:
 		return "Remove"
+	case GenerateInstruction:
+		return "GenerateInstruction"
 	default:
 		return "Invalid stateChange"
 	}

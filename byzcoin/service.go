@@ -2192,7 +2192,10 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction,
 	h := tx.Instructions.Hash()
 	var statesTemp StateChanges
 	var cin []Coin
-	for _, instr := range tx.Instructions {
+	for i := 0; i < len(tx.Instructions); i++ {
+		instr := tx.Instructions[i]
+		log.Lvlf2("Processing instruction: %v", instr.Action())
+
 		scs, cout, err := s.executeInstruction(gs, cin, instr, h)
 		if err != nil {
 			_, _, cid, _, err2 := sst.GetValues(instr.InstanceID.Slice())
@@ -2250,6 +2253,26 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction,
 			}
 			log.Lvlf2("StateChange %s for id %x - contract: %s", sc.StateAction,
 				sc.InstanceID, sc.ContractID)
+
+			if sc.StateAction == GenerateInstruction {
+				var newInstr Instruction
+				err = protobuf.Decode(sc.Value, &newInstr)
+				if err != nil {
+					return nil, nil, xerrors.Errorf("failed to decode "+
+						"new instruction: %v", err)
+				}
+
+				// Insert new instruction in the transaction, to be executed
+				// right after the current one.
+				// See https://github.com/golang/go/wiki/SliceTricks#insert for
+				// the insertion trick.
+				tx.Instructions = append(tx.Instructions, Instruction{})
+				copy(tx.Instructions[i+2:], tx.Instructions[i+1:])
+				tx.Instructions[i+1] = newInstr
+
+				continue
+			}
+
 			err = sst.StoreAll(StateChanges{sc})
 			if err != nil {
 				err = xerrors.Errorf("%s StoreAll failed: %v", s.ServerIdentity(), err)

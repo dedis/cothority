@@ -41,6 +41,7 @@ type ReadOnlyStateTrie interface {
 	// the state changes to the copy. The implementation should make sure
 	// that the original read-only trie is not be modified.
 	StoreAllToReplica(StateChanges) (ReadOnlyStateTrie, error)
+	GetSignerCounter(id darc.Identity) (uint64, error)
 }
 
 // ReadOnlySkipChain holds the skipchain data.
@@ -137,6 +138,10 @@ func (t *stagingStateTrie) StoreAllToReplica(scs StateChanges) (ReadOnlyStateTri
 		return nil, xerrors.Errorf("replica failed to store state changes: %v", err)
 	}
 	return newTrie, nil
+}
+
+func (t *stagingStateTrie) GetSignerCounter(id darc.Identity) (uint64, error) {
+	return getSignerCounter(t, id.String())
 }
 
 // GetVersion returns the version of the ByzCoin protocol.
@@ -265,6 +270,10 @@ func (t *stateTrie) MakeStagingStateTrie() *stagingStateTrie {
 // stagingStateTrie and then use StoreAllToReplica.
 func (t *stateTrie) StoreAllToReplica(scs StateChanges) (ReadOnlyStateTrie, error) {
 	return nil, xerrors.New("unsupported operation")
+}
+
+func (t *stateTrie) GetSignerCounter(id darc.Identity) (uint64, error) {
+	return getSignerCounter(t, id.String())
 }
 
 // newMemStagingStateTrie creates an in-memory StagingStateTrie.
