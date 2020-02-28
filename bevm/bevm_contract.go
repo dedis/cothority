@@ -3,7 +3,9 @@ package bevm
 import (
 	"fmt"
 	"math/big"
+	"strings"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/state"
@@ -234,10 +236,11 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 		// State changes to ByzCoin contain the Update to the main contract
 		// state, plus whatever changes were produced by the EVM on its state
 		// database.
-		sc = append([]byzcoin.StateChange{
-			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
-				ContractBEvmID, contractData, darcID),
-		}, stateChanges...)
+		mainSc := byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
+			ContractBEvmID, contractData, darcID)
+
+		sc = []byzcoin.StateChange{mainSc}
+		sc = append(sc, stateChanges...)
 
 	case "transaction":
 		// Perform an Ethereum transaction (contract method call with state
@@ -266,6 +269,8 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 		// Compute the timestamp for the EVM, converting [ns] to [s]
 		evmTs := uint64(tr.GetCurrentBlockTimestamp() / 1e9)
 
+		log.Lvlf2("Transaction hash = '%s'", ethTx.Hash().Hex())
+		stateDb.Prepare(ethTx.Hash(), common.Hash{}, 0)
 		txReceipt, err := sendTx(&ethTx, stateDb, evmTs)
 		if err != nil {
 			return nil, nil,
@@ -281,7 +286,20 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 		log.Lvlf2("\\--> status = %d, gas used = %d, receipt = %s",
 			txReceipt.Status, txReceipt.GasUsed, txReceipt.TxHash.Hex())
 
-		contractState, stateChanges, err := NewContractState(stateDb)
+		instrs, signers, err := handleLogs(txReceipt.Logs)
+		if err != nil {
+			return nil, nil, xerrors.Errorf("failed to handle EVM transaction "+
+				"logs: %v", err)
+		}
+
+		c, eventStateChanges, err := processInstrs(instrs, signers, rst, cout)
+		if err != nil {
+			return nil, nil, xerrors.Errorf("failed to process EVM-"+
+				"generated instructions: %v", err)
+		}
+		cout = c
+
+		contractState, evmStateChanges, err := NewContractState(stateDb)
 		if err != nil {
 			return nil, nil,
 				xerrors.Errorf("failed to create new BEvm contract "+
@@ -296,11 +314,13 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 
 		// State changes to ByzCoin contain the Update to the main contract
 		// state, plus whatever changes were produced by the EVM on its state
-		// database.
-		sc = append([]byzcoin.StateChange{
-			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
-				ContractBEvmID, contractData, darcID),
-		}, stateChanges...)
+		// database, plus whatever changes were produced by the events.
+		mainSc := byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
+			ContractBEvmID, contractData, darcID)
+
+		sc = []byzcoin.StateChange{mainSc}
+		sc = append(sc, evmStateChanges...)
+		sc = append(sc, eventStateChanges...)
 
 	default:
 		err = fmt.Errorf("unknown Invoke command: '%s'", inst.Invoke.Command)
@@ -377,4 +397,123 @@ func (c *contractBEvm) Delete(rst byzcoin.ReadOnlyStateTrie,
 	}, stateChanges...)
 
 	return
+}
+
+func convertArgs(eventArgs []struct {
+	Name  string
+	Value []byte
+}) byzcoin.Arguments {
+	args := byzcoin.Arguments{}
+
+	for _, arg := range eventArgs {
+		args = append(args, arg)
+	}
+
+	return args
+}
+
+func handleLogs(logEntries []*types.Log) (byzcoin.Instructions, []darc.Signer,
+	error) {
+	eventsAbi, err := abi.JSON(strings.NewReader(eventsAbiJSON))
+	if err != nil {
+		return nil, nil, xerrors.Errorf("failed to decode ABI for EVM "+
+			"events: %v", err)
+	}
+
+	var instrs byzcoin.Instructions
+	var signers []darc.Signer
+
+	for _, logEntry := range logEntries {
+		// See https://solidity.readthedocs.io/en/v0.5.3/abi-spec.html#events
+		eventID := logEntry.Topics[0]
+
+		eventName, eventIface, err := unpackEvent(eventsAbi, eventID,
+			logEntry.Data)
+		if err != nil {
+			return nil, nil, xerrors.Errorf("failed to unpack EVM "+
+				"event: %v", err)
+		}
+
+		var instr byzcoin.Instruction
+
+		switch eventName {
+		case byzcoinSpawnEvent:
+			event, ok := eventIface.(struct {
+				InstanceID [32]byte
+				ContractID string
+				Args       []struct {
+					Name  string
+					Value []byte
+				}
+			})
+			if !ok {
+				return nil, nil, xerrors.Errorf("failed to cast 'spawn' event")
+			}
+
+			instr = byzcoin.Instruction{
+				InstanceID: event.InstanceID,
+				Spawn: &byzcoin.Spawn{
+					ContractID: event.ContractID,
+					Args:       convertArgs(event.Args),
+				},
+			}
+
+		case byzcoinInvokeEvent:
+			event, ok := eventIface.(struct {
+				InstanceID [32]byte
+				ContractID string
+				Command    string
+				Args       []struct {
+					Name  string
+					Value []byte
+				}
+			})
+			if !ok {
+				return nil, nil, xerrors.Errorf("failed to cast 'invoke' event")
+			}
+
+			instr = byzcoin.Instruction{
+				InstanceID: event.InstanceID,
+				Invoke: &byzcoin.Invoke{
+					ContractID: event.ContractID,
+					Command:    event.Command,
+					Args:       convertArgs(event.Args),
+				},
+			}
+
+		case byzcoinDeleteEvent:
+			event, ok := eventIface.(struct {
+				InstanceID [32]byte
+				ContractID string
+				Args       []struct {
+					Name  string
+					Value []byte
+				}
+			})
+			if !ok {
+				return nil, nil, xerrors.Errorf("failed to cast 'delete' event")
+			}
+
+			instr = byzcoin.Instruction{
+				InstanceID: event.InstanceID,
+				Delete: &byzcoin.Delete{
+					ContractID: event.ContractID,
+					Args:       convertArgs(event.Args),
+				},
+			}
+
+		default:
+			log.Lvlf2("skipping event '%s'", eventName)
+			continue
+		}
+
+		instrs = append(instrs, instr)
+
+		signer := darc.Signer{
+			EvmContract: &darc.SignerEvmContract{Address: logEntry.Address},
+		}
+		signers = append(signers, signer)
+	}
+
+	return instrs, signers, nil
 }

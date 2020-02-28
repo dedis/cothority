@@ -1,0 +1,275 @@
+package bevm
+
+import (
+	"math/big"
+	"testing"
+	"time"
+
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"golang.org/x/xerrors"
+
+	"github.com/stretchr/testify/require"
+)
+
+func init() {
+	err := byzcoin.RegisterGlobalContract(myValueContractID,
+		myValueContractFromBytes)
+	if err != nil {
+		log.ErrFatal(err)
+	}
+}
+
+const myValueContractID = "MyValueContract"
+
+func myValueContractFromBytes(in []byte) (byzcoin.Contract, error) {
+	return myValueContract{value: in}, nil
+}
+
+// The test value contracts just holds a value
+type myValueContract struct {
+	byzcoin.BasicContract
+	value []byte
+}
+
+func (c myValueContract) Spawn(rst byzcoin.ReadOnlyStateTrie,
+	inst byzcoin.Instruction, cin []byzcoin.Coin) (sc []byzcoin.StateChange,
+	cout []byzcoin.Coin, err error) {
+	cout = cin
+
+	// Find the darcID for this instance.
+	var darcID darc.ID
+	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
+	if err != nil {
+		return
+	}
+
+	sc = []byzcoin.StateChange{
+		byzcoin.NewStateChange(
+			byzcoin.Create,
+			byzcoin.NewInstanceID(inst.Spawn.Args.Search("id")),
+			myValueContractID,
+			inst.Spawn.Args.Search("value"),
+			darcID),
+	}
+	return
+}
+
+func (c myValueContract) Invoke(rst byzcoin.ReadOnlyStateTrie,
+	inst byzcoin.Instruction, cin []byzcoin.Coin) (sc []byzcoin.StateChange,
+	cout []byzcoin.Coin, err error) {
+	cout = cin
+
+	// Find the darcID for this instance.
+	var darcID darc.ID
+
+	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
+	if err != nil {
+		return
+	}
+
+	switch inst.Invoke.Command {
+	case "update":
+		sc = []byzcoin.StateChange{
+			byzcoin.NewStateChange(
+				byzcoin.Update,
+				inst.InstanceID,
+				myValueContractID,
+				inst.Invoke.Args.Search("value"),
+				darcID),
+		}
+		return
+
+	default:
+		return nil, nil, xerrors.New("Value contract can only update")
+	}
+}
+
+func (c myValueContract) Delete(rst byzcoin.ReadOnlyStateTrie,
+	inst byzcoin.Instruction, cin []byzcoin.Coin) (sc []byzcoin.StateChange,
+	cout []byzcoin.Coin, err error) {
+	cout = cin
+
+	// Find the darcID for this instance.
+	var darcID darc.ID
+
+	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
+	if err != nil {
+		return
+	}
+
+	sc = []byzcoin.StateChange{
+		byzcoin.NewStateChange(
+			byzcoin.Remove,
+			inst.InstanceID,
+			myValueContractID,
+			nil,
+			darcID),
+	}
+	return
+}
+
+// Inspired by byzcoin.Client.WaitProof()
+func waitProofGone(t *testing.T, cl *byzcoin.Client, interval time.Duration,
+	id byzcoin.InstanceID) error {
+	for i := 0; i < 10; i++ {
+		resp, err := cl.GetProof(id[:])
+		require.NoError(t, err)
+		ok, err := resp.Proof.InclusionProof.Exists(id[:])
+		require.NoError(t, err)
+		if !ok {
+			return nil
+		}
+		time.Sleep(interval / 10)
+	}
+
+	return xerrors.Errorf("timeout reached and inclusion proof for %v "+
+		"still exists", id)
+}
+
+func Test_BEvmCallsByzcoin(t *testing.T) {
+	log.LLvl1("BEvmCallsByzcoin")
+
+	local := onet.NewTCPTest(cothority.Suite)
+	defer local.CloseAll()
+
+	signer := darc.NewSignerEd25519(nil, nil)
+	_, roster, _ := local.GenTree(3, true)
+
+	// Initialize DARC with rights for BEvm
+	genesisMsg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
+		[]string{
+			"spawn:" + ContractBEvmID,
+			"invoke:" + ContractBEvmID + ".credit",
+			"invoke:" + ContractBEvmID + ".transaction",
+		}, signer.Identity(),
+	)
+	require.NoError(t, err)
+
+	gDarc := &genesisMsg.GenesisDarc
+	darcID := byzcoin.NewInstanceID(gDarc.GetBaseID())
+	genesisMsg.BlockInterval = time.Second
+
+	// Create new ledger
+	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
+	require.NoError(t, err)
+
+	// Spawn a new BEvm instance
+	instanceID, err := NewBEvm(cl, signer, gDarc)
+	require.NoError(t, err)
+
+	// Create a new BEvm client
+	bevmClient, err := NewClient(cl, signer, instanceID)
+	require.NoError(t, err)
+
+	// Initialize an account
+	a, err := NewEvmAccount(testPrivateKeys[0])
+	require.NoError(t, err)
+
+	// Credit the account
+	err = bevmClient.CreditAccount(big.NewInt(5*WeiPerEther), a.Address)
+	require.NoError(t, err)
+
+	// Deploy a CallByzcoin contract
+	callBcContract, err := NewEvmContract("CallByzcoin",
+		getContractData(t, "CallByzcoin", "abi"),
+		getContractData(t, "CallByzcoin", "bin"))
+	require.NoError(t, err)
+	callBcInstance, err := bevmClient.Deploy(txParams.GasLimit,
+		txParams.GasPrice, 0, a, callBcContract)
+	require.NoError(t, err)
+
+	// Values used for tests
+	initValue := []byte{42}
+	updateValue := []byte{187}
+
+	// Spawn a value -- fails because the DARC rule is missing
+	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a,
+		callBcInstance, "spawnValue",
+		darcID, myValueContractID, initValue[0])
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "'spawn:MyValueContract' does not exist")
+
+	// Add rules to the DARC guarding "spawn", "invoke.update" and "delete" on
+	// the value contract with the address of the deployed CallByzcoin contract
+	newDarc := gDarc.Copy()
+	newDarc.EvolveFrom(gDarc)
+
+	darcExpr := darc.Identity{
+		EvmContract: &darc.IdentityEvmContract{
+			Address: callBcInstance.Address,
+		},
+	}.String()
+
+	darcAction := "spawn:" + myValueContractID
+	log.LLvlf2("DARC rule: %s → %s", darcAction, darcExpr)
+	require.NoError(t,
+		newDarc.Rules.AddRule(darc.Action(darcAction), []byte(darcExpr)))
+
+	darcAction = "invoke:" + myValueContractID + ".update"
+	log.LLvlf2("DARC rule: %s → %s", darcAction, darcExpr)
+	require.NoError(t,
+		newDarc.Rules.AddRule(darc.Action(darcAction), []byte(darcExpr)))
+
+	darcAction = "delete:" + myValueContractID
+	log.LLvlf2("DARC rule: %s → %s", darcAction, darcExpr)
+	require.NoError(t,
+		newDarc.Rules.AddRule(darc.Action(darcAction), []byte(darcExpr)))
+
+	newDarcBuf, err := newDarc.ToProto()
+	require.NoError(t, err)
+
+	// Evolve the DARC with the new rules
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: darcID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDarcID,
+			Command:    "evolve",
+			Args: byzcoin.Arguments{{
+				Name:  "darc",
+				Value: newDarcBuf,
+			}},
+		},
+		SignerCounter: []uint64{getNextCounter(t, cl, signer)},
+	})
+	require.NoError(t, err)
+	require.NoError(t, ctx.FillSignersAndSignWith(signer))
+
+	_, err = cl.AddTransactionAndWait(ctx, 10)
+	require.NoError(t, err)
+
+	// Spawn a value
+	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a,
+		callBcInstance, "spawnValue",
+		darcID, myValueContractID, initValue[0])
+	require.NoError(t, err)
+
+	// ID generated by the Solidity event
+	valID := byzcoin.NewInstanceID([]byte("val\x01"))
+
+	// Check that the new instance exists and holds the correct value
+	_, err = cl.WaitProof(valID, 10*time.Second, initValue)
+	require.NoError(t, err)
+
+	// Update the value
+	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a,
+		callBcInstance, "updateValue",
+		valID, myValueContractID, updateValue[0])
+	require.NoError(t, err)
+
+	// Check it holds the updated value
+	_, err = cl.WaitProof(valID, 10*time.Second, updateValue)
+	require.NoError(t, err)
+
+	// Delete the value instance
+	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a,
+		callBcInstance, "deleteValue",
+		valID, myValueContractID)
+	require.NoError(t, err)
+
+	// Check it no longer exists
+	require.NoError(t, waitProofGone(t, cl, 10*time.Second, valID))
+}
