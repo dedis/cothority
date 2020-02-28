@@ -82,29 +82,33 @@ func (contractInstance EvmContractInstance) getAbi() abi.ABI {
 	return contractInstance.Parent.Abi
 }
 
-func unpackResult(contractAbi abi.ABI, method string,
+func unpackResult(contractAbi abi.ABI, methodName string,
 	resultBytes []byte) (interface{}, error) {
-	methodAbi, ok := contractAbi.Methods[method]
+	methodAbi, ok := contractAbi.Methods[methodName]
 	if !ok {
 		return nil, xerrors.Errorf("method \"%s\" does not exist for "+
-			"this contract", method)
+			"this contract", methodName)
 	}
 
-	abiOutputs := methodAbi.Outputs
+	return unpackData(contractAbi, methodName, resultBytes, methodAbi.Outputs)
+}
 
-	switch len(abiOutputs) {
+func unpackData(contractAbi abi.ABI, objectName string,
+	dataBytes []byte, args abi.Arguments) (interface{}, error) {
+
+	switch len(args) {
 	case 0:
 		return nil, nil
 
 	case 1:
 		// Create a pointer to the desired type
-		result := reflect.New(abiOutputs[0].Type.Type)
+		result := reflect.New(args[0].Type.Type)
 
 		err := contractAbi.Unpack(result.Interface(),
-			method, resultBytes)
+			objectName, dataBytes)
 		if err != nil {
 			return nil, xerrors.Errorf("failed to unpack single "+
-				"result of EVM execution: %v", err)
+				"element of EVM data: %v", err)
 		}
 
 		// Dereference the result pointer
@@ -118,7 +122,7 @@ func unpackResult(contractAbi abi.ABI, method string,
 
 		// Build a struct naming the fields after the outputs
 		var fields []reflect.StructField
-		for _, output := range abiOutputs {
+		for _, output := range args {
 			// Adapt names to what Abi.Unpack() does
 			name := abi.ToCamelCase(output.Name)
 
@@ -132,10 +136,10 @@ func unpackResult(contractAbi abi.ABI, method string,
 		s := reflect.New(structType)
 
 		err := contractAbi.Unpack(s.Interface(),
-			method, resultBytes)
+			objectName, dataBytes)
 		if err != nil {
 			return nil, xerrors.Errorf("failed to unpack multiple "+
-				"result of EVM execution: %v", err)
+				"elements of EVM data: %v", err)
 		}
 
 		// Dereference the result pointer
