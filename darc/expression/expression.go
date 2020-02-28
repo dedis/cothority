@@ -6,7 +6,7 @@ the syntax we use is from: https://en.wikipedia.org/wiki/Extended_Backus%E2%80%9
 	expr = term, [ '&', term ]*
 	term = factor, [ '|', factor ]*
 	factor = '(', expr, ')' | id | openid
-	identity = (darc|ed25519|x509ec):[0-9a-fA-F]+
+	identity = (darc|ed25519|x509ec|evm_contract):[0-9a-fA-F]+
 	proxy = proxy:[0-9a-fA-F]+:[^ \n\t]*
 	attr = attr:[0-9a-zA-Z\-\_]+:[^ \n\t]*
 
@@ -128,7 +128,7 @@ func InitOrExpr(ids ...string) Expr {
 func identity() parsec.Parser {
 	return func(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
 		_, s = s.SkipAny(`^[ \n\t]+`)
-		p := parsec.Token(`(darc|ed25519|x509ec):[0-9a-fA-F]+`, "HEX")
+		p := parsec.Token(`(darc|ed25519|x509ec|evm_contract):[0-9a-fA-F]+`, "HEX")
 		return p(s)
 	}
 }
