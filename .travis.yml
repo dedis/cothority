@@ -2,6 +2,10 @@ _: &language_go_1_13
   name: "go 1.13"
   language: go
   go: "1.13.x"
+_: &language_go_1_14
+  name: "go 1.14"
+  language: go
+  go: "1.14.x"
 _: &language_js
   language: node_js
   node_js: "lts/*"
@@ -40,6 +44,10 @@ jobs:
         - go mod tidy && [ -z "$(git status --porcelain)" ]
         - make -C conode verify
         - GO111MODULE=on make test_{fmt,lint}
+    - <<: *language_go_1_14
+      script:
+        - make -C conode verify
+        - GO111MODULE=on make test_{fmt,lint}
     - name: "js > kyber"
       <<: *language_js
       script:
@@ -60,6 +68,8 @@ jobs:
       <<: *stage_build_go
     - <<: *stage_build_go
       <<: *language_go_1_13
+    - <<: *stage_build_go
+      <<: *language_go_1_14
 
     - name: "js > kyber"
       <<: *language_js
@@ -78,6 +88,8 @@ jobs:
 
     - stage: test
       <<: *language_go_1_13
+      script: GO111MODULE=on make test_goveralls
+    - <<: *language_go_1_14
       script: GO111MODULE=on make test_goveralls
     - name: "java"
       language: java
