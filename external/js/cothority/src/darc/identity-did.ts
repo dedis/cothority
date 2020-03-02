@@ -12,7 +12,7 @@ const ed25519 = curve.newCurve("edwards25519");
 export default class IdentityDid extends Message<IdentityDid>
   implements IIdentity {
   static register() {
-    registerMessage("identityDid", IdentityDid);
+    registerMessage("IdentityDid", IdentityDid);
   }
 
   protected _point: Buffer;
