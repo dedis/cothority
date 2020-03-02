@@ -867,7 +867,7 @@ func (id Identity) PrimaryIdentity() bool {
 	case id.Proxy != nil:
 		return true
 	case id.DID != nil:
-		return false
+		return true
 	}
 	return false
 }
