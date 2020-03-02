@@ -1,5 +1,7 @@
 module go.dedis.ch/cothority/v3
 
+go 1.14
+
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/allegro/bigcache v1.2.1 // indirect
@@ -32,5 +34,3 @@ require (
 	gopkg.in/satori/go.uuid.v1 v1.2.0
 	gopkg.in/square/go-jose.v2 v2.4.0 // indirect
 )
-
-go 1.13
