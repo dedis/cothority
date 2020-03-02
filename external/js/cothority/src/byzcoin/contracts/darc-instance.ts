@@ -151,7 +151,7 @@ export default class DarcInstance extends Instance {
 
         const ctx = ClientTransaction.make(this.rpc.getProtocolVersion(), instr);
         await ctx.updateCounters(this.rpc, [signers]);
-        ctx.signWith([signers]);
+        await ctx.signWith([signers]);
 
         await this.rpc.sendTransactionAndWait(ctx, wait);
 
@@ -193,7 +193,7 @@ export default class DarcInstance extends Instance {
 
         const ctx = ClientTransaction.make(this.rpc.getProtocolVersion(), instr);
         await ctx.updateCounters(this.rpc, [signers]);
-        ctx.signWith([signers]);
+        await ctx.signWith([signers]);
 
         await this.rpc.sendTransactionAndWait(ctx, wait);
 

@@ -39,7 +39,7 @@ export default class SignerEd25519 extends IdentityEd25519 implements ISigner {
     }
 
     /** @inheritdoc */
-    sign(msg: Buffer): Buffer {
+    async sign(msg: Buffer): Promise<Buffer> {
         return schnorr.sign(ed25519, this.priv, msg);
     }
 }

@@ -9,5 +9,5 @@ export default interface ISigner extends IIdentity {
      * @param msg the message to sign
      * @returns the signature
      */
-    sign(msg: Buffer): Buffer;
+    sign(msg: Buffer): Promise<Buffer>;
 }

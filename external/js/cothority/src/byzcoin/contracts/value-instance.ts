@@ -31,7 +31,7 @@ export default class ValueInstance extends Instance {
         await inst.updateCounters(bc, signers);
 
         const ctx = ClientTransaction.make(bc.getProtocolVersion(), inst);
-        ctx.signWith([signers]);
+        await ctx.signWith([signers]);
 
         await bc.sendTransactionAndWait(ctx, 10);
 

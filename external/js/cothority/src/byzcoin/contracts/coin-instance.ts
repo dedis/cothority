@@ -55,7 +55,7 @@ export default class CoinInstance extends Instance {
         await inst.updateCounters(bc, signers);
 
         const ctx = ClientTransaction.make(bc.getProtocolVersion(), inst);
-        ctx.signWith([signers]);
+        await ctx.signWith([signers]);
 
         await bc.sendTransactionAndWait(ctx, 10);
 
@@ -145,7 +145,7 @@ export default class CoinInstance extends Instance {
         await inst.updateCounters(this.rpc, signers);
 
         const ctx = ClientTransaction.make(this.rpc.getProtocolVersion(), inst);
-        ctx.signWith([signers]);
+        await ctx.signWith([signers]);
 
         await this.rpc.sendTransactionAndWait(ctx, 10);
     }
@@ -167,7 +167,7 @@ export default class CoinInstance extends Instance {
         await inst.updateCounters(this.rpc, signers);
 
         const ctx = ClientTransaction.make(this.rpc.getProtocolVersion(), inst);
-        ctx.signWith([signers]);
+        await ctx.signWith([signers]);
 
         await this.rpc.sendTransactionAndWait(ctx, wait);
     }
