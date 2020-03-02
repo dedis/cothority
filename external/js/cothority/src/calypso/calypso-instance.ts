@@ -159,6 +159,7 @@ export class CalypsoWriteInstance extends Instance {
     coin?: CoinInstance,
     coinSigners?: Signer[]
   ): Promise<CalypsoReadInstance> {
+    /*
     if (
       this.write.cost &&
       this.write.cost.value !== Long.ZERO &&
@@ -166,6 +167,7 @@ export class CalypsoWriteInstance extends Instance {
     ) {
       throw new Error("spawning a read instance costs coins");
     }
+    */
     let pay: Instruction;
     if (coin && coinSigners) {
       pay = Instruction.createInvoke(

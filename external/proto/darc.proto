@@ -78,8 +78,40 @@ message IdentityDarc {
 // from a decentralized identifier
 message IdentityDID {
   required string did = 1;
-  optional did.Doc diddoc = 2;
+  optional DIDDoc diddoc = 2;
   required string method = 3;
+}
+
+// DIDDoc stores the DID Document
+message DIDDoc {
+  repeated string context = 1;
+  required string id = 2;
+  repeated PublicKey publickey = 3;
+  repeated DIDService service = 4;
+  repeated VerificationMethod authentication = 5;
+}
+
+// PublicKey DID doc public key
+message PublicKey {
+  required string id = 1;
+  required string type = 2;
+  required string controller = 3;
+  required bytes value = 4;
+}
+
+// Service DID doc service
+message DIDService {
+  required string id = 1;
+  required string type = 2;
+  required sint32 priority = 3;
+  repeated string recipientkeys = 4;
+  repeated string routingkeys = 5;
+  required string serviceendpoint = 6;
+}
+
+// VerificationMethod authentication verification method
+message VerificationMethod {
+  required PublicKey publickey = 1;
 }
 
 // Signature is a signature on a Darc to accept a given decision.

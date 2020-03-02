@@ -9,13 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hyperledger/aries-framework-go/pkg/doc/did"
 	"github.com/mr-tron/base58"
 )
 
 // DIDResolver resolves a given DID to a DID Document
 type DIDResolver interface {
-	Resolve(string) (*did.Doc, error)
+	Resolve(string) (*DIDDoc, error)
 }
 
 // IndyCLIDIDResolver resolves a DID using `indy-cli`
@@ -82,7 +81,7 @@ pool delete %s`, poolName, r.GenesisFilePath, poolName, id, id, poolName)
 
 // parseOutput parses the output from indy-cli. It assumes only one verkey and service
 // in the output for now
-func (r *IndyCLIDIDResolver) parseOutput(id, output string) (time.Time, []did.PublicKey, []did.Service, error) {
+func (r *IndyCLIDIDResolver) parseOutput(id, output string) (time.Time, []PublicKey, []DIDService, error) {
 	verkey := ""
 	endpoint := ""
 	createdAt := ""
@@ -123,17 +122,17 @@ func (r *IndyCLIDIDResolver) parseOutput(id, output string) (time.Time, []did.Pu
 		return time.Time{}, nil, nil, fmt.Errorf("error base58 decoding did: %s", err)
 	}
 	pkBuf := append(idBuf, verkeyBuf...)
-	pk := did.PublicKey{
+	pk := PublicKey{
 		ID:         fmt.Sprintf("%s-keys#1", id),
 		Type:       Ed25519VerificationKey2018.String(),
 		Controller: id,
 		Value:      pkBuf,
 	}
 
-	var svcs []did.Service
+	var svcs []DIDService
 	if endpoint != "" {
 		// Adopted from ACA-Py
-		svcs = append(svcs, did.Service{
+		svcs = append(svcs, DIDService{
 			ID:              "indy",
 			Type:            "IndyAgent",
 			Priority:        0,
@@ -141,11 +140,11 @@ func (r *IndyCLIDIDResolver) parseOutput(id, output string) (time.Time, []did.Pu
 			ServiceEndpoint: endpoint,
 		})
 	}
-	return _createdAt, []did.PublicKey{pk}, svcs, nil
+	return _createdAt, []PublicKey{pk}, svcs, nil
 }
 
 // Resolve resolves a did to a DID document using indy-cli.
-func (r *IndyCLIDIDResolver) Resolve(id string) (*did.Doc, error) {
+func (r *IndyCLIDIDResolver) Resolve(id string) (*DIDDoc, error) {
 	output, err := r.executeCli(id)
 	if strings.Contains(output, "NYM not found") {
 		return nil, errors.New("DID not found in the ledger")
@@ -153,20 +152,21 @@ func (r *IndyCLIDIDResolver) Resolve(id string) (*did.Doc, error) {
 	if err != nil {
 		return nil, err
 	}
-	createdAt, pks, svcs, err := r.parseOutput(id, output)
+	_, pks, svcs, err := r.parseOutput(id, output)
 	if err != nil {
 		return nil, err
 	}
 
-	var auths []did.VerificationMethod
+	var auths []VerificationMethod
 	for _, pk := range pks {
-		auths = append(auths, did.VerificationMethod{PublicKey: pk})
+		auths = append(auths, VerificationMethod{PublicKey: pk})
 	}
 
-	return did.BuildDoc(
-		did.WithCreatedTime(createdAt),
-		did.WithPublicKey(pks),
-		did.WithAuthentication(auths),
-		did.WithService(svcs),
-	), nil
+	return &DIDDoc{
+		Context: []string{""},
+		ID: id,
+		PublicKey: pks,
+		Service: svcs,
+		Authentication: auths,
+	}, nil
 }
