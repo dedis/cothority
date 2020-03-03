@@ -90,6 +90,7 @@ func (t *Transaction) Hash() []byte {
 		e = *t.Election
 		e.Name = nil
 		e.Subtitle = nil
+		e.MoreInfoLang = nil
 
 		data, _ := protobuf.Encode(e)
 		h.Write(data)
@@ -97,6 +98,7 @@ func (t *Transaction) Hash() []byte {
 		// now hash maps in deterministic order
 		hashMap(h, t.Election.Name)
 		hashMap(h, t.Election.Subtitle)
+		hashMap(h, t.Election.MoreInfoLang)
 
 		// finally hash the user id in the tx
 		binary.Write(h, binary.LittleEndian, t.User)

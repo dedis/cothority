@@ -6,6 +6,7 @@ import (
 	"io"
 	"sort"
 	"strings"
+	"time"
 
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/onet/v3"
@@ -55,7 +56,8 @@ type Election struct {
 	Theme  string // Theme denotes the CSS class for selecting background color of card title.
 	Footer Footer // Footer denotes the Election footer
 
-	Voted skipchain.SkipBlockID // Voted denotes if a user has already cast a ballot for this election.
+	Voted        skipchain.SkipBlockID // Voted denotes if a user has already cast a ballot for this election.
+	MoreInfoLang map[string]string     // MoreInfoLang, is MoreInfo, but as a lang-code/value map. MoreInfoLang should be used in preference to MoreInfo.
 }
 
 // Footer denotes the fields for the election footer
@@ -342,13 +344,15 @@ func (e *Election) String() string {
 	fmt.Fprintf(str, "Candidates: %v\n", e.Candidates)
 	fmt.Fprintf(str, "MaxChoices: %v\n", e.MaxChoices)
 	fmt.Fprintf(str, "MoreInfo: %v\n", e.MoreInfo)
+	fmt.Fprintf(str, "MoreInfoLang:\n")
+	printLang(str, e.MoreInfoLang)
 	fmt.Fprintf(str, "Theme: %v\n", e.Theme)
 	fmt.Fprintf(str, "Footer Text: %v\n", e.Footer.Text)
 	fmt.Fprintf(str, "Footer ContactTitle: %v\n", e.Footer.ContactTitle)
 	fmt.Fprintf(str, "Footer ContactPhone: %v\n", e.Footer.ContactPhone)
 	fmt.Fprintf(str, "Footer ContactEmail: %v\n", e.Footer.ContactEmail)
-	fmt.Fprintf(str, "Start: %v\n", e.Start)
-	fmt.Fprintf(str, "End: %v\n", e.End)
+	fmt.Fprintf(str, "Start: %v\n", time.Unix(e.Start, 0))
+	fmt.Fprintf(str, "End: %v\n", time.Unix(e.End, 0))
 	fmt.Fprintf(str, "Election pubkey: %v\n", e.Key)
 	fmt.Fprintf(str, "Authentication server pubkey: %v\n", e.MasterKey)
 	fmt.Fprintf(str, "Stage: %v\n", e.Stage)
