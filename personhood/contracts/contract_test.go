@@ -71,6 +71,10 @@ func (s *rstSimul) Process(scs byzcoin.StateChanges) {
 	}
 }
 
+func (s *rstSimul) GetSignerCounter(id darc.Identity) (uint64, error) {
+	return 0, xerrors.Errorf("not yet implemented")
+}
+
 func (s *rstSimul) addDarc(signer *darc.Identity, desc string) (*darc.Darc,
 	error) {
 	if signer == nil {
