@@ -3,6 +3,8 @@
 Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
 Cothority
 
+This repository is currently maintained by [C4DT](https://www.c4dt.org).
+
 # Cothority
 
 The collective authority (cothority) project provides a framework for
