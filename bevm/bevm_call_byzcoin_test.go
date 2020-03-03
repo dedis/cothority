@@ -12,6 +12,7 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"golang.org/x/xerrors"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 )
 
@@ -272,4 +273,58 @@ func Test_BEvmCallsByzcoin(t *testing.T) {
 
 	// Check it no longer exists
 	require.NoError(t, waitProofGone(t, cl, 10*time.Second, valID))
+}
+
+func Test_DirectlyUseEvmIdentity(t *testing.T) {
+	log.LLvl1("DirectlyUseEvmIdentity")
+
+	local := onet.NewTCPTest(cothority.Suite)
+	defer local.CloseAll()
+
+	signer := darc.Signer{
+		EvmContract: &darc.SignerEvmContract{
+			Address: common.HexToAddress(
+				"000102030405060708090A0B0C0D0E0F10111213"),
+		},
+	}
+	_, roster, _ := local.GenTree(3, true)
+
+	// Initialize DARC with rights to spawn a value contract using an EVM
+	// contract address
+	genesisMsg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
+		[]string{
+			"spawn:" + myValueContractID,
+		}, signer.Identity(),
+	)
+	require.NoError(t, err)
+
+	gDarc := &genesisMsg.GenesisDarc
+	genesisMsg.BlockInterval = time.Second
+
+	// Create new ledger
+	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
+	require.NoError(t, err)
+
+	// Spawn a new value contract
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: myValueContractID,
+			Args: []byzcoin.Argument{{
+				Name:  "value",
+				Value: []byte{42},
+			}, {
+				Name:  "id",
+				Value: []byte{1, 2, 3},
+			}},
+		},
+		SignerCounter: []uint64{getNextCounter(t, cl, signer)},
+	})
+	require.NoError(t, err)
+	require.NoError(t, ctx.FillSignersAndSignWith(signer))
+
+	// fails because directly using an EVM contract as signer is forbidden
+	_, err = cl.AddTransactionAndWait(ctx, 10)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "forbidden signer identity")
 }

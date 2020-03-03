@@ -2262,6 +2262,8 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction,
 						"new instruction: %v", err)
 				}
 
+				newInstr.synthetic = true
+
 				// Insert new instruction in the transaction, to be executed
 				// right after the current one.
 				// See https://github.com/golang/go/wiki/SliceTricks#insert for

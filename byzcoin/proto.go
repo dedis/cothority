@@ -209,6 +209,10 @@ type Instruction struct {
 	// Signatures that are verified using the Darc controlling access to
 	// the instance.
 	Signatures [][]byte
+	// synthetic is a private field indicating that the instruction has been
+	// artificially created, which can give it additional rights (see
+	// Instruction.usesForbiddenIdentities()).
+	synthetic bool
 	// version is a private field that can allow an instruction to be passed
 	// around with the context of a block with a specific version.
 	// This field must be the last field of the struct, so that the
