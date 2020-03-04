@@ -398,6 +398,7 @@ func (c *contractBEvm) Delete(rst byzcoin.ReadOnlyStateTrie,
 // contracts are handled, the other ones are ignored.
 func handleLogs(rst byzcoin.ReadOnlyStateTrie, logEntries []*types.Log) (
 	[]byzcoin.StateChange, error) {
+	var err error
 	eventsAbi, err := abi.JSON(strings.NewReader(eventsAbiJSON))
 	if err != nil {
 		return nil, xerrors.Errorf("failed to decode ABI for EVM "+
@@ -405,6 +406,12 @@ func handleLogs(rst byzcoin.ReadOnlyStateTrie, logEntries []*types.Log) (
 	}
 
 	var stateChanges []byzcoin.StateChange
+
+	// An EVM call can generate several Byzcoin instructions, all originating
+	// from different contracts (inter-contract calls).
+	// The following map helps to keep track of the signer counters while
+	// processing all the events of an EVM call.
+	counters := map[common.Address]uint64{}
 
 	for _, logEntry := range logEntries {
 		// See https://solidity.readthedocs.io/en/v0.5.3/abi-spec.html#events
@@ -416,11 +423,14 @@ func handleLogs(rst byzcoin.ReadOnlyStateTrie, logEntries []*types.Log) (
 			return nil, xerrors.Errorf("failed to unpack EVM "+
 				"event: %v", err)
 		}
+
 		if eventName == "" {
+			// Not a recognized event
 			log.Lvlf2("skipping event ID %s", hex.EncodeToString(eventID[:]))
 			continue
 		}
 
+		// Build the instruction from the event
 		instr, err := getInstrForEvent(eventName, eventIface)
 		if err != nil {
 			return nil, xerrors.Errorf("failed to build instruction "+
@@ -430,16 +440,26 @@ func handleLogs(rst byzcoin.ReadOnlyStateTrie, logEntries []*types.Log) (
 		signer := darc.Signer{
 			EvmContract: &darc.SignerEvmContract{Address: logEntry.Address},
 		}
-
 		identity := signer.Identity()
-		counter, err := rst.GetSignerCounter(identity)
-		if err != nil {
-			return nil, xerrors.Errorf("failed to get counter "+
-				"for identity '%s': %v", identity, err)
+
+		// Retrieve counter
+		counter, ok := counters[logEntry.Address]
+		if !ok {
+			// Counter not yet available -- retrieve from Byzcoin
+			counter, err = rst.GetSignerCounter(identity)
+			if err != nil {
+				return nil, xerrors.Errorf("failed to get counter "+
+					"for identity '%s': %v", identity, err)
+			}
 		}
 
+		// Update counter
+		counter++
+		counters[logEntry.Address] = counter
+
+		// Fill in  missing information and sign
 		instr.SignerIdentities = []darc.Identity{identity}
-		instr.SignerCounter = []uint64{counter + 1}
+		instr.SignerCounter = []uint64{counter}
 
 		instr.SetVersion(rst.GetVersion())
 
@@ -449,6 +469,7 @@ func handleLogs(rst byzcoin.ReadOnlyStateTrie, logEntries []*types.Log) (
 				"from EVM: %v", err)
 		}
 
+		// Encode the instruction and store it in the state change's value
 		encodedInstr, err := protobuf.Encode(instr)
 		if err != nil {
 			return nil, xerrors.Errorf("failed to encode instruction "+

@@ -49,7 +49,20 @@ contract CallByzcoin {
             value: argValue
         });
 
+        emit ByzcoinSpawn(darcID, contractID, args);
+    }
 
+    function spawnTwoValues(bytes32 darcID, string contractID, uint8 value) public {
+        bytes memory argValue = new bytes(1);
+        argValue[0] = byte(value);
+
+        Argument[] memory args = new Argument[](1);
+        args[0] = Argument({
+            name: "value",
+            value: argValue
+        });
+
+        emit ByzcoinSpawn(darcID, contractID, args);
         emit ByzcoinSpawn(darcID, contractID, args);
     }
 
