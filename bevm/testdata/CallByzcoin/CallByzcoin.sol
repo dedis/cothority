@@ -32,12 +32,9 @@ contract CallByzcoin {
 
     // Fields
 
-    uint8 counter;
-
     // Constructor
 
     constructor() public {
-        counter = 1;
     }
 
     // Public functions
@@ -46,23 +43,12 @@ contract CallByzcoin {
         bytes memory argValue = new bytes(1);
         argValue[0] = byte(value);
 
-        bytes memory id = new bytes(4);
-        id[0] = byte("v");
-        id[1] = byte("a");
-        id[2] = byte("l");
-        id[3] = byte(counter);
-
-        Argument[] memory args = new Argument[](2);
+        Argument[] memory args = new Argument[](1);
         args[0] = Argument({
             name: "value",
             value: argValue
         });
-        args[1] = Argument({
-            name: "id",
-            value: id
-        });
 
-        counter++;
 
         emit ByzcoinSpawn(darcID, contractID, args);
     }
