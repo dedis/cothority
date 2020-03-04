@@ -260,13 +260,13 @@ func (client *Client) Delete() error {
 // Deploy deploys a new Ethereum contract on the EVM
 func (client *Client) Deploy(gasLimit uint64, gasPrice uint64, amount uint64,
 	account *EvmAccount, contract *EvmContract, args ...interface{}) (
-	*EvmContractInstance, error) {
+	*byzcoin.ClientTransaction, *EvmContractInstance, error) {
 	log.Lvlf2(">>> Deploy EVM contract '%s'", contract)
 	defer log.Lvlf2("<<< Deploy EVM contract '%s'", contract)
 
 	packedArgs, err := contract.packConstructor(args...)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to pack arguments for "+
+		return nil, nil, xerrors.Errorf("failed to pack arguments for "+
 			"contract constructor: %v", err)
 	}
 
@@ -275,16 +275,16 @@ func (client *Client) Deploy(gasLimit uint64, gasPrice uint64, amount uint64,
 		gasLimit, big.NewInt(int64(gasPrice)), callData)
 	signedTxBuffer, err := account.signAndMarshalTx(tx)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to prepare EVM transaction for "+
-			"contract deployment: %v", err)
+		return nil, nil, xerrors.Errorf("failed to prepare EVM transaction "+
+			"for EVM contract deployment: %v", err)
 	}
 
-	err = client.invoke("transaction", byzcoin.Arguments{
+	bcTx, err := client.invoke("transaction", byzcoin.Arguments{
 		{Name: "tx", Value: signedTxBuffer},
 	})
 	if err != nil {
-		return nil, xerrors.Errorf("failed to invoke ByzCoin transaction for "+
-			"EVM contract deployment: %v", err)
+		return nil, nil, xerrors.Errorf("failed to invoke ByzCoin transaction "+
+			"for EVM contract deployment: %v", err)
 	}
 
 	contractInstance := &EvmContractInstance{
@@ -294,20 +294,20 @@ func (client *Client) Deploy(gasLimit uint64, gasPrice uint64, amount uint64,
 
 	account.Nonce++
 
-	return contractInstance, nil
+	return bcTx, contractInstance, nil
 }
 
 // Transaction performs a new transaction (contract method call with state
 // change) on the EVM
 func (client *Client) Transaction(gasLimit uint64, gasPrice uint64,
 	amount uint64, account *EvmAccount, contractInstance *EvmContractInstance,
-	method string, args ...interface{}) error {
+	method string, args ...interface{}) (*byzcoin.ClientTransaction, error) {
 	log.Lvlf2(">>> EVM method '%s()' on %s", method, contractInstance)
 	defer log.Lvlf2("<<< EVM method '%s()' on %s", method, contractInstance)
 
 	callData, err := contractInstance.packMethod(method, args...)
 	if err != nil {
-		return xerrors.Errorf("failed to pack arguments for contract "+
+		return nil, xerrors.Errorf("failed to pack arguments for contract "+
 			"method '%s': %v", method, err)
 	}
 
@@ -316,21 +316,21 @@ func (client *Client) Transaction(gasLimit uint64, gasPrice uint64,
 		callData)
 	signedTxBuffer, err := account.signAndMarshalTx(tx)
 	if err != nil {
-		return xerrors.Errorf("failed to prepare EVM transaction for "+
-			"method execution: %v", err)
+		return nil, xerrors.Errorf("failed to prepare EVM transaction for "+
+			"EVM method execution: %v", err)
 	}
 
-	err = client.invoke("transaction", byzcoin.Arguments{
+	bcTx, err := client.invoke("transaction", byzcoin.Arguments{
 		{Name: "tx", Value: signedTxBuffer},
 	})
 	if err != nil {
-		return xerrors.Errorf("failed to invoke ByzCoin transaction for "+
+		return nil, xerrors.Errorf("failed to invoke ByzCoin transaction for "+
 			"EVM method execution: %v", err)
 	}
 
 	account.Nonce++
 
-	return nil
+	return bcTx, nil
 }
 
 // Call performs a new call (contract view method call, without state change)
@@ -385,18 +385,18 @@ func (client *Client) Call(account *EvmAccount,
 
 // CreditAccount credits the given Ethereum address with the given amount
 func (client *Client) CreditAccount(amount *big.Int,
-	address common.Address) error {
-	err := client.invoke("credit", byzcoin.Arguments{
+	address common.Address) (*byzcoin.ClientTransaction, error) {
+	bcTx, err := client.invoke("credit", byzcoin.Arguments{
 		{Name: "address", Value: address.Bytes()},
 		{Name: "amount", Value: amount.Bytes()},
 	})
 	if err != nil {
-		return xerrors.Errorf("failed to credit EVM account: %v", err)
+		return nil, xerrors.Errorf("failed to credit EVM account: %v", err)
 	}
 
 	log.Lvlf2("Credited %d wei on '%x'", amount, address)
 
-	return nil
+	return bcTx, nil
 }
 
 // GetAccountBalance returns the current balance of a Ethereum address
@@ -625,18 +625,19 @@ func getEvmDb(bcClient *byzcoin.Client, instID byzcoin.InstanceID) (
 }
 
 // Invoke a method on a ByzCoin EVM instance
-func (client *Client) invoke(command string, args byzcoin.Arguments) error {
-	_, err := client.invokeBEvm(&byzcoin.Invoke{
+func (client *Client) invoke(command string, args byzcoin.Arguments) (
+	*byzcoin.ClientTransaction, error) {
+	bcTx, err := client.invokeBEvm(&byzcoin.Invoke{
 		ContractID: ContractBEvmID,
 		Command:    command,
 		Args:       args,
 	})
 	if err != nil {
-		return xerrors.Errorf("failed to execute ByzCoin invoke "+
+		return nil, xerrors.Errorf("failed to execute ByzCoin invoke "+
 			"instruction: %v", err)
 	}
 
-	return nil
+	return bcTx, nil
 }
 
 func spawnBEvm(bcClient *byzcoin.Client, signer darc.Signer,

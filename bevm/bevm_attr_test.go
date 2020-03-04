@@ -140,7 +140,7 @@ func TestAttrBevm(t *testing.T) {
 	require.NoError(t, err)
 
 	// Credit the account
-	err = bevmClient.CreditAccount(big.NewInt(5*WeiPerEther), acct.Address)
+	_, err = bevmClient.CreditAccount(big.NewInt(5*WeiPerEther), acct.Address)
 	require.NoError(t, err)
 
 	// Deploy a Verify contract (see Verify.sol in `testdata/Verify`)
@@ -148,7 +148,7 @@ func TestAttrBevm(t *testing.T) {
 		"Verify", getContractData(t, "Verify", "abi"),
 		getContractData(t, "Verify", "bin"))
 	require.NoError(t, err)
-	verifyInstance, err := bevmClient.Deploy(txParams.GasLimit,
+	_, verifyInstance, err := bevmClient.Deploy(txParams.GasLimit,
 		txParams.GasPrice, 0, acct, verifyContract)
 	require.NoError(t, err)
 

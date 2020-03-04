@@ -171,7 +171,7 @@ func Test_BEvmCallsByzcoin(t *testing.T) {
 	require.NoError(t, err)
 
 	// Credit the account
-	err = bevmClient.CreditAccount(big.NewInt(5*WeiPerEther), a.Address)
+	_, err = bevmClient.CreditAccount(big.NewInt(5*WeiPerEther), a.Address)
 	require.NoError(t, err)
 
 	// Deploy a CallByzcoin contract
@@ -179,7 +179,7 @@ func Test_BEvmCallsByzcoin(t *testing.T) {
 		getContractData(t, "CallByzcoin", "abi"),
 		getContractData(t, "CallByzcoin", "bin"))
 	require.NoError(t, err)
-	callBcInstance, err := bevmClient.Deploy(txParams.GasLimit,
+	_, callBcInstance, err := bevmClient.Deploy(txParams.GasLimit,
 		txParams.GasPrice, 0, a, callBcContract)
 	require.NoError(t, err)
 
@@ -188,7 +188,7 @@ func Test_BEvmCallsByzcoin(t *testing.T) {
 	updateValue := []byte{187}
 
 	// Spawn a value -- fails because the DARC rule is missing
-	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a,
+	_, err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a,
 		callBcInstance, "spawnValue",
 		darcID, myValueContractID, initValue[0])
 	require.Error(t, err)
@@ -243,7 +243,7 @@ func Test_BEvmCallsByzcoin(t *testing.T) {
 	require.NoError(t, err)
 
 	// Spawn a value
-	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a,
+	tx, err := bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a,
 		callBcInstance, "spawnValue",
 		darcID, myValueContractID, initValue[0])
 	require.NoError(t, err)
@@ -256,7 +256,7 @@ func Test_BEvmCallsByzcoin(t *testing.T) {
 	require.NoError(t, err)
 
 	// Update the value
-	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a,
+	_, err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a,
 		callBcInstance, "updateValue",
 		valID, myValueContractID, updateValue[0])
 	require.NoError(t, err)
@@ -266,7 +266,7 @@ func Test_BEvmCallsByzcoin(t *testing.T) {
 	require.NoError(t, err)
 
 	// Delete the value instance
-	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a,
+	_, err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a,
 		callBcInstance, "deleteValue",
 		valID, myValueContractID)
 	require.NoError(t, err)
