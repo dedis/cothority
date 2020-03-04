@@ -14,7 +14,7 @@ let factory: (path: string) => WebSocketAdapter = (path: string) =>
  * @param generator A function taking a path and creating a websocket adapter instance
  */
 export function setFactory(
-  generator: (path: string) => WebSocketAdapter
+  generator: (path: string) => WebSocketAdapter,
 ): void {
   factory = generator;
 }
@@ -58,7 +58,7 @@ export interface IConnection {
    */
   sendStream<T extends Message>(
     message: Message,
-    reply: typeof Message
+    reply: typeof Message,
   ): Observable<[T, WebSocketAdapter]>;
 
   /**
@@ -131,7 +131,7 @@ export class WebSocketConnection implements IConnection {
   /** @inheritdoc */
   async send<T extends Message>(
     message: Message,
-    reply: typeof Message
+    reply: typeof Message,
   ): Promise<T> {
     return new Promise((complete, error) => {
       this.sendStream(message, reply).subscribe({
@@ -140,7 +140,7 @@ export class WebSocketConnection implements IConnection {
         next: ([m, ws]) => {
           complete(m as T);
           ws.close(1000);
-        }
+        },
       });
     });
   }
@@ -156,7 +156,7 @@ export class WebSocketConnection implements IConnection {
   setParallel(p: number): void {
     if (p > 1) {
       throw new Error(
-        "Single connection doesn't support more than one parallel"
+        "Single connection doesn't support more than one parallel",
       );
     }
   }
@@ -164,22 +164,22 @@ export class WebSocketConnection implements IConnection {
   /** @inheritdoc */
   sendStream<T extends Message>(
     message: Message,
-    reply: typeof Message
+    reply: typeof Message,
   ): Observable<[T, WebSocketAdapter]> {
     if (!message.$type) {
       throw new Error(
-        `message "${message.constructor.name}" is not registered`
+        `message "${message.constructor.name}" is not registered`,
       );
     }
     if (!reply.$type) {
       throw new Error(`message "${reply.constructor.name}" is not registered`);
     }
 
-    return new Observable(sub => {
+    return new Observable((sub) => {
       const url = new URL(this.url.href);
       url.pathname += `${this.service}/${message.$type.name.replace(
         /.*\./,
-        ""
+        "",
       )}`;
       Log.lvl4(`Socket: new WebSocket(${url.href})`);
       const ws = factory(url.href);
@@ -219,7 +219,7 @@ export class WebSocketConnection implements IConnection {
 
         if (err !== undefined) {
           sub.error(
-            new Error(`error in websocket ${url.href}: ${err.message}`)
+            new Error(`error in websocket ${url.href}: ${err.message}`),
           );
         } else {
           sub.complete();
@@ -255,7 +255,7 @@ export class RosterWSConnection implements IConnection {
   constructor(
     r: Roster | string,
     private service: string,
-    parallel: number = RosterWSConnection.defaultParallel
+    parallel: number = RosterWSConnection.defaultParallel,
   ) {
     this.setParallel(parallel);
     if (r instanceof Roster) {
@@ -296,7 +296,7 @@ export class RosterWSConnection implements IConnection {
    */
   async send<T extends Message>(
     message: Message,
-    reply: typeof Message
+    reply: typeof Message,
   ): Promise<T> {
     const errors: string[] = [];
     const msgNbr = this.msgNbr;
@@ -309,7 +309,7 @@ export class RosterWSConnection implements IConnection {
       "sending",
       message.constructor.name,
       "with list:",
-      pool.map(conn => conn.getURL())
+      pool.map((conn) => conn.getURL()),
     );
 
     // Get the first reply - need to take care not to return a reject too soon, else
@@ -317,7 +317,7 @@ export class RosterWSConnection implements IConnection {
     // The promises that never 'resolve' or 'reject' will later be collected by GC:
     // https://stackoverflow.com/questions/36734900/what-happens-if-we-dont-resolve-or-reject-the-promise
     return Promise.race(
-      pool.map(conn => {
+      pool.map((conn) => {
         return new Promise<T>(async (resolve, reject) => {
           do {
             const idStr = `${
@@ -345,7 +345,7 @@ export class RosterWSConnection implements IConnection {
             }
           } while (conn !== undefined);
         });
-      })
+      }),
     );
   }
 
@@ -366,7 +366,7 @@ export class RosterWSConnection implements IConnection {
   /** @inheritdoc */
   sendStream<T extends Message>(
     message: Message,
-    reply: typeof Message
+    reply: typeof Message,
   ): Observable<[T, WebSocketAdapter]> {
     const list = this.nodes.newList(this.service, this.parallel);
     return list.active[0].sendStream(message, reply);

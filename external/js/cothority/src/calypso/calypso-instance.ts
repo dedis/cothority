@@ -1,18 +1,18 @@
 import { curve, Point, Scalar } from "@dedis/kyber";
 import { createHash } from "crypto-browserify";
 import Keccak from "keccak";
+import Long from "Long";
 import { Message, Properties } from "protobufjs/light";
 import ByzCoinRPC from "../byzcoin/byzcoin-rpc";
 import ClientTransaction, {
   Argument,
-  Instruction
+  Instruction,
 } from "../byzcoin/client-transaction";
 import CoinInstance, { Coin } from "../byzcoin/contracts/coin-instance";
 import Instance, { InstanceID } from "../byzcoin/instance";
 import Signer from "../darc/signer";
 import { registerMessage } from "../protobuf";
 import { OnChainSecretRPC } from "./calypso-rpc";
-import Long from "Long";
 
 const curve25519 = curve.newCurve("edwards25519");
 
@@ -31,12 +31,12 @@ export class OnChainSecretInstance extends Instance {
   static async spawn(
     bc: ByzCoinRPC,
     darcID: InstanceID,
-    signers: Signer[]
+    signers: Signer[],
   ): Promise<OnChainSecretInstance> {
     const inst = Instruction.createSpawn(
       darcID,
       OnChainSecretInstance.contractID,
-      []
+      [],
     );
     await inst.updateCounters(bc, signers);
 
@@ -48,7 +48,7 @@ export class OnChainSecretInstance extends Instance {
     return OnChainSecretInstance.fromByzcoin(
       bc,
       ctx.instructions[0].deriveId(),
-      1
+      1,
     );
   }
 
@@ -64,11 +64,11 @@ export class OnChainSecretInstance extends Instance {
     bc: ByzCoinRPC,
     iid: InstanceID,
     waitMatch: number = 0,
-    interval: number = 1000
+    interval: number = 1000,
   ): Promise<OnChainSecretInstance> {
     return new OnChainSecretInstance(
       bc,
-      await Instance.fromByzcoin(bc, iid, waitMatch, interval)
+      await Instance.fromByzcoin(bc, iid, waitMatch, interval),
     );
   }
   write: Write;
@@ -77,7 +77,7 @@ export class OnChainSecretInstance extends Instance {
     super(inst);
     if (inst.contractID.toString() !== OnChainSecretInstance.contractID) {
       throw new Error(
-        `mismatch contract name: ${inst.contractID} vs ${OnChainSecretInstance.contractID}`
+        `mismatch contract name: ${inst.contractID} vs ${OnChainSecretInstance.contractID}`,
       );
     }
 
@@ -102,16 +102,16 @@ export class CalypsoWriteInstance extends Instance {
     bc: ByzCoinRPC,
     darcID: InstanceID,
     write: Write,
-    signers: Signer[]
+    signers: Signer[],
   ): Promise<CalypsoWriteInstance> {
     const ctx = ClientTransaction.make(
       bc.getProtocolVersion(),
       Instruction.createSpawn(darcID, CalypsoWriteInstance.contractID, [
         new Argument({
           name: CalypsoWriteInstance.argumentWrite,
-          value: Buffer.from(Write.encode(write).finish())
-        })
-      ])
+          value: Buffer.from(Write.encode(write).finish()),
+        }),
+      ]),
     );
     await ctx.updateCountersAndSign(bc, [signers]);
     await bc.sendTransactionAndWait(ctx, 10);
@@ -119,7 +119,7 @@ export class CalypsoWriteInstance extends Instance {
     return CalypsoWriteInstance.fromByzcoin(
       bc,
       ctx.instructions[0].deriveId(),
-      1
+      1,
     );
   }
 
@@ -133,11 +133,11 @@ export class CalypsoWriteInstance extends Instance {
     bc: ByzCoinRPC,
     iid: InstanceID,
     waitMatch: number = 0,
-    interval: number = 1000
+    interval: number = 1000,
   ): Promise<CalypsoWriteInstance> {
     return new CalypsoWriteInstance(
       bc,
-      await Instance.fromByzcoin(bc, iid, waitMatch, interval)
+      await Instance.fromByzcoin(bc, iid, waitMatch, interval),
     );
   }
   write: Write;
@@ -146,7 +146,7 @@ export class CalypsoWriteInstance extends Instance {
     super(inst);
     if (inst.contractID.toString() !== CalypsoWriteInstance.contractID) {
       throw new Error(
-        `mismatch contract name: ${inst.contractID} vs ${CalypsoWriteInstance.contractID}`
+        `mismatch contract name: ${inst.contractID} vs ${CalypsoWriteInstance.contractID}`,
       );
     }
 
@@ -157,7 +157,7 @@ export class CalypsoWriteInstance extends Instance {
     pub: Point,
     signers: Signer[],
     coin?: CoinInstance,
-    coinSigners?: Signer[]
+    coinSigners?: Signer[],
   ): Promise<CalypsoReadInstance> {
     /*
     if (
@@ -177,9 +177,9 @@ export class CalypsoWriteInstance extends Instance {
         [
           new Argument({
             name: CoinInstance.argumentCoins,
-            value: Buffer.from(this.write.cost.value.toBytesLE())
-          })
-        ]
+            value: Buffer.from(this.write.cost.value.toBytesLE()),
+          }),
+        ],
       );
     }
     return CalypsoReadInstance.spawn(this.rpc, this.id, pub, signers, pay);
@@ -195,16 +195,16 @@ export class CalypsoReadInstance extends Instance {
     writeId: InstanceID,
     pub: Point,
     signers: Signer[],
-    pay?: Instruction
+    pay?: Instruction,
   ): Promise<CalypsoReadInstance> {
     const read = new Read({ write: writeId, xc: pub.marshalBinary() });
     const instrs = [
       Instruction.createSpawn(writeId, CalypsoReadInstance.contractID, [
         new Argument({
           name: CalypsoReadInstance.argumentRead,
-          value: Buffer.from(Read.encode(read).finish())
-        })
-      ])
+          value: Buffer.from(Read.encode(read).finish()),
+        }),
+      ]),
     ];
     const ctxSigners = [signers];
     if (pay) {
@@ -218,7 +218,7 @@ export class CalypsoReadInstance extends Instance {
     return CalypsoReadInstance.fromByzcoin(
       bc,
       ctx.instructions[ctx.instructions.length - 1].deriveId(),
-      1
+      1,
     );
   }
 
@@ -232,11 +232,11 @@ export class CalypsoReadInstance extends Instance {
     bc: ByzCoinRPC,
     iid: InstanceID,
     waitMatch: number = 0,
-    interval: number = 1000
+    interval: number = 1000,
   ): Promise<CalypsoReadInstance> {
     return new CalypsoReadInstance(
       bc,
-      await Instance.fromByzcoin(bc, iid, waitMatch, interval)
+      await Instance.fromByzcoin(bc, iid, waitMatch, interval),
     );
   }
   read: Read;
@@ -245,7 +245,7 @@ export class CalypsoReadInstance extends Instance {
     super(inst);
     if (inst.contractID.toString() !== CalypsoReadInstance.contractID) {
       throw new Error(
-        `mismatch contract name: ${inst.contractID} vs ${CalypsoReadInstance.contractID}`
+        `mismatch contract name: ${inst.contractID} vs ${CalypsoReadInstance.contractID}`,
       );
     }
 
@@ -257,7 +257,7 @@ export class CalypsoReadInstance extends Instance {
     // can easily verify the proof.
     const xhatenc = await ocs.reencryptKey(
       await this.rpc.getProof(this.read.write),
-      await this.rpc.getProof(this.id)
+      await this.rpc.getProof(this.id),
     );
     return xhatenc.decrypt(priv);
   }
@@ -285,7 +285,7 @@ export class Write extends Message<Write> {
     writeDarc: InstanceID,
     X: Point,
     key: Buffer,
-    rand?: (length: number) => Buffer
+    rand?: (length: number) => Buffer,
   ): Promise<Write> {
     // wr := &Write{LTSID: ltsid}
     const wr = new Write();
@@ -319,8 +319,8 @@ export class Write extends Message<Write> {
     k.update(ltsid);
     const gBar = curve25519
       .point()
-      .embed(Buffer.from(ltsid.subarray(0, curve25519.point().embedLen())), l =>
-        k.squeeze(l)
+      .embed(Buffer.from(ltsid.subarray(0, curve25519.point().embedLen())), (l) =>
+        k.squeeze(l),
       );
     // wr.Ubar = suite.Point().Mul(r, gBar)
     wr.ubar = curve25519
@@ -433,7 +433,7 @@ export async function DecodeKey(
   X: Point,
   C: Point,
   XhatEnc: Point,
-  priv: Scalar
+  priv: Scalar,
 ): Promise<Buffer> {
   // 	xcInv := suite.Scalar().Neg(xc)
   const xcInv = curve25519.scalar().neg(priv);

@@ -948,14 +948,7 @@ func (id Identity) GetPublicBytes() []byte {
 		}
 		return buf
 	case 4:
-		doc, err := didResolver.Resolve(id.DID.DID)
-		if err != nil {
-			return nil
-		}
-		for _, pk := range doc.PublicKey {
-			return pk.Value
-		}
-		return nil
+		return []byte(fmt.Sprintf("did:%s:%s", id.DID.Method, id.DID.DID))
 	default:
 		return nil
 	}

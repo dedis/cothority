@@ -1,10 +1,10 @@
-import { IIdentity } from "./identity-wrapper";
-import { Message, Properties } from "protobufjs";
-import { registerMessage } from "../protobuf";
-import { sign, curve, Point } from "@dedis/kyber";
+import { curve, Point, sign } from "@dedis/kyber";
 import Ed25519Point from "@dedis/kyber/curve/edwards25519/point";
 // @ts-ignore
 import Base58 from "base-58";
+import { Message, Properties } from "protobufjs";
+import { registerMessage } from "../protobuf";
+import { IIdentity } from "./identity-wrapper";
 
 const { schnorr } = sign;
 const ed25519 = curve.newCurve("edwards25519");
@@ -15,9 +15,9 @@ export default class IdentityDid extends Message<IdentityDid>
     registerMessage("IdentityDID", IdentityDid);
   }
 
-  protected _point: Buffer;
-
   point: Point;
+
+  readonly method: string;
 
   readonly did: string;
 
@@ -27,9 +27,17 @@ export default class IdentityDid extends Message<IdentityDid>
 
   readonly indy: Indy;
 
+  protected _point: Buffer;
+
   constructor(props?: Properties<IdentityDid>) {
     super(props);
     this.did = props.did;
+    if (this.did && this.did.startsWith("did:sov")) {
+      this.did = this.did.substring(this.did.lastIndexOf(":") + 1);
+      this.method = "sov";
+    } else {
+      this.method = props.method;
+    }
     this.walletHandle = props.walletHandle;
     this.poolHandle = props.poolHandle;
     this.indy = props.indy;
@@ -39,7 +47,7 @@ export default class IdentityDid extends Message<IdentityDid>
     const keyBase58 = await this.indy.keyForDid(
       this.poolHandle,
       this.walletHandle,
-      this.did
+      this.did,
     );
     this._point = Base58.decode(keyBase58);
     this.point = new Ed25519Point();
@@ -53,12 +61,11 @@ export default class IdentityDid extends Message<IdentityDid>
 
   /** @inheritdoc */
   toBytes(): Buffer {
-    return Buffer.from(this.did);
+    return Buffer.from(this.toString());
   }
 
   /** @inheritdoc */
   toString() {
-    return this.did;
+    return `did:${this.method}:${this.did}`;
   }
 }
-

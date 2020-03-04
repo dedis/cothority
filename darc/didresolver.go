@@ -47,6 +47,7 @@ func (t DIDVerificationKeyTypes) String() string {
 }
 
 func (r *IndyCLIDIDResolver) generatePoolName(n int) string {
+	rand.Seed(time.Now().UnixNano())
 	alphabet := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	b := make([]byte, n)
 	for i := range b {
@@ -102,10 +103,11 @@ func (r *IndyCLIDIDResolver) parseOutput(id, output string) (time.Time, []Public
 		}
 	}
 
-	//_createdAt, err := time.Parse("2006-01-02 22:04:05", createdAt)
+	/*
+	_createdAt, err := time.Parse("2006-01-02 22:04:05", createdAt)
 	_createdAt, err := time.Parse("2006-01-02 15:04:05", createdAt)
 	if err != nil {
-		return time.Time{}, nil, nil, fmt.Errorf("error parsing time: %s", err)
+	/return time.Time{}, nil, nil, fmt.Errorf("error parsing time: %s", err)
 	}
 
 	idBuf, err := base58.Decode(id)
@@ -114,19 +116,25 @@ func (r *IndyCLIDIDResolver) parseOutput(id, output string) (time.Time, []Public
 	}
 
 	// Some txns have verykey beginning with a ~ sign
-	if verkey[0] == '~' {
+	if len(verkey) > 0 && verkey[0] == '~' {
 		verkey = verkey[1:]
 	}
+	*/
 	verkeyBuf, err := base58.Decode(verkey)
 	if err != nil {
 		return time.Time{}, nil, nil, fmt.Errorf("error base58 decoding did: %s", err)
 	}
-	pkBuf := append(idBuf, verkeyBuf...)
+	var pkBuf []byte
+	/*
+	if len(verkey) > 0 && verkey[0] == '~' {
+		pkBuf = append(idBuf, verkeyBuf...)
+	} else { }
+	*/
 	pk := PublicKey{
 		ID:         fmt.Sprintf("%s-keys#1", id),
 		Type:       Ed25519VerificationKey2018.String(),
 		Controller: id,
-		Value:      pkBuf,
+		Value:      verkeyBuf,
 	}
 
 	var svcs []DIDService
@@ -140,7 +148,7 @@ func (r *IndyCLIDIDResolver) parseOutput(id, output string) (time.Time, []Public
 			ServiceEndpoint: endpoint,
 		})
 	}
-	return _createdAt, []PublicKey{pk}, svcs, nil
+	return time.Time{}, []PublicKey{pk}, svcs, nil
 }
 
 // Resolve resolves a did to a DID document using indy-cli.
