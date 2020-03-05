@@ -7,6 +7,12 @@ import (
 	"golang.org/x/xerrors"
 )
 
+// Whitelist of EVM-spawnable Byzcoin contracts.
+// This prevents replay issues in case the way to generate a new InstanceID of
+// a Byzcoin contract is changed to take into account the `seed` argument
+// *after* EVM-generated instances already exist in the ledger.
+var evmSpawnableContracts = map[string]bool{}
+
 const (
 	byzcoinSpawnEvent  = "ByzcoinSpawn"
 	byzcoinInvokeEvent = "ByzcoinInvoke"
@@ -172,6 +178,12 @@ func getInstrForEvent(name string, iface interface{}) (
 		})
 		if !ok {
 			return nil, xerrors.Errorf("failed to cast 'spawn' event")
+		}
+
+		if !evmSpawnableContracts[event.ContractID] {
+			return nil, xerrors.Errorf("contract '%s' has not been "+
+				"whitelisted to be spawned by an EVM contract",
+				event.ContractID)
 		}
 
 		instr = &byzcoin.Instruction{

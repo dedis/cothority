@@ -270,7 +270,6 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 		// Compute the timestamp for the EVM, converting [ns] to [s]
 		evmTs := uint64(tr.GetCurrentBlockTimestamp() / 1e9)
 
-		log.Lvlf2("Transaction hash = '%s'", ethTx.Hash().Hex())
 		stateDb.Prepare(ethTx.Hash(), common.Hash{}, 0)
 		txReceipt, err := sendTx(&ethTx, stateDb, evmTs)
 		if err != nil {
@@ -473,7 +472,7 @@ func handleLogs(rst byzcoin.ReadOnlyStateTrie, logEntries []*types.Log) (
 		encodedInstr, err := protobuf.Encode(instr)
 		if err != nil {
 			return nil, xerrors.Errorf("failed to encode instruction "+
-				"from EMV: %v", err)
+				"from EVM: %v", err)
 		}
 
 		sc := byzcoin.NewStateChange(

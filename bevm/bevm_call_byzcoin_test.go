@@ -22,6 +22,8 @@ func init() {
 	if err != nil {
 		log.ErrFatal(err)
 	}
+
+	evmSpawnableContracts[myValueContractID] = true
 }
 
 const myValueContractID = "MyValueContract"
@@ -391,8 +393,8 @@ func Test_SpawnTwoValues(t *testing.T) {
 		txParams.GasPrice, 0, a, callBcContract)
 	require.NoError(t, err)
 
-	// Add rules to the DARC guarding "spawn", "invoke.update" and "delete" on
-	// the value contract with the address of the deployed CallByzcoin contract
+	// Add rules to the DARC guarding "spawn" on the value contract with the
+	// address of the deployed CallByzcoin contract
 	newDarc := gDarc.Copy()
 	newDarc.EvolveFrom(gDarc)
 
@@ -449,4 +451,64 @@ func Test_SpawnTwoValues(t *testing.T) {
 	require.NoError(t, err)
 	_, err = cl.WaitProof(valID2, 10*time.Second, initValue)
 	require.NoError(t, err)
+}
+
+func Test_SpawnWhitelist(t *testing.T) {
+	log.LLvl1("SpawnWhitelist")
+
+	local := onet.NewTCPTest(cothority.Suite)
+	defer local.CloseAll()
+
+	signer := darc.NewSignerEd25519(nil, nil)
+	_, roster, _ := local.GenTree(3, true)
+
+	// Initialize DARC with rights for BEvm
+	genesisMsg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
+		[]string{
+			"spawn:" + ContractBEvmID,
+			"invoke:" + ContractBEvmID + ".credit",
+			"invoke:" + ContractBEvmID + ".transaction",
+		}, signer.Identity(),
+	)
+	require.NoError(t, err)
+
+	gDarc := &genesisMsg.GenesisDarc
+	darcID := byzcoin.NewInstanceID(gDarc.GetBaseID())
+	genesisMsg.BlockInterval = time.Second
+
+	// Create new ledger
+	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
+	require.NoError(t, err)
+
+	// Spawn a new BEvm instance
+	instanceID, err := NewBEvm(cl, signer, gDarc)
+	require.NoError(t, err)
+
+	// Create a new BEvm client
+	bevmClient, err := NewClient(cl, signer, instanceID)
+	require.NoError(t, err)
+
+	// Initialize an account
+	a, err := NewEvmAccount(testPrivateKeys[0])
+	require.NoError(t, err)
+
+	// Credit the account
+	_, err = bevmClient.CreditAccount(big.NewInt(5*WeiPerEther), a.Address)
+	require.NoError(t, err)
+
+	// Deploy a CallByzcoin contract
+	callBcContract, err := NewEvmContract("CallByzcoin",
+		getContractData(t, "CallByzcoin", "abi"),
+		getContractData(t, "CallByzcoin", "bin"))
+	require.NoError(t, err)
+	_, callBcInstance, err := bevmClient.Deploy(txParams.GasLimit,
+		txParams.GasPrice, 0, a, callBcContract)
+	require.NoError(t, err)
+
+	// Spawning a non-whitelisted contract fails
+	_, err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a,
+		callBcInstance, "spawnValue",
+		darcID, "xyzzy", uint8(42))
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "not been whitelisted")
 }
