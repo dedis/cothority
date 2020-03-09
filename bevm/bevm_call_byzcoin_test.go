@@ -1,6 +1,7 @@
 package bevm
 
 import (
+	"bytes"
 	"math/big"
 	"testing"
 	"time"
@@ -122,22 +123,24 @@ func (c myValueContract) Delete(rst byzcoin.ReadOnlyStateTrie,
 	return
 }
 
-// Inspired by byzcoin.Client.WaitProof()
-func waitProofGone(t *testing.T, cl *byzcoin.Client, interval time.Duration,
-	id byzcoin.InstanceID) error {
-	for i := 0; i < 10; i++ {
-		resp, err := cl.GetProof(id[:])
-		require.NoError(t, err)
-		ok, err := resp.Proof.InclusionProof.Exists(id[:])
-		require.NoError(t, err)
-		if !ok {
-			return nil
-		}
-		time.Sleep(interval / 10)
+// Check that an InstanceID exists and, if provided, that it holds a given
+// value.
+func instanceIDExists(t *testing.T, cl *byzcoin.Client,
+	id byzcoin.InstanceID, value []byte) bool {
+	resp, err := cl.GetProof(id[:])
+	require.NoError(t, err)
+
+	ok, err := resp.Proof.InclusionProof.Exists(id[:])
+	require.NoError(t, err)
+
+	if value == nil {
+		return ok
 	}
 
-	return xerrors.Errorf("timeout reached and inclusion proof for %v "+
-		"still exists", id)
+	_, buf, _, _, err := resp.Proof.KeyValue()
+	require.NoError(t, err)
+
+	return bytes.Compare(buf, value) == 0
 }
 
 func Test_BEvmCallsByzcoin(t *testing.T) {
@@ -164,6 +167,7 @@ func Test_BEvmCallsByzcoin(t *testing.T) {
 	// Create new ledger
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
 	require.NoError(t, err)
+	require.NoError(t, cl.UseNode(1))
 
 	// Spawn a new BEvm instance
 	instanceID, err := NewBEvm(cl, signer, gDarc)
@@ -257,8 +261,7 @@ func Test_BEvmCallsByzcoin(t *testing.T) {
 	valID := byzcoin.ComputeNewInstanceID(myValueContractID, seed)
 
 	// Check that the new instance exists and holds the correct value
-	_, err = cl.WaitProof(valID, 10*time.Second, initValue)
-	require.NoError(t, err)
+	require.True(t, instanceIDExists(t, cl, valID, initValue))
 
 	// Update the value
 	_, err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a,
@@ -267,8 +270,7 @@ func Test_BEvmCallsByzcoin(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check it holds the updated value
-	_, err = cl.WaitProof(valID, 10*time.Second, updateValue)
-	require.NoError(t, err)
+	require.True(t, instanceIDExists(t, cl, valID, updateValue))
 
 	// Delete the value instance
 	_, err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a,
@@ -277,7 +279,7 @@ func Test_BEvmCallsByzcoin(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check it no longer exists
-	require.NoError(t, waitProofGone(t, cl, 10*time.Second, valID))
+	require.False(t, instanceIDExists(t, cl, valID, nil))
 }
 
 func Test_DirectlyUseEvmIdentity(t *testing.T) {
@@ -356,6 +358,7 @@ func Test_SpawnTwoValues(t *testing.T) {
 	// Create new ledger
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
 	require.NoError(t, err)
+	require.NoError(t, cl.UseNode(1))
 
 	// Spawn a new BEvm instance
 	instanceID, err := NewBEvm(cl, signer, gDarc)
@@ -435,10 +438,8 @@ func Test_SpawnTwoValues(t *testing.T) {
 	valID2 := byzcoin.ComputeNewInstanceID(myValueContractID, seed)
 
 	// Check that the new instances exist and hold the correct value
-	_, err = cl.WaitProof(valID1, 10*time.Second, initValue)
-	require.NoError(t, err)
-	_, err = cl.WaitProof(valID2, 10*time.Second, initValue)
-	require.NoError(t, err)
+	require.True(t, instanceIDExists(t, cl, valID1, initValue))
+	require.True(t, instanceIDExists(t, cl, valID2, initValue))
 }
 
 func Test_SpawnWhitelist(t *testing.T) {
