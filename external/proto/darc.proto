@@ -76,6 +76,7 @@ message IdentityDarc {
 
 // IdentityEvmContract holds the address of an EVM contract.
 message IdentityEvmContract {
+  // 	BEvmID  []byteBEvm InstanceID
   required common.Address address = 1;
 }
 
@@ -117,6 +118,7 @@ message SignerProxy {
 
 // SignerEvmContract holds the address of an EVM contract.
 message SignerEvmContract {
+  // 	BEvmID  []byteBEvm InstanceID
   required common.Address address = 1;
 }
 

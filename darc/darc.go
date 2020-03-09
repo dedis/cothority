@@ -896,8 +896,9 @@ func (id Identity) String() string {
 	case 3:
 		return fmt.Sprintf("%s:%v:%v", id.TypeString(), id.Proxy.Public, id.Proxy.Data)
 	case 4:
-		addrString := id.EvmContract.Address.Hex()[2:] // Remove "0x"
-		return fmt.Sprintf("%s:%s", id.TypeString(), addrString)
+		bevmString := hex.EncodeToString(id.EvmContract.BEvmID)
+		addrString := id.EvmContract.Address.Hex()
+		return fmt.Sprintf("%s:%s:%s", id.TypeString(), bevmString, addrString)
 	default:
 		return "No identity"
 	}
@@ -1006,6 +1007,7 @@ func NewIdentityProxy(s *SignerProxy) Identity {
 func NewIdentityEvmContract(s *SignerEvmContract) Identity {
 	return Identity{
 		EvmContract: &IdentityEvmContract{
+			BEvmID:  s.BEvmID,
 			Address: s.Address,
 		},
 	}
@@ -1023,7 +1025,8 @@ func (idp IdentityProxy) Equal(i2 *IdentityProxy) bool {
 
 // Equal returns true if both IdentityEvmContract are the same.
 func (id IdentityEvmContract) Equal(id2 *IdentityEvmContract) bool {
-	return id.Address == id2.Address
+	return bytes.Compare(id.BEvmID, id2.BEvmID) == 0 &&
+		id.Address == id2.Address
 }
 
 type sigRS struct {
@@ -1068,7 +1071,12 @@ func (idp IdentityProxy) Verify(msg, s []byte) error {
 // Verify returns nil if the EVM contract signature is correct, or an error
 // otherwise.
 func (id IdentityEvmContract) Verify(msg, s []byte) error {
-	if bytes.Equal(s, id.Address[:]) {
+	h := sha256.New()
+	h.Write(id.BEvmID)
+	h.Write(id.Address[:])
+	sig := h.Sum(nil)
+
+	if bytes.Equal(s, sig) {
 		return nil
 	}
 
@@ -1142,10 +1150,23 @@ func parseIDProxy(in string) (Identity, error) {
 }
 
 func parseIDEvmContract(in string) (Identity, error) {
-	address := common.HexToAddress(in)
+	fields := strings.Split(in, ":")
+	if len(fields) != 2 {
+		return Identity{}, xerrors.Errorf("failed to parse EVM contract " +
+			"identity: expected format 'evm_contract:bevm_id:contract_address'")
+	}
+
+	bevmID, err := hex.DecodeString(fields[0])
+	if err != nil {
+		return Identity{}, xerrors.Errorf("failed to parse BEvmID of EVM "+
+			"contract identity: %v", err)
+	}
+
+	address := common.HexToAddress(fields[1])
 
 	return Identity{
 		EvmContract: &IdentityEvmContract{
+			BEvmID:  bevmID,
 			Address: address,
 		},
 	}, nil
@@ -1300,9 +1321,21 @@ func (s SignerProxy) Sign(msg []byte) ([]byte, error) {
 	return sig, err
 }
 
+// NewSignerEvmContract creates a new SignerEvmContract
+func NewSignerEvmContract(BEvmID []byte, Address common.Address) Signer {
+	return Signer{
+		EvmContract: &SignerEvmContract{BEvmID, Address},
+	}
+}
+
 // Sign creates a signature for an EVM contract identity.
 func (s SignerEvmContract) Sign(msg []byte) ([]byte, error) {
-	return s.Address[:], nil
+	h := sha256.New()
+	h.Write(s.BEvmID)
+	h.Write(s.Address[:])
+	sig := h.Sum(nil)
+
+	return sig, nil
 }
 
 func copyBytes(a []byte) []byte {

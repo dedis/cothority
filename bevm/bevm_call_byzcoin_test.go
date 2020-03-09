@@ -170,11 +170,11 @@ func Test_BEvmCallsByzcoin(t *testing.T) {
 	require.NoError(t, cl.UseNode(1))
 
 	// Spawn a new BEvm instance
-	instanceID, err := NewBEvm(cl, signer, gDarc)
+	bevmID, err := NewBEvm(cl, signer, gDarc)
 	require.NoError(t, err)
 
 	// Create a new BEvm client
-	bevmClient, err := NewClient(cl, signer, instanceID)
+	bevmClient, err := NewClient(cl, signer, bevmID)
 	require.NoError(t, err)
 
 	// Initialize an account
@@ -210,11 +210,8 @@ func Test_BEvmCallsByzcoin(t *testing.T) {
 	newDarc := gDarc.Copy()
 	newDarc.EvolveFrom(gDarc)
 
-	darcExpr := darc.Identity{
-		EvmContract: &darc.IdentityEvmContract{
-			Address: callBcInstance.Address,
-		},
-	}.String()
+	evmSigner := darc.NewSignerEvmContract(bevmID[:], callBcInstance.Address)
+	darcExpr := evmSigner.Identity().String()
 
 	darcAction := "spawn:" + myValueContractID
 	require.NoError(t,
@@ -286,12 +283,9 @@ func Test_DirectlyUseEvmIdentity(t *testing.T) {
 	local := onet.NewTCPTest(cothority.Suite)
 	defer local.CloseAll()
 
-	signer := darc.Signer{
-		EvmContract: &darc.SignerEvmContract{
-			Address: common.HexToAddress(
-				"000102030405060708090A0B0C0D0E0F10111213"),
-		},
-	}
+	signer := darc.NewSignerEvmContract(
+		[]byte{1, 2, 3, 4, 5},
+		common.HexToAddress("000102030405060708090A0B0C0D0E0F10111213"))
 	_, roster, _ := local.GenTree(3, true)
 
 	// Initialize DARC with rights to spawn a value contract using an EVM
@@ -361,11 +355,11 @@ func Test_SpawnTwoValues(t *testing.T) {
 	require.NoError(t, cl.UseNode(1))
 
 	// Spawn a new BEvm instance
-	instanceID, err := NewBEvm(cl, signer, gDarc)
+	bevmID, err := NewBEvm(cl, signer, gDarc)
 	require.NoError(t, err)
 
 	// Create a new BEvm client
-	bevmClient, err := NewClient(cl, signer, instanceID)
+	bevmClient, err := NewClient(cl, signer, bevmID)
 	require.NoError(t, err)
 
 	// Initialize an account
@@ -390,11 +384,8 @@ func Test_SpawnTwoValues(t *testing.T) {
 	newDarc := gDarc.Copy()
 	newDarc.EvolveFrom(gDarc)
 
-	darcExpr := darc.Identity{
-		EvmContract: &darc.IdentityEvmContract{
-			Address: callBcInstance.Address,
-		},
-	}.String()
+	evmSigner := darc.NewSignerEvmContract(bevmID[:], callBcInstance.Address)
+	darcExpr := evmSigner.Identity().String()
 
 	darcAction := "spawn:" + myValueContractID
 	require.NoError(t,

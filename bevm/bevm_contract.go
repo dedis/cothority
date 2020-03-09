@@ -286,7 +286,7 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 		log.Lvlf2("\\--> status = %d, gas used = %d, receipt = %s",
 			txReceipt.Status, txReceipt.GasUsed, txReceipt.TxHash.Hex())
 
-		eventStateChanges, err := handleLogs(rst, txReceipt.Logs)
+		eventStateChanges, err := handleLogs(inst, rst, txReceipt.Logs)
 		if err != nil {
 			return nil, nil, xerrors.Errorf("failed to handle EVM transaction "+
 				"logs: %v", err)
@@ -395,7 +395,8 @@ func (c *contractBEvm) Delete(rst byzcoin.ReadOnlyStateTrie,
 // Handle the log entries produced by an EVM execution.
 // Currently, only the special entries allowing to interact with Byzcoin
 // contracts are handled, the other ones are ignored.
-func handleLogs(rst byzcoin.ReadOnlyStateTrie, logEntries []*types.Log) (
+func handleLogs(inst byzcoin.Instruction, rst byzcoin.ReadOnlyStateTrie,
+	logEntries []*types.Log) (
 	[]byzcoin.StateChange, error) {
 	var err error
 	eventsAbi, err := abi.JSON(strings.NewReader(eventsAbiJSON))
@@ -436,9 +437,8 @@ func handleLogs(rst byzcoin.ReadOnlyStateTrie, logEntries []*types.Log) (
 				"for EVM event: %v", err)
 		}
 
-		signer := darc.Signer{
-			EvmContract: &darc.SignerEvmContract{Address: logEntry.Address},
-		}
+		signer := darc.NewSignerEvmContract(inst.InstanceID[:],
+			logEntry.Address)
 		identity := signer.Identity()
 
 		// Retrieve counter

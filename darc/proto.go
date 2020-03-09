@@ -96,6 +96,7 @@ type IdentityDarc struct {
 
 // IdentityEvmContract holds the address of an EVM contract.
 type IdentityEvmContract struct {
+	BEvmID  []byte // BEvm InstanceID
 	Address common.Address
 }
 
@@ -139,6 +140,7 @@ type SignerProxy struct {
 
 // SignerEvmContract holds the address of an EVM contract.
 type SignerEvmContract struct {
+	BEvmID  []byte // BEvm InstanceID
 	Address common.Address
 }
 
