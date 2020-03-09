@@ -18,9 +18,7 @@ import (
 func init() {
 	err := byzcoin.RegisterGlobalContract(valueContractID,
 		valueContractFromBytes)
-	if err != nil {
-		log.ErrFatal(err)
-	}
+	log.ErrFatal(err)
 }
 
 const valueContractID = "TestValueContract"
@@ -44,7 +42,7 @@ func (c valueContract) Spawn(rst byzcoin.ReadOnlyStateTrie,
 	var darcID darc.ID
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return
+		return nil, nil, xerrors.Errorf("failed to get darcID: %v", err)
 	}
 
 	sc = []byzcoin.StateChange{
@@ -64,7 +62,7 @@ func (c valueContract) Invoke(rst byzcoin.ReadOnlyStateTrie,
 
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return
+		return nil, nil, xerrors.Errorf("failed to get darcID: %v", err)
 	}
 
 	switch inst.Invoke.Command {
@@ -128,7 +126,6 @@ func TestAttrBevm(t *testing.T) {
 	// Spawn a new BEvm instance
 	bevmID, err := NewBEvm(cl, signer, gDarc)
 	require.NoError(t, err)
-	log.LLvlf2("bevmID = %v", bevmID)
 
 	// Create a new BEvm client
 	bevmClient, err := NewClient(cl, signer, bevmID)
@@ -163,7 +160,6 @@ func TestAttrBevm(t *testing.T) {
 		BEvmAttrID,
 		bevmID.String(),
 		verifyInstance.Address.Hex())
-	log.LLvlf2("DARC rule: %s → %s", darcAction, darcExpr)
 	require.NoError(t,
 		newDarc.Rules.AddRule(darc.Action(darcAction), []byte(darcExpr)))
 

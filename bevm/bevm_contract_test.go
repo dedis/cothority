@@ -11,7 +11,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/onet/v3/log"
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -33,8 +32,6 @@ var testPrivateKeys = []string{
 
 // Spawn a BEvm
 func Test_Spawn(t *testing.T) {
-	log.LLvl1("BEvm instantiation")
-
 	// Create a new ledger and prepare for proper closing
 	bct := newBCTest(t)
 	defer bct.Close()
@@ -46,8 +43,6 @@ func Test_Spawn(t *testing.T) {
 
 // Spawn and delete a BEvm instance
 func Test_SpawnAndDelete(t *testing.T) {
-	log.LLvl1("BEvm creation and deletion")
-
 	// Create a new ledger and prepare for proper closing
 	bct := newBCTest(t)
 	defer bct.Close()
@@ -87,8 +82,6 @@ func Test_SpawnAndDelete(t *testing.T) {
 
 // Credit and display three accounts balances
 func Test_InvokeCreditAccounts(t *testing.T) {
-	log.LLvl1("Account credit and balance")
-
 	// Create a new ledger and prepare for proper closing
 	bct := newBCTest(t)
 	defer bct.Close()
@@ -124,8 +117,6 @@ func Test_InvokeCreditAccounts(t *testing.T) {
 }
 
 func Test_InvokeCandyContract(t *testing.T) {
-	log.LLvl1("Candy")
-
 	// Create a new ledger and prepare for proper closing
 	bct := newBCTest(t)
 	defer bct.Close()
@@ -180,8 +171,6 @@ func Test_InvokeCandyContract(t *testing.T) {
 }
 
 func Test_Time(t *testing.T) {
-	log.LLvl1("TimeTest")
-
 	// Create a new ledger and prepare for proper closing
 	bct := newBCTest(t)
 	defer bct.Close()
@@ -246,8 +235,6 @@ func Test_Time(t *testing.T) {
 }
 
 func Test_InvokeTokenContract(t *testing.T) {
-	log.LLvl1("ERC20Token")
-
 	// Create a new ledger and prepare for proper closing
 	bct := newBCTest(t)
 	defer bct.Close()
@@ -338,7 +325,6 @@ func Test_InvokeTokenContract(t *testing.T) {
 }
 
 func Test_InvokeLoanContract(t *testing.T) {
-	log.LLvl1("LoanContract")
 	//Preparing ledger
 	bct := newBCTest(t)
 	defer bct.Close()

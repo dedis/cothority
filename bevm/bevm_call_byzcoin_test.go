@@ -19,9 +19,7 @@ import (
 func init() {
 	err := byzcoin.RegisterGlobalContract(myValueContractID,
 		myValueContractFromBytes)
-	if err != nil {
-		log.ErrFatal(err)
-	}
+	log.ErrFatal(err)
 
 	evmSpawnableContracts[myValueContractID] = true
 }
@@ -32,7 +30,7 @@ func myValueContractFromBytes(in []byte) (byzcoin.Contract, error) {
 	return myValueContract{value: in}, nil
 }
 
-// The test value contracts just holds a value
+// The test value contract just holds a value
 type myValueContract struct {
 	byzcoin.BasicContract
 	value []byte
@@ -47,7 +45,7 @@ func (c myValueContract) Spawn(rst byzcoin.ReadOnlyStateTrie,
 	var darcID darc.ID
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return
+		return nil, nil, xerrors.Errorf("failed to get darcID: %v", err)
 	}
 
 	var newInstanceID byzcoin.InstanceID
@@ -80,7 +78,7 @@ func (c myValueContract) Invoke(rst byzcoin.ReadOnlyStateTrie,
 
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return
+		return nil, nil, xerrors.Errorf("failed to get darcID: %v", err)
 	}
 
 	switch inst.Invoke.Command {
@@ -110,7 +108,7 @@ func (c myValueContract) Delete(rst byzcoin.ReadOnlyStateTrie,
 
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return
+		return nil, nil, xerrors.Errorf("failed to get darcID: %v", err)
 	}
 
 	sc = []byzcoin.StateChange{
@@ -143,8 +141,6 @@ func waitProofGone(t *testing.T, cl *byzcoin.Client, interval time.Duration,
 }
 
 func Test_BEvmCallsByzcoin(t *testing.T) {
-	log.LLvl1("BEvmCallsByzcoin")
-
 	local := onet.NewTCPTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -217,17 +213,14 @@ func Test_BEvmCallsByzcoin(t *testing.T) {
 	}.String()
 
 	darcAction := "spawn:" + myValueContractID
-	log.LLvlf2("DARC rule: %s → %s", darcAction, darcExpr)
 	require.NoError(t,
 		newDarc.Rules.AddRule(darc.Action(darcAction), []byte(darcExpr)))
 
 	darcAction = "invoke:" + myValueContractID + ".update"
-	log.LLvlf2("DARC rule: %s → %s", darcAction, darcExpr)
 	require.NoError(t,
 		newDarc.Rules.AddRule(darc.Action(darcAction), []byte(darcExpr)))
 
 	darcAction = "delete:" + myValueContractID
-	log.LLvlf2("DARC rule: %s → %s", darcAction, darcExpr)
 	require.NoError(t,
 		newDarc.Rules.AddRule(darc.Action(darcAction), []byte(darcExpr)))
 
@@ -288,8 +281,6 @@ func Test_BEvmCallsByzcoin(t *testing.T) {
 }
 
 func Test_DirectlyUseEvmIdentity(t *testing.T) {
-	log.LLvl1("DirectlyUseEvmIdentity")
-
 	local := onet.NewTCPTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -342,8 +333,6 @@ func Test_DirectlyUseEvmIdentity(t *testing.T) {
 }
 
 func Test_SpawnTwoValues(t *testing.T) {
-	log.LLvl1("SpawnTwoValues")
-
 	local := onet.NewTCPTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -405,7 +394,6 @@ func Test_SpawnTwoValues(t *testing.T) {
 	}.String()
 
 	darcAction := "spawn:" + myValueContractID
-	log.LLvlf2("DARC rule: %s → %s", darcAction, darcExpr)
 	require.NoError(t,
 		newDarc.Rules.AddRule(darc.Action(darcAction), []byte(darcExpr)))
 
@@ -454,8 +442,6 @@ func Test_SpawnTwoValues(t *testing.T) {
 }
 
 func Test_SpawnWhitelist(t *testing.T) {
-	log.LLvl1("SpawnWhitelist")
-
 	local := onet.NewTCPTest(cothority.Suite)
 	defer local.CloseAll()
 

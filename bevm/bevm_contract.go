@@ -198,7 +198,7 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 	var darcID darc.ID
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return
+		return nil, nil, xerrors.Errorf("failed to get darcID: %v", err)
 	}
 
 	stateDb, err := NewEvmDb(&c.State, rst, inst.InstanceID)
@@ -224,7 +224,7 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 		contractState, stateChanges, err := NewContractState(stateDb)
 		if err != nil {
 			return nil, nil,
-				xerrors.Errorf("failed to creating new BEvm contract "+
+				xerrors.Errorf("failed to create new BEvm contract "+
 					"state: %v", err)
 		}
 
@@ -367,7 +367,7 @@ func (c *contractBEvm) Delete(rst byzcoin.ReadOnlyStateTrie,
 	var darcID darc.ID
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return
+		return nil, nil, xerrors.Errorf("failed to get darcID: %v", err)
 	}
 
 	stateDb, err := NewEvmDb(&c.State, rst, inst.InstanceID)
