@@ -1,7 +1,6 @@
 package bevm
 
 import (
-	"bytes"
 	"math/big"
 	"testing"
 	"time"
@@ -123,26 +122,6 @@ func (c myValueContract) Delete(rst byzcoin.ReadOnlyStateTrie,
 	return
 }
 
-// Check that an InstanceID exists and, if provided, that it holds a given
-// value.
-func instanceIDExists(t *testing.T, cl *byzcoin.Client,
-	id byzcoin.InstanceID, value []byte) bool {
-	resp, err := cl.GetProof(id[:])
-	require.NoError(t, err)
-
-	ok, err := resp.Proof.InclusionProof.Exists(id[:])
-	require.NoError(t, err)
-
-	if value == nil {
-		return ok
-	}
-
-	_, buf, _, _, err := resp.Proof.KeyValue()
-	require.NoError(t, err)
-
-	return bytes.Compare(buf, value) == 0
-}
-
 func Test_BEvmCallsByzcoin(t *testing.T) {
 	local := onet.NewTCPTest(cothority.Suite)
 	defer local.CloseAll()
@@ -258,7 +237,8 @@ func Test_BEvmCallsByzcoin(t *testing.T) {
 	valID := byzcoin.ComputeNewInstanceID(myValueContractID, seed)
 
 	// Check that the new instance exists and holds the correct value
-	require.True(t, instanceIDExists(t, cl, valID, initValue))
+	_, err = cl.WaitProof(valID, 0, initValue)
+	require.NoError(t, err)
 
 	// Update the value
 	_, err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a,
@@ -267,7 +247,8 @@ func Test_BEvmCallsByzcoin(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check it holds the updated value
-	require.True(t, instanceIDExists(t, cl, valID, updateValue))
+	_, err = cl.WaitProof(valID, 0, updateValue)
+	require.NoError(t, err)
 
 	// Delete the value instance
 	_, err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a,
@@ -276,7 +257,9 @@ func Test_BEvmCallsByzcoin(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check it no longer exists
-	require.False(t, instanceIDExists(t, cl, valID, nil))
+	_, err = cl.WaitProof(valID, 0, nil)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "inclusion not found")
 }
 
 func Test_DirectlyUseEvmIdentity(t *testing.T) {
@@ -429,8 +412,10 @@ func Test_SpawnTwoValues(t *testing.T) {
 	valID2 := byzcoin.ComputeNewInstanceID(myValueContractID, seed)
 
 	// Check that the new instances exist and hold the correct value
-	require.True(t, instanceIDExists(t, cl, valID1, initValue))
-	require.True(t, instanceIDExists(t, cl, valID2, initValue))
+	_, err = cl.WaitProof(valID1, 0, initValue)
+	require.NoError(t, err)
+	_, err = cl.WaitProof(valID2, 0, initValue)
+	require.NoError(t, err)
 }
 
 func Test_SpawnWhitelist(t *testing.T) {
