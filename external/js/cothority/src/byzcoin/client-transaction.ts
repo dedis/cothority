@@ -24,7 +24,7 @@ export default class ClientTransaction extends Message<ClientTransaction> {
     registerMessage(
       "byzcoin.ClientTransaction",
       ClientTransaction,
-      Instruction,
+      Instruction
     );
   }
 
@@ -35,7 +35,7 @@ export default class ClientTransaction extends Message<ClientTransaction> {
    */
   static make(version: number, ...instrs: Instruction[]): ClientTransaction {
     if (version >= 1) {
-      instrs = instrs.map((i) => new InstructionV1(i));
+      instrs = instrs.map(i => new InstructionV1(i));
     }
 
     return new ClientTransaction({ instructions: instrs });
@@ -76,7 +76,7 @@ export default class ClientTransaction extends Message<ClientTransaction> {
    */
   async updateCounters(
     rpc: ICounterUpdater,
-    signers: IIdentity[][],
+    signers: IIdentity[][]
   ): Promise<void> {
     if (this.instructions.length === 0) {
       return;
@@ -93,9 +93,9 @@ export default class ClientTransaction extends Message<ClientTransaction> {
     // Iterate over the instructions, and store the appropriate signers and counters, while
     // increasing those that have been used.
     for (let i = 0; i < this.instructions.length; i++) {
-      signers[i].forEach((signer) => {
+      signers[i].forEach(signer => {
         this.instructions[i].signerIdentities.push(
-          IdentityWrapper.fromIdentity(signer),
+          IdentityWrapper.fromIdentity(signer)
         );
         this.instructions[i].signerCounter.push(rpc.getNextCounter(signer));
       });
@@ -104,7 +104,7 @@ export default class ClientTransaction extends Message<ClientTransaction> {
 
   async updateCountersAndSign(
     rpc: ICounterUpdater,
-    signers: Signer[][],
+    signers: Signer[][]
   ): Promise<void> {
     // Extend the signers to the number of instructions if there is only one signer.
     if (signers.length === 1) {
@@ -122,7 +122,7 @@ export default class ClientTransaction extends Message<ClientTransaction> {
    */
   hash(): Buffer {
     const h = createHash("sha256");
-    this.instructions.forEach((i) => h.update(i.hash()));
+    this.instructions.forEach(i => h.update(i.hash()));
     return h.digest();
   }
 }
@@ -161,7 +161,7 @@ export class Instruction extends Message<Instruction> {
       IdentityWrapper,
       Spawn,
       Invoke,
-      Delete,
+      Delete
     );
   }
 
@@ -175,12 +175,12 @@ export class Instruction extends Message<Instruction> {
   static createSpawn(
     iid: Buffer,
     contractID: string,
-    args: Argument[],
+    args: Argument[]
   ): Instruction {
     return new Instruction({
       instanceID: iid,
       signerCounter: [],
-      spawn: new Spawn({ contractID, args }),
+      spawn: new Spawn({ contractID, args })
     });
   }
 
@@ -196,12 +196,12 @@ export class Instruction extends Message<Instruction> {
     iid: Buffer,
     contractID: string,
     command: string,
-    args: Argument[],
+    args: Argument[]
   ): Instruction {
     return new Instruction({
       instanceID: iid,
       invoke: new Invoke({ command, contractID, args }),
-      signerCounter: [],
+      signerCounter: []
     });
   }
 
@@ -215,7 +215,7 @@ export class Instruction extends Message<Instruction> {
     return new Instruction({
       delete: new Delete({ contractID }),
       instanceID: iid,
-      signerCounter: [],
+      signerCounter: []
     });
   }
 
@@ -242,7 +242,7 @@ export class Instruction extends Message<Instruction> {
       },
       set(value: InstanceID) {
         this.instanceID = value;
-      },
+      }
     });
 
     Object.defineProperty(this, "signercounter", {
@@ -251,7 +251,7 @@ export class Instruction extends Message<Instruction> {
       },
       set(value: Long[]) {
         this.signerCounter = value;
-      },
+      }
     });
 
     Object.defineProperty(this, "signeridentities", {
@@ -260,7 +260,7 @@ export class Instruction extends Message<Instruction> {
       },
       set(value: IdentityWrapper[]) {
         this.signerIdentities = value;
-      },
+      }
     });
   }
 
@@ -272,10 +272,10 @@ export class Instruction extends Message<Instruction> {
   async signWith(ctxHash: Buffer, signers: Signer[]): Promise<void> {
     // @ts-ignore
     this.signatures = await Promise.all(
-      signers.map(async (s) => {
+      signers.map(async s => {
         const sig = await s.sign(ctxHash);
         return sig;
-      }),
+      })
     );
   }
 
@@ -299,13 +299,13 @@ export class Instruction extends Message<Instruction> {
    */
   async updateCounters(
     rpc: ICounterUpdater,
-    signers: IIdentity[],
+    signers: IIdentity[]
   ): Promise<void> {
     const counters = await rpc.getSignerCounters(signers, 1);
 
     this.setCounters(
       counters,
-      signers.map((s) => IdentityWrapper.fromIdentity(s)),
+      signers.map(s => IdentityWrapper.fromIdentity(s))
     );
   }
 
@@ -314,7 +314,7 @@ export class Instruction extends Message<Instruction> {
    * @returns a buffer of the hash
    */
   hash(): Buffer {
-    return this.hashForVersion(0);
+    return this.hashForVersion(2);
   }
 
   /**
@@ -327,7 +327,7 @@ export class Instruction extends Message<Instruction> {
     const b = Buffer.alloc(4);
     b.writeUInt32LE(this.signatures.length, 0);
     h.update(b);
-    this.signatures.forEach((sig) => {
+    this.signatures.forEach(sig => {
       b.writeUInt32LE(sig.length, 0);
       h.update(b);
       h.update(sig);
@@ -357,25 +357,25 @@ export class Instruction extends Message<Instruction> {
         h.update(this.delete.contractID);
         break;
     }
-    args.forEach((arg) => {
+    args.forEach(arg => {
       const nameBuf = Buffer.from(arg.name);
       const nameLenBuf = Buffer.from(
-        Long.fromNumber(nameBuf.length).toBytesLE(),
+        Long.fromNumber(nameBuf.length).toBytesLE()
       );
 
       h.update(nameLenBuf);
       h.update(arg.name);
 
       const valueLenBuf = Buffer.from(
-        Long.fromNumber(arg.value.length).toBytesLE(),
+        Long.fromNumber(arg.value.length).toBytesLE()
       );
       h.update(valueLenBuf);
       h.update(arg.value);
     });
-    this.signerCounter.forEach((sc) => {
+    this.signerCounter.forEach(sc => {
       h.update(Buffer.from(sc.toBytesLE()));
     });
-    this.signerIdentities.forEach((si) => {
+    this.signerIdentities.forEach(si => {
       const buf = si.toBytes();
       const lenBuf = Buffer.from(Long.fromNumber(buf.length).toBytesLE());
 
@@ -445,7 +445,7 @@ export class Spawn extends Message<Spawn> {
       },
       set(value: string) {
         this.contractID = value;
-      },
+      }
     });
   }
 }
@@ -478,7 +478,7 @@ export class Invoke extends Message<Invoke> {
       },
       set(value: string) {
         this.contractID = value;
-      },
+      }
     });
   }
 }
@@ -505,7 +505,7 @@ export class Delete extends Message<Delete> {
       },
       set(value: string) {
         this.contractID = value;
-      },
+      }
     });
   }
 }

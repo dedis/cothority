@@ -724,7 +724,7 @@ func evalExprDarc(visited map[string]bool, expr expression.Expr, getDarc GetDarc
 			return true
 		}
 		if !found {
-			issue = errors.New("expression evaluated to false")
+			issue = fmt.Errorf("expression %s evaluated to false", expr)
 		}
 		return found
 	})
@@ -1095,7 +1095,10 @@ func (iddid IdentityDID) Verify(msg, s []byte) error {
 		}
 		err = schnorr.Verify(cothority.Suite, key, msg, s)
 		if err == nil {
+			fmt.Println("Succesfull")
 			return nil
+		} else {
+			fmt.Println("verification err", err)
 		}
 	}
 	return errors.New("couldn't find a key in DIDDoc that could verify this message")
