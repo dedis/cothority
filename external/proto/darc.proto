@@ -46,6 +46,8 @@ message Identity {
   optional IdentityX509EC x509ec = 3;
   // A claim which has been signed by a proxy or proxies.
   optional IdentityProxy proxy = 4;
+  // Address of an EVM contract
+  optional IdentityEvmContract evmcontract = 5;
 }
 
 // IdentityEd25519 holds a Ed25519 public key (Point)
@@ -72,6 +74,12 @@ message IdentityDarc {
   required bytes id = 1;
 }
 
+// IdentityEvmContract holds the address of an EVM contract.
+message IdentityEvmContract {
+  // 	BEvmID  []byteBEvm InstanceID
+  required common.Address address = 1;
+}
+
 // Signature is a signature on a Darc to accept a given decision.
 // can be verified using the appropriate identity.
 message Signature {
@@ -86,6 +94,7 @@ message Signer {
   optional SignerEd25519 ed25519 = 1;
   optional SignerX509EC x509ec = 2;
   optional SignerProxy proxy = 3;
+  optional SignerEvmContract evmcontract = 4;
 }
 
 // SignerEd25519 holds a public and private keys necessary to sign Darcs
@@ -105,6 +114,12 @@ message SignerX509EC {
 message SignerProxy {
   required string data = 1;
   required bytes public = 2;
+}
+
+// SignerEvmContract holds the address of an EVM contract.
+message SignerEvmContract {
+  // 	BEvmID  []byteBEvm InstanceID
+  required common.Address address = 1;
 }
 
 // Request is the structure that the client must provide to be verified

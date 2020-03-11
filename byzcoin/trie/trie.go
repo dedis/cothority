@@ -187,6 +187,7 @@ func (t *Trie) BatchWithBucket(pairs []KVPair, b Bucket) error {
 			if err := t.DeleteWithBucket(p.Key(), b); err != nil {
 				return err
 			}
+		case Nop:
 		default:
 			return xerrors.New("no such operation")
 		}

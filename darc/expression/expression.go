@@ -8,6 +8,7 @@ the syntax we use is from: https://en.wikipedia.org/wiki/Extended_Backus%E2%80%9
 	factor = '(', expr, ')' | id | openid
 	identity = (darc|ed25519|x509ec):[0-9a-fA-F]+
 	proxy = proxy:[0-9a-fA-F]+:[^ \n\t]*
+	evm_identity = evm_contract:[0-9a-fA-F]+:0x[0-9a-fA-F]+
 	attr = attr:[0-9a-zA-Z\-\_]+:[^ \n\t]*
 
 Examples:
@@ -76,7 +77,8 @@ func InitParser(fn ValueCheckFn) parsec.Parser {
 	// sum -> prod (andop prod)*
 	sum = parsec.And(sumNode(fn), &value, prodK)
 	// value -> id | "(" expr ")"
-	value = parsec.OrdChoice(exprValueNode(fn), identity(), proxy(), attr(), groupExpr)
+	value = parsec.OrdChoice(exprValueNode(fn), identity(), proxy(),
+		evmIdentity(), attr(), groupExpr)
 	// expr  -> sum
 	Y = parsec.OrdChoice(one2one, sum)
 	return Y
@@ -138,6 +140,14 @@ func proxy() parsec.Parser {
 	return func(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
 		_, s = s.SkipAny(`^[ \n\t]+`)
 		p := parsec.Token(`proxy:[0-9a-fA-F]+:[^ \n\t]*`, "PROXY")
+		return p(s)
+	}
+}
+
+func evmIdentity() parsec.Parser {
+	return func(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
+		_, s = s.SkipAny(`^[ \n\t]+`)
+		p := parsec.Token(`evm_contract:[0-9a-fA-F]+:0x[0-9a-fA-F]+`, "EVM")
 		return p(s)
 	}
 }

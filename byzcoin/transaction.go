@@ -359,6 +359,26 @@ func (instr Instruction) Verify(st ReadOnlyStateTrie, msg []byte) error {
 	return instr.VerifyWithOption(st, msg, nil)
 }
 
+func (instr Instruction) usesForbiddenIdentities() bool {
+	// A synthetic instruction is currently not restricted
+	if instr.synthetic {
+		return false
+	}
+
+	// A genuine instruction cannot use an EVM contract identity
+	evmContractType := darc.Identity{
+		EvmContract: &darc.IdentityEvmContract{},
+	}.Type()
+
+	for _, id := range instr.SignerIdentities {
+		if id.Type() == evmContractType {
+			return true
+		}
+	}
+
+	return false
+}
+
 // VerifyWithOption adds the ability to the Verify(...) method to specify if
 // the counters should be checked. This is used with the "defered" contract
 // where the clients sign the root instruction without the counters.
@@ -398,6 +418,10 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops 
 	// check the action
 	if !d.Rules.Contains(darc.Action(instr.Action())) {
 		return xerrors.Errorf("action '%v' does not exist", instr.Action())
+	}
+
+	if instr.usesForbiddenIdentities() {
+		return xerrors.Errorf("instruction is using a forbidden signer identity")
 	}
 
 	// check the signature
@@ -462,6 +486,12 @@ func (instr Instruction) GetType() InstrType {
 		return DeleteType
 	}
 	return InvalidInstrType
+}
+
+// SetVersion makes sure the underlying data will use the implementation
+// of the given version.
+func (instr *Instruction) SetVersion(version Version) {
+	instr.version = version
 }
 
 // Instructions is a slice of Instruction
@@ -601,6 +631,8 @@ func (sc *StateChange) Op() trie.OpType {
 		return trie.OpSet
 	case Remove:
 		return trie.OpDel
+	case GenerateInstruction:
+		return trie.Nop
 	}
 	return 0
 }
@@ -646,6 +678,8 @@ const (
 	Update
 	// Remove allows to delete an existing key-value association.
 	Remove
+	// GenerateInstruction allows to generate an instruction
+	GenerateInstruction
 )
 
 // String returns a readable output of the action.
@@ -657,6 +691,8 @@ func (sc StateAction) String() string {
 		return "Update"
 	case Remove:
 		return "Remove"
+	case GenerateInstruction:
+		return "GenerateInstruction"
 	default:
 		return "Invalid stateChange"
 	}

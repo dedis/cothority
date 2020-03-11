@@ -62,7 +62,7 @@ func creditAccount(ctx *cli.Context) error {
 	amountBig := big.NewInt(int64(amount))
 	amountBig.Mul(amountBig, big.NewInt(bevm.WeiPerEther))
 
-	err = opt.bevmClient.CreditAccount(amountBig, opt.account.Address)
+	_, err = opt.bevmClient.CreditAccount(amountBig, opt.account.Address)
 	if err != nil {
 		return xerrors.Errorf("failed to credit BEvm account: %v", err)
 	}
@@ -158,7 +158,7 @@ func deployContract(ctx *cli.Context) error {
 
 	// Perform command
 
-	contractInstance, err := opt.bevmClient.Deploy(
+	_, contractInstance, err := opt.bevmClient.Deploy(
 		gasLimit, gasPrice, amount, opt.account, contract, args...)
 	if err != nil {
 		return xerrors.Errorf("failed to deploy new BEvm contract: %v", err)
@@ -224,7 +224,7 @@ func executeTransaction(ctx *cli.Context) error {
 
 	// Perform command
 
-	err = opt.bevmClient.Transaction(
+	_, err = opt.bevmClient.Transaction(
 		gasLimit, gasPrice, amount, opt.account, contractInstance,
 		method, args...)
 	if err != nil {

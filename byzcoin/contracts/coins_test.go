@@ -314,6 +314,10 @@ func (ct cvTest) StoreAllToReplica(scs byzcoin.StateChanges) (byzcoin.ReadOnlySt
 	return nil, xerrors.New("not implemented")
 }
 
+func (ct cvTest) GetSignerCounter(id darc.Identity) (uint64, error) {
+	return 0, xerrors.Errorf("not yet implemented")
+}
+
 func (ct cvTest) setSignatureCounter(id string, v uint64) {
 	key := sha256.Sum256([]byte("signercounter_" + id))
 	verBuf := make([]byte, 8)

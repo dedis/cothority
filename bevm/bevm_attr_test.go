@@ -18,9 +18,7 @@ import (
 func init() {
 	err := byzcoin.RegisterGlobalContract(valueContractID,
 		valueContractFromBytes)
-	if err != nil {
-		log.ErrFatal(err)
-	}
+	log.ErrFatal(err)
 }
 
 const valueContractID = "TestValueContract"
@@ -44,7 +42,7 @@ func (c valueContract) Spawn(rst byzcoin.ReadOnlyStateTrie,
 	var darcID darc.ID
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return
+		return nil, nil, xerrors.Errorf("failed to get darcID: %v", err)
 	}
 
 	sc = []byzcoin.StateChange{
@@ -64,7 +62,7 @@ func (c valueContract) Invoke(rst byzcoin.ReadOnlyStateTrie,
 
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return
+		return nil, nil, xerrors.Errorf("failed to get darcID: %v", err)
 	}
 
 	switch inst.Invoke.Command {
@@ -128,7 +126,6 @@ func TestAttrBevm(t *testing.T) {
 	// Spawn a new BEvm instance
 	bevmID, err := NewBEvm(cl, signer, gDarc)
 	require.NoError(t, err)
-	log.LLvlf2("bevmID = %v", bevmID)
 
 	// Create a new BEvm client
 	bevmClient, err := NewClient(cl, signer, bevmID)
@@ -140,7 +137,7 @@ func TestAttrBevm(t *testing.T) {
 	require.NoError(t, err)
 
 	// Credit the account
-	err = bevmClient.CreditAccount(big.NewInt(5*WeiPerEther), acct.Address)
+	_, err = bevmClient.CreditAccount(big.NewInt(5*WeiPerEther), acct.Address)
 	require.NoError(t, err)
 
 	// Deploy a Verify contract (see Verify.sol in `testdata/Verify`)
@@ -148,7 +145,7 @@ func TestAttrBevm(t *testing.T) {
 		"Verify", getContractData(t, "Verify", "abi"),
 		getContractData(t, "Verify", "bin"))
 	require.NoError(t, err)
-	verifyInstance, err := bevmClient.Deploy(txParams.GasLimit,
+	_, verifyInstance, err := bevmClient.Deploy(txParams.GasLimit,
 		txParams.GasPrice, 0, acct, verifyContract)
 	require.NoError(t, err)
 
@@ -163,7 +160,6 @@ func TestAttrBevm(t *testing.T) {
 		BEvmAttrID,
 		bevmID.String(),
 		verifyInstance.Address.Hex())
-	log.LLvlf2("DARC rule: %s → %s", darcAction, darcExpr)
 	require.NoError(t,
 		newDarc.Rules.AddRule(darc.Action(darcAction), []byte(darcExpr)))
 

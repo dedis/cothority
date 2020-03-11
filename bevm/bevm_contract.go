@@ -1,9 +1,12 @@
 package bevm
 
 import (
+	"encoding/hex"
 	"fmt"
 	"math/big"
+	"strings"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/state"
@@ -195,7 +198,7 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 	var darcID darc.ID
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return
+		return nil, nil, xerrors.Errorf("failed to get darcID: %v", err)
 	}
 
 	stateDb, err := NewEvmDb(&c.State, rst, inst.InstanceID)
@@ -221,7 +224,7 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 		contractState, stateChanges, err := NewContractState(stateDb)
 		if err != nil {
 			return nil, nil,
-				xerrors.Errorf("failed to creating new BEvm contract "+
+				xerrors.Errorf("failed to create new BEvm contract "+
 					"state: %v", err)
 		}
 
@@ -234,10 +237,11 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 		// State changes to ByzCoin contain the Update to the main contract
 		// state, plus whatever changes were produced by the EVM on its state
 		// database.
-		sc = append([]byzcoin.StateChange{
-			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
-				ContractBEvmID, contractData, darcID),
-		}, stateChanges...)
+		mainSc := byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
+			ContractBEvmID, contractData, darcID)
+
+		sc = []byzcoin.StateChange{mainSc}
+		sc = append(sc, stateChanges...)
 
 	case "transaction":
 		// Perform an Ethereum transaction (contract method call with state
@@ -266,6 +270,7 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 		// Compute the timestamp for the EVM, converting [ns] to [s]
 		evmTs := uint64(tr.GetCurrentBlockTimestamp() / 1e9)
 
+		stateDb.Prepare(ethTx.Hash(), common.Hash{}, 0)
 		txReceipt, err := sendTx(&ethTx, stateDb, evmTs)
 		if err != nil {
 			return nil, nil,
@@ -281,7 +286,13 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 		log.Lvlf2("\\--> status = %d, gas used = %d, receipt = %s",
 			txReceipt.Status, txReceipt.GasUsed, txReceipt.TxHash.Hex())
 
-		contractState, stateChanges, err := NewContractState(stateDb)
+		eventStateChanges, err := handleLogs(inst, rst, txReceipt.Logs)
+		if err != nil {
+			return nil, nil, xerrors.Errorf("failed to handle EVM transaction "+
+				"logs: %v", err)
+		}
+
+		contractState, evmStateChanges, err := NewContractState(stateDb)
 		if err != nil {
 			return nil, nil,
 				xerrors.Errorf("failed to create new BEvm contract "+
@@ -296,11 +307,13 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 
 		// State changes to ByzCoin contain the Update to the main contract
 		// state, plus whatever changes were produced by the EVM on its state
-		// database.
-		sc = append([]byzcoin.StateChange{
-			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
-				ContractBEvmID, contractData, darcID),
-		}, stateChanges...)
+		// database, plus whatever changes were produced by the events.
+		mainSc := byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
+			ContractBEvmID, contractData, darcID)
+
+		sc = []byzcoin.StateChange{mainSc}
+		sc = append(sc, evmStateChanges...)
+		sc = append(sc, eventStateChanges...)
 
 	default:
 		err = fmt.Errorf("unknown Invoke command: '%s'", inst.Invoke.Command)
@@ -354,7 +367,7 @@ func (c *contractBEvm) Delete(rst byzcoin.ReadOnlyStateTrie,
 	var darcID darc.ID
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return
+		return nil, nil, xerrors.Errorf("failed to get darcID: %v", err)
 	}
 
 	stateDb, err := NewEvmDb(&c.State, rst, inst.InstanceID)
@@ -377,4 +390,101 @@ func (c *contractBEvm) Delete(rst byzcoin.ReadOnlyStateTrie,
 	}, stateChanges...)
 
 	return
+}
+
+// Handle the log entries produced by an EVM execution.
+// Currently, only the special entries allowing to interact with Byzcoin
+// contracts are handled, the other ones are ignored.
+func handleLogs(inst byzcoin.Instruction, rst byzcoin.ReadOnlyStateTrie,
+	logEntries []*types.Log) (
+	[]byzcoin.StateChange, error) {
+	var err error
+	eventsAbi, err := abi.JSON(strings.NewReader(eventsAbiJSON))
+	if err != nil {
+		return nil, xerrors.Errorf("failed to decode ABI for EVM "+
+			"events: %v", err)
+	}
+
+	var stateChanges []byzcoin.StateChange
+
+	// An EVM call can generate several Byzcoin instructions, all originating
+	// from different contracts (inter-contract calls).
+	// The following map helps to keep track of the signer counters while
+	// processing all the events of an EVM call.
+	counters := map[common.Address]uint64{}
+
+	for _, logEntry := range logEntries {
+		// See https://solidity.readthedocs.io/en/v0.5.3/abi-spec.html#events
+		eventID := logEntry.Topics[0]
+
+		eventName, eventIface, err := unpackEvent(eventsAbi, eventID,
+			logEntry.Data)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to unpack EVM "+
+				"event: %v", err)
+		}
+
+		if eventName == "" {
+			// Not a recognized event
+			log.Lvlf2("skipping event ID %s", hex.EncodeToString(eventID[:]))
+			continue
+		}
+
+		// Build the instruction from the event
+		instr, err := getInstrForEvent(eventName, eventIface)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to build instruction "+
+				"for EVM event: %v", err)
+		}
+
+		signer := darc.NewSignerEvmContract(inst.InstanceID[:],
+			logEntry.Address)
+		identity := signer.Identity()
+
+		// Retrieve counter
+		counter, ok := counters[logEntry.Address]
+		if !ok {
+			// Counter not yet available -- retrieve from Byzcoin
+			counter, err = rst.GetSignerCounter(identity)
+			if err != nil {
+				return nil, xerrors.Errorf("failed to get counter "+
+					"for identity '%s': %v", identity, err)
+			}
+		}
+
+		// Update counter
+		counter++
+		counters[logEntry.Address] = counter
+
+		// Fill in  missing information and sign
+		instr.SignerIdentities = []darc.Identity{identity}
+		instr.SignerCounter = []uint64{counter}
+
+		instr.SetVersion(rst.GetVersion())
+
+		err = instr.SignWith([]byte{}, signer)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to sign instruction "+
+				"from EVM: %v", err)
+		}
+
+		// Encode the instruction and store it in the state change's value
+		encodedInstr, err := protobuf.Encode(instr)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to encode instruction "+
+				"from EVM: %v", err)
+		}
+
+		sc := byzcoin.NewStateChange(
+			byzcoin.GenerateInstruction,
+			byzcoin.NewInstanceID(nil),
+			"",
+			encodedInstr,
+			nil,
+		)
+
+		stateChanges = append(stateChanges, sc)
+	}
+
+	return stateChanges, nil
 }
