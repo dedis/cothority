@@ -25,6 +25,19 @@ type ContractDID struct {
 	// Other DID methods may be placed here later
 }
 
+func init() {
+	err := byzcoin.RegisterGlobalContract(ContractSovrinDIDID, contractSovrinDIDFromBytes)
+	if err != nil {
+		log.ErrFatal(err)
+	}
+}
+
+func contractSovrinDIDFromBytes(data []byte) (byzcoin.Contract, error) {
+	c := &ContractDID{}
+	err := protobuf.DecodeWithConstructors(data, &c.Sovrin, network.DefaultConstructors(cothority.Suite))
+	return c, cothority.ErrorOrNil(err, "error unmarshalling SovrinDID contract")
+}
+
 // Spawn is used to create a new SovrinDID contract.
 func (c *ContractDID) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
@@ -66,12 +79,17 @@ func (c *ContractDID) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 }
 
 func (s *Sovrin) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
+	_, _, _, darcID, err := rst.GetValues(inst.InstanceID.Slice())
+	if err != nil {
+		return nil, nil, xerrors.Errorf("error retrieving DARC: %v", err)
+	}
+
 	sovrinDIDPropsBuf := inst.Invoke.Args.Search("sovrinDIDProps")
 	if sovrinDIDPropsBuf == nil || len(sovrinDIDPropsBuf) == 0 {
 		return nil, nil, xerrors.New("did is a required argument")
 	}
 	var sovrinDIDProps SovrinDIDProps
-	err := protobuf.Decode(sovrinDIDPropsBuf, &sovrinDIDProps)
+	err = protobuf.Decode(sovrinDIDPropsBuf, &sovrinDIDProps)
 	if err != nil {
 		return nil, nil, xerrors.Errorf("error decoding arguments: %s", err)
 	}
@@ -136,5 +154,5 @@ func (s *Sovrin) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction,
 		return nil, nil, xerrors.Errorf("error encoding DID Doc: %v", err)
 	}
 
-	return []byzcoin.StateChange{byzcoin.NewStateChange(byzcoin.Update, key, ContractSovrinDIDID, didDocBuf, nil)}, coins, nil
+	return []byzcoin.StateChange{byzcoin.NewStateChange(byzcoin.Update, key, ContractSovrinDIDID, didDocBuf, darcID)}, coins, nil
 }
