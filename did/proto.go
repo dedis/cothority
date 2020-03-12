@@ -22,11 +22,6 @@ type SovrinDIDProps struct {
 }
 
 type GetNymTransaction struct {
-	Op     string
-	Result GetNymResult
-}
-
-type GetNymResult struct {
 	Type       string
 	Identifier string
 	ReqId      string
