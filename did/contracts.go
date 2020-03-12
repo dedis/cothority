@@ -142,10 +142,10 @@ func (s *Sovrin) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction,
 		ID: sovrinDIDProps.DID,
 		PublicKeys: []darc.PublicKey{
 			darc.PublicKey{
-				ID: fmt.Sprintf("did:sov:%s#keys-1", sovrinDIDProps.DID),
-				Type: "Ed25519VerificationKey2018",
+				ID:         fmt.Sprintf("did:sov:%s#keys-1", sovrinDIDProps.DID),
+				Type:       "Ed25519VerificationKey2018",
 				Controller: sovrinDIDProps.DID,
-				Value: val,
+				Value:      val,
 			},
 		},
 	}
