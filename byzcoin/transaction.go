@@ -443,10 +443,12 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops 
 				return xerrors.Errorf("error getting DIDDoc: %v", err)
 			}
 
-			err = identity.DID.Public.UnmarshalBinary(value)
+			var didDoc *darc.DIDDoc
+			err = protobuf.Decode(value, didDoc)
 			if err != nil {
-				return xerrors.Errorf("error unmarshalling public key: %v", err)
+				return xerrors.Errorf("error decoding DIDDoc: %v", err)
 			}
+			identity.DID.DIDDoc = didDoc
 		}
 		if err := instr.SignerIdentities[i].Verify(msg, instr.Signatures[i]); err == nil {
 			identitiesWithCorrectSignatures = append(identitiesWithCorrectSignatures, instr.SignerIdentities[i].String())

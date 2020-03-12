@@ -1103,7 +1103,21 @@ func (id IdentityEvmContract) Verify(msg, s []byte) error {
 // Verify returns nil if the signature is correct, or an error if
 // validation fails.
 func (id IdentityDID) Verify(msg, s []byte) error {
-	return schnorr.Verify(cothority.Suite, id.Public, msg, s)
+	for _, publicKey := range id.DIDDoc.PublicKeys {
+		// Only Ed25519 keys supported at the moment
+		if publicKey.Type != "Ed25519VerificationKey2018" {
+			continue
+		}
+
+		key := cothority.Suite.Point()
+		key.UnmarshalBinary(publicKey.Value)
+		err := schnorr.Verify(cothority.Suite, key, msg, s)
+		// Indicates message validation was successful
+		if err == nil {
+			return nil
+		}
+	}
+	return xerrors.Errorf("cannot find a public key that validates the signature")
 }
 
 // ParseIdentity returns an Identity structure that matches

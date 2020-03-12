@@ -106,7 +106,23 @@ type IdentityEvmContract struct {
 type IdentityDID struct {
 	ID string
 	Method string
-	Public kyber.Point
+	DIDDoc *DIDDoc
+}
+
+// DIDDoc represents a subset of fields mentioned in the
+// DIDDoc spec https://w3c.github.io/did-core/
+// The subset contains the bare-minimum fields required to
+// verify messages signed by a DID
+type DIDDoc struct {
+	ID string
+	PublicKeys []PublicKey
+}
+
+type PublicKey struct {
+	ID string
+	Type string
+	Controller string
+	Value []byte
 }
 
 // Signature is a signature on a Darc to accept a given decision.

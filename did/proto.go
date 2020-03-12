@@ -56,3 +56,4 @@ type MultiSignatureValue struct {
 	PoolStateRootHash string
 	StateRootHash string
 }
+

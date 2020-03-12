@@ -3,6 +3,7 @@ package did
 import (
 	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 
 	"github.com/mr-tron/base58"
 	"go.dedis.ch/cothority/v3"
@@ -119,5 +120,21 @@ func (s *Sovrin) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction,
 		return nil, nil, xerrors.Errorf("error unmarshalling verkey: %s", err)
 	}
 
-	return []byzcoin.StateChange{byzcoin.NewStateChange(byzcoin.Update, key, ContractSovrinDIDID, val, nil)}, coins, nil
+	didDoc := &darc.DIDDoc{
+		ID: sovrinDIDProps.DID,
+		PublicKeys: []darc.PublicKey{
+			darc.PublicKey{
+				ID: fmt.Sprintf("did:sov:%s#keys-1", sovrinDIDProps.DID),
+				Type: "Ed25519VerificationKey2018",
+				Controller: sovrinDIDProps.DID,
+				Value: val,
+			},
+		},
+	}
+	didDocBuf, err := protobuf.Encode(didDoc)
+	if err != nil {
+		return nil, nil, xerrors.Errorf("error encoding DID Doc: %v", err)
+	}
+
+	return []byzcoin.StateChange{byzcoin.NewStateChange(byzcoin.Update, key, ContractSovrinDIDID, didDocBuf, nil)}, coins, nil
 }
