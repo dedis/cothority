@@ -826,6 +826,8 @@ func (id Identity) Equal(id2 *Identity) bool {
 		return id.Proxy.Equal(id2.Proxy)
 	case 4:
 		return id.EvmContract.Equal(id2.EvmContract)
+	case 5:
+		return id.DID.Equal(id2.DID)
 	}
 	return false
 }
@@ -844,6 +846,8 @@ func (id Identity) Type() int {
 		return 3
 	case id.EvmContract != nil:
 		return 4
+	case id.DID != nil:
+		return 5
 	}
 	return -1
 }
@@ -862,6 +866,8 @@ func (id Identity) PrimaryIdentity() bool {
 		return true
 	case id.EvmContract != nil:
 		return true
+	case id.DID != nil:
+		return true
 	}
 	return false
 }
@@ -879,6 +885,8 @@ func (id Identity) TypeString() string {
 		return "proxy"
 	case 4:
 		return "evm_contract"
+	case 5:
+		return "did"
 	default:
 		return "No identity"
 	}
@@ -899,6 +907,8 @@ func (id Identity) String() string {
 		bevmString := hex.EncodeToString(id.EvmContract.BEvmID)
 		addrString := id.EvmContract.Address.Hex()
 		return fmt.Sprintf("%s:%s:%s", id.TypeString(), bevmString, addrString)
+	case 5:
+		return fmt.Sprintf("%s:%s:%s", id.TypeString(), id.DID.Method, id.DID.ID)
 	default:
 		return "No identity"
 	}
@@ -918,6 +928,8 @@ func (id Identity) Verify(msg, sig []byte) error {
 		return id.Proxy.Verify(msg, sig)
 	case 4:
 		return id.EvmContract.Verify(msg, sig)
+	case 5:
+		return id.DID.Verify(msg, sig)
 	default:
 		return errors.New("unknown identity")
 	}
@@ -1029,6 +1041,11 @@ func (id IdentityEvmContract) Equal(id2 *IdentityEvmContract) bool {
 		id.Address == id2.Address
 }
 
+// Equal returns true if both IdentityDID are the same.
+func (id IdentityDID) Equal(id2 *IdentityDID) bool {
+	return id.ID == id2.ID && id.Method == id2.Method
+}
+
 type sigRS struct {
 	R *big.Int
 	S *big.Int
@@ -1081,6 +1098,12 @@ func (id IdentityEvmContract) Verify(msg, s []byte) error {
 	}
 
 	return xerrors.Errorf("invalid EVM Contract signature")
+}
+
+// Verify returns nil if the signature is correct, or an error if
+// validation fails.
+func (id IdentityDID) Verify(msg, s []byte) error {
+	return schnorr.Verify(cothority.Suite, id.Public, msg, s)
 }
 
 // ParseIdentity returns an Identity structure that matches

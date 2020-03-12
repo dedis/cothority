@@ -68,6 +68,8 @@ type Identity struct {
 	Proxy *IdentityProxy
 	// Address of an EVM contract
 	EvmContract *IdentityEvmContract
+	// A Decentralised Identifier
+	DID *IdentityDID
 }
 
 // IdentityEd25519 holds a Ed25519 public key (Point)
@@ -98,6 +100,13 @@ type IdentityDarc struct {
 type IdentityEvmContract struct {
 	BEvmID  []byte // BEvm InstanceID
 	Address common.Address
+}
+
+// IdentityDID represents a decentralised identifier
+type IdentityDID struct {
+	ID string
+	Method string
+	Public kyber.Point
 }
 
 // Signature is a signature on a Darc to accept a given decision.

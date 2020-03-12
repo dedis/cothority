@@ -428,6 +428,26 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops 
 	// Save the identities that provide good signatures
 	identitiesWithCorrectSignatures := make([]string, 0)
 	for i := range instr.Signatures {
+		identity := instr.SignerIdentities[i]
+
+		// Retrieve a DIDDoc for the given DID and populate
+		// the public key associated with the DID to be
+		// used for signature verification.
+		if identity.DID != nil {
+			didBuf := []byte(identity.String())
+			h := sha256.New()
+			h.Write(didBuf)
+			key := NewInstanceID(h.Sum(nil))
+			value, _, _, _, err := st.GetValues(key[:])
+			if err != nil {
+				return xerrors.Errorf("error getting DIDDoc: %v", err)
+			}
+
+			err = identity.DID.Public.UnmarshalBinary(value)
+			if err != nil {
+				return xerrors.Errorf("error unmarshalling public key: %v", err)
+			}
+		}
 		if err := instr.SignerIdentities[i].Verify(msg, instr.Signatures[i]); err == nil {
 			identitiesWithCorrectSignatures = append(identitiesWithCorrectSignatures, instr.SignerIdentities[i].String())
 		}
