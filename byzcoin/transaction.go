@@ -434,16 +434,16 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops 
 		// the public key associated with the DID to be
 		// used for signature verification.
 		if identity.DID != nil {
-			didBuf := []byte(identity.String())
-			h := sha256.New()
-			h.Write(didBuf)
-			key := NewInstanceID(h.Sum(nil))
+			key, err := identity.DID.GetStateTrieKey()
+			if err != nil {
+				return xerrors.Errorf("getting state trie key: %v", err)
+			}
 			value, _, _, _, err := st.GetValues(key[:])
 			if err != nil {
 				return xerrors.Errorf("error getting DIDDoc: %v", err)
 			}
 
-			var didDoc *darc.DIDDoc
+			didDoc := &darc.DIDDoc{}
 			err = protobuf.Decode(value, didDoc)
 			if err != nil {
 				return xerrors.Errorf("error decoding DIDDoc: %v", err)

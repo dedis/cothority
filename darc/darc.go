@@ -46,6 +46,7 @@ import (
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/mr-tron/base58/base58"
 
 	"golang.org/x/xerrors"
 
@@ -754,6 +755,8 @@ func (s Signer) Type() int {
 		return 3
 	case s.EvmContract != nil:
 		return 4
+	case s.DID != nil:
+		return 5
 	default:
 		return -1
 	}
@@ -771,6 +774,8 @@ func (s Signer) Identity() Identity {
 		return NewIdentityProxy(s.Proxy)
 	case 4:
 		return NewIdentityEvmContract(s.EvmContract)
+	case 5:
+		return NewIdentityDID(s.DID)
 	default:
 		return Identity{}
 	}
@@ -792,6 +797,8 @@ func (s Signer) Sign(msg []byte) ([]byte, error) {
 		return s.Proxy.Sign(msg)
 	case 4:
 		return s.EvmContract.Sign(msg)
+	case 5:
+		return s.DID.Sign(msg)
 	default:
 		return nil, errors.New("unknown signer type")
 	}
@@ -804,6 +811,8 @@ func (s Signer) GetPrivate() (kyber.Scalar, error) {
 		return s.Ed25519.Secret, nil
 	case 0, 2, 3:
 		return nil, errors.New("signer lacks a private key")
+	case 5:
+		return s.DID.Secret, nil
 	default:
 		return nil, errors.New("signer is of unknown type")
 	}
@@ -1025,6 +1034,16 @@ func NewIdentityEvmContract(s *SignerEvmContract) Identity {
 	}
 }
 
+// NewIdentityDID creates a new DID identity
+func NewIdentityDID(s *SignerDID) Identity {
+	return Identity{
+		DID: &IdentityDID{
+			ID:     s.ID,
+			Method: s.Method,
+		},
+	}
+}
+
 // Equal returns true if both IdentityX509EC point to the same data.
 func (idkc IdentityX509EC) Equal(idkc2 *IdentityX509EC) bool {
 	return bytes.Compare(idkc.Public, idkc2.Public) == 0
@@ -1044,6 +1063,20 @@ func (id IdentityEvmContract) Equal(id2 *IdentityEvmContract) bool {
 // Equal returns true if both IdentityDID are the same.
 func (id IdentityDID) Equal(id2 *IdentityDID) bool {
 	return id.ID == id2.ID && id.Method == id2.Method
+}
+
+func (id IdentityDID) GetStateTrieKey() ([]byte, error) {
+	if id.Method != "sov" {
+		return nil, xerrors.New("only sovrin DIDs supported at the moment")
+	}
+	idBuf, err := base58.Decode(id.ID)
+	if err != nil {
+		return nil, xerrors.Errorf("error base58 decoding DID: %v", err)
+	}
+	h := sha256.New()
+	h.Write([]byte(fmt.Sprintf("did:%s:", id.Method)))
+	h.Write(idBuf)
+	return h.Sum(nil), nil
 }
 
 type sigRS struct {
@@ -1373,6 +1406,20 @@ func (s SignerEvmContract) Sign(msg []byte) ([]byte, error) {
 	sig := h.Sum(nil)
 
 	return sig, nil
+}
+
+// NewSignerDID initializes a DID Signer that uses an Ed25519 key-pair.
+func NewSignerDID(public kyber.Point, private kyber.Scalar, id, method string) Signer {
+	return Signer{DID: &SignerDID{
+		Point:  public,
+		Secret: private,
+		Method: method,
+		ID:     id,
+	}}
+}
+
+func (s SignerDID) Sign(msg []byte) ([]byte, error) {
+	return schnorr.Sign(cothority.Suite, s.Secret, msg)
 }
 
 func copyBytes(a []byte) []byte {

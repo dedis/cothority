@@ -33,9 +33,13 @@ func init() {
 }
 
 func contractSovrinDIDFromBytes(data []byte) (byzcoin.Contract, error) {
-	c := &ContractDID{}
-	err := protobuf.DecodeWithConstructors(data, &c.Sovrin, network.DefaultConstructors(cothority.Suite))
-	return c, cothority.ErrorOrNil(err, "error unmarshalling SovrinDID contract")
+	c := ContractDID{Sovrin: &Sovrin{}}
+	if data == nil {
+		return &c, nil
+	}
+
+	err := protobuf.DecodeWithConstructors(data, c.Sovrin, network.DefaultConstructors(cothority.Suite))
+	return &c, cothority.ErrorOrNil(err, "error unmarshalling SovrinDID contract")
 }
 
 // Spawn is used to create a new SovrinDID contract.
@@ -56,7 +60,8 @@ func (c *ContractDID) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruct
 			err = xerrors.New("need information about sovrin to spawn the contract")
 			return
 		}
-		err = protobuf.DecodeWithConstructors(sovrin, &c.Sovrin, network.DefaultConstructors(cothority.Suite))
+		c.Sovrin = &Sovrin{}
+		err = protobuf.DecodeWithConstructors(sovrin, c.Sovrin, network.DefaultConstructors(cothority.Suite))
 		instID := inst.DeriveID("")
 		log.Lvlf3("Spawning %s contract with instance id: %s", ContractSovrinDIDID, instID)
 		sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, instID, ContractSovrinDIDID, sovrin, darcID))
@@ -74,7 +79,7 @@ func (c *ContractDID) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 	if c.Sovrin != nil {
 		return c.Sovrin.Invoke(rst, inst, coins)
 	} else {
-		return nil, nil, xerrors.New("error invoking: invalid contract type")
+		return nil, nil, xerrors.Errorf("error invoking: invalid contract type")
 	}
 }
 
@@ -94,12 +99,12 @@ func (s *Sovrin) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction,
 		return nil, nil, xerrors.Errorf("error decoding arguments: %s", err)
 	}
 
-	if sovrinDIDProps.DID != sovrinDIDProps.Transaction.Result.Dest {
+	if sovrinDIDProps.DID != sovrinDIDProps.Transaction.Dest {
 		return nil, nil, xerrors.New("input did and the one referred in the transaction don't match")
 	}
 
 	var data getNymData
-	json.Unmarshal([]byte(sovrinDIDProps.Transaction.Result.Data), &data)
+	json.Unmarshal([]byte(sovrinDIDProps.Transaction.Data), &data)
 	if data.Verkey == "" {
 		return nil, nil, xerrors.New("error parsing verkey")
 	}
@@ -115,6 +120,7 @@ func (s *Sovrin) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction,
 	// Sovrin DIDs are always fixed lengths and are therefore not vulnerable
 	// to length extension attacks
 	h := sha256.New()
+	h.Write([]byte("did:sov:"))
 	h.Write(didBuf)
 	key := byzcoin.NewInstanceID(h.Sum(nil))
 
@@ -154,5 +160,14 @@ func (s *Sovrin) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction,
 		return nil, nil, xerrors.Errorf("error encoding DID Doc: %v", err)
 	}
 
-	return []byzcoin.StateChange{byzcoin.NewStateChange(byzcoin.Update, key, ContractSovrinDIDID, didDocBuf, darcID)}, coins, nil
+	stateAction := byzcoin.Update
+	_, _, _, _, err = rst.GetValues(key[:])
+
+	// Key is not set
+	if err != nil {
+		stateAction = byzcoin.Create
+	}
+
+	log.Lvlf3("Setting key %x for did %s", key, sovrinDIDProps.DID)
+	return []byzcoin.StateChange{byzcoin.NewStateChange(stateAction, key, ContractSovrinDIDID, didDocBuf, darcID)}, coins, nil
 }

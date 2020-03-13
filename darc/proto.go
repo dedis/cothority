@@ -104,7 +104,7 @@ type IdentityEvmContract struct {
 
 // IdentityDID represents a decentralised identifier
 type IdentityDID struct {
-	ID string
+	ID     string
 	Method string
 	DIDDoc *DIDDoc
 }
@@ -114,15 +114,15 @@ type IdentityDID struct {
 // The subset contains the bare-minimum fields required to
 // verify messages signed by a DID
 type DIDDoc struct {
-	ID string
+	ID         string
 	PublicKeys []PublicKey
 }
 
 type PublicKey struct {
-	ID string
-	Type string
+	ID         string
+	Type       string
 	Controller string
-	Value []byte
+	Value      []byte
 }
 
 // Signature is a signature on a Darc to accept a given decision.
@@ -140,6 +140,7 @@ type Signer struct {
 	X509EC      *SignerX509EC
 	Proxy       *SignerProxy
 	EvmContract *SignerEvmContract
+	DID         *SignerDID
 }
 
 // SignerEd25519 holds a public and private keys necessary to sign Darcs
@@ -167,6 +168,14 @@ type SignerProxy struct {
 type SignerEvmContract struct {
 	BEvmID  []byte // BEvm InstanceID
 	Address common.Address
+}
+
+// SignerDID holds the private key required to sign a message with a given DID
+type SignerDID struct {
+	Point  kyber.Point
+	Secret kyber.Scalar
+	ID     string
+	Method string
 }
 
 // Request is the structure that the client must provide to be verified

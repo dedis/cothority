@@ -78,7 +78,7 @@ func InitParser(fn ValueCheckFn) parsec.Parser {
 	sum = parsec.And(sumNode(fn), &value, prodK)
 	// value -> id | "(" expr ")"
 	value = parsec.OrdChoice(exprValueNode(fn), identity(), proxy(),
-		evmIdentity(), attr(), groupExpr)
+		evmIdentity(), did(), attr(), groupExpr)
 	// expr  -> sum
 	Y = parsec.OrdChoice(one2one, sum)
 	return Y
@@ -148,6 +148,17 @@ func evmIdentity() parsec.Parser {
 	return func(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
 		_, s = s.SkipAny(`^[ \n\t]+`)
 		p := parsec.Token(`evm_contract:[0-9a-fA-F]+:0x[0-9a-fA-F]+`, "EVM")
+		return p(s)
+	}
+}
+
+func did() parsec.Parser {
+	return func(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
+		_, s = s.SkipAny(`^[ \n\t]+`)
+		// TODO: This assumes the base58 alphabet for identifier used in Sovrin
+		// Other methods may use something different
+		// Add support for more DID methods
+		p := parsec.Token(`did:[a-zA-Z]+:[1-9A-HJ-NP-Za-km-z]{21,22}`, "DID")
 		return p(s)
 	}
 }
