@@ -46,7 +46,7 @@ func testRunCollectionTxProtocol(n, max, version int) ([]ClientTransaction, erro
 
 	getTx := func(leader *network.ServerIdentity, roster *onet.Roster, scID skipchain.SkipBlockID, latestID skipchain.SkipBlockID, max int) []ClientTransaction {
 		tx := ClientTransaction{
-			Instructions: []Instruction{Instruction{}},
+			Instructions: []Instruction{{}},
 		}
 		return []ClientTransaction{tx}
 	}

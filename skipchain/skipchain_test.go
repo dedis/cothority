@@ -770,7 +770,7 @@ func TestService_ForgedPropagationMessage(t *testing.T) {
 	forgedBlock := NewSkipBlock()
 	forgedBlock.BackLinkIDs = []SkipBlockID{p1[3].Hash}
 	forgedBlock.updateHash()
-	p1[3].ForwardLink = []*ForwardLink{&ForwardLink{From: p1[3].Hash, To: forgedBlock.Hash}}
+	p1[3].ForwardLink = []*ForwardLink{{From: p1[3].Hash, To: forgedBlock.Hash}}
 	err = service.propagateProofHandler(&PropagateProof{Proof(append(p1, forgedBlock))})
 	require.NotNil(t, err)
 }

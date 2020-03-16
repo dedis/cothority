@@ -89,7 +89,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 		sb := skipchain.NewSkipBlock()
 		sb.Roster = s.roster
 		sb.Payload = []byte{1, 1, 1, 1, 1}
-		sb.ForwardLink = []*skipchain.ForwardLink{&skipchain.ForwardLink{}}
+		sb.ForwardLink = []*skipchain.ForwardLink{{}}
 		return sb, nil
 	}
 	tryReplay(t, s, cb, "Error while decoding field")
@@ -100,7 +100,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 		sb.Roster = s.roster
 		sb.Payload = []byte{}
 		sb.Data = []byte{1, 1, 1, 1, 1}
-		sb.ForwardLink = []*skipchain.ForwardLink{&skipchain.ForwardLink{}}
+		sb.ForwardLink = []*skipchain.ForwardLink{{}}
 		return sb, nil
 	}
 	tryReplay(t, s, cb, "Error while decoding field")
@@ -109,7 +109,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 	cb = func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
 		sb := skipchain.NewSkipBlock()
 		sb.Payload = []byte{}
-		sb.ForwardLink = []*skipchain.ForwardLink{&skipchain.ForwardLink{}}
+		sb.ForwardLink = []*skipchain.ForwardLink{{}}
 		return sb, nil
 	}
 	tryReplay(t, s, cb, "client transaction hash does not match")

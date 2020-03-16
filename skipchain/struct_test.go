@@ -379,11 +379,11 @@ func TestSkipBlockDB_GetProof(t *testing.T) {
 	sb2.GenesisID = root.Hash
 	sb2.BackLinkIDs = []SkipBlockID{sb1.Hash}
 	sb2.updateHash()
-	sb1.ForwardLink = []*ForwardLink{&ForwardLink{From: sb1.Hash, To: sb2.Hash}}
+	sb1.ForwardLink = []*ForwardLink{{From: sb1.Hash, To: sb2.Hash}}
 	require.NoError(t, sb1.ForwardLink[0].sign(ro))
 	root.ForwardLink = []*ForwardLink{
-		&ForwardLink{From: root.Hash, To: sb1.Hash},
-		&ForwardLink{From: root.Hash, To: sb2.Hash},
+		{From: root.Hash, To: sb1.Hash},
+		{From: root.Hash, To: sb2.Hash},
 	}
 	require.NoError(t, root.ForwardLink[0].sign(ro))
 	require.NoError(t, root.ForwardLink[1].sign(ro))
