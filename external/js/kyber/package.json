@@ -15,7 +15,8 @@
     "doc": "node_modules/.bin/typedoc --out doc/ src/",
     "link": "./publish.sh --link",
     "linter": "node_modules/.bin/tslint 'src/{,**/}*.ts' 'spec/{,**/}*.ts'",
-    "linter:fix": "node_modules/.bin/tslint --fix 'src/{,**/}*.ts' 'spec/{,**/}*.ts'"
+    "linter:fix": "node_modules/.bin/tslint --fix 'src/{,**/}*.ts' 'spec/{,**/}*.ts'",
+    "test-publish": "npm test && ./publish.sh"
   },
   "repository": {
     "type": "git",

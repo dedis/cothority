@@ -21,6 +21,7 @@
     "bundle": "node node_modules/.bin/webpack",
     "doc": "node_modules/.bin/typedoc --out doc/ src/",
     "protobuf": "node scripts/build_proto.js",
+    "test-publish": "npm test && ./publish.sh",
     "link": "./publish.sh --link"
   },
   "keywords": [
