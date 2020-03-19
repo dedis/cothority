@@ -12,8 +12,8 @@
   "types": "index.d.ts",
   "scripts": {
     "build": "npm run protobuf && tsc",
-    "linter": "node_modules/.bin/tslint 'src/{,**/}*.ts' 'spec/{,**/}*.ts'",
-    "linter:fix": "node_modules/.bin/tslint --fix 'src/{,**/}*.ts' 'spec/{,**/}*.ts'",
+    "linter": "tslint 'src/{,**/}*.ts' 'spec/{,**/}*.ts' && prettier --check *.html",
+    "linter:fix": "tslint --fix 'src/{,**/}*.ts' 'spec/{,**/}*.ts' && prettier --write *.html",
     "test": "npm run linter && npm run cover",
     "test:nocover": "ts-node node_modules/jasmine/bin/jasmine.js",
     "cover": "node_modules/.bin/nyc --reporter=lcov --reporter=text node_modules/jasmine/bin/jasmine.js",
@@ -74,6 +74,7 @@
     "jasmine": "^3.3.1",
     "jasmine-console-reporter": "^3.1.0",
     "nyc": "^13.3.0",
+    "prettier": "^1.19.1",
     "ts-loader": "^5.3.3",
     "ts-node": "^8.0.1",
     "tslint": "^5.12.1",
