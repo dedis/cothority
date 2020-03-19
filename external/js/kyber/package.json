@@ -14,8 +14,8 @@
     "bundle": "node node_modules/.bin/webpack",
     "doc": "node_modules/.bin/typedoc --out doc/ src/",
     "link": "./publish.sh --link",
-    "linter": "node_modules/.bin/tslint 'src/{,**/}*.ts' 'spec/{,**/}*.ts'",
-    "linter:fix": "node_modules/.bin/tslint --fix 'src/{,**/}*.ts' 'spec/{,**/}*.ts'",
+    "linter": "tslint 'src/{,**/}*.ts' 'spec/{,**/}*.ts' && prettier --check *.html",
+    "linter:fix": "tslint --fix 'src/{,**/}*.ts' 'spec/{,**/}*.ts' && prettier --write *.html",
     "test-publish": "npm test && ./publish.sh"
   },
   "repository": {
@@ -57,7 +57,7 @@
     "jasmine": "^3.3.1",
     "jsverify": "^0.8.4",
     "nyc": "^14.1.1",
-    "prettier": "^1.10.2",
+    "prettier": "^1.19.1",
     "ts-loader": "^5.3.3",
     "ts-node": "^7.0.1",
     "tslint": "^5.20.1",
