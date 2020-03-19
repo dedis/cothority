@@ -2,8 +2,10 @@ package contracts
 
 import (
 	"crypto/sha256"
+	"encoding/binary"
 	"errors"
 	"fmt"
+	"math"
 	"regexp"
 
 	"go.dedis.ch/cothority/v3"
@@ -138,19 +140,39 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 			return
 		}
 		coin := &byzcoin.Coin{
-			Name: byzcoin.NewInstanceID(inst.Spawn.Args.Search("coinName")),
+			Name: contracts.CoinName,
 		}
+		if name := inst.Spawn.Args.Search("coinName"); name != nil {
+			coin.Name = byzcoin.NewInstanceID(name)
+		}
+
+		// Start with the maximum value for addCoin,
+		// then eventually adjust with the argument.
+		// The for-loop below will get as much as possible from cout.
+		addCoin := uint64(math.MaxUint64)
+		for _, arg := range inst.Spawn.Args {
+			if arg.Name == "coinValue" {
+				if len(arg.Value) < 8 {
+					return nil, nil,
+						errors.New("getCoin needs to have a value of 8 bytes")
+				}
+				addCoin = binary.LittleEndian.Uint64(arg.Value)
+			}
+		}
+
 		for i := range cout {
-			if cout[i].Name.Equal(coin.Name) {
-				err = coin.SafeAdd(cout[i].Value)
+			if cout[i].Name.Equal(coin.Name) && addCoin > 0 {
+				if addCoin <= cout[i].Value {
+					err = cout[i].SafeTransfer(coin, addCoin)
+					addCoin = 0
+				} else {
+					err = cout[i].SafeTransfer(coin, cout[i].Value)
+					addCoin -= cout[i].Value
+				}
 				if err != nil {
 					return nil, nil, err
 				}
-				log.Lvl2("Adding initial balance:", coin.Value)
-				err = cout[i].SafeSub(coin.Value)
-				if err != nil {
-					return nil, nil, err
-				}
+				log.Lvl2("Initial balance is:", coin.Value)
 			}
 		}
 		darcID = inst.Spawn.Args.Search("darcID")
