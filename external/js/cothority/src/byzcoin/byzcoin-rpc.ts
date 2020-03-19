@@ -36,7 +36,7 @@ import { StreamingRequest, StreamingResponse } from "./proto/stream";
 
 export const currentVersion = 2;
 
-const CONFIG_INSTANCE_ID = Buffer.alloc(32, 0);
+export const CONFIG_INSTANCE_ID = Buffer.alloc(32, 0);
 
 /**
  * ByzCoinRPC represents one byzcoin-representation.
@@ -448,7 +448,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
 
     /**
      * checks the authorization of a set of identities with respect to a given darc. This calls
-     * an OmniLedger node and trusts it to return the name of the actions that a hypotethic set of
+     * an OmniLedger node and trusts it to return the name of the actions that a hypothetical set of
      * signatures from the given identities can execute using the given darc.
      *
      * This is useful if a darc delegates one or more actions to other darc, who delegate also, so
