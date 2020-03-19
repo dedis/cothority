@@ -39,6 +39,7 @@ export default class SpawnerInstance extends Instance {
     static readonly argumentDarcID = "darcID";
     static readonly argumentCoinID = "coinID";
     static readonly argumentCoinName = "coinName";
+    static readonly argumentCoinValue = "coinValue";
 
     /**
      * Spawn a spawner instance. It takes either an ICreateSpawner as single argument, or all the arguments
@@ -200,6 +201,7 @@ export default class SpawnerInstance extends Instance {
                     new Argument({name: SpawnerInstance.argumentCoinName, value: SPAWNER_COIN}),
                     new Argument({name: SpawnerInstance.argumentCoinID, value: coinID}),
                     new Argument({name: SpawnerInstance.argumentDarcID, value: darcID}),
+                    new Argument({name: SpawnerInstance.argumentCoinValue, value: Buffer.from(balance.toBytesLE())}),
                 ],
             ),
         ];
