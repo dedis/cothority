@@ -1,3 +1,4 @@
+import { randomBytes } from "crypto";
 import { createHash } from "crypto-browserify";
 import Long from "long";
 import { Message, Properties } from "protobufjs/light";
@@ -63,7 +64,7 @@ export default class Darc extends Message<Darc> {
         const darc = new Darc({
             baseID: Buffer.from([]),
             description: desc,
-            prevID: createHash("sha256").digest(),
+            prevID: randomBytes(32),
             rules: this.initRules(owners, signers),
             version: Long.fromNumber(0, true),
         });

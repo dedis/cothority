@@ -78,6 +78,8 @@ export default class Proof extends Message<Proof> {
     static register() {
         registerMessage("byzcoin.Proof", Proof, InclusionProof, SkipBlock, ForwardLink);
     }
+    // The id of the latest known proof - supposes there is only one ByzCoin
+    private static latestID: InstanceID;
 
     readonly inclusionproof: InclusionProof;
     readonly latest: SkipBlock;
@@ -154,26 +156,32 @@ export default class Proof extends Message<Proof> {
         }
 
         let publics = links[0].newRoster.getServicePublics(SkipchainRPC.serviceName);
-
-        // Check that all forward-links are correct.
         let prev = links[0].to;
-        for (let i = 1; i < links.length; i++) {
-            const link = links[i];
 
-            const err = link.verifyWithScheme(publics, this.latest.signatureScheme);
-            if (err) {
-                return new Error("invalid forward link signature: " + err.message);
+        if (Proof.latestID && links[links.length - 1].to.equals(Proof.latestID)) {
+            // This latest block is already known, so no use of doing forward-link checking
+            prev = Proof.latestID;
+        } else {
+            // Check that all forward-links are correct.
+            for (let i = 1; i < links.length; i++) {
+                const link = links[i];
+
+                const err = link.verifyWithScheme(publics, this.latest.signatureScheme);
+                if (err) {
+                    return new Error("invalid forward link signature: " + err.message);
+                }
+
+                if (!link.from.equals(prev)) {
+                    return new Error("invalid chain of forward links");
+                }
+
+                prev = link.to;
+
+                if (link.newRoster) {
+                    publics = link.newRoster.getServicePublics(SkipchainRPC.serviceName);
+                }
             }
-
-            if (!link.from.equals(prev)) {
-                return new Error("invalid chain of forward links");
-            }
-
-            prev = link.to;
-
-            if (link.newRoster) {
-                publics = link.newRoster.getServicePublics(SkipchainRPC.serviceName);
-            }
+            Proof.latestID = prev;
         }
 
         if (!prev.equals(this.latest.hash)) {

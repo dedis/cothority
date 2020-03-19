@@ -228,7 +228,7 @@ describe("SpawnerInstance Tests", () => {
 
         const user = SignerEd25519.fromBytes(Buffer.from([1, 2, 3, 4, 5, 6]));
         const userDarc = await spawnUserDarc(si, ci, [SIGNER], user.public);
-        await expectAsync(spawnUserDarc(si, ci, [SIGNER], user.public)).toBeRejected();
+        await expectAsync(si.spawnDarcs(ci, [SIGNER], userDarc.darc)).toBeRejected();
 
         await si.spawnCredential(ci, [SIGNER], userDarc.darc.getBaseID(),
             generateCredential(user.public));
