@@ -99,11 +99,13 @@ export default class NistPoint implements Point {
             }
 
             const xRed = x.toRed(this.ref.curve.curve.red);
+            // @ts-ignore
             const aX = xRed.redMul(new BN(this.ref.curve.curve.a));
             // y^2 = x^3 + ax + b
             const y2 = xRed.redSqr()
                 .redMul(xRed)
                 .redAdd(aX)
+                // @ts-ignore
                 .redAdd(new BN(this.ref.curve.curve.b));
 
             let y = y2.redSqrt();
