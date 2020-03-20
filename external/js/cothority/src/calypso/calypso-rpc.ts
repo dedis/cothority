@@ -3,8 +3,8 @@ import { Message, Properties } from "protobufjs/light";
 import { Argument, ClientTransaction, InstanceID, Instruction, Proof } from "../byzcoin";
 import ByzCoinRPC from "../byzcoin/byzcoin-rpc";
 import { Signer } from "../darc";
-import { Roster, ServerIdentity } from "../network";
-import { IConnection, RosterWSConnection, WebSocketConnection } from "../network/connection";
+import { IConnection, Roster, ServerIdentity, WebSocketConnection } from "../network";
+import { RosterWSConnection } from "../network/connection";
 import { registerMessage } from "../protobuf";
 import { DecodeKey, OnChainSecretInstance } from "./calypso-instance";
 

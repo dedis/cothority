@@ -1,10 +1,8 @@
 import { Message } from "protobufjs/light";
-import { BrowserWebSocketAdapter } from "../../src/network";
+import { BrowserWebSocketAdapter, setFactory, WebSocketConnection } from "../../src/network";
 import {
     LeaderConnection,
     RosterWSConnection,
-    setFactory,
-    WebSocketConnection,
 } from "../../src/network/connection";
 import { Roster, ServerIdentity } from "../../src/network/proto";
 import { ROSTER } from "../support/conondes";

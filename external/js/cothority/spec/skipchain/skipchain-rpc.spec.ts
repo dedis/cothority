@@ -1,6 +1,5 @@
 import Log from "../../src/log";
-import { Roster } from "../../src/network";
-import { RosterWSConnection, WebSocketConnection } from "../../src/network/connection";
+import { Roster, RosterWSConnection, WebSocketConnection } from "../../src/network";
 import { SkipBlock, SkipchainRPC } from "../../src/skipchain";
 import { ROSTER, startConodes } from "../support/conondes";
 

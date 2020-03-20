@@ -1,7 +1,59 @@
+import { Message } from "protobufjs";
+import { Observable } from "rxjs";
 import shuffle from "shuffle-array";
 import Log from "../log";
-import { WebSocketConnection } from "./connection";
 import { Roster } from "./proto";
+import { WebSocketConnection } from "./websocket";
+import { WebSocketAdapter } from "./websocket-adapter";
+
+/**
+ * A connection allows to send a message to one or more distant peers. It has a default
+ * service it is connected to, and can only be used to send messages to that service.
+ * To change service, a copy has to be created using the copy method.
+ */
+export interface IConnection {
+    /**
+     * Send a message to the distant peer
+     * @param message   Protobuf compatible message
+     * @param reply     Protobuf type of the reply
+     * @returns a promise resolving with the reply on success, rejecting otherwise
+     */
+    send<T extends Message>(message: Message, reply: typeof Message): Promise<T>;
+
+    /**
+     * Get the origin of the distant address
+     * @returns the address as a string
+     */
+    getURL(): string;
+
+    /**
+     * Set the timeout value for new connections
+     * @param value Timeout in milliseconds
+     */
+    setTimeout(value: number): void;
+
+    /**
+     * Creates a copy of the connection, but usable with the given service.
+     * @param service
+     */
+    copy(service: string): IConnection;
+
+    /**
+     * Send a message to the distant peer
+     * @param message Protobuf compatible message
+     * @param reply Protobuf type of the reply
+     */
+    sendStream<T extends Message>(message: Message, reply: typeof Message):
+        Observable<[T, WebSocketAdapter]>;
+
+    /**
+     * Sets how many nodes will be contacted in parallel
+     * @deprecated - don't use IConnection for that, but rather directly a
+     * RosterWSConnection.
+     * @param p number of nodes to contact in parallel
+     */
+    setParallel(p: number): void;
+}
 
 /**
  * Nodes holds all nodes for all services in two lists - one active for the number of
@@ -89,11 +141,11 @@ export class Nodes {
     }
 
     /**
-     * Returns the WebSocketConnections corresponding to the active list and the reserve nodes.
+     * Returns the IConnections corresponding to the active list and the reserve nodes.
      * @param active how many active nodes to return
      * @param service the chosen service
      */
-    splitList(active: number, service: string): [WebSocketConnection[], WebSocketConnection[]] {
+    splitList(active: number, service: string): [IConnection[], IConnection[]] {
         const wsc = this.nodeList.map((n) => n.getService(service));
         return [wsc.slice(0, active), wsc.slice(active)];
     }
@@ -134,20 +186,20 @@ export class Nodes {
 }
 
 /**
- * A Node holds one WebSocketConnection per service.
+ * A Node holds one IConnection per service.
  */
 export class Node {
-    private services: Map<string, WebSocketConnection> = new Map<string, WebSocketConnection>();
+    private services: Map<string, IConnection> = new Map<string, IConnection>();
 
     constructor(readonly address: string) {
     }
 
     /**
-     * Returns a WebSocketConnection for a given service. If the
+     * Returns a IConnection for a given service. If the
      * connection doesn't exist yet, it will be created.
      * @param name
      */
-    getService(name: string): WebSocketConnection {
+    getService(name: string): IConnection {
         if (this.services.has(name)) {
             return this.services.get(name);
         }
@@ -169,8 +221,8 @@ export class Node {
  * which nodes didn't reply correctly.
  */
 export class NodeList {
-    readonly active: WebSocketConnection[];
-    private reserve: WebSocketConnection[];
+    readonly active: IConnection[];
+    private reserve: IConnection[];
     private readonly start: number;
     private first: number = 0;
     private replied: number = 0;
@@ -192,7 +244,7 @@ export class NodeList {
      * 1001 or higher.
      * @param ws
      */
-    replace(ws: WebSocketConnection): WebSocketConnection | undefined {
+    replace(ws: IConnection): IConnection | undefined {
         this.nodes.gotError(ws.getURL());
         if (this.replied === 0) {
             return this.reserve.pop();
@@ -204,7 +256,7 @@ export class NodeList {
      * Indicates that this node has successfully finished its job.
      * @param ws
      */
-    done(ws: WebSocketConnection): number {
+    done(ws: IConnection): number {
         const delay = Date.now() - this.start;
         if (this.replied === 0) {
             this.first = delay;

@@ -6,9 +6,6 @@ import { Rule } from "../darc";
 import Darc from "../darc/darc";
 import IdentityEd25519 from "../darc/identity-ed25519";
 import IdentityWrapper, { IIdentity } from "../darc/identity-wrapper";
-import { WebSocketAdapter } from "../network";
-import { IConnection, LeaderConnection, RosterWSConnection } from "../network/connection";
-import { Roster } from "../network/proto";
 import { SkipBlock } from "../skipchain/skipblock";
 import SkipchainRPC from "../skipchain/skipchain-rpc";
 import ClientTransaction, { ICounterUpdater } from "./client-transaction";
@@ -32,6 +29,7 @@ import {
     IDVersion,
 } from "./proto/requests";
 import { StreamingRequest, StreamingResponse } from "./proto/stream";
+import {IConnection, LeaderConnection, Roster, RosterWSConnection, WebSocketAdapter} from "../network";
 
 export const currentVersion = 2;
 

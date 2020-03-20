@@ -1,7 +1,8 @@
 // tslint:disable:variable-name
 import { BLAKE2Xs } from "@stablelib/blake2xs";
 import { cloneDeep } from "lodash";
-import { curve, Point, Scalar } from "../..";
+import * as curve from "../../curve";
+import { Point, Scalar } from "../../suite";
 
 // tslint:disable-next-line
 export const Suite = curve.newCurve("edwards25519");

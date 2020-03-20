@@ -3,7 +3,7 @@ import CurvePoint from "./curve-point";
 import GfP12 from "./gfp12";
 import GfP2 from "./gfp2";
 import GfP6 from "./gfp6";
-import { optimalAte } from "./opt-ate";
+import { finalExponentiation, miller } from "./opt-ate";
 import TwistPoint from "./twist-point";
 
 export type BNType = number | string | number[] | Buffer | BN;
@@ -488,4 +488,22 @@ export class GT {
     toString(): string {
         return `bn256.GT${this.g.toString()}`;
     }
+}
+
+/**
+ * Compute the pairing between a point in G1 and a point in G2
+ * using the Optimal Ate algorithm
+ * @param g1 the point in G1
+ * @param g2 the point in G2
+ * @returns the resulting point in GT
+ */
+export function optimalAte(g1: G1, g2: G2): GT {
+    const e = miller(g2.getPoint(), g1.getPoint());
+    const ret = finalExponentiation(e);
+
+    if (g1.isInfinity() || g2.isInfinity()) {
+        return new GT(GfP12.one());
+    }
+
+    return new GT(ret);
 }

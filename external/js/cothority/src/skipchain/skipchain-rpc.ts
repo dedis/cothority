@@ -1,9 +1,8 @@
 import Log from "../log";
+import { IConnection, WebSocketConnection } from "../network";
 import {
-    IConnection,
     LeaderConnection,
     RosterWSConnection,
-    WebSocketConnection,
 } from "../network/connection";
 import { Roster } from "../network/proto";
 import {

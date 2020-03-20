@@ -1,9 +1,8 @@
-import { G1, G2, GT } from "./bn";
-import { u, xiToPMinus1Over2, xiToPMinus1Over3, xiToPSquaredMinus1Over3 } from "./constants";
+import { u } from "./constants";
 import CurvePoint from "./curve-point";
 import GfP from "./gfp";
 import GfP12 from "./gfp12";
-import GfP2 from "./gfp2";
+import GfP2, { xiToPMinus1Over2, xiToPMinus1Over3, xiToPSquaredMinus1Over3 } from "./gfp2";
 import GfP6 from "./gfp6";
 import TwistPoint from "./twist-point";
 
@@ -124,7 +123,7 @@ function mulLine(ret: GfP12, res: Result): GfP12 {
  * miller implements the Miller loop for calculating the Optimal Ate pairing.
  * See algorithm 1 from http://cryptojedi.org/papers/dclxvi-20100714.pdf
  */
-function miller(q: TwistPoint, p: CurvePoint): GfP12 {
+export function miller(q: TwistPoint, p: CurvePoint): GfP12 {
     let ret = GfP12.one();
 
     const aAffine = q.clone();
@@ -189,7 +188,7 @@ function miller(q: TwistPoint, p: CurvePoint): GfP12 {
  * GF(p¹²) to obtain an element of GT (steps 13-15 of algorithm 1 from
  * http://cryptojedi.org/papers/dclxvi-20100714.pdf)
  */
-function finalExponentiation(a: GfP12): GfP12 {
+export function finalExponentiation(a: GfP12): GfP12 {
     let t1 = a.conjugate();
 
     t1 = t1.mul(a.invert());
@@ -222,22 +221,4 @@ function finalExponentiation(a: GfP12): GfP12 {
     t1 = t1.mul(y0);
 
     return t0.square().mul(t1);
-}
-
-/**
- * Compute the pairing between a point in G1 and a point in G2
- * using the Optimal Ate algorithm
- * @param g1 the point in G1
- * @param g2 the point in G2
- * @returns the resulting point in GT
- */
-export function optimalAte(g1: G1, g2: G2): GT {
-    const e = miller(g2.getPoint(), g1.getPoint());
-    const ret = finalExponentiation(e);
-
-    if (g1.isInfinity() || g2.isInfinity()) {
-        return new GT(GfP12.one());
-    }
-
-    return new GT(ret);
 }

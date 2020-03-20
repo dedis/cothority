@@ -1,6 +1,6 @@
 import BN from "bn.js";
-import { xiToPMinus1Over6, xiToPSquaredMinus1Over6 } from "./constants";
 import GfP from "./gfp";
+import { xiToPMinus1Over6, xiToPSquaredMinus1Over6 } from "./gfp2";
 import GfP6 from "./gfp6";
 
 /**

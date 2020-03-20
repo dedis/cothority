@@ -1,4 +1,4 @@
-import { WebSocketConnection } from "../network/connection";
+import { WebSocketConnection } from "../network";
 import { Roster } from "../network/proto";
 import { StatusRequest, StatusResponse } from "./proto";
 
