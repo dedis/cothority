@@ -5,7 +5,6 @@ import ByzCoinRPC from "../byzcoin/byzcoin-rpc";
 import ClientTransaction, { Argument, Instruction } from "../byzcoin/client-transaction";
 import Instance, { InstanceID } from "../byzcoin/instance";
 import Signer from "../darc/signer";
-import Log from "../log";
 import { EMPTY_BUFFER, registerMessage } from "../protobuf";
 
 export default class CredentialsInstance extends Instance {
@@ -108,7 +107,6 @@ export default class CredentialsInstance extends Instance {
         Promise<CredentialsInstance> {
         return new CredentialsInstance(bc, await Instance.fromByzcoin(bc, iid, waitMatch, interval));
     }
-
     credential: CredentialStruct;
 
     constructor(private rpc: ByzCoinRPC, readonly inst: Instance) {
@@ -283,7 +281,12 @@ export class CredentialStruct extends Message<CredentialStruct> {
      * @param attribute     Name of the attribute
      * @param value         The value to set
      */
-    setAttribute(credential: string, attribute: string, value?: Buffer) {
+    setAttribute(credential: string, attribute: string, value?: Buffer | string) {
+        if (value === undefined) {
+            value = Buffer.from("");
+        } else if (typeof value === "string") {
+            value = Buffer.from(value);
+        }
         const attr = new Attribute({name: attribute, value});
         const cred = this.credentials.find((c) => c.name === credential);
         if (cred === undefined) {
