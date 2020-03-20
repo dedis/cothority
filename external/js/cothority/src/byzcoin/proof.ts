@@ -79,7 +79,7 @@ export default class Proof extends Message<Proof> {
         registerMessage("byzcoin.Proof", Proof, InclusionProof, SkipBlock, ForwardLink);
     }
     // The id of the latest known proof - supposes there is only one ByzCoin
-    private static latestID: InstanceID;
+    private static latestID: InstanceID | undefined;
 
     readonly inclusionproof: InclusionProof;
     readonly latest: SkipBlock;

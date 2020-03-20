@@ -64,6 +64,8 @@ export default class Darc extends Message<Darc> {
         const darc = new Darc({
             baseID: Buffer.from([]),
             description: desc,
+            // Assure that two otherwise identical darcs get another base-id by using a random prevID,
+            // even for a genesis-darc.
             prevID: randomBytes(32),
             rules: this.initRules(owners, signers),
             version: Long.fromNumber(0, true),
