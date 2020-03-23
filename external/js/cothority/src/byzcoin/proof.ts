@@ -27,12 +27,7 @@ export default class Proof extends Message<Proof> {
      * @returns the state change body
      */
     get stateChangeBody(): StateChangeBody {
-        if (!this._state) {
-            // cache the decoding
-            this._state = StateChangeBody.decode(this.inclusionproof.value);
-        }
-
-        return this._state;
+        return this.inclusionproof.stateChangeBody;
     }
 
     /**
@@ -84,7 +79,6 @@ export default class Proof extends Message<Proof> {
     readonly inclusionproof: InclusionProof;
     readonly latest: SkipBlock;
     readonly links: ForwardLink[];
-    protected _state: StateChangeBody;
 
     constructor(props: Properties<Proof>) {
         super(props);
@@ -136,11 +130,11 @@ export default class Proof extends Message<Proof> {
      * Verify that the proof contains a correct chain from the given genesis. Note that
      * this function doesn't verify the first roster of the chain.
      *
-     * @param genesisID The skipchain ID
+     * @param latestID ID of the latest known and trusted block the proof is based upon
      * @returns an error if something is wrong, null otherwise
      * @deprecated use verifyFrom for a complete verification
      */
-    verify(id: InstanceID): Error {
+    verify(latestID: InstanceID): Error {
         if (!this.latest.computeHash().equals(this.latest.hash)) {
             return new Error("invalid latest block");
         }
@@ -151,7 +145,7 @@ export default class Proof extends Message<Proof> {
         }
 
         const links = this.links;
-        if (!links[0].to.equals(id)) {
+        if (!links[0].to.equals(latestID)) {
             return new Error("mismatching block ID in the first link");
         }
 
@@ -198,44 +192,7 @@ export default class Proof extends Message<Proof> {
      * @throws for corrupted proofs
      */
     exists(key: Buffer): boolean {
-        if (key.length === 0) {
-            throw new Error("key is nil");
-        }
-        if (this.inclusionproof.interiors.length === 0) {
-            throw new Error("no interior node");
-        }
-
-        const bits = hashToBits(key);
-        let expectedHash = this.inclusionproof.hashInterior(0);
-
-        let i = 0;
-        for (; i < this.inclusionproof.interiors.length; i++) {
-            if (!expectedHash.equals(this.inclusionproof.hashInterior(i))) {
-                throw new Error("invalid interior node");
-            }
-
-            if (bits[i]) {
-                expectedHash = this.inclusionproof.interiors[i].left;
-            } else {
-                expectedHash = this.inclusionproof.interiors[i].right;
-            }
-        }
-
-        if (expectedHash.equals(this.inclusionproof.hashLeaf())) {
-            if (_.difference(bits.slice(0, i), this.inclusionproof.leaf.prefix).length !== 0) {
-                throw new Error("invalid prefix in leaf node");
-            }
-
-            return this.key.equals(key);
-        } else if (expectedHash.equals(this.inclusionproof.hashEmpty())) {
-            if (_.difference(bits.slice(0, i), this.inclusionproof.empty.prefix).length !== 0) {
-                throw new Error("invalid prefix in empty node");
-            }
-
-            return false;
-        }
-
-        throw new Error("no corresponding leaf/empty node with respect to the interior node");
+        return this.inclusionproof.exists(key);
     }
 
     /**
@@ -355,7 +312,7 @@ class LeafNode extends Message<LeafNode> {
 /**
  * InclusionProof represents the proof that an instance is present or not in the global state trie.
  */
-class InclusionProof extends Message<InclusionProof> {
+export class InclusionProof extends Message<InclusionProof> {
 
     /**
      * @return {Buffer} the key in the leaf for this inclusionProof. This is not the same as the key this proof has
@@ -372,6 +329,19 @@ class InclusionProof extends Message<InclusionProof> {
     get value(): Buffer {
         return this.leaf.value;
     }
+
+    /**
+     * Returns the stateChangeBody of this InclusionProof.
+     */
+    get stateChangeBody(): StateChangeBody {
+        if (!this._state) {
+            // cache the decoding
+            this._state = StateChangeBody.decode(this.value);
+        }
+
+        return this._state;
+    }
+
     /**
      * @see README#Message classes
      */
@@ -383,6 +353,7 @@ class InclusionProof extends Message<InclusionProof> {
     leaf: LeafNode;
     empty: EmptyNode;
     nonce: Buffer;
+    protected _state: StateChangeBody;
 
     constructor(props?: Properties<InclusionProof>) {
         super(props);
@@ -445,6 +416,53 @@ class InclusionProof extends Message<InclusionProof> {
         h.update(length);
 
         return h.digest();
+    }
+
+    /**
+     * Check if the key exists in the proof
+     *
+     * @returns true when it exists, false otherwise
+     * @throws for corrupted proofs
+     */
+    exists(key: Buffer): boolean {
+        if (key.length === 0) {
+            throw new Error("key is nil");
+        }
+        if (this.interiors.length === 0) {
+            throw new Error("no interior node");
+        }
+
+        const bits = hashToBits(key);
+        let expectedHash = this.hashInterior(0);
+
+        let i = 0;
+        for (; i < this.interiors.length; i++) {
+            if (!expectedHash.equals(this.hashInterior(i))) {
+                throw new Error("invalid interior node");
+            }
+
+            if (bits[i]) {
+                expectedHash = this.interiors[i].left;
+            } else {
+                expectedHash = this.interiors[i].right;
+            }
+        }
+
+        if (expectedHash.equals(this.hashLeaf())) {
+            if (_.difference(bits.slice(0, i), this.leaf.prefix).length !== 0) {
+                throw new Error("invalid prefix in leaf node");
+            }
+
+            return this.key.equals(key);
+        } else if (expectedHash.equals(this.hashEmpty())) {
+            if (_.difference(bits.slice(0, i), this.empty.prefix).length !== 0) {
+                throw new Error("invalid prefix in empty node");
+            }
+
+            return false;
+        }
+
+        throw new Error("no corresponding leaf/empty node with respect to the interior node");
     }
 }
 

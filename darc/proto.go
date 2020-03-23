@@ -18,6 +18,7 @@ func init() {
 // type :expression.Expr:bytes
 // type :ID:bytes
 // type :Action:string
+// type :common.Address:bytes
 // package darc;
 // option java_package = "ch.epfl.dedis.lib.proto";
 // option java_outer_classname = "DarcProto";

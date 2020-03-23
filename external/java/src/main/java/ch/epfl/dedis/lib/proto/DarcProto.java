@@ -2451,6 +2451,31 @@ public final class DarcProto {
      * <code>optional .darc.IdentityProxy proxy = 4;</code>
      */
     ch.epfl.dedis.lib.proto.DarcProto.IdentityProxyOrBuilder getProxyOrBuilder();
+
+    /**
+     * <pre>
+     * Address of an EVM contract
+     * </pre>
+     *
+     * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
+     */
+    boolean hasEvmcontract();
+    /**
+     * <pre>
+     * Address of an EVM contract
+     * </pre>
+     *
+     * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract getEvmcontract();
+    /**
+     * <pre>
+     * Address of an EVM contract
+     * </pre>
+     *
+     * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContractOrBuilder getEvmcontractOrBuilder();
   }
   /**
    * <pre>
@@ -2546,6 +2571,19 @@ public final class DarcProto {
                 proxy_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000008;
+              break;
+            }
+            case 42: {
+              ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000010) == 0x00000010)) {
+                subBuilder = evmcontract_.toBuilder();
+              }
+              evmcontract_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(evmcontract_);
+                evmcontract_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000010;
               break;
             }
             default: {
@@ -2713,6 +2751,39 @@ public final class DarcProto {
       return proxy_ == null ? ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy.getDefaultInstance() : proxy_;
     }
 
+    public static final int EVMCONTRACT_FIELD_NUMBER = 5;
+    private ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract evmcontract_;
+    /**
+     * <pre>
+     * Address of an EVM contract
+     * </pre>
+     *
+     * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
+     */
+    public boolean hasEvmcontract() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <pre>
+     * Address of an EVM contract
+     * </pre>
+     *
+     * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
+     */
+    public ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract getEvmcontract() {
+      return evmcontract_ == null ? ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.getDefaultInstance() : evmcontract_;
+    }
+    /**
+     * <pre>
+     * Address of an EVM contract
+     * </pre>
+     *
+     * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
+     */
+    public ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContractOrBuilder getEvmcontractOrBuilder() {
+      return evmcontract_ == null ? ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.getDefaultInstance() : evmcontract_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -2744,6 +2815,12 @@ public final class DarcProto {
           return false;
         }
       }
+      if (hasEvmcontract()) {
+        if (!getEvmcontract().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -2762,6 +2839,9 @@ public final class DarcProto {
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeMessage(4, getProxy());
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeMessage(5, getEvmcontract());
       }
       unknownFields.writeTo(output);
     }
@@ -2787,6 +2867,10 @@ public final class DarcProto {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, getProxy());
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, getEvmcontract());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2824,6 +2908,11 @@ public final class DarcProto {
         result = result && getProxy()
             .equals(other.getProxy());
       }
+      result = result && (hasEvmcontract() == other.hasEvmcontract());
+      if (hasEvmcontract()) {
+        result = result && getEvmcontract()
+            .equals(other.getEvmcontract());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -2850,6 +2939,10 @@ public final class DarcProto {
       if (hasProxy()) {
         hash = (37 * hash) + PROXY_FIELD_NUMBER;
         hash = (53 * hash) + getProxy().hashCode();
+      }
+      if (hasEvmcontract()) {
+        hash = (37 * hash) + EVMCONTRACT_FIELD_NUMBER;
+        hash = (53 * hash) + getEvmcontract().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -2988,6 +3081,7 @@ public final class DarcProto {
           getEd25519FieldBuilder();
           getX509EcFieldBuilder();
           getProxyFieldBuilder();
+          getEvmcontractFieldBuilder();
         }
       }
       @java.lang.Override
@@ -3017,6 +3111,12 @@ public final class DarcProto {
           proxyBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000008);
+        if (evmcontractBuilder_ == null) {
+          evmcontract_ = null;
+        } else {
+          evmcontractBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
@@ -3076,6 +3176,14 @@ public final class DarcProto {
           result.proxy_ = proxy_;
         } else {
           result.proxy_ = proxyBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        if (evmcontractBuilder_ == null) {
+          result.evmcontract_ = evmcontract_;
+        } else {
+          result.evmcontract_ = evmcontractBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -3138,6 +3246,9 @@ public final class DarcProto {
         if (other.hasProxy()) {
           mergeProxy(other.getProxy());
         }
+        if (other.hasEvmcontract()) {
+          mergeEvmcontract(other.getEvmcontract());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -3162,6 +3273,11 @@ public final class DarcProto {
         }
         if (hasProxy()) {
           if (!getProxy().isInitialized()) {
+            return false;
+          }
+        }
+        if (hasEvmcontract()) {
+          if (!getEvmcontract().isInitialized()) {
             return false;
           }
         }
@@ -3802,6 +3918,160 @@ public final class DarcProto {
           proxy_ = null;
         }
         return proxyBuilder_;
+      }
+
+      private ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract evmcontract_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract, ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContractOrBuilder> evmcontractBuilder_;
+      /**
+       * <pre>
+       * Address of an EVM contract
+       * </pre>
+       *
+       * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
+       */
+      public boolean hasEvmcontract() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <pre>
+       * Address of an EVM contract
+       * </pre>
+       *
+       * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract getEvmcontract() {
+        if (evmcontractBuilder_ == null) {
+          return evmcontract_ == null ? ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.getDefaultInstance() : evmcontract_;
+        } else {
+          return evmcontractBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * Address of an EVM contract
+       * </pre>
+       *
+       * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
+       */
+      public Builder setEvmcontract(ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract value) {
+        if (evmcontractBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          evmcontract_ = value;
+          onChanged();
+        } else {
+          evmcontractBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000010;
+        return this;
+      }
+      /**
+       * <pre>
+       * Address of an EVM contract
+       * </pre>
+       *
+       * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
+       */
+      public Builder setEvmcontract(
+          ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.Builder builderForValue) {
+        if (evmcontractBuilder_ == null) {
+          evmcontract_ = builderForValue.build();
+          onChanged();
+        } else {
+          evmcontractBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000010;
+        return this;
+      }
+      /**
+       * <pre>
+       * Address of an EVM contract
+       * </pre>
+       *
+       * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
+       */
+      public Builder mergeEvmcontract(ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract value) {
+        if (evmcontractBuilder_ == null) {
+          if (((bitField0_ & 0x00000010) == 0x00000010) &&
+              evmcontract_ != null &&
+              evmcontract_ != ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.getDefaultInstance()) {
+            evmcontract_ =
+              ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.newBuilder(evmcontract_).mergeFrom(value).buildPartial();
+          } else {
+            evmcontract_ = value;
+          }
+          onChanged();
+        } else {
+          evmcontractBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000010;
+        return this;
+      }
+      /**
+       * <pre>
+       * Address of an EVM contract
+       * </pre>
+       *
+       * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
+       */
+      public Builder clearEvmcontract() {
+        if (evmcontractBuilder_ == null) {
+          evmcontract_ = null;
+          onChanged();
+        } else {
+          evmcontractBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000010);
+        return this;
+      }
+      /**
+       * <pre>
+       * Address of an EVM contract
+       * </pre>
+       *
+       * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.Builder getEvmcontractBuilder() {
+        bitField0_ |= 0x00000010;
+        onChanged();
+        return getEvmcontractFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Address of an EVM contract
+       * </pre>
+       *
+       * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContractOrBuilder getEvmcontractOrBuilder() {
+        if (evmcontractBuilder_ != null) {
+          return evmcontractBuilder_.getMessageOrBuilder();
+        } else {
+          return evmcontract_ == null ?
+              ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.getDefaultInstance() : evmcontract_;
+        }
+      }
+      /**
+       * <pre>
+       * Address of an EVM contract
+       * </pre>
+       *
+       * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract, ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContractOrBuilder> 
+          getEvmcontractFieldBuilder() {
+        if (evmcontractBuilder_ == null) {
+          evmcontractBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract, ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContractOrBuilder>(
+                  getEvmcontract(),
+                  getParentForChildren(),
+                  isClean());
+          evmcontract_ = null;
+        }
+        return evmcontractBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -6156,6 +6426,561 @@ public final class DarcProto {
 
   }
 
+  public interface IdentityEvmContractOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:darc.IdentityEvmContract)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * 	BEvmID  []byteBEvm InstanceID
+     * </pre>
+     *
+     * <code>required bytes address = 1;</code>
+     */
+    boolean hasAddress();
+    /**
+     * <pre>
+     * 	BEvmID  []byteBEvm InstanceID
+     * </pre>
+     *
+     * <code>required bytes address = 1;</code>
+     */
+    com.google.protobuf.ByteString getAddress();
+  }
+  /**
+   * <pre>
+   * IdentityEvmContract holds the address of an EVM contract.
+   * </pre>
+   *
+   * Protobuf type {@code darc.IdentityEvmContract}
+   */
+  public  static final class IdentityEvmContract extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:darc.IdentityEvmContract)
+      IdentityEvmContractOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use IdentityEvmContract.newBuilder() to construct.
+    private IdentityEvmContract(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private IdentityEvmContract() {
+      address_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private IdentityEvmContract(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              address_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityEvmContract_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityEvmContract_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.class, ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int ADDRESS_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString address_;
+    /**
+     * <pre>
+     * 	BEvmID  []byteBEvm InstanceID
+     * </pre>
+     *
+     * <code>required bytes address = 1;</code>
+     */
+    public boolean hasAddress() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <pre>
+     * 	BEvmID  []byteBEvm InstanceID
+     * </pre>
+     *
+     * <code>required bytes address = 1;</code>
+     */
+    public com.google.protobuf.ByteString getAddress() {
+      return address_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasAddress()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, address_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, address_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract other = (ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract) obj;
+
+      boolean result = true;
+      result = result && (hasAddress() == other.hasAddress());
+      if (hasAddress()) {
+        result = result && getAddress()
+            .equals(other.getAddress());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasAddress()) {
+        hash = (37 * hash) + ADDRESS_FIELD_NUMBER;
+        hash = (53 * hash) + getAddress().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * IdentityEvmContract holds the address of an EVM contract.
+     * </pre>
+     *
+     * Protobuf type {@code darc.IdentityEvmContract}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:darc.IdentityEvmContract)
+        ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContractOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityEvmContract_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityEvmContract_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.class, ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        address_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityEvmContract_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract build() {
+        ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract buildPartial() {
+        ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract result = new ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.address_ = address_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract other) {
+        if (other == ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.getDefaultInstance()) return this;
+        if (other.hasAddress()) {
+          setAddress(other.getAddress());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasAddress()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString address_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * 	BEvmID  []byteBEvm InstanceID
+       * </pre>
+       *
+       * <code>required bytes address = 1;</code>
+       */
+      public boolean hasAddress() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <pre>
+       * 	BEvmID  []byteBEvm InstanceID
+       * </pre>
+       *
+       * <code>required bytes address = 1;</code>
+       */
+      public com.google.protobuf.ByteString getAddress() {
+        return address_;
+      }
+      /**
+       * <pre>
+       * 	BEvmID  []byteBEvm InstanceID
+       * </pre>
+       *
+       * <code>required bytes address = 1;</code>
+       */
+      public Builder setAddress(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        address_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * 	BEvmID  []byteBEvm InstanceID
+       * </pre>
+       *
+       * <code>required bytes address = 1;</code>
+       */
+      public Builder clearAddress() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        address_ = getDefaultInstance().getAddress();
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:darc.IdentityEvmContract)
+    }
+
+    // @@protoc_insertion_point(class_scope:darc.IdentityEvmContract)
+    private static final ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract();
+    }
+
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<IdentityEvmContract>
+        PARSER = new com.google.protobuf.AbstractParser<IdentityEvmContract>() {
+      @java.lang.Override
+      public IdentityEvmContract parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new IdentityEvmContract(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<IdentityEvmContract> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<IdentityEvmContract> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   public interface SignatureOrBuilder extends
       // @@protoc_insertion_point(interface_extends:darc.Signature)
       com.google.protobuf.MessageOrBuilder {
@@ -7028,6 +7853,19 @@ public final class DarcProto {
      * <code>optional .darc.SignerProxy proxy = 3;</code>
      */
     ch.epfl.dedis.lib.proto.DarcProto.SignerProxyOrBuilder getProxyOrBuilder();
+
+    /**
+     * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
+     */
+    boolean hasEvmcontract();
+    /**
+     * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract getEvmcontract();
+    /**
+     * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContractOrBuilder getEvmcontractOrBuilder();
   }
   /**
    * <pre>
@@ -7109,6 +7947,19 @@ public final class DarcProto {
                 proxy_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000004;
+              break;
+            }
+            case 34: {
+              ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000008) == 0x00000008)) {
+                subBuilder = evmcontract_.toBuilder();
+              }
+              evmcontract_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(evmcontract_);
+                evmcontract_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000008;
               break;
             }
             default: {
@@ -7207,6 +8058,27 @@ public final class DarcProto {
       return proxy_ == null ? ch.epfl.dedis.lib.proto.DarcProto.SignerProxy.getDefaultInstance() : proxy_;
     }
 
+    public static final int EVMCONTRACT_FIELD_NUMBER = 4;
+    private ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract evmcontract_;
+    /**
+     * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
+     */
+    public boolean hasEvmcontract() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
+     */
+    public ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract getEvmcontract() {
+      return evmcontract_ == null ? ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.getDefaultInstance() : evmcontract_;
+    }
+    /**
+     * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
+     */
+    public ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContractOrBuilder getEvmcontractOrBuilder() {
+      return evmcontract_ == null ? ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.getDefaultInstance() : evmcontract_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -7232,6 +8104,12 @@ public final class DarcProto {
           return false;
         }
       }
+      if (hasEvmcontract()) {
+        if (!getEvmcontract().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -7247,6 +8125,9 @@ public final class DarcProto {
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeMessage(3, getProxy());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeMessage(4, getEvmcontract());
       }
       unknownFields.writeTo(output);
     }
@@ -7268,6 +8149,10 @@ public final class DarcProto {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getProxy());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(4, getEvmcontract());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -7300,6 +8185,11 @@ public final class DarcProto {
         result = result && getProxy()
             .equals(other.getProxy());
       }
+      result = result && (hasEvmcontract() == other.hasEvmcontract());
+      if (hasEvmcontract()) {
+        result = result && getEvmcontract()
+            .equals(other.getEvmcontract());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -7322,6 +8212,10 @@ public final class DarcProto {
       if (hasProxy()) {
         hash = (37 * hash) + PROXY_FIELD_NUMBER;
         hash = (53 * hash) + getProxy().hashCode();
+      }
+      if (hasEvmcontract()) {
+        hash = (37 * hash) + EVMCONTRACT_FIELD_NUMBER;
+        hash = (53 * hash) + getEvmcontract().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -7458,6 +8352,7 @@ public final class DarcProto {
           getEd25519FieldBuilder();
           getX509EcFieldBuilder();
           getProxyFieldBuilder();
+          getEvmcontractFieldBuilder();
         }
       }
       @java.lang.Override
@@ -7481,6 +8376,12 @@ public final class DarcProto {
           proxyBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000004);
+        if (evmcontractBuilder_ == null) {
+          evmcontract_ = null;
+        } else {
+          evmcontractBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -7532,6 +8433,14 @@ public final class DarcProto {
           result.proxy_ = proxy_;
         } else {
           result.proxy_ = proxyBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        if (evmcontractBuilder_ == null) {
+          result.evmcontract_ = evmcontract_;
+        } else {
+          result.evmcontract_ = evmcontractBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -7591,6 +8500,9 @@ public final class DarcProto {
         if (other.hasProxy()) {
           mergeProxy(other.getProxy());
         }
+        if (other.hasEvmcontract()) {
+          mergeEvmcontract(other.getEvmcontract());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -7610,6 +8522,11 @@ public final class DarcProto {
         }
         if (hasProxy()) {
           if (!getProxy().isInitialized()) {
+            return false;
+          }
+        }
+        if (hasEvmcontract()) {
+          if (!getEvmcontract().isInitialized()) {
             return false;
           }
         }
@@ -7988,6 +8905,124 @@ public final class DarcProto {
           proxy_ = null;
         }
         return proxyBuilder_;
+      }
+
+      private ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract evmcontract_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract, ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContractOrBuilder> evmcontractBuilder_;
+      /**
+       * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
+       */
+      public boolean hasEvmcontract() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract getEvmcontract() {
+        if (evmcontractBuilder_ == null) {
+          return evmcontract_ == null ? ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.getDefaultInstance() : evmcontract_;
+        } else {
+          return evmcontractBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
+       */
+      public Builder setEvmcontract(ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract value) {
+        if (evmcontractBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          evmcontract_ = value;
+          onChanged();
+        } else {
+          evmcontractBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
+       */
+      public Builder setEvmcontract(
+          ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.Builder builderForValue) {
+        if (evmcontractBuilder_ == null) {
+          evmcontract_ = builderForValue.build();
+          onChanged();
+        } else {
+          evmcontractBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
+       */
+      public Builder mergeEvmcontract(ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract value) {
+        if (evmcontractBuilder_ == null) {
+          if (((bitField0_ & 0x00000008) == 0x00000008) &&
+              evmcontract_ != null &&
+              evmcontract_ != ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.getDefaultInstance()) {
+            evmcontract_ =
+              ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.newBuilder(evmcontract_).mergeFrom(value).buildPartial();
+          } else {
+            evmcontract_ = value;
+          }
+          onChanged();
+        } else {
+          evmcontractBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
+       */
+      public Builder clearEvmcontract() {
+        if (evmcontractBuilder_ == null) {
+          evmcontract_ = null;
+          onChanged();
+        } else {
+          evmcontractBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+      /**
+       * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.Builder getEvmcontractBuilder() {
+        bitField0_ |= 0x00000008;
+        onChanged();
+        return getEvmcontractFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContractOrBuilder getEvmcontractOrBuilder() {
+        if (evmcontractBuilder_ != null) {
+          return evmcontractBuilder_.getMessageOrBuilder();
+        } else {
+          return evmcontract_ == null ?
+              ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.getDefaultInstance() : evmcontract_;
+        }
+      }
+      /**
+       * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract, ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContractOrBuilder> 
+          getEvmcontractFieldBuilder() {
+        if (evmcontractBuilder_ == null) {
+          evmcontractBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract, ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContractOrBuilder>(
+                  getEvmcontract(),
+                  getParentForChildren(),
+                  isClean());
+          evmcontract_ = null;
+        }
+        return evmcontractBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -9879,6 +10914,561 @@ public final class DarcProto {
 
     @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.SignerProxy getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface SignerEvmContractOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:darc.SignerEvmContract)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * 	BEvmID  []byteBEvm InstanceID
+     * </pre>
+     *
+     * <code>required bytes address = 1;</code>
+     */
+    boolean hasAddress();
+    /**
+     * <pre>
+     * 	BEvmID  []byteBEvm InstanceID
+     * </pre>
+     *
+     * <code>required bytes address = 1;</code>
+     */
+    com.google.protobuf.ByteString getAddress();
+  }
+  /**
+   * <pre>
+   * SignerEvmContract holds the address of an EVM contract.
+   * </pre>
+   *
+   * Protobuf type {@code darc.SignerEvmContract}
+   */
+  public  static final class SignerEvmContract extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:darc.SignerEvmContract)
+      SignerEvmContractOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use SignerEvmContract.newBuilder() to construct.
+    private SignerEvmContract(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private SignerEvmContract() {
+      address_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private SignerEvmContract(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              address_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerEvmContract_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerEvmContract_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.class, ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int ADDRESS_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString address_;
+    /**
+     * <pre>
+     * 	BEvmID  []byteBEvm InstanceID
+     * </pre>
+     *
+     * <code>required bytes address = 1;</code>
+     */
+    public boolean hasAddress() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <pre>
+     * 	BEvmID  []byteBEvm InstanceID
+     * </pre>
+     *
+     * <code>required bytes address = 1;</code>
+     */
+    public com.google.protobuf.ByteString getAddress() {
+      return address_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasAddress()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, address_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, address_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract other = (ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract) obj;
+
+      boolean result = true;
+      result = result && (hasAddress() == other.hasAddress());
+      if (hasAddress()) {
+        result = result && getAddress()
+            .equals(other.getAddress());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasAddress()) {
+        hash = (37 * hash) + ADDRESS_FIELD_NUMBER;
+        hash = (53 * hash) + getAddress().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * SignerEvmContract holds the address of an EVM contract.
+     * </pre>
+     *
+     * Protobuf type {@code darc.SignerEvmContract}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:darc.SignerEvmContract)
+        ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContractOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerEvmContract_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerEvmContract_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.class, ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        address_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerEvmContract_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract build() {
+        ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract buildPartial() {
+        ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract result = new ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.address_ = address_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract other) {
+        if (other == ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.getDefaultInstance()) return this;
+        if (other.hasAddress()) {
+          setAddress(other.getAddress());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasAddress()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString address_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * 	BEvmID  []byteBEvm InstanceID
+       * </pre>
+       *
+       * <code>required bytes address = 1;</code>
+       */
+      public boolean hasAddress() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <pre>
+       * 	BEvmID  []byteBEvm InstanceID
+       * </pre>
+       *
+       * <code>required bytes address = 1;</code>
+       */
+      public com.google.protobuf.ByteString getAddress() {
+        return address_;
+      }
+      /**
+       * <pre>
+       * 	BEvmID  []byteBEvm InstanceID
+       * </pre>
+       *
+       * <code>required bytes address = 1;</code>
+       */
+      public Builder setAddress(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        address_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * 	BEvmID  []byteBEvm InstanceID
+       * </pre>
+       *
+       * <code>required bytes address = 1;</code>
+       */
+      public Builder clearAddress() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        address_ = getDefaultInstance().getAddress();
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:darc.SignerEvmContract)
+    }
+
+    // @@protoc_insertion_point(class_scope:darc.SignerEvmContract)
+    private static final ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract();
+    }
+
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<SignerEvmContract>
+        PARSER = new com.google.protobuf.AbstractParser<SignerEvmContract>() {
+      @java.lang.Override
+      public SignerEvmContract parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new SignerEvmContract(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<SignerEvmContract> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<SignerEvmContract> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -12735,6 +14325,11 @@ public final class DarcProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_darc_IdentityDarc_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_darc_IdentityEvmContract_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_darc_IdentityEvmContract_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_darc_Signature_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -12759,6 +14354,11 @@ public final class DarcProto {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_darc_SignerProxy_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_darc_SignerEvmContract_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_darc_SignerEvmContract_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_darc_Request_descriptor;
   private static final 
@@ -12788,27 +14388,32 @@ public final class DarcProto {
       "\014\022\016\n\006previd\030\004 \002(\014\022\032\n\005rules\030\005 \002(\0132\013.darc." +
       "Rules\022#\n\nsignatures\030\006 \003(\0132\017.darc.Signatu" +
       "re\022%\n\021verificationdarcs\030\007 \003(\0132\n.darc.Dar" +
-      "c\"\236\001\n\010Identity\022 \n\004darc\030\001 \001(\0132\022.darc.Iden" +
+      "c\"\316\001\n\010Identity\022 \n\004darc\030\001 \001(\0132\022.darc.Iden" +
       "tityDarc\022&\n\007ed25519\030\002 \001(\0132\025.darc.Identit" +
       "yEd25519\022$\n\006x509ec\030\003 \001(\0132\024.darc.Identity" +
       "X509EC\022\"\n\005proxy\030\004 \001(\0132\023.darc.IdentityPro" +
-      "xy\" \n\017IdentityEd25519\022\r\n\005point\030\001 \002(\014\" \n\016" +
-      "IdentityX509EC\022\016\n\006public\030\001 \002(\014\"-\n\rIdenti" +
-      "tyProxy\022\014\n\004data\030\001 \002(\t\022\016\n\006public\030\002 \002(\014\"\032\n" +
-      "\014IdentityDarc\022\n\n\002id\030\001 \002(\014\">\n\tSignature\022\021" +
-      "\n\tsignature\030\001 \002(\014\022\036\n\006signer\030\002 \002(\0132\016.darc" +
-      ".Identity\"t\n\006Signer\022$\n\007ed25519\030\001 \001(\0132\023.d" +
-      "arc.SignerEd25519\022\"\n\006x509ec\030\002 \001(\0132\022.darc" +
-      ".SignerX509EC\022 \n\005proxy\030\003 \001(\0132\021.darc.Sign" +
-      "erProxy\".\n\rSignerEd25519\022\r\n\005point\030\001 \002(\014\022" +
-      "\016\n\006secret\030\002 \002(\014\"\035\n\014SignerX509EC\022\r\n\005point" +
-      "\030\001 \002(\014\"+\n\013SignerProxy\022\014\n\004data\030\001 \002(\t\022\016\n\006p" +
-      "ublic\030\002 \002(\014\"n\n\007Request\022\016\n\006baseid\030\001 \002(\014\022\016" +
-      "\n\006action\030\002 \002(\t\022\013\n\003msg\030\003 \002(\014\022\"\n\nidentitie" +
-      "s\030\004 \003(\0132\016.darc.Identity\022\022\n\nsignatures\030\005 " +
-      "\003(\014\"!\n\005Rules\022\030\n\004list\030\001 \003(\0132\n.darc.Rule\"$" +
-      "\n\004Rule\022\016\n\006action\030\001 \002(\t\022\014\n\004expr\030\002 \002(\014B$\n\027" +
-      "ch.epfl.dedis.lib.protoB\tDarcProto"
+      "xy\022.\n\013evmcontract\030\005 \001(\0132\031.darc.IdentityE" +
+      "vmContract\" \n\017IdentityEd25519\022\r\n\005point\030\001" +
+      " \002(\014\" \n\016IdentityX509EC\022\016\n\006public\030\001 \002(\014\"-" +
+      "\n\rIdentityProxy\022\014\n\004data\030\001 \002(\t\022\016\n\006public\030" +
+      "\002 \002(\014\"\032\n\014IdentityDarc\022\n\n\002id\030\001 \002(\014\"&\n\023Ide" +
+      "ntityEvmContract\022\017\n\007address\030\001 \002(\014\">\n\tSig" +
+      "nature\022\021\n\tsignature\030\001 \002(\014\022\036\n\006signer\030\002 \002(" +
+      "\0132\016.darc.Identity\"\242\001\n\006Signer\022$\n\007ed25519\030" +
+      "\001 \001(\0132\023.darc.SignerEd25519\022\"\n\006x509ec\030\002 \001" +
+      "(\0132\022.darc.SignerX509EC\022 \n\005proxy\030\003 \001(\0132\021." +
+      "darc.SignerProxy\022,\n\013evmcontract\030\004 \001(\0132\027." +
+      "darc.SignerEvmContract\".\n\rSignerEd25519\022" +
+      "\r\n\005point\030\001 \002(\014\022\016\n\006secret\030\002 \002(\014\"\035\n\014Signer" +
+      "X509EC\022\r\n\005point\030\001 \002(\014\"+\n\013SignerProxy\022\014\n\004" +
+      "data\030\001 \002(\t\022\016\n\006public\030\002 \002(\014\"$\n\021SignerEvmC" +
+      "ontract\022\017\n\007address\030\001 \002(\014\"n\n\007Request\022\016\n\006b" +
+      "aseid\030\001 \002(\014\022\016\n\006action\030\002 \002(\t\022\013\n\003msg\030\003 \002(\014" +
+      "\022\"\n\nidentities\030\004 \003(\0132\016.darc.Identity\022\022\n\n" +
+      "signatures\030\005 \003(\014\"!\n\005Rules\022\030\n\004list\030\001 \003(\0132" +
+      "\n.darc.Rule\"$\n\004Rule\022\016\n\006action\030\001 \002(\t\022\014\n\004e" +
+      "xpr\030\002 \002(\014B$\n\027ch.epfl.dedis.lib.protoB\tDa" +
+      "rcProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -12833,7 +14438,7 @@ public final class DarcProto {
     internal_static_darc_Identity_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_darc_Identity_descriptor,
-        new java.lang.String[] { "Darc", "Ed25519", "X509Ec", "Proxy", });
+        new java.lang.String[] { "Darc", "Ed25519", "X509Ec", "Proxy", "Evmcontract", });
     internal_static_darc_IdentityEd25519_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_darc_IdentityEd25519_fieldAccessorTable = new
@@ -12858,50 +14463,62 @@ public final class DarcProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_darc_IdentityDarc_descriptor,
         new java.lang.String[] { "Id", });
-    internal_static_darc_Signature_descriptor =
+    internal_static_darc_IdentityEvmContract_descriptor =
       getDescriptor().getMessageTypes().get(6);
+    internal_static_darc_IdentityEvmContract_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_darc_IdentityEvmContract_descriptor,
+        new java.lang.String[] { "Address", });
+    internal_static_darc_Signature_descriptor =
+      getDescriptor().getMessageTypes().get(7);
     internal_static_darc_Signature_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_darc_Signature_descriptor,
         new java.lang.String[] { "Signature", "Signer", });
     internal_static_darc_Signer_descriptor =
-      getDescriptor().getMessageTypes().get(7);
+      getDescriptor().getMessageTypes().get(8);
     internal_static_darc_Signer_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_darc_Signer_descriptor,
-        new java.lang.String[] { "Ed25519", "X509Ec", "Proxy", });
+        new java.lang.String[] { "Ed25519", "X509Ec", "Proxy", "Evmcontract", });
     internal_static_darc_SignerEd25519_descriptor =
-      getDescriptor().getMessageTypes().get(8);
+      getDescriptor().getMessageTypes().get(9);
     internal_static_darc_SignerEd25519_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_darc_SignerEd25519_descriptor,
         new java.lang.String[] { "Point", "Secret", });
     internal_static_darc_SignerX509EC_descriptor =
-      getDescriptor().getMessageTypes().get(9);
+      getDescriptor().getMessageTypes().get(10);
     internal_static_darc_SignerX509EC_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_darc_SignerX509EC_descriptor,
         new java.lang.String[] { "Point", });
     internal_static_darc_SignerProxy_descriptor =
-      getDescriptor().getMessageTypes().get(10);
+      getDescriptor().getMessageTypes().get(11);
     internal_static_darc_SignerProxy_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_darc_SignerProxy_descriptor,
         new java.lang.String[] { "Data", "Public", });
+    internal_static_darc_SignerEvmContract_descriptor =
+      getDescriptor().getMessageTypes().get(12);
+    internal_static_darc_SignerEvmContract_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_darc_SignerEvmContract_descriptor,
+        new java.lang.String[] { "Address", });
     internal_static_darc_Request_descriptor =
-      getDescriptor().getMessageTypes().get(11);
+      getDescriptor().getMessageTypes().get(13);
     internal_static_darc_Request_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_darc_Request_descriptor,
         new java.lang.String[] { "Baseid", "Action", "Msg", "Identities", "Signatures", });
     internal_static_darc_Rules_descriptor =
-      getDescriptor().getMessageTypes().get(12);
+      getDescriptor().getMessageTypes().get(14);
     internal_static_darc_Rules_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_darc_Rules_descriptor,
         new java.lang.String[] { "List", });
     internal_static_darc_Rule_descriptor =
-      getDescriptor().getMessageTypes().get(13);
+      getDescriptor().getMessageTypes().get(15);
     internal_static_darc_Rule_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_darc_Rule_descriptor,

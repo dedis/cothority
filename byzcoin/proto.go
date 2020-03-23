@@ -19,6 +19,7 @@ import (
 // type :TxResults:[]TxResult
 // type :InstanceID:bytes
 // type :Version:sint32
+// type :GetUpdatesFlags:uint64
 // import "skipchain.proto";
 // import "onet.proto";
 // import "darc.proto";
@@ -504,4 +505,26 @@ type DebugResponseState struct {
 type DebugRemoveRequest struct {
 	ByzCoinID []byte
 	Signature []byte
+}
+
+// IDVersion holds the InstanceID and the latest known version of an instance.
+type IDVersion struct {
+	ID      InstanceID
+	Version uint64
+}
+
+// GetUpdatesRequest allows to request changes to existing instances by
+// sending a slice of known versions.
+type GetUpdatesRequest struct {
+	Instances     []IDVersion
+	Flags         GetUpdatesFlags
+	LatestBlockID skipchain.SkipBlockID
+}
+
+// GetUpdatesReply only sends back the instances that have a new version,
+// but will not send any proof for an instance that didn't change.
+type GetUpdatesReply struct {
+	Proofs []trie.Proof
+	Links  []skipchain.ForwardLink
+	Latest *skipchain.SkipBlock
 }

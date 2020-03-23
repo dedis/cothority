@@ -2,6 +2,8 @@ package byzcoin
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -270,6 +272,35 @@ func (c *Client) GetProofAfter(key []byte, full bool, block *skipchain.SkipBlock
 	}
 
 	return rep, cothority.ErrorOrNil(err, "request failed")
+}
+
+// GetUpdates returns only new proofs.
+// The client sends a list of instances/version pairs,
+// and the server returns only proofs for the instances that have been
+// changed.
+//
+// The available flag(s) are:
+//   - 	GUFSendVersion0 - always send version0 instances
+func (c *Client) GetUpdates(keyVer []IDVersion, flags GetUpdatesFlags,
+	latest skipchain.SkipBlockID) (rep *GetUpdatesReply,
+	err error) {
+	rep = &GetUpdatesReply{}
+	if latest == nil {
+		if c.Latest == nil {
+			return nil, errors.New("didn't find latest block")
+		}
+		latest = c.Latest.Hash
+	}
+	req := &GetUpdatesRequest{
+		Instances:     keyVer,
+		Flags:         flags,
+		LatestBlockID: latest,
+	}
+	_, err = c.SendProtobufParallel(c.Roster.List, req, rep, c.options)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't get updates: %v", err)
+	}
+	return
 }
 
 func (c *Client) getProofRaw(key []byte, from, include *skipchain.SkipBlock) (*GetProofResponse, error) {

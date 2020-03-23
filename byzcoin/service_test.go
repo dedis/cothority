@@ -1046,6 +1046,21 @@ func sendTransactionWithCounter(t *testing.T, s *ser, client int, kind string, w
 	return proof, tx.Instructions[0].Hash(), resp, err, err2
 }
 
+func (s *ser) sendInstructions(t *testing.T, wait int,
+	instr ...Instruction) (resp *AddTxResponse, ctx ClientTransaction) {
+	var err error
+	ctx, err = combineInstrsAndSign(s.signer, instr...)
+	require.NoError(t, err)
+	resp, err = s.service().AddTransaction(&AddTxRequest{
+		Version:       CurrentVersion,
+		SkipchainID:   s.genesis.SkipChainID(),
+		Transaction:   ctx,
+		InclusionWait: wait,
+	})
+	require.NoError(t, err)
+	return
+}
+
 func TestService_InvalidVerification(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()

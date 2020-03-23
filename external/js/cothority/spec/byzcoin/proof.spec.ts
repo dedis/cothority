@@ -39,7 +39,8 @@ describe("Proof Tests", () => {
     });
 
     it("should refuse a proof for a non-existing key", async () => {
-        const badKey = Buffer.from("123");
+        const badKey = Buffer.alloc(32);
+        badKey.write("123");
         const badProof = await rpc.getProof(badKey);
         expect(badProof.exists(badKey)).toBeFalsy();
     });

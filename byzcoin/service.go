@@ -604,6 +604,38 @@ func (s *Service) GetSignerCounters(req *GetSignerCounters) (*GetSignerCountersR
 	return &resp, nil
 }
 
+// GetUpdates returns instances that have a newer versions than the ones
+// passed to it.
+func (s *Service) GetUpdates(pr *GetUpdatesRequest) (*GetUpdatesReply, error) {
+	reply := &GetUpdatesReply{}
+	sendVersion0 := pr.Flags&GUFSendVersion0 > 0
+	sb := s.db().GetByID(pr.LatestBlockID)
+	if sb == nil {
+		return nil, xerrors.New("cannot find skipblock while getting proof")
+	}
+	if len(sb.ForwardLink) > 0 {
+		return nil, xerrors.New("can only give proofs for latest block")
+	}
+	st, err := s.GetReadOnlyStateTrie(sb.SkipChainID())
+	if err != nil {
+		return nil, xerrors.Errorf("getting state trie: %w", err)
+	}
+	for _, idv := range pr.Instances {
+		_, ver, _, _, err := st.GetValues(idv.ID[:])
+		if ver <= idv.Version &&
+			!(sendVersion0 && ver == 0) {
+			continue
+		}
+		proof, err := st.GetProof(idv.ID[:])
+		if err != nil {
+			log.Warn("Error while looking up proof", err)
+			continue
+		}
+		reply.Proofs = append(reply.Proofs, *proof)
+	}
+	return reply, nil
+}
+
 // DownloadState creates a snapshot of the current state and then returns the
 // instances in small chunks.
 func (s *Service) DownloadState(req *DownloadState) (resp *DownloadStateResponse, err error) {
@@ -2942,6 +2974,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		s.CreateGenesisBlock,
 		s.AddTransaction,
 		s.GetProof,
+		s.GetUpdates,
 		s.CheckAuthorization,
 		s.GetSignerCounters,
 		s.DownloadState,

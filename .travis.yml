@@ -62,11 +62,7 @@ jobs:
         - npm run linter
 
     - stage: build
-      name: "go 1.12"
-      language: go
-      go: "1.12.x"
       <<: *stage_build_go
-    - <<: *stage_build_go
       <<: *language_go_1_13
     - <<: *stage_build_go
       <<: *language_go_1_14
