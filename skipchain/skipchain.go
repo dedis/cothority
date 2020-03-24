@@ -974,7 +974,8 @@ func (s *Service) ChainIsProcessing(sid SkipBlockID) bool {
 // WaitBlock returns a block by its ID instantly if already stored in the DB
 // or check if the block is inside the buffer. If the block is known, false will
 // be returned because a catch up is not necessary, true otherwise.
-// DEPRECATED
+// DEPRECATED - mixes checking for available block and waiting for it.
+// Use ChainHasBlock and ChainIsProcessing instead.
 func (s *Service) WaitBlock(sid SkipBlockID, id SkipBlockID) (*SkipBlock, bool) {
 	sb := s.db.GetByID(id)
 	if sb != nil {
