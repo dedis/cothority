@@ -3,10 +3,10 @@ package byzcoin
 import (
 	"time"
 
-	"go.dedis.ch/cothority/v4/byzcoin/trie"
-	"go.dedis.ch/cothority/v4/darc"
-	"go.dedis.ch/cothority/v4/skipchain"
-	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/onet/v3"
 )
 
 // PROTOSTART
@@ -209,6 +209,10 @@ type Instruction struct {
 	// Signatures that are verified using the Darc controlling access to
 	// the instance.
 	Signatures [][]byte
+	// synthetic is a private field indicating that the instruction has been
+	// artificially created, which can give it additional rights (see
+	// Instruction.usesForbiddenIdentities()).
+	synthetic bool
 	// version is a private field that can allow an instruction to be passed
 	// around with the context of a block with a specific version.
 	// This field must be the last field of the struct, so that the
@@ -240,6 +244,8 @@ type Invoke struct {
 type Delete struct {
 	// ContractID represents the kind of contract that is being deleted.
 	ContractID string
+	// Args holds all data necessary to delete the instance.
+	Args Arguments
 }
 
 // Argument is a name/value pair that will be passed to the contract.
@@ -299,6 +305,38 @@ type StreamingRequest struct {
 // StreamingResponse is the reply (block) that is streamed back to the client
 type StreamingResponse struct {
 	Block *skipchain.SkipBlock
+}
+
+// PaginateRequest is a request to get NumPages times the consecutive list of
+// PageSize blocks.
+type PaginateRequest struct {
+	// The first block to fetch
+	StartID skipchain.SkipBlockID
+	// Determines the length of the Blocks attribute in the PaginateResponse.
+	// The list contains PageSize consecutive blocks
+	PageSize uint64
+	// The number of (asynchrounous) requests the service will return to the
+	// client. Requests are send in a consecutive order wrt their list of blocks
+	NumPages uint64
+	// If true then blocks are consecutive in the reverse order, ie. following
+	// backward links.
+	Backward bool
+}
+
+// PaginateResponse is a reponse from a PaginateRequest.
+type PaginateResponse struct {
+	// A list of consecutive blocks
+	Blocks []*skipchain.SkipBlock
+	// The page number index: relevant if the clients asked for more than one
+	// asynchrounous reply from the service.
+	PageNumber uint64
+	// Tells if the result contains consecutive blocks in a reversed order.
+	Backward bool
+	// Used to tell the client if an error occured. Any error code not equal to
+	// 0 means that something special happened.
+	ErrorCode uint64
+	// A list of error messages in case something special happened.
+	ErrorText []string
 }
 
 // DownloadState requests the current global state of that node.

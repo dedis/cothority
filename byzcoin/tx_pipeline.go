@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/skipchain"
-	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
 	"golang.org/x/xerrors"
 )
@@ -125,7 +125,7 @@ func (s *defaultTxProcessor) CollectTx() (*collectTxResult, error) {
 	s.latest = latest
 	s.Unlock()
 
-	log.Lvlf3("%s: Starting new block %d for chain %x", s.ServerIdentity(), latest.Index+1, s.scID)
+	log.Lvlf3("%s: Starting new block %d (%x) for chain %x", s.ServerIdentity(), latest.Index+1, latest.Hash, s.scID)
 	tree := bcConfig.Roster.GenerateNaryTree(len(bcConfig.Roster.List))
 
 	proto, err := s.CreateProtocol(collectTxProtocol, tree)
@@ -212,7 +212,7 @@ func (s *defaultTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcesso
 
 	tx.Instructions.SetVersion(header.Version)
 
-	scsOut, sstOut, err := s.processOneTx(inState.sst, tx, s.scID)
+	scsOut, sstOut, err := s.processOneTx(inState.sst, tx, s.scID, header.Timestamp)
 
 	// try to create a new state
 	newState := func() *txProcessorState {

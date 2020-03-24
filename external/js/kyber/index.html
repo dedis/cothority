@@ -1,6 +1,6 @@
 <html>
   <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <script src="dist/bundle.min.js" type="text/javascript"></script>
     <script type="text/javascript">
       window.onload = function() {
@@ -14,14 +14,24 @@
         var pRef = document.getElementById("point").appendChild(p);
         var sRef = document.getElementById("scalar").appendChild(s);
 
-        var bn256secret = new kyber.pairing.BN256Scalar().pick()
-        var bn256public = new kyber.pairing.point.BN256G2Point(bn256secret.getValue());
+        var bn256secret = new kyber.pairing.BN256Scalar().pick();
+        var bn256public = new kyber.pairing.point.BN256G2Point(
+          bn256secret.getValue()
+        );
 
-        var bn256s = document.createTextNode("Scalar: " + bn256secret.getValue().toString());
-        var bn256p = document.createTextNode("Point: " + bn256public.toString());
-        var bn256pRef = document.getElementById("bn256-point").appendChild(bn256p);
-        var bn256sRef = document.getElementById("bn256-scalar").appendChild(bn256s);
-      }
+        var bn256s = document.createTextNode(
+          "Scalar: " + bn256secret.getValue().toString()
+        );
+        var bn256p = document.createTextNode(
+          "Point: " + bn256public.toString()
+        );
+        var bn256pRef = document
+          .getElementById("bn256-point")
+          .appendChild(bn256p);
+        var bn256sRef = document
+          .getElementById("bn256-scalar")
+          .appendChild(bn256s);
+      };
     </script>
   </head>
   <body>

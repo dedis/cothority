@@ -2,34 +2,31 @@
 package service
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"math/rand"
-	"net/http"
-	"regexp"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/share"
-	"go.dedis.ch/kyber/v4/sign/schnorr"
-	"go.dedis.ch/kyber/v4/util/random"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
-	"go.dedis.ch/onet/v4/network"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/share"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/kyber/v3/util/random"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 
-	"go.dedis.ch/cothority/v4"
-	dkgprotocol "go.dedis.ch/cothority/v4/dkg/rabin"
-	"go.dedis.ch/cothority/v4/evoting"
-	"go.dedis.ch/cothority/v4/evoting/lib"
-	"go.dedis.ch/cothority/v4/evoting/protocol"
-	"go.dedis.ch/cothority/v4/skipchain"
+	"github.com/go-ldap/ldap/v3"
+	"go.dedis.ch/cothority/v3"
+	dkgprotocol "go.dedis.ch/cothority/v3/dkg/rabin"
+	"go.dedis.ch/cothority/v3/evoting"
+	"go.dedis.ch/cothority/v3/evoting/lib"
+	"go.dedis.ch/cothority/v3/evoting/protocol"
+	"go.dedis.ch/cothority/v3/skipchain"
 )
 
 var errOnlyLeader = errors.New("operation only allowed on the leader node")
@@ -153,6 +150,45 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 		return nil, err
 	}
 
+	// Check for the Election update case
+	if len(req.Election.ID) > 0 {
+		if !bytes.Equal(req.Election.Master, req.ID) {
+			return nil, errors.New("master id mismatch")
+		}
+
+		cur, err := lib.GetElection(s.skipchain, req.Election.ID, false, 0)
+		if err != nil {
+			return nil, err
+		}
+
+		// Check that voting has not started.
+		box, err := cur.Box(s.skipchain)
+		if err != nil {
+			return nil, err
+		}
+		if len(box.Ballots) != 0 {
+			return nil, errors.New("election has started, no modifications allowed")
+		}
+
+		// Update cur with new values from req
+		cur.Name = req.Election.Name
+		cur.Candidates = req.Election.Candidates
+		cur.MaxChoices = req.Election.MaxChoices
+		cur.Subtitle = req.Election.Subtitle
+		cur.MoreInfo = req.Election.MoreInfo
+		cur.MoreInfoLang = req.Election.MoreInfoLang
+		cur.Start = req.Election.Start
+		cur.End = req.Election.End
+		cur.Theme = req.Election.Theme
+		cur.Footer = req.Election.Footer
+
+		transaction := lib.NewTransaction(cur, req.User)
+		if _, err := lib.Store(s.skipchain, req.Election.ID, transaction, s.ServerIdentity().GetPrivate()); err != nil {
+			return nil, err
+		}
+		return &evoting.OpenReply{ID: cur.ID, Key: cur.Key}, nil
+	}
+
 	genesis, err := lib.NewSkipchain(s.skipchain, master.Roster, false)
 	if err != nil {
 		return nil, err
@@ -267,56 +303,43 @@ func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciper
 
 	// Try to find it in cache first
 	if res := s.sciperGet(sciper); res != nil {
-		log.Lvl3("Got vcard (cache hit): ", res)
+		log.Lvl3("Got vcard (cache hit)", res)
 		return res, nil
 	}
 
-	url := "https://people.epfl.ch/cgi-bin/people/vCard"
+	url := "ldaps://ldap.epfl.ch"
 	if req.LookupURL != "" {
 		url = req.LookupURL
 	}
-
-	// Make sure the only variable expansion in there is what we want it to be.
-	if strings.Contains(url, "%") {
-		return nil, errors.New("percent not allowed in LookupURL")
-	}
-	url = fmt.Sprintf(url+"?id=%06d", sciper)
-
-	resp, err := http.Get(url)
+	l, err := ldap.DialURL(url)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer l.Close()
 
-	if resp.Header.Get("Content-type") != "text/x-vcard; charset=utf-8" {
-		return nil, errors.New("invalid or unknown sciper")
-	}
+	// Search for the given username
+	searchRequest := ldap.NewSearchRequest(
+		"o=epfl, c=ch",
+		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
+		fmt.Sprintf("(&(objectClass=person)(uniqueIdentifier=%d))", sciper),
+		[]string{"displayName", "mail"},
+		nil,
+	)
 
-	bodyLimit := io.LimitReader(resp.Body, 1<<17)
-	body, err := ioutil.ReadAll(bodyLimit)
+	sr, err := l.Search(searchRequest)
 	if err != nil {
 		return nil, err
+	}
+
+	// If no results, err.
+	// If more than one are returned, we look only at the first one.
+	if len(sr.Entries) == 0 {
+		return nil, errors.New("SCIPER not found")
 	}
 
 	reply := &evoting.LookupSciperReply{}
-	search := regexp.MustCompile("[:;]")
-	for _, line := range strings.Split(string(body), "\n") {
-		fr := search.Split(line, 2)
-		if len(fr) != 2 {
-			continue
-		}
-		value := strings.Replace(fr[1], "CHARSET=UTF-8:", "", 1)
-		switch fr[0] {
-		case "FN":
-			reply.FullName = value
-		case "EMAIL":
-			reply.Email = value
-		case "TITLE":
-			reply.Title = value
-		case "URL":
-			reply.URL = value
-		}
-	}
+	reply.FullName = sr.Entries[0].GetAttributeValue("displayName")
+	reply.Email = sr.Entries[0].GetAttributeValue("mail")
 
 	// Put it into the cache
 	s.sciperPut(sciper, reply)
@@ -413,7 +436,7 @@ func (s *Service) GetBox(req *evoting.GetBox) (*evoting.GetBoxReply, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &evoting.GetBoxReply{Box: box}, nil
+	return &evoting.GetBoxReply{Box: box, Election: election}, nil
 }
 
 // GetMixes message handler. It is the caller's responsibility to check the proof

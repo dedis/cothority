@@ -1,4 +1,5 @@
-import { createHash } from "crypto";
+import { randomBytes } from "crypto";
+import { createHash } from "crypto-browserify";
 import Long from "long";
 import { Message, Properties } from "protobufjs/light";
 import { EMPTY_BUFFER, registerMessage } from "../protobuf";
@@ -63,7 +64,9 @@ export default class Darc extends Message<Darc> {
         const darc = new Darc({
             baseID: Buffer.from([]),
             description: desc,
-            prevID: createHash("sha256").digest(),
+            // Assure that two otherwise identical darcs get another base-id by using a random prevID,
+            // even for a genesis-darc.
+            prevID: randomBytes(32),
             rules: this.initRules(owners, signers),
             version: Long.fromNumber(0, true),
         });

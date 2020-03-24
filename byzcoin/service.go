@@ -15,19 +15,19 @@ import (
 	"sync"
 	"time"
 
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/blscosi/protocol"
-	"go.dedis.ch/cothority/v4/byzcoin/trie"
-	"go.dedis.ch/cothority/v4/byzcoin/viewchange"
-	"go.dedis.ch/cothority/v4/darc"
-	"go.dedis.ch/cothority/v4/skipchain"
-	"go.dedis.ch/kyber/v4/pairing"
-	"go.dedis.ch/kyber/v4/sign/schnorr"
-	"go.dedis.ch/kyber/v4/suites"
-	"go.dedis.ch/kyber/v4/util/random"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
-	"go.dedis.ch/onet/v4/network"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/blscosi/protocol"
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
+	"go.dedis.ch/cothority/v3/byzcoin/viewchange"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/kyber/v3/suites"
+	"go.dedis.ch/kyber/v3/util/random"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 	"go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
@@ -1016,8 +1016,13 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 	var err error
 	var txRes TxResults
 
+	// Determine new block timestamp.
+	// It will be passed to createStateChanges() so that instructions can
+	// access it if needed.
+	timestamp := time.Now().UnixNano()
+
 	log.Lvl3("Creating state changes")
-	mr, txRes, scs, _ = s.createStateChanges(sst, scID, tx, noTimeout, version)
+	mr, txRes, scs, _ = s.createStateChanges(sst, scID, tx, noTimeout, version, timestamp)
 	if len(txRes) == 0 {
 		return nil, xerrors.New("no transactions")
 	}
@@ -1033,7 +1038,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		TrieRoot:              mr,
 		ClientTransactionHash: txRes.Hash(),
 		StateChangesHash:      scs.Hash(),
-		Timestamp:             time.Now().UnixNano(),
+		Timestamp:             timestamp,
 		Version:               version,
 	}
 	sb.Data, err = protobuf.Encode(header)
@@ -1105,7 +1110,8 @@ func (s *Service) createUpgradeVersionBlock(scID skipchain.SkipBlockID, version 
 	}
 
 	sst := st.MakeStagingStateTrie()
-	mr, txRes, scs, _ := s.createStateChanges(sst, scID, []TxResult{}, noTimeout, version)
+	timestamp := time.Now().UnixNano()
+	mr, txRes, scs, _ := s.createStateChanges(sst, scID, []TxResult{}, noTimeout, version, timestamp)
 
 	sb.Payload, err = protobuf.Encode(&DataBody{TxResults: TxResults{}})
 	if err != nil {
@@ -1116,7 +1122,7 @@ func (s *Service) createUpgradeVersionBlock(scID skipchain.SkipBlockID, version 
 		TrieRoot:              mr,
 		ClientTransactionHash: txRes.Hash(),
 		StateChangesHash:      scs.Hash(),
-		Timestamp:             time.Now().UnixNano(),
+		Timestamp:             timestamp,
 		Version:               version,
 	})
 	if err != nil {
@@ -1580,7 +1586,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	}
 
 	log.Lvlf2("%s Updating %d transactions for %x on index %v", s.ServerIdentity(), len(body.TxResults), sb.SkipChainID(), sb.Index)
-	_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), sb.SkipChainID(), body.TxResults, noTimeout, header.Version)
+	_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), sb.SkipChainID(), body.TxResults, noTimeout, header.Version, header.Timestamp)
 
 	log.Lvlf3("%s Storing index %d with %d state changes %v", s.ServerIdentity(), sb.Index, len(scs), scs.ShortStrings())
 	// Update our global state using all state changes.
@@ -1981,7 +1987,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 			return false
 		}
 	}
-	mtr, txOut, scs, _ := s.createStateChanges(sst, newSB.SkipChainID(), body.TxResults, noTimeout, header.Version)
+	mtr, txOut, scs, _ := s.createStateChanges(sst, newSB.SkipChainID(), body.TxResults, noTimeout, header.Version, header.Timestamp)
 
 	// Check that the locally generated list of accepted/rejected txs match the list
 	// the leader proposed.
@@ -2077,7 +2083,7 @@ func txSize(txr ...TxResult) (out int) {
 // State caching is implemented here, which is critical to performance, because
 // on the leader it reduces the number of contract executions by 1/3 and on
 // followers by 1/2.
-func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipBlockID, txIn TxResults, timeout time.Duration, version Version) (
+func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipBlockID, txIn TxResults, timeout time.Duration, version Version, timestamp int64) (
 	merkleRoot []byte, txOut TxResults, states StateChanges, sstTemp *stagingStateTrie) {
 	// Make sure that we're using the correct implementation for the
 	// version of the byzcoin protocol.
@@ -2109,7 +2115,7 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 
 		var sstTempC *stagingStateTrie
 		var statesTemp StateChanges
-		statesTemp, sstTempC, err = s.processOneTx(sstTemp, tx.ClientTransaction, scID)
+		statesTemp, sstTempC, err = s.processOneTx(sstTemp, tx.ClientTransaction, scID, timestamp)
 		if err != nil {
 			tx.Accepted = false
 			txOut = append(txOut, tx)
@@ -2162,27 +2168,45 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 	return
 }
 
+// addError simply stores the given error using the hash with signatures of the
+// given instruction as the key.
+func (s *Service) addError(tx ClientTransaction, err error) {
+	s.txErrorBuf.add(tx.Instructions.HashWithSignatures(), err.Error())
+}
+
+// ComputeSeed is used to compute the seed provided as argument to the
+// `Spawn()` synthetic instructions, generated by EVM executions. It can also
+// be used by clients in order to determine the seed and the InstanceID of
+// Byzcoin contracts spawned via the EVM.
+func ComputeSeed(instr Instruction, index uint8) []byte {
+	seed := append(instr.DeriveID("").Slice(), index)
+
+	return seed
+}
+
 // processOneTx takes one transaction and creates a set of StateChanges. It
 // also returns the temporary StateTrie with the StateChanges applied. Any data
 // from the trie should be read from sst and not the service.
-func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction, scID skipchain.SkipBlockID) (newStateChanges StateChanges, newStateTrie *stagingStateTrie, err error) {
-	defer func() {
-		if err != nil {
-			s.txErrorBuf.add(tx.Instructions.HashWithSignatures(), err.Error())
-		}
-	}()
+func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction,
+	scID skipchain.SkipBlockID, timestamp int64) (StateChanges, *stagingStateTrie, error) {
 
 	// Make a new trie for each instruction. If the instruction is
 	// sucessfully implemented and changes applied, then keep it
 	// otherwise dump it.
 	sst = sst.Clone()
+
+	// convert ReadOnlyStateTrie to a GlobalState so that contracts may cast it if they wish
+	roSC := newROSkipChain(s.skService(), scID)
+	gs := globalState{sst, roSC, &currentBlockInfo{timestamp}}
+
 	h := tx.Instructions.Hash()
 	var statesTemp StateChanges
 	var cin []Coin
-	for _, instr := range tx.Instructions {
-		var scs StateChanges
-		var cout []Coin
-		scs, cout, err = s.executeInstruction(sst, cin, instr, h, scID)
+	for i := 0; i < len(tx.Instructions); i++ {
+		instr := tx.Instructions[i]
+		log.Lvlf2("Processing instruction: %v", instr.Action())
+
+		scs, cout, err := s.executeInstruction(gs, cin, instr, h)
 		if err != nil {
 			_, _, cid, _, err2 := sst.GetValues(instr.InstanceID.Slice())
 			if err2 != nil {
@@ -2190,13 +2214,25 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction, scID
 			}
 			err = xerrors.Errorf("%s Contract %s got %x and returned error: %v",
 				s.ServerIdentity(), cid, instr.Hash(), err)
-			return
+			s.addError(tx, err)
+			return nil, nil, err
 		}
-		var counterScs StateChanges
-		if counterScs, err = incrementSignerCounters(sst, instr.SignerIdentities); err != nil {
-			err = xerrors.Errorf("%s failed to update signature counters: %v", s.ServerIdentity(), err)
-			return
+
+		counterScs, err := incrementSignerCounters(sst, instr.SignerIdentities)
+		if err != nil {
+			err = xerrors.Errorf("%s failed to update signature counters: %v",
+				s.ServerIdentity(), err)
+			s.addError(tx, err)
+			return nil, nil, err
 		}
+
+		// Counter used in the seed provided to generated Spawn instructions.
+		// Provides different seeds in case multiple Spawns are generated by a
+		// single instruction.
+		seedCounter := uint8(0)
+
+		// List of new instructions generated by this instruction.
+		newInstructions := []Instruction{}
 
 		// Verify the validity of the state-changes:
 		//  - refuse to update non-existing instances
@@ -2223,37 +2259,78 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction, scID
 				_, _, contractID, _, err = sst.GetValues(instr.InstanceID.Slice())
 				if err != nil {
 					err = xerrors.Errorf("%s couldn't get contractID from the "+
-						"following instruction: %x", s.ServerIdentity(), instr.Hash())
-					return
+						"following instruction: %x (with instanceID %x)",
+						s.ServerIdentity(), instr.Hash(), instr.InstanceID.Slice())
+					s.addError(tx, err)
+					return nil, nil, err
 				}
-				err = xerrors.Errorf("%s: contract %s %s", s.ServerIdentity(), contractID, reason)
-				return
+				err = xerrors.Errorf("%s: contract %s %s %x", s.ServerIdentity(),
+					contractID, reason, sc.InstanceID)
+				s.addError(tx, err)
+				return nil, nil, err
 			}
-			log.Lvlf2("StateChange %s for id %x - contract: %s", sc.StateAction, sc.InstanceID, sc.ContractID)
+			log.Lvlf2("StateChange %s for id %x - contract: %s", sc.StateAction,
+				sc.InstanceID, sc.ContractID)
+
+			if sc.StateAction == GenerateInstruction {
+				var newInstr Instruction
+				err = protobuf.Decode(sc.Value, &newInstr)
+				if err != nil {
+					return nil, nil, xerrors.Errorf("failed to decode "+
+						"new instruction: %v", err)
+				}
+
+				newInstr.synthetic = true
+
+				if newInstr.Spawn != nil {
+					// For Spawn instructions, provide a seed to the contract
+					// allowing to define a new InstanceID that can also be
+					// determined by the client.
+					seedArg := Argument{
+						Name:  "seed",
+						Value: ComputeSeed(instr, seedCounter),
+					}
+					newInstr.Spawn.Args = append(newInstr.Spawn.Args, seedArg)
+
+					seedCounter++
+				}
+
+				newInstructions = append(newInstructions, newInstr)
+
+				continue
+			}
+
 			err = sst.StoreAll(StateChanges{sc})
 			if err != nil {
 				err = xerrors.Errorf("%s StoreAll failed: %v", s.ServerIdentity(), err)
-				return
+				s.addError(tx, err)
+				return nil, nil, err
 			}
 		}
+
+		// Insert the new instructions in the transaction, to be executed right
+		// after the current one.
+		// See https://github.com/golang/go/wiki/SliceTricks#insert for the
+		// insertion trick.
+		tx.Instructions = append(tx.Instructions, newInstructions...)
+		copy(tx.Instructions[i+1+len(newInstructions):], tx.Instructions[i+1:])
+		copy(tx.Instructions[i+1:], newInstructions)
+
 		if err = sst.StoreAll(counterScs); err != nil {
-			err = xerrors.Errorf("%s StoreAll failed to add counter changes: %v", s.ServerIdentity(), err)
-			return
+			err = xerrors.Errorf("%s StoreAll failed to add counter changes: %v",
+				s.ServerIdentity(), err)
+			s.addError(tx, err)
+			return nil, nil, err
 		}
 		statesTemp = append(statesTemp, scs...)
 		statesTemp = append(statesTemp, counterScs...)
 		cin = cout
 	}
 	if len(cin) != 0 {
-		log.Warn(s.ServerIdentity(), "Leftover coins detected, discarding.")
+		log.Lvl2(s.ServerIdentity(), "Leftover coins detected, discarding.")
 	}
 
-	newStateChanges = statesTemp
-	newStateTrie = sst
-	if err != nil {
-		panic("programmer error: error should be nil if we get to this point")
-	}
-	return
+	return statesTemp, sst, nil
 }
 
 // GetContractConstructor gets the contract constructor of the contract
@@ -2286,20 +2363,18 @@ func (s *Service) GetContractInstance(contractName string, in []byte) (Contract,
 	return c, nil
 }
 
-func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Instruction, ctxHash []byte, scID skipchain.SkipBlockID) (scs StateChanges, cout []Coin, err error) {
+func (s *Service) executeInstruction(gs GlobalState, cin []Coin,
+	instr Instruction, ctxHash []byte) (scs StateChanges, cout []Coin,
+	err error) {
 	defer func() {
 		if re := recover(); re != nil {
 			err = xerrors.Errorf("executing instr: %v", re)
 		}
 	}()
 
-	// convert ReadOnlyStateTrie to a GlobalState so that contracts may cast it if they wish
-	roSC := newROSkipChain(s.skService(), scID)
-	gs := globalState{st, roSC}
-
 	contents, _, contractID, _, err := gs.GetValues(instr.InstanceID.Slice())
 	if !xerrors.Is(err, errKeyNotSet) && err != nil {
-		err = xerrors.Errorf("Couldn't get contract type of instruction: %v", err)
+		err = xerrors.Errorf("couldn't get contract type of instruction: %v", err)
 		return
 	}
 
@@ -2806,7 +2881,7 @@ func (s *Service) repairStateTrie(from *skipchain.SkipBlock, st *stateTrie) erro
 			return xerrors.Errorf("decoding body: %v", err)
 		}
 
-		_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), from.SkipChainID(), body.TxResults, noTimeout, header.Version)
+		_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), from.SkipChainID(), body.TxResults, noTimeout, header.Version, header.Timestamp)
 
 		// Update our global state using all state changes.
 		if st.GetIndex()+1 != from.Index {
@@ -2881,7 +2956,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		return nil, err
 	}
 
-	if err := s.RegisterStreamingHandlers(s.StreamTransactions); err != nil {
+	if err := s.RegisterStreamingHandlers(s.StreamTransactions, s.PaginateBlocks); err != nil {
 		return nil, xerrors.Errorf("registering handlers: %v", err)
 	}
 	s.RegisterProcessorFunc(viewChangeMsgID, s.handleViewChangeReq)

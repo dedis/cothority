@@ -8,15 +8,15 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/darc"
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/share"
-	"go.dedis.ch/kyber/v4/sign/dss"
-	"go.dedis.ch/kyber/v4/sign/schnorr"
-	"go.dedis.ch/kyber/v4/suites"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/share"
+	"go.dedis.ch/kyber/v3/sign/dss"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/kyber/v3/suites"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 func TestMain(m *testing.M) {
@@ -103,7 +103,7 @@ func Test_EnrollAndSign(t *testing.T) {
 			RandPri:  rp,
 			RandPubs: rPubCommits,
 		}
-		resp, err := s.Signature(req)
+		_, err := s.Signature(req)
 		require.Error(t, err)
 
 		// And now correctly.
@@ -114,7 +114,7 @@ func Test_EnrollAndSign(t *testing.T) {
 			RandPri:  rp,
 			RandPubs: rPubCommits,
 		}
-		resp, err = s.Signature(req)
+		resp, err := s.Signature(req)
 		require.NoError(t, err)
 
 		ps := &dss.PartialSig{

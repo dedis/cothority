@@ -1,4 +1,4 @@
-import { createHash } from "crypto";
+import { createHash } from "crypto-browserify";
 import Long from "long";
 import ByzCoinRPC from "../../src/byzcoin/byzcoin-rpc";
 import ClientTransaction, { Argument, Instruction } from "../../src/byzcoin/client-transaction";
@@ -52,7 +52,7 @@ async function createInstance(
     await rpc.sendTransactionAndWait(ctx);
 
     const iid = ctx.instructions[1].deriveId();
-    const instance = await RoPaSciInstance.fromByzcoin(rpc, iid);
+    const instance = await RoPaSciInstance.fromByzcoin(rpc, iid, 1);
     instance.setChoice(1, fillup);
 
     return instance;

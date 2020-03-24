@@ -1,0 +1,205 @@
+syntax = "proto2";
+package personhood_service;
+
+import "onet.proto";
+import "darc.proto";
+import "personhood.proto";
+
+option java_package = "ch.epfl.dedis.lib.proto";
+option java_outer_classname = "PersonhoodService";
+
+// PartyList can either store a new party in the list, or just return the list of
+// available parties.
+message PartyList {
+  optional Party newparty = 1;
+  optional bool wipeparties = 2;
+  optional PartyDelete partydelete = 3;
+}
+
+// PartyDelete can be sent from one of the admins to remove a party.
+message PartyDelete {
+  required bytes partyid = 1;
+  required darc.Identity identity = 2;
+  required bytes signature = 3;
+}
+
+// PartyListResponse holds a list of all known parties so far. Only parties in PreBarrier
+// state are listed.
+message PartyListResponse {
+  repeated Party parties = 1;
+}
+
+// Party represents everything necessary to find a party in the ledger.
+message Party {
+  // Roster is the list of nodes responsible for the byzcoin instance
+  required onet.Roster roster = 1;
+  // ByzCoinID represents the ledger where the pop-party is stored.
+  required bytes byzcoinid = 2;
+  // InstanceID is where to find the party in the ledger.
+  required bytes instanceid = 3;
+}
+
+// RoPaSciList can either store a new RockPaperScissors in the list, or just
+// return the available RoPaScis.
+message RoPaSciList {
+  optional personhood.RoPaSci newropasci = 1;
+  optional bool wipe = 2;
+  // RoPaSciLock allows to ask to lock a ropasci-game and take 1 minute to reply.
+  // After 1 minute, the game is again released. If the given game is not available,
+  // another one will be presented, when available.
+  optional personhood.RoPaSci lock = 3;
+}
+
+// RoPaSciListResponse returns a list of all known, unfinished RockPaperScissors
+// games.
+message RoPaSciListResponse {
+  repeated personhood.RoPaSci ropascis = 1;
+}
+
+// StringReply can be used by all calls that need a string to be returned
+// to the caller.
+message StringReply {
+  required string reply = 1;
+}
+
+// Poll allows for adding, listing, and answering to storagePolls
+message Poll {
+  required bytes byzcoinid = 1;
+  optional PollStruct newpoll = 2;
+  optional PollList list = 3;
+  optional PollAnswer answer = 4;
+  optional PollDelete delete = 5;
+}
+
+// PollDelete has the poll to be deleted, and the signature proving that
+// the client has the right to do so.
+// The signature is a Schnorr signature on the PollID.
+message PollDelete {
+  required darc.Identity identity = 1;
+  required bytes pollid = 2;
+  required bytes signature = 3;
+}
+
+// PollList returns all known storagePolls for this byzcoinID
+message PollList {
+  repeated bytes partyids = 1;
+}
+
+// PollAnswer stores one answer for a poll. It needs to be signed with a Linkable Ring Signature
+// to proof that the choice is unique. The context for the LRS must be
+//   'Poll' + ByzCoinID + PollID
+// And the message must be
+//   'Choice' + byte(Choice)
+message PollAnswer {
+  required bytes pollid = 1;
+  required sint32 choice = 2;
+  required bytes lrs = 3;
+  optional bytes partyid = 4;
+}
+
+// PollStruct represents one poll with answers.
+message PollStruct {
+  required bytes personhood = 1;
+  optional bytes pollid = 2;
+  required string title = 3;
+  required string description = 4;
+  repeated string choices = 5;
+  repeated PollChoice chosen = 6;
+}
+
+// PollChoice represents one choice of one participant.
+message PollChoice {
+  required sint32 choice = 1;
+  required bytes lrstag = 2;
+}
+
+// PollResponse is sent back to the client and contains all storagePolls known that
+// still have a reward left. It also returns the coinIID of the pollservice
+// itself.
+message PollResponse {
+  repeated PollStruct polls = 1;
+}
+
+// Capabilities returns what the service is able to do.
+message Capabilities {
+}
+
+// CapabilitiesResponse is the response with the endpoints and the version of each
+// endpoint. The versioning is a 24 bit value, that can be interpreted in hexadecimal
+// as the following:
+//   Version = [3]byte{xx, yy, zz}
+//   - xx - major version - incompatible
+//   - yy - minor version - downwards compatible. A client with a lower number will be able
+//     to interact with this server
+//   - zz - patch version - whatever suits you - higher is better, but no incompatibilities
+message CapabilitiesResponse {
+  repeated Capability capabilities = 1;
+}
+
+// Capability is one endpoint / version pair
+message Capability {
+  required string endpoint = 1;
+  required bytes version = 2;
+}
+
+// UserLocation is the moment a user has been at a certain location.
+message UserLocation {
+  required bytes publickey = 1;
+  optional bytes credentialiid = 2;
+  optional personhood.CredentialStruct credential = 3;
+  optional string location = 4;
+  required sint64 time = 5;
+}
+
+// Meetup is sent by a user who wants to discover who else is around.
+message Meetup {
+  optional UserLocation userlocation = 1;
+  optional bool wipe = 2;
+}
+
+// MeetupResponse contains all users from the last x minutes.
+message MeetupResponse {
+  repeated UserLocation users = 1;
+}
+
+// Challenge allows a participant to sign up and to fetch the latest list of scores.
+message Challenge {
+  optional ChallengeCandidate update = 1;
+}
+
+// ChallengeCandidate is the information the client sends to the server.
+// Some of the information is not verifiable for the moment (meetups and references).
+message ChallengeCandidate {
+  required bytes credential = 1;
+  required sint32 score = 2;
+  required sint64 signup = 3;
+}
+
+// ChallengeReply is sent back to the client and holds a list of pairs of Credential/Score
+// to display on the client's phone.
+message ChallengeReply {
+  repeated ChallengeCandidate list = 1;
+}
+
+// GetAdminDarcIDs returns a slice of adminDarcs that are allowed to delete the
+// polls and add a party.
+message GetAdminDarcIDs {
+}
+
+// GetAdminDarcIDsReply returns the list of adminDarcs that are allowed to
+// delete the polls and add a party.
+message GetAdminDarcIDsReply {
+  repeated bytes admindarcids = 1;
+}
+
+// SetAdminDarcIDs sets the list of admin darcs.
+// The signature must be on
+//   sha256( AdminDarcID[0] | AdminDarcID[1] | ... )
+message SetAdminDarcIDs {
+  repeated bytes newadmindarcids = 1;
+  required bytes signature = 2;
+}
+
+// SetAdminDarcIDsReply indicates a correct storage of the AdminDarcIDs.
+message SetAdminDarcIDsReply {
+}

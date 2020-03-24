@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4/skipchain"
+	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/protobuf"
 	"golang.org/x/xerrors"
 )
@@ -17,7 +17,7 @@ func TestService_StateReplay(t *testing.T) {
 	n := 2
 	for i := 0; i < n; i++ {
 		tx, err := createClientTxWithTwoInstrWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, uint64(i*2+1))
-		require.Nil(t, err)
+		require.NoError(t, err)
 
 		_, err = s.service().AddTransaction(&AddTxRequest{
 			Version:       CurrentVersion,
@@ -25,7 +25,7 @@ func TestService_StateReplay(t *testing.T) {
 			Transaction:   tx,
 			InclusionWait: 10,
 		})
-		require.Nil(t, err)
+		require.NoError(t, err)
 	}
 
 	cb := func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
@@ -49,7 +49,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 	defer s.local.CloseAll()
 
 	tx, err := createClientTxWithTwoInstrWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, uint64(1))
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	_, err = s.service().AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
@@ -57,7 +57,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 		Transaction:   tx,
 		InclusionWait: 10,
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// 1. error when fetching the genesis block
 	cb := func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
@@ -89,7 +89,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 		sb := skipchain.NewSkipBlock()
 		sb.Roster = s.roster
 		sb.Payload = []byte{1, 1, 1, 1, 1}
-		sb.ForwardLink = []*skipchain.ForwardLink{&skipchain.ForwardLink{}}
+		sb.ForwardLink = []*skipchain.ForwardLink{{}}
 		return sb, nil
 	}
 	tryReplay(t, s, cb, "Error while decoding field")
@@ -100,7 +100,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 		sb.Roster = s.roster
 		sb.Payload = []byte{}
 		sb.Data = []byte{1, 1, 1, 1, 1}
-		sb.ForwardLink = []*skipchain.ForwardLink{&skipchain.ForwardLink{}}
+		sb.ForwardLink = []*skipchain.ForwardLink{{}}
 		return sb, nil
 	}
 	tryReplay(t, s, cb, "Error while decoding field")
@@ -109,7 +109,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 	cb = func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
 		sb := skipchain.NewSkipBlock()
 		sb.Payload = []byte{}
-		sb.ForwardLink = []*skipchain.ForwardLink{&skipchain.ForwardLink{}}
+		sb.ForwardLink = []*skipchain.ForwardLink{{}}
 		return sb, nil
 	}
 	tryReplay(t, s, cb, "client transaction hash does not match")
@@ -129,6 +129,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 
 		dHead.TrieRoot = []byte{1, 2, 3}
 		buf, err := protobuf.Encode(&dHead)
+		require.NoError(t, err)
 		sb.Data = buf
 		return sb, nil
 	}
@@ -154,6 +155,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 			},
 		})
 		buf, err := protobuf.Encode(&dBody)
+		require.NoError(t, err)
 		sb.Payload = buf
 
 		var dHead DataHeader
@@ -164,6 +166,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 
 		dHead.ClientTransactionHash = dBody.TxResults.Hash()
 		buf, err = protobuf.Encode(&dHead)
+		require.NoError(t, err)
 		sb.Data = buf
 		return sb, nil
 	}

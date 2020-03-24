@@ -14,6 +14,8 @@ const (
 	OpSet OpType = iota + 1
 	// OpDel is the delete operation.
 	OpDel
+	// Nop does not perform any operation
+	Nop
 )
 
 type instr struct {
@@ -138,6 +140,7 @@ func (t *StagingTrie) Batch(pairs []KVPair) error {
 			if err := t.del(p.Key()); err != nil {
 				return err
 			}
+		case Nop:
 		default:
 			return xerrors.New("no such operation")
 		}

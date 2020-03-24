@@ -1,4 +1,6 @@
 import Log from "../../src/log";
+import { Roster } from "../../src/network";
+import { RosterWSConnection, WebSocketConnection } from "../../src/network/connection";
 import { SkipBlock, SkipchainRPC } from "../../src/skipchain";
 import { ROSTER, startConodes } from "../support/conondes";
 
@@ -51,6 +53,35 @@ describe("SkipchainRPC Tests", () => {
 
         const chain = await rpc2.getUpdateChain(genesis.hash);
         expect(chain.length).toBe(7);
+    });
+
+    it("should correctly return a chain even with roster changes", async () => {
+        const rpc = new SkipchainRPC(roster);
+        const rpc2 = new SkipchainRPC(roster.slice(0, 2));
+        const { latest: genesis } = await rpc.createSkipchain(2, 2);
+
+        const checkReplies = async (blocks: number) => {
+            // This uses RosterWSConnection, which will keep the fastest
+            // nodes in order.
+            for (const node of roster.list) {
+                const c = new RosterWSConnection(new Roster({list: [node]}), "");
+                const update = await new SkipchainRPC(c).getUpdateChain(genesis.hash, false);
+                expect(update.length).toBe(blocks);
+            }
+            // This uses a simple WebSocketConnection, which will be
+            // overwritten on the first missing block.
+            for (const node of roster.list) {
+                const c = new WebSocketConnection(node.getWebSocketAddress(), "");
+                const update = await new SkipchainRPC(c).getUpdateChain(genesis.hash, false);
+                expect(update.length).toBe(blocks);
+            }
+        };
+
+        await checkReplies(1);
+        await rpc2.addBlock(genesis.hash, Buffer.from("abc"));
+        await checkReplies(2);
+        await rpc.addBlock(genesis.hash, Buffer.from("abc"));
+        await checkReplies(3);
     });
 
     /**

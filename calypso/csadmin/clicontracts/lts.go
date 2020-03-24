@@ -6,14 +6,14 @@ import (
 	"io"
 	"os"
 
-	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/onet/v3/log"
 	"golang.org/x/xerrors"
 
 	"github.com/urfave/cli"
-	"go.dedis.ch/cothority/v4/byzcoin"
-	"go.dedis.ch/cothority/v4/byzcoin/bcadmin/lib"
-	"go.dedis.ch/cothority/v4/calypso"
-	"go.dedis.ch/cothority/v4/darc"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
+	"go.dedis.ch/cothority/v3/calypso"
+	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/protobuf"
 )
 
@@ -79,9 +79,7 @@ func LTSSpawn(c *cli.Context) error {
 		SignerCounter: []uint64{counters.Counters[0] + 1},
 	}
 
-	tx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{inst},
-	}
+	tx := byzcoin.NewClientTransaction(byzcoin.CurrentVersion, inst)
 
 	err = tx.FillSignersAndSignWith(*signer)
 	if err != nil {

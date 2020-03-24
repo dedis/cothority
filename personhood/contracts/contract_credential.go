@@ -1,4 +1,4 @@
-package personhood
+package contracts
 
 import (
 	"crypto/sha256"
@@ -7,13 +7,15 @@ import (
 	"errors"
 	"strings"
 
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/darc/expression"
-	"go.dedis.ch/kyber/v4/sign/schnorr"
+	"golang.org/x/xerrors"
 
-	"go.dedis.ch/cothority/v4/byzcoin"
-	"go.dedis.ch/cothority/v4/darc"
-	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/darc/expression"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
+
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
 )
 
@@ -63,6 +65,7 @@ func (c *ContractCredential) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.I
 		var cid string
 		_, _, cid, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 		if err != nil {
+			err = xerrors.Errorf("couldn't get darc: %+v", err)
 			return
 		}
 		if cid != byzcoin.ContractDarcID {
@@ -241,6 +244,29 @@ func (c *ContractCredential) Delete(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.
 
 	sc = byzcoin.StateChanges{
 		byzcoin.NewStateChange(byzcoin.Remove, inst.InstanceID, ContractCredentialID, nil, darcID),
+	}
+	return
+}
+
+// NewInstructionCredentialSpawn returns an instruction that is ready to be
+// sent to byzcoin to spawn a credential.
+func NewInstructionCredentialSpawn(dst byzcoin.InstanceID, did darc.ID,
+	credID byzcoin.InstanceID, cred CredentialStruct) (
+	inst byzcoin.Instruction, err error) {
+
+	var credBuf []byte
+	credBuf, err = protobuf.Encode(&cred)
+	if err != nil {
+		return
+	}
+	inst.InstanceID = dst
+	inst.Spawn = &byzcoin.Spawn{
+		ContractID: ContractCredentialID,
+		Args: byzcoin.Arguments{
+			newArg("darcIDBuf", did),
+			newArg("credentialID", credID[:]),
+			newArg("credential", credBuf),
+		},
 	}
 	return
 }

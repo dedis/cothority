@@ -5,21 +5,21 @@ import (
 	"testing"
 	"time"
 
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/proof"
-	"go.dedis.ch/kyber/v4/shuffle"
-	"go.dedis.ch/kyber/v4/sign/schnorr"
-	"go.dedis.ch/kyber/v4/util/random"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
-	"go.dedis.ch/onet/v4/network"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/proof"
+	"go.dedis.ch/kyber/v3/shuffle"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/kyber/v3/util/random"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/evoting/lib"
-	"go.dedis.ch/cothority/v4/skipchain"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/evoting/lib"
+	"go.dedis.ch/cothority/v3/skipchain"
 )
 
 var decryptServiceID onet.ServiceID
@@ -103,7 +103,7 @@ func runDecrypt(t *testing.T, n int) {
 		ballots[i] = &lib.Ballot{User: uint32(i), Alpha: a, Beta: b}
 		tx = lib.NewTransaction(ballots[i], election.Creator)
 		err := lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
-		require.Nil(t, err)
+		require.NoError(t, err)
 	}
 
 	mixes := make([]*lib.Mix, n)
@@ -122,7 +122,7 @@ func runDecrypt(t *testing.T, n int) {
 		}
 		tx = lib.NewTransaction(mix, election.Creator)
 		err := lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		x, y = v, w
 	}
 
@@ -208,7 +208,7 @@ func TestDecryptNodeFailure(t *testing.T) {
 		mixes[i] = mix
 		tx = lib.NewTransaction(mix, election.Creator)
 		err := lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		x, y = v, w
 	}
 

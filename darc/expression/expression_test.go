@@ -50,10 +50,7 @@ func TestInitAnd(t *testing.T) {
 func TestParsing_One(t *testing.T) {
 	expr := []byte("ed25519:abc")
 	fn := func(s string) bool {
-		if s == "ed25519:abc" {
-			return true
-		}
-		return false
+		return s == "ed25519:abc"
 	}
 	v, s := InitParser(fn)(parsec.NewScanner(expr))
 	if v.(bool) != true {
@@ -67,10 +64,7 @@ func TestParsing_One(t *testing.T) {
 func TestParsing_Or(t *testing.T) {
 	expr := []byte("ed25519:abc | ed25519:abc | ed25519:abc")
 	fn := func(s string) bool {
-		if s == "ed25519:abc" {
-			return true
-		}
-		return false
+		return s == "ed25519:abc"
 	}
 	v, s := InitParser(fn)(parsec.NewScanner(expr))
 	if v.(bool) != true {

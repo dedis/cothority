@@ -4,27 +4,29 @@ To use this demo, first run `npm install` and `npm run bundle`.
 -->
 <html>
   <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <script src="dist/bundle.min.js" type="text/javascript"></script>
     <script type="text/javascript">
       window.onload = function() {
-        const input = document.getElementById('roster');
-        input.addEventListener('change', getStatus);
-      }
+        const input = document.getElementById("roster");
+        input.addEventListener("change", getStatus);
+      };
 
       function getStatus(e) {
         const fr = new FileReader();
         fr.onload = function(evt) {
           const r = cothority.network.Roster.fromTOML(evt.target.result);
           const rpc = new cothority.status.StatusRPC(r);
-          const p = document.getElementById('status');
+          const p = document.getElementById("status");
           rpc.getStatus(0).then(
-            (r) => {
+            r => {
               p.innerText = r.toString();
             },
-            (e) => p.innerText = 'something went wrong. Did you start the conodes ?: ' + e,
+            e =>
+              (p.innerText =
+                "something went wrong. Did you start the conodes ?: " + e)
           );
-        }
+        };
         fr.readAsText(e.target.files[0]);
       }
     </script>

@@ -30,14 +30,14 @@ message SignatureRequest {
   required bytes message = 6;
 }
 
-// PriShare is a local copy of go.dedis.ch/kyber/v4/share.PriShare
+// PriShare is a local copy of go.dedis.ch/kyber/v3/share.PriShare
 // because we do not have proto files for Kyber objects.
 message PriShare {
   // 	I intIndex of the private share
   // 	V kyber.ScalarValue of the private share
 }
 
-// PartialSig is a local copy of go.dedis.ch/kyber/v4/sign/dss.PartialSig
+// PartialSig is a local copy of go.dedis.ch/kyber/v3/sign/dss.PartialSig
 // because we do not have proto files for Kyber objects.
 message PartialSig {
   required PriShare partial = 1;

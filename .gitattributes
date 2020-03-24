@@ -7,6 +7,10 @@ external/java/src/main/java/ch/epfl/dedis/proto/*.java     -diff merge=theirs
 external/java/src/main/java/ch/epfl/dedis/proto/*.java     linguist-generated=true
 external/js/cothority/lib/protobuf/models.json 	-diff merge=theirs
 external/js/cothority/lib/protobuf/models.json  linguist-generated=true
+external/js/cothority/package-lock.json  linguist-generated=true
+external/js/cothority/package-lock.json 	-diff merge=theirs
+external/js/kyber/package-lock.json  linguist-generated=true
+external/js/kyber/package-lock.json 	-diff merge=theirs
 external/js/kyber/dist/*    -diff -merge
 external/js/kyber/dist/*    linguist-generated=true
 external/js/kyber/doc/*     -diff -merge

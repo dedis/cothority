@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v3"
 )
 
 // genTrees will create a given number of subtrees of the same number of nodes.

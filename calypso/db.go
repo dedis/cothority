@@ -3,12 +3,12 @@ package calypso
 import (
 	"sync"
 
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/byzcoin"
-	dkgprotocol "go.dedis.ch/cothority/v4/dkg/pedersen"
-	dkg "go.dedis.ch/kyber/v4/share/dkg/pedersen"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	dkgprotocol "go.dedis.ch/cothority/v3/dkg/pedersen"
+	dkg "go.dedis.ch/kyber/v3/share/dkg/pedersen"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 	"golang.org/x/xerrors"
 )
 

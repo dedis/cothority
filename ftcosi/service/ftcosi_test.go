@@ -4,10 +4,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/kyber/v4/sign/cosi"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/kyber/v3/sign/cosi"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 var tSuite = cothority.Suite
@@ -34,10 +34,10 @@ func TestServiceCosi(t *testing.T) {
 		reply := &SignatureResponse{}
 		log.Lvl1("Sending request to service...")
 		err := client.SendProtobuf(dst, serviceReq, reply)
-		require.Nil(t, err, "Couldn't send")
+		require.NoError(t, err, "Couldn't send")
 
 		// verify the response still
-		require.Nil(t, cosi.Verify(tSuite, roster.Publics(), msg, reply.Signature, cosi.CompletePolicy{}))
+		require.NoError(t, cosi.Verify(tSuite, roster.Publics(), msg, reply.Signature, cosi.CompletePolicy{}))
 	}
 }
 
@@ -55,12 +55,12 @@ func TestCreateAggregate(t *testing.T) {
 
 	el1 := &onet.Roster{}
 	_, err := client.SignatureRequest(el1, msg)
-	require.NotNil(t, err)
+	require.Error(t, err)
 	// Create a roster with a missing aggregate and ID.
 	el2 := &onet.Roster{List: roster.List}
 	res, err := client.SignatureRequest(el2, msg)
-	require.Nil(t, err, "Couldn't send")
+	require.NoError(t, err, "Couldn't send")
 
 	// verify the response still
-	require.Nil(t, cosi.Verify(tSuite, roster.Publics(), msg, res.Signature, cosi.CompletePolicy{}))
+	require.NoError(t, cosi.Verify(tSuite, roster.Publics(), msg, res.Signature, cosi.CompletePolicy{}))
 }

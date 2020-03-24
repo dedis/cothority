@@ -28,6 +28,23 @@ on protected resources.
 - [RandHound](https://github.com/dedis/paper_17_randomness) - a service that produce 
 verifiable random numbers and store them on a blockchain for later proofs.
 
+The novelties of skipchains are the following:
+
+- Delegation of trust from one block to the next: as the roster is stored in the
+  block, the current nodes delegate trust to the next set of nodes
+- Finality using forwardlinks: where other blockchains use proof-of-work and
+  longest chain to define the latest state of the system, skipchains never
+  change and don't allow for split views
+- Short proofs: using only the hash of the genesis block (9cc3...), every node
+  can return a proof that the latest block is valid by sending only the
+  forward-links. In other systems you need to have your own trusted node follow
+  the skipchain so you can be sure that the latest block is valid
+
+and one thing that is not implemented, but described in Chainiac:
+
+- Using multiple skipchains, where one holds the definition of the roster, while
+  the other skipchain holds the actual transactions.
+
 ## Overview of implementation
 
 ### Networking transactions

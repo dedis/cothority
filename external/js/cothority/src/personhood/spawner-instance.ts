@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "crypto";
+import { createHash, randomBytes } from "crypto-browserify";
 import Long from "long";
 import { Message, Properties } from "protobufjs/light";
 import ByzCoinRPC from "../byzcoin/byzcoin-rpc";
@@ -39,6 +39,7 @@ export default class SpawnerInstance extends Instance {
     static readonly argumentDarcID = "darcID";
     static readonly argumentCoinID = "coinID";
     static readonly argumentCoinName = "coinName";
+    static readonly argumentCoinValue = "coinValue";
 
     /**
      * Spawn a spawner instance. It takes either an ICreateSpawner as single argument, or all the arguments
@@ -71,10 +72,9 @@ export default class SpawnerInstance extends Instance {
         const inst = Instruction.createSpawn(darcID, this.contractID, args);
         const ctx = ClientTransaction.make(bc.getProtocolVersion(), inst);
         await ctx.updateCountersAndSign(bc, [signers]);
-
         await bc.sendTransactionAndWait(ctx);
 
-        return this.fromByzcoin(bc, ctx.instructions[0].deriveId());
+        return this.fromByzcoin(bc, ctx.instructions[0].deriveId(), 1);
     }
 
     /**
@@ -201,6 +201,7 @@ export default class SpawnerInstance extends Instance {
                     new Argument({name: SpawnerInstance.argumentCoinName, value: SPAWNER_COIN}),
                     new Argument({name: SpawnerInstance.argumentCoinID, value: coinID}),
                     new Argument({name: SpawnerInstance.argumentDarcID, value: darcID}),
+                    new Argument({name: SpawnerInstance.argumentCoinValue, value: Buffer.from(balance.toBytesLE())}),
                 ],
             ),
         ];

@@ -8,13 +8,13 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/byzcoin"
-	"go.dedis.ch/cothority/v4/darc"
-	"go.dedis.ch/cothority/v4/skipchain"
-	"go.dedis.ch/kyber/v4/suites"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3/suites"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
 )
 
@@ -34,7 +34,7 @@ func TestClient_Log(t *testing.T) {
 	defer s.close()
 
 	err := c.Create()
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, c.Instance)
 
 	waitForKey(t, leader.omni, c.ByzCoin.ID, c.Instance.Slice(), testBlockInterval)
@@ -42,7 +42,7 @@ func TestClient_Log(t *testing.T) {
 	ids, err := c.Log(NewEvent("auth", "user alice logged out"),
 		NewEvent("auth", "user bob logged out"),
 		NewEvent("auth", "user bob logged back in"))
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 3, len(ids))
 	require.Equal(t, 32, len(ids[2]))
 
@@ -80,22 +80,21 @@ func TestClient_Log(t *testing.T) {
 	// Use the client API to get the event back
 	for _, key := range ids {
 		_, err = c.GetEvent(key)
-		require.Nil(t, err)
+		require.NoError(t, err)
 	}
 
 	// Test naming, this is just a sanity check for eventlogs, the main
 	// naming test is in the byzcoin package.
-	spawnNamingTx := byzcoin.ClientTransaction{
-		Instructions: byzcoin.Instructions{
-			{
-				InstanceID: byzcoin.NewInstanceID(s.gen.GetBaseID()),
-				Spawn: &byzcoin.Spawn{
-					ContractID: byzcoin.ContractNamingID,
-				},
-				SignerCounter: c.incrementCtrs(),
+	spawnNamingTx, err := c.ByzCoin.CreateTransaction(
+		byzcoin.Instruction{
+			InstanceID: byzcoin.NewInstanceID(s.gen.GetBaseID()),
+			Spawn: &byzcoin.Spawn{
+				ContractID: byzcoin.ContractNamingID,
 			},
+			SignerCounter: c.incrementCtrs(),
 		},
-	}
+	)
+	require.NoError(t, err)
 	require.NoError(t, spawnNamingTx.FillSignersAndSignWith(c.Signers...))
 	_, err = c.ByzCoin.AddTransactionAndWait(spawnNamingTx, 10)
 	require.NoError(t, err)
@@ -138,7 +137,7 @@ func TestClient_Log200(t *testing.T) {
 	defer s.close()
 
 	err := c.Create()
-	require.Nil(t, err)
+	require.NoError(t, err)
 	waitForKey(t, leader.omni, c.ByzCoin.ID, c.Instance.Slice(), time.Second)
 
 	logCount := 100
@@ -168,7 +167,7 @@ func TestClient_Log200(t *testing.T) {
 			evs[j] = NewEvent("auth", fmt.Sprintf("user %v logged in", j+i*logCount/5))
 		}
 		_, err = c.Log(evs...)
-		require.Nil(t, err)
+		require.NoError(t, err)
 
 		s.waitNextBlock(t, current)
 	}
@@ -182,7 +181,7 @@ func TestClient_Log200(t *testing.T) {
 			break
 		}
 	}
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Fetch index, and check its length.
 	idx := checkProof(t, leader.omni, c.Instance.Slice(), c.ByzCoin.ID)
@@ -207,7 +206,7 @@ func TestClient_Log200(t *testing.T) {
 		bucketID = b.Prev
 		err = fmt.Errorf("Didn't finish in time. Got %d instead of %d events", eventCount, 2*logCount)
 	}
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	for _, eventID := range eventIDs {
 		eventBuf := checkProof(t, leader.omni, eventID, c.ByzCoin.ID)
@@ -223,13 +222,13 @@ func TestClient_Search(t *testing.T) {
 	defer s.close()
 
 	err := c.Create()
-	require.Nil(t, err)
+	require.NoError(t, err)
 	waitForKey(t, leader.omni, c.ByzCoin.ID, c.Instance.Slice(), testBlockInterval)
 
 	// Search before any events are logged.
 	req := &SearchRequest{}
 	resp, err := c.Search(req)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.Equal(t, 0, len(resp.Events))
 	require.False(t, resp.Truncated)
@@ -265,14 +264,14 @@ func TestClient_Search(t *testing.T) {
 	// Search for all.
 	req = &SearchRequest{}
 	resp, err = c.Search(req)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.Equal(t, 20, len(resp.Events))
 
 	// Search by time range.
 	req = &SearchRequest{Instance: c.Instance, ID: c.ByzCoin.ID, From: tm0 + 3, To: tm0 + 8}
 	resp, err = c.Search(req)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.False(t, resp.Truncated)
 	require.Equal(t, 5, len(resp.Events))
@@ -280,7 +279,7 @@ func TestClient_Search(t *testing.T) {
 	// Search by topic, should find half of them.
 	req = &SearchRequest{Instance: c.Instance, ID: c.ByzCoin.ID, Topic: "a"}
 	resp, err = c.Search(req)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.False(t, resp.Truncated)
 	require.Equal(t, 10, len(resp.Events))
@@ -288,7 +287,7 @@ func TestClient_Search(t *testing.T) {
 	// Search by time range and topic.
 	req = &SearchRequest{Instance: c.Instance, ID: c.ByzCoin.ID, Topic: "a", From: tm0 + 3, To: tm0 + 8}
 	resp, err = c.Search(req)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.False(t, resp.Truncated)
 	require.Equal(t, 3, len(resp.Events))
@@ -298,7 +297,7 @@ func TestClient_Search(t *testing.T) {
 	searchMax = 5
 	req = &SearchRequest{Instance: c.Instance, ID: c.ByzCoin.ID}
 	resp, err = c.Search(req)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.Equal(t, 5, len(resp.Events))
 	require.True(t, resp.Truncated)
@@ -307,14 +306,14 @@ func TestClient_Search(t *testing.T) {
 	// Put one more event on now.
 	tm := time.Now().UnixNano()
 	_, err = c.Log(Event{Topic: "none", Content: "one more", When: tm})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	leader.waitForBlock(c.ByzCoin.ID)
 	leader.waitForBlock(c.ByzCoin.ID)
 
 	// Search from the last event, expect only it, not previous ones.
 	req = &SearchRequest{Instance: c.Instance, ID: c.ByzCoin.ID, From: tm}
 	resp, err = c.Search(req)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.Equal(t, 1, len(resp.Events))
 	require.False(t, resp.Truncated)
@@ -440,8 +439,8 @@ func TestClient_StreamEventsFrom(t *testing.T) {
 	}
 
 	wg := sync.WaitGroup{}
+	wg.Add(1)
 	go func() {
-		wg.Add(1)
 		defer wg.Done()
 
 		require.NoError(t, c.StreamEventsFrom(h, c.ByzCoin.ID))
@@ -475,7 +474,7 @@ func checkProof(t *testing.T, omni *byzcoin.Service, key []byte, scID skipchain.
 		ID:      scID,
 	}
 	resp, err := omni.GetProof(req)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	p := resp.Proof
 	require.True(t, p.InclusionProof.Match(key), "proof of exclusion of index")
@@ -573,14 +572,14 @@ func newSer(t *testing.T) (*ser, *Client) {
 
 func (s *ser) getCurrentBlock(t *testing.T) skipchain.SkipBlockID {
 	reply, err := skipchain.NewClient().GetUpdateChain(s.roster, s.id)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	return reply.Update[len(reply.Update)-1].Hash
 }
 
 func (s *ser) waitNextBlock(t *testing.T, current skipchain.SkipBlockID) {
 	for i := 0; i < 10; i++ {
 		reply, err := skipchain.NewClient().GetUpdateChain(s.roster, s.id)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		if !current.Equal(reply.Update[len(reply.Update)-1].Hash) {
 			return
 		}

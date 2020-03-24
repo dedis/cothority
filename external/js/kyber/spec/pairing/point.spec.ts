@@ -1,22 +1,22 @@
-import jsc from 'jsverify';
-import { BN256G1Point, BN256G2Point } from '../../src/pairing/point';
-import BN256Scalar from '../../src/pairing/scalar';
-import { order } from '../../src/pairing/constants';
+import jsc from "jsverify";
+import { order } from "../../src/pairing/constants";
+import { BN256G1Point, BN256G2Point } from "../../src/pairing/point";
+import BN256Scalar from "../../src/pairing/scalar";
 
-describe('BN256 Point Tests', () => {
-    it('should get the order of g1', () => {
+describe("BN256 Point Tests", () => {
+    it("should get the order of g1", () => {
         const a = new BN256G1Point();
         a.mul(new BN256Scalar(order), new BN256G1Point().base());
 
         expect(a.equals(new BN256G1Point().null())).toBeTruthy();
     });
 
-    it('should add and subtract g1 points', () => {
+    it("should add and subtract g1 points", () => {
         const prop = jsc.forall(jsc.array(jsc.uint8), jsc.array(jsc.uint8), (a, b) => {
             const p1 = new BN256G1Point(a);
             const p2 = new BN256G1Point(b);
 
-            const aa = new BN256G1Point().add(p1, p2)
+            const aa = new BN256G1Point().add(p1, p2);
             const bb = new BN256G1Point().sub(p1, p2.clone().neg(p2));
 
             return aa.equals(bb);
@@ -26,7 +26,78 @@ describe('BN256 Point Tests', () => {
         expect(prop).toHold();
     });
 
-    it('should add and multiply g1 points', () => {
+    it("should yield the same point by addition and mul", () => {
+        const prop = jsc.forall(jsc.uint8, (target) => {
+            const base = new BN256G1Point().base();
+            const scalarUnit = new BN256Scalar().one();
+            const pointUnit = new BN256G1Point().mul(scalarUnit, base);
+
+            const scalarAdder = new BN256Scalar();
+            const pointAdder = new BN256G1Point();
+            for (let i = 0; i < target; i++) {
+                scalarAdder.add(scalarAdder, scalarUnit);
+                pointAdder.add(pointAdder, pointUnit);
+            }
+
+            return pointAdder.equals(new BN256G1Point().mul(scalarAdder, base));
+        });
+
+        // @ts-ignore
+        expect(prop).toHold();
+    });
+
+    it("should yield the same point by negative addition and multiplication", () => {
+        const prop = jsc.forall(jsc.uint8, (target) => {
+            const base = new BN256G1Point().base();
+            const scalarNegUnit = new BN256Scalar().one();
+            scalarNegUnit.neg(scalarNegUnit);
+            const pointNegUnit = new BN256G1Point().mul(scalarNegUnit, base);
+
+            const scalarSuber = new BN256Scalar().zero();
+            const pointSuber = new BN256G1Point().null();
+            for (let i = 0; i < target; i++) {
+                scalarSuber.add(scalarSuber, scalarNegUnit);
+                pointSuber.add(pointSuber, pointNegUnit);
+            }
+
+            return pointSuber.equals(new BN256G1Point().mul(scalarSuber, base));
+        });
+
+        // @ts-ignore
+        expect(prop).toHold();
+    });
+
+    it("should yield the same point by negation and multiplication, for -1", () => {
+        const base = new BN256G1Point().base();
+        const scalarOne = new BN256Scalar().one();
+        const pointOne = new BN256G1Point().mul(scalarOne, base);
+
+        scalarOne.neg(scalarOne);
+        pointOne.neg(pointOne);
+
+        expect(pointOne.equals(new BN256G1Point().mul(scalarOne, base))).toBeTruthy();
+    });
+
+    it("should not modify params with add/sub/neg/mul", () => {
+        const prop = jsc.forall(jsc.uint8, (target) => {
+            const pointRef = new BN256G1Point(target);
+            const scalarRef = new BN256Scalar(target);
+            const point = pointRef.clone();
+            const scalar = scalarRef.clone();
+
+            point.clone().add(point, point);
+            point.clone().sub(point, point);
+            point.clone().neg(point);
+            point.clone().mul(scalar, point);
+
+            return pointRef.equals(point) && scalarRef.equals(scalar);
+        });
+
+        // @ts-ignore
+        expect(prop).toHold();
+    });
+
+    it("should add and multiply g1 points", () => {
         const prop = jsc.forall(jsc.array(jsc.uint8), (a) => {
             const p1 = new BN256G1Point(a);
 
@@ -41,7 +112,7 @@ describe('BN256 Point Tests', () => {
         expect(prop).toHold();
     });
 
-    it('should marshal and unmarshal g1 points', () => {
+    it("should marshal and unmarshal g1 points", () => {
         const prop = jsc.forall(jsc.array(jsc.uint8), (a) => {
             const p1 = new BN256G1Point(a);
 
@@ -58,7 +129,7 @@ describe('BN256 Point Tests', () => {
 
     // Test written because of the edge case found by the property-based
     // test
-    it('should marshal and unmarshal g1 point generated with k=1', () => {
+    it("should marshal and unmarshal g1 point generated with k=1", () => {
         const p1 = new BN256G1Point([1]);
 
         const buf = p1.marshalBinary();
@@ -69,7 +140,7 @@ describe('BN256 Point Tests', () => {
         expect(p2.marshalSize()).toBe(buf.length);
     });
 
-    it('should get random g1', () => {
+    it("should get random g1", () => {
         for (let i = 0; i < 100; i++) {
             const a = new BN256G1Point().pick();
             const b = new BN256G1Point().pick();
@@ -78,28 +149,28 @@ describe('BN256 Point Tests', () => {
         }
     });
 
-    it('should hash the message to a point', () => {
-        const p1 = BN256G1Point.hashToPoint(Buffer.from('abc'));
-        const ref1 = Buffer.from('2ac314dc445e47f096d15425fc294601c1a7d8d27561c4fe9bb452f593f77f4705230e9663123b93c06ce0cd49a893619a92019566f326829a39d6f5ce10579d', 'hex');
+    it("should hash the message to a point", () => {
+        const p1 = BN256G1Point.hashToPoint(Buffer.from("abc"));
+        const ref1 = Buffer.from("2ac314dc445e47f096d15425fc294601c1a7d8d27561c4fe9bb452f593f77f4705230e9663123b93c06ce0cd49a893619a92019566f326829a39d6f5ce10579d", "hex");
         expect(p1.marshalBinary().equals(ref1)).toBeTruthy();
 
-        const p2 = BN256G1Point.hashToPoint(Buffer.from('e0a05cbb37fd6c159732a8c57b981773f7480695328b674d8a9cc083377f1811', 'hex'));
-        const ref2 = Buffer.from('1444853e16a3f959e9ff1da9c226958f9ee4067f82451bcf88ecc5980cf2c4d50095605d82d456fbb24b21f283842746935e0c42c7f7a8f579894d9bccede5ae', 'hex');
+        const p2 = BN256G1Point.hashToPoint(Buffer.from("e0a05cbb37fd6c159732a8c57b981773f7480695328b674d8a9cc083377f1811", "hex"));
+        const ref2 = Buffer.from("1444853e16a3f959e9ff1da9c226958f9ee4067f82451bcf88ecc5980cf2c4d50095605d82d456fbb24b21f283842746935e0c42c7f7a8f579894d9bccede5ae", "hex");
         expect(p2.marshalBinary().equals(ref2)).toBeTruthy();
     });
 
-    it('should get the string representation of G1', () => {
+    it("should get the string representation of G1", () => {
         const a = new BN256G1Point().null();
 
-        expect(a.toString()).toBe('bn256.G1(0,1)');
+        expect(a.toString()).toBe("bn256.G1(0,1)");
     });
 
-    it('should add and subtract g2 points', () => {
+    it("should add and subtract g2 points", () => {
         const prop = jsc.forall(jsc.array(jsc.uint8), jsc.array(jsc.uint8), (a, b) => {
             const p1 = new BN256G2Point(a);
             const p2 = new BN256G2Point(b);
 
-            const aa = new BN256G2Point().add(p1, p2)
+            const aa = new BN256G2Point().add(p1, p2);
             const bb = new BN256G2Point().sub(p1, p2.clone().neg(p2));
 
             return aa.equals(bb);
@@ -109,7 +180,7 @@ describe('BN256 Point Tests', () => {
         expect(prop).toHold();
     });
 
-    it('should add and subtract 0 and 1', () => {
+    it("should add and subtract 0 and 1", () => {
         const p1 = new BN256G2Point([]);
         const p2 = new BN256G2Point([1]);
 
@@ -121,7 +192,7 @@ describe('BN256 Point Tests', () => {
         expect(aa.equals(bb)).toBeTruthy();
     });
 
-    it('should add and multiply g2 points', () => {
+    it("should add and multiply g2 points", () => {
         const prop = jsc.forall(jsc.array(jsc.uint8), (a) => {
             const p1 = new BN256G2Point(a);
 
@@ -136,7 +207,7 @@ describe('BN256 Point Tests', () => {
         expect(prop).toHold();
     });
 
-    it('should marshal and unmarshal g2 points', () => {
+    it("should marshal and unmarshal g2 points", () => {
         const prop = jsc.forall(jsc.array(jsc.uint8), (a) => {
             const p1 = new BN256G2Point(a);
 
@@ -151,22 +222,22 @@ describe('BN256 Point Tests', () => {
         expect(prop).toHold();
     });
 
-    it('should get random g2', () => {
+    it("should get random g2", () => {
         for (let i = 0; i < 100; i++) {
             const a = new BN256G2Point().pick();
             const b = new BN256G2Point().pick();
 
             expect(a.equals(b)).toBeFalsy();
         }
-    })
-
-    it('should get the string representation of G2', () => {
-        const a = new BN256G2Point().null();
-
-        expect(a.toString()).toBe('bn256.G2((0,0),(0,1),(0,0))');
     });
 
-    it('should pair g1 and g2 points', () => {
+    it("should get the string representation of G2", () => {
+        const a = new BN256G2Point().null();
+
+        expect(a.toString()).toBe("bn256.G2((0,0),(0,1),(0,0))");
+    });
+
+    it("should pair g1 and g2 points", () => {
         const prop = jsc.forall(jsc.array(jsc.uint8), jsc.array(jsc.uint8), (a, b) => {
             const p1 = new BN256G1Point(a);
             const p2 = new BN256G2Point(b);
@@ -181,7 +252,7 @@ describe('BN256 Point Tests', () => {
         expect(prop).toHold();
     });
 
-    it('should throw unimplemented errors', () => {
+    it("should throw unimplemented errors", () => {
         const a = new BN256G1Point();
 
         expect(() => a.embedLen()).toThrow();

@@ -1,8 +1,8 @@
-import fs from "fs";
-import crypto from "crypto";
-import BN = require('bn.js');
-import Curve from '../../../src/curve/edwards25519/curve';
-import { unhexlify, hexToBuffer } from "../../helpers/utils";
+import BN = require("bn.js");
+import * as crypto from "crypto-browserify";
+import * as fs from "fs";
+import Curve from "../../../src/curve/edwards25519/curve";
+import { hexToBuffer, unhexlify } from "../../helpers/utils";
 
 /**
  * Test vectors from http://ed25519.cr.yp.to/python/sign.input
@@ -11,7 +11,7 @@ describe("Ed25519 Test Vector", () => {
     const curve = new Curve();
 
     let lines: string[];
-    beforeAll(done => {
+    beforeAll((done) => {
         fs.readFile(__dirname + "/sign.input", "utf-8", (err, data) => {
             lines = data.split("\n");
             done();
@@ -24,9 +24,11 @@ describe("Ed25519 Test Vector", () => {
             const hash = crypto.createHash("sha512");
             let digest = hash.update(unhexlify(parts[0].substring(0, 64))).digest();
             digest = digest.slice(0, 32);
+            // tslint:disable
             digest[0] &= 0xf8;
             digest[31] &= 0x3f;
             digest[31] |= 0x40;
+            // tslint:enable
             const sk = new BN(digest.slice(0, 32), 16, "le");
             // using hexToBuffer until
             // https://github.com/indutny/bn.js/issues/175 is resolved

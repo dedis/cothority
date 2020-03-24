@@ -19,15 +19,15 @@ package bevm
 import (
 	"bytes"
 	"encoding/hex"
-	"errors"
 	"sort"
 	"sync"
 
-	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethdb"
-	"go.dedis.ch/protobuf"
 )
 
 // ---------------------------------------------------------------------------
@@ -55,7 +55,8 @@ func NewMemDatabase(data []byte) (*MemDatabase, error) {
 
 	err := protobuf.Decode(data, kvs)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to decode in-memory EVM "+
+			"state DB: %v", err)
 	}
 
 	DB := &MemDatabase{
@@ -88,7 +89,8 @@ func (db *MemDatabase) Dump() ([]byte, error) {
 // Put implements Putter.Put()
 func (db *MemDatabase) Put(key []byte, value []byte) error {
 	db.lock.Lock()
-	log.Lvlf3("MemDatabase.Put(key=%v, value=%v)", hex.EncodeToString(key), hex.EncodeToString(value))
+	log.Lvlf3("MemDatabase.Put(key=%v, value=%v)",
+		hex.EncodeToString(key), hex.EncodeToString(value))
 	defer db.lock.Unlock()
 
 	return db.put(key, value)
@@ -122,7 +124,8 @@ func (db *MemDatabase) Get(key []byte) ([]byte, error) {
 		return common.CopyBytes(entry), nil
 	}
 
-	return nil, errors.New("not found")
+	return nil, xerrors.Errorf("key '%s' not found in EVM state DB",
+		hex.EncodeToString(key))
 }
 
 // Delete implements Deleter.Delete()

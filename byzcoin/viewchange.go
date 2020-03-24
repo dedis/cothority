@@ -5,16 +5,16 @@ import (
 	"sync"
 	"time"
 
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/blscosi/protocol"
-	"go.dedis.ch/cothority/v4/byzcoin/viewchange"
-	"go.dedis.ch/cothority/v4/darc"
-	"go.dedis.ch/cothority/v4/skipchain"
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/sign/schnorr"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
-	"go.dedis.ch/onet/v4/network"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/blscosi/protocol"
+	"go.dedis.ch/cothority/v3/byzcoin/viewchange"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 	"golang.org/x/xerrors"
 )
@@ -444,7 +444,7 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 		return xerrors.Errorf("signing tx: %v", err)
 	}
 
-	_, err = s.createNewBlock(req.GetGen(), rotateRoster(sb.Roster, req.GetView().LeaderIndex), []TxResult{TxResult{ctx, false}})
+	_, err = s.createNewBlock(req.GetGen(), rotateRoster(sb.Roster, req.GetView().LeaderIndex), []TxResult{{ctx, false}})
 	return cothority.ErrorOrNil(err, "creating block")
 }
 

@@ -5,14 +5,14 @@ import (
 	"testing"
 	"time"
 
-	"go.dedis.ch/kyber/v4/sign/schnorr"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/byzcoin"
-	"go.dedis.ch/cothority/v4/darc"
-	"go.dedis.ch/cothority/v4/darc/expression"
-	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/darc/expression"
+	"go.dedis.ch/onet/v3"
 )
 
 // Tests the client function CreateLTS
@@ -27,13 +27,13 @@ func TestClient_CreateLTS(t *testing.T) {
 		[]string{"spawn:dummy", "spawn:" + ContractLongTermSecretID},
 		signer.Identity())
 	msg.BlockInterval = 500 * time.Millisecond
-	require.Nil(t, err)
+	require.NoError(t, err)
 	d := msg.GenesisDarc
 	require.Nil(t, d.Verify(true))
 
 	// Create the clients
 	c, _, err := byzcoin.NewLedger(msg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	calypsoClient := NewClient(c)
 	for _, who := range roster.List {
 		err := calypsoClient.Authorize(who, c.ID)
@@ -42,7 +42,7 @@ func TestClient_CreateLTS(t *testing.T) {
 
 	// Invoke CreateLTS
 	ltsReply, err := calypsoClient.CreateLTS(roster, d.GetBaseID(), []darc.Signer{signer}, []uint64{1})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, ltsReply.ByzCoinID)
 	require.NotNil(t, ltsReply.InstanceID)
 	require.NotNil(t, ltsReply.X)
@@ -59,13 +59,13 @@ func TestClient_Authorize(t *testing.T) {
 		[]string{"spawn:dummy", "spawn:" + ContractLongTermSecretID},
 		signer.Identity())
 	msg.BlockInterval = 500 * time.Millisecond
-	require.Nil(t, err)
+	require.NoError(t, err)
 	d := msg.GenesisDarc
 	require.Nil(t, d.Verify(true))
 
 	// Create the clients
 	c, _, err := byzcoin.NewLedger(msg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	reply := &AuthorizeReply{}
 	who := roster.List[0]
@@ -119,13 +119,13 @@ func TestClient_Calypso(t *testing.T) {
 		admin.Identity())
 
 	msg.BlockInterval = 500 * time.Millisecond
-	require.Nil(t, err)
+	require.NoError(t, err)
 	// The darc inside it should be valid.
 	gDarc := msg.GenesisDarc
 	require.Nil(t, gDarc.Verify(true))
 	//Create Ledger
 	c, _, err := byzcoin.NewLedger(msg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	//Create a Calypso Client (Byzcoin + Onet)
 	calypsoClient := NewClient(c)
 
@@ -136,7 +136,7 @@ func TestClient_Calypso(t *testing.T) {
 	}
 	ltsReply, err := calypsoClient.CreateLTS(roster, gDarc.GetBaseID(), []darc.Signer{admin}, []uint64{adminCt})
 	adminCt++
-	require.Nil(t, err)
+	require.NoError(t, err)
 	//If no error, assign it
 	calypsoClient.ltsReply = ltsReply
 
@@ -149,10 +149,10 @@ func TestClient_Calypso(t *testing.T) {
 	darc1.Rules.AddRule(darc.Action("spawn:"+ContractReadID),
 		expression.InitOrExpr(reader1.Identity().String()))
 	require.NotNil(t, darc1)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	_, err = calypsoClient.SpawnDarc(admin, adminCt, gDarc, *darc1, 10)
 	adminCt++
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	//Create a similar darc for provider2, reader2
 	darc2 := darc.NewDarc(darc.InitRules([]darc.Identity{provider2.Identity()},
@@ -165,7 +165,7 @@ func TestClient_Calypso(t *testing.T) {
 	//Spawn it
 	_, err = calypsoClient.SpawnDarc(admin, adminCt, gDarc, *darc2, 10)
 	adminCt++
-	require.Nil(t, err)
+	require.NoError(t, err)
 	//Create a secret key
 	key1 := []byte("secret key 1")
 	//Create a Write instance
@@ -173,17 +173,17 @@ func TestClient_Calypso(t *testing.T) {
 		darc1.GetBaseID(), calypsoClient.ltsReply.X, key1)
 	//Write it to calypso
 	wr1, err := calypsoClient.AddWrite(write1, provider1, 1, *darc1, 10)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, wr1.InstanceID)
 	//Get the write proof
 	prWr1, err := calypsoClient.WaitProof(wr1.InstanceID, time.Second, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, prWr1)
 
 	re1, err := calypsoClient.AddRead(prWr1, reader1, 1, 10)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	prRe1, err := calypsoClient.WaitProof(re1.InstanceID, time.Second, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, prRe1.InclusionProof.Match(re1.InstanceID.Slice()))
 
 	key2 := []byte("secret key 2")
@@ -191,14 +191,14 @@ func TestClient_Calypso(t *testing.T) {
 	write2 := NewWrite(cothority.Suite, calypsoClient.ltsReply.InstanceID,
 		darc2.GetBaseID(), calypsoClient.ltsReply.X, key2)
 	wr2, err := calypsoClient.AddWrite(write2, provider2, 1, *darc2, 10)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	prWr2, err := calypsoClient.WaitProof(wr2.InstanceID, time.Second, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, prWr2.InclusionProof.Match(wr2.InstanceID.Slice()))
 	re2, err := calypsoClient.AddRead(prWr2, reader2, 1, 10)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	prRe2, err := calypsoClient.WaitProof(re2.InstanceID, time.Second, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, prRe2.InclusionProof.Match(re2.InstanceID.Slice()))
 
 	// Make sure you can't decrypt with non-matching proofs
@@ -209,10 +209,10 @@ func TestClient_Calypso(t *testing.T) {
 
 	// Make sure you can actually decrypt
 	dk1, err := calypsoClient.DecryptKey(&DecryptKey{Read: *prRe1, Write: *prWr1})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, dk1.X.Equal(calypsoClient.ltsReply.X))
 	keyCopy1, err := dk1.RecoverKey(reader1.Ed25519.Secret)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, key1, keyCopy1)
 
 	// use keyCopy to unlock the stuff in writeInstance.Data

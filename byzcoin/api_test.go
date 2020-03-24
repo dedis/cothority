@@ -6,12 +6,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/darc"
-	"go.dedis.ch/cothority/v4/skipchain"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
-	"go.dedis.ch/onet/v4/network"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 	"golang.org/x/xerrors"
 )
@@ -29,7 +28,7 @@ func TestClient_NewLedgerCorrupted(t *testing.T) {
 	service := servers[0].Service(testServiceName).(*corruptedService)
 	signer := darc.NewSignerEd25519(nil, nil)
 	msg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{"spawn:dummy"}, signer.Identity())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	c := &Client{
 		Client: onet.NewClient(cothority.Suite, testServiceName),
 		Roster: *roster,
@@ -59,7 +58,7 @@ func TestClient_NewLedgerCorrupted(t *testing.T) {
 
 	data := &DataBody{
 		TxResults: []TxResult{
-			TxResult{ClientTransaction: ClientTransaction{Instructions: []Instruction{Instruction{}}}},
+			{ClientTransaction: ClientTransaction{Instructions: []Instruction{{}}}},
 		},
 	}
 	sb.Payload, err = protobuf.Encode(data)
@@ -71,7 +70,7 @@ func TestClient_NewLedgerCorrupted(t *testing.T) {
 
 	data.TxResults[0].ClientTransaction.Instructions[0].Spawn = &Spawn{
 		Args: []Argument{
-			Argument{
+			{
 				Name:  "darc",
 				Value: []byte{1, 2, 3},
 			},
@@ -87,7 +86,7 @@ func TestClient_NewLedgerCorrupted(t *testing.T) {
 	darcBytes, _ := protobuf.Encode(&darc.Darc{})
 	data.TxResults[0].ClientTransaction.Instructions[0].Spawn = &Spawn{
 		Args: []Argument{
-			Argument{
+			{
 				Name:  "darc",
 				Value: darcBytes,
 			},
@@ -121,21 +120,21 @@ func TestClient_CreateTransaction(t *testing.T) {
 func TestClient_GetProof(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
 	servers, roster, _ := l.GenTree(3, true)
-	registerDummy(servers)
+	registerDummy(t, servers)
 	defer l.CloseAll()
 
 	// Initialise the genesis message and send it to the service.
 	signer := darc.NewSignerEd25519(nil, nil)
 	msg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{"spawn:dummy"}, signer.Identity())
 	msg.BlockInterval = 100 * time.Millisecond
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// The darc inside it should be valid.
 	d := msg.GenesisDarc
 	require.Nil(t, d.Verify(true))
 
 	c, csr, err := NewLedger(msg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	gac, err := c.GetAllByzCoinIDs(roster.List[1])
 	require.NoError(t, err)
@@ -145,9 +144,9 @@ func TestClient_GetProof(t *testing.T) {
 	value := []byte{5, 6, 7, 8}
 	kind := "dummy"
 	tx, err := createOneClientTx(d.GetBaseID(), kind, value, signer)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	atr, err := c.AddTransactionAndWait(tx, 10)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// We should have a proof of our transaction in the skipchain.
 	newID := tx.Instructions[0].Hash()
@@ -156,7 +155,7 @@ func TestClient_GetProof(t *testing.T) {
 	require.Nil(t, p.Proof.Verify(csr.Skipblock.SkipChainID()))
 	require.Equal(t, 2, len(p.Proof.Links))
 	k, v0, _, _, err := p.Proof.KeyValue()
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, k, newID)
 	require.Equal(t, value, v0)
 
@@ -187,7 +186,7 @@ func TestClient_GetProofCorrupted(t *testing.T) {
 	service.GetProofResponse = &GetProofResponse{
 		Proof: Proof{
 			Latest: *sb,
-			Links:  []skipchain.ForwardLink{skipchain.ForwardLink{To: c.ID}},
+			Links:  []skipchain.ForwardLink{{To: c.ID}},
 		},
 	}
 
@@ -201,21 +200,21 @@ func TestClient_GetProofCorrupted(t *testing.T) {
 func TestClient_Streaming(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
 	servers, roster, _ := l.GenTree(3, true)
-	registerDummy(servers)
+	registerDummy(t, servers)
 	defer l.CloseAll()
 
 	// Initialise the genesis message and send it to the service.
 	signer := darc.NewSignerEd25519(nil, nil)
 	msg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{"spawn:dummy"}, signer.Identity())
 	msg.BlockInterval = time.Second
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// The darc inside it should be valid.
 	d := msg.GenesisDarc
 	require.Nil(t, d.Verify(true))
 
 	c, csr, err := NewLedger(msg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	n := 2
 	go func() {
@@ -226,9 +225,9 @@ func TestClient_Streaming(t *testing.T) {
 			tx, err := createOneClientTxWithCounter(d.GetBaseID(), kind, value, signer, uint64(i)+1)
 			// Need log.ErrFatal here, else it races with the rest of the code that
 			// uses 't'.
-			log.ErrFatal(err)
+			require.NoError(t, err)
 			_, err = c.AddTransaction(tx)
-			log.ErrFatal(err)
+			require.NoError(t, err)
 
 			// sleep for a block interval so we create multiple blocks
 			time.Sleep(msg.BlockInterval)
@@ -268,7 +267,7 @@ func TestClient_Streaming(t *testing.T) {
 
 	go func() {
 		err = c1.StreamTransactions(cb)
-		require.Nil(t, err)
+		require.NoError(t, err)
 	}()
 	select {
 	case <-done:
@@ -281,7 +280,7 @@ func TestClient_Streaming(t *testing.T) {
 func TestClient_NoPhantomSkipchain(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
 	servers, roster, _ := l.GenTree(3, true)
-	registerDummy(servers)
+	registerDummy(t, servers)
 	defer l.CloseAll()
 
 	// Initialise the genesis message and send it to the service.

@@ -4,12 +4,12 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"go.dedis.ch/cothority/v4/byzcoin"
-	"go.dedis.ch/cothority/v4/byzcoin/contracts"
-	"go.dedis.ch/cothority/v4/darc"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
-	"go.dedis.ch/onet/v4/simul/monitor"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/byzcoin/contracts"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/simul/monitor"
 	"go.dedis.ch/protobuf"
 	"golang.org/x/xerrors"
 )

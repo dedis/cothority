@@ -1,8 +1,8 @@
-import BN from 'bn.js';
-import { modSqrt } from '../../src/utils/tonelli-shanks';
+import BN from "bn.js";
+import { modSqrt } from "../../src/utils/tonelli-shanks";
 
-describe('Tonelli-Shanks', () => {
-    it('should pass the reference test', () => {
+describe("Tonelli-Shanks", () => {
+    it("should pass the reference test", () => {
         expect(modSqrt(10, 13).toNumber()).toBe(7);
         expect(modSqrt(56, 101).toNumber()).toBe(37);
         expect(modSqrt(1030, 10009).toNumber()).toBe(1632);

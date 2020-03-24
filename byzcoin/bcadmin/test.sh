@@ -25,7 +25,7 @@ export BC_WAIT=true
 
 main(){
     startTest
-    buildConode go.dedis.ch/cothority/v4/byzcoin go.dedis.ch/cothority/v4/byzcoin/contracts
+    buildConode go.dedis.ch/cothority/v3/byzcoin go.dedis.ch/cothority/v3/byzcoin/contracts
     [[ ! -x ./bcadmin ]] && exit 1
     run testReset
     run testDbReplay
@@ -48,6 +48,7 @@ main(){
     run testQR
     run testUpdateDarcDesc
     run testResolveiid
+    run testInstructionGet
     run testContractValue
     run testContractDeferred
     run testContractConfig
@@ -55,6 +56,7 @@ main(){
     stopTest
 }
 
+# TODO: https://github.com/dedis/cothority/issues/2150
 testReset(){
   rm -f config/* *.db
   runCoBG 1 2 3
@@ -65,7 +67,8 @@ testReset(){
   db=service_storage/$( ls service_storage | tail -n 1 )
   runBA config --blockSize 1000000 $bc $key
 
-  runBA db resetBlock $db $bcID
+  pkill -9 conode
+  testFail runBA db resetBlock $db $bcID
 }
 
 testDbReplay(){
@@ -317,6 +320,11 @@ testAddDarc(){
   testOK runBA darc add
   ID=`cat ./darc_id.txt`
   testGrep "${ID:5:${#ID}-0}" runBA darc show --darc "$ID"
+
+  # checks the --shortPrint option
+  OUTRES=$(runBA darc add --shortPrint)
+  matchOK "$OUTRES" "darc:[0-9a-f]{64}
+\[ed25519:[0-9a-f]{64}\]" 
 }
 
 testDarcAddDeferred() {
@@ -497,8 +505,8 @@ testUpdateDarcDesc() {
   testOK runBA darc add -out_id ./darc_id.txt -out_key ./darc_key.txt -desc testing
   ID=`cat ./darc_id.txt`
   KEY=`cat ./darc_key.txt`
-  testOK runBA darc cdesc --desc "New description" --darc "$ID"
-  testGrep "New description" runBA darc show
+  testOK runBA darc cdesc --desc "New description" --darc "$ID" --sign "$KEY"
+  testGrep "New description" runBA darc show --darc "$ID"
 }
 
 # Rely on:
@@ -543,6 +551,17 @@ $VALUE_INSTANCE_ID"
   # Let's get the content of the value contract
   OUTRES=`runBA0 contract value get --instid "$VALUE_INSTANCE_ID"`
   testGrep "Hello world" echo "$OUTRES"
+}
+
+# In this test we simply get the config instance
+testInstructionGet() {
+  runCoBG 1 2 3
+  runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
+  eval $SED
+  [ -z "$BC" ] && exit 1
+
+  testOK runBA0 instance get -i 0000000000000000000000000000000000000000000000000000000000000000
+  testOK runBA0 instance get -i 0000000000000000000000000000000000000000000000000000000000000000 --hex
 }
 
 main

@@ -11,11 +11,11 @@ import (
 	"strings"
 	"sync"
 
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/byzcoin/trie"
-	"go.dedis.ch/cothority/v4/darc"
-	"go.dedis.ch/onet/v4/log"
-	"go.dedis.ch/onet/v4/network"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 	"golang.org/x/xerrors"
 )
@@ -120,6 +120,8 @@ func (ctx *ClientTransaction) SignWith(signers ...darc.Signer) error {
 
 // NewClientTransaction creates a transaction compatible with the version passed
 // in arguments. Depending on the version, the hash will have a different value.
+// Most common usage is:
+//   byzcoin.NewClientTransaction(byzcoin.CurrentVersion, instr...)
 func NewClientTransaction(v Version, instrs ...Instruction) ClientTransaction {
 	ctx := ClientTransaction{Instructions: instrs}
 	ctx.Instructions.SetVersion(v)
@@ -259,6 +261,22 @@ func (instr Instruction) ContractID() string {
 	return a
 }
 
+// Arguments returns the arguments of the instruction
+func (instr Instruction) Arguments() Arguments {
+	var args Arguments
+
+	switch instr.GetType() {
+	case SpawnType:
+		args = instr.Spawn.Args
+	case InvokeType:
+		args = instr.Invoke.Args
+	case DeleteType:
+		args = instr.Delete.Args
+	}
+
+	return args
+}
+
 // String returns a human readable form of the instruction.
 func (instr Instruction) String() string {
 	contractFn, ok := GetContractRegistry().Search(instr.ContractID())
@@ -297,6 +315,10 @@ func (instr *Instruction) SignWith(msg []byte, signers ...darc.Signer) error {
 	}
 	if len(signers) != len(instr.SignerCounter) {
 		return xerrors.New("the number of signers does not match the number of counters")
+	}
+	if instr.version != CurrentVersion {
+		return xerrors.New("cannot sign previous versions - please use" +
+			" byzcoin.NewClientTransaction")
 	}
 	instr.Signatures = make([][]byte, len(signers))
 	for i := range signers {
@@ -337,6 +359,26 @@ func (instr Instruction) Verify(st ReadOnlyStateTrie, msg []byte) error {
 	return instr.VerifyWithOption(st, msg, nil)
 }
 
+func (instr Instruction) usesForbiddenIdentities() bool {
+	// A synthetic instruction is currently not restricted
+	if instr.synthetic {
+		return false
+	}
+
+	// A genuine instruction cannot use an EVM contract identity
+	evmContractType := darc.Identity{
+		EvmContract: &darc.IdentityEvmContract{},
+	}.Type()
+
+	for _, id := range instr.SignerIdentities {
+		if id.Type() == evmContractType {
+			return true
+		}
+	}
+
+	return false
+}
+
 // VerifyWithOption adds the ability to the Verify(...) method to specify if
 // the counters should be checked. This is used with the "defered" contract
 // where the clients sign the root instruction without the counters.
@@ -347,7 +389,8 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops 
 
 	// check the number of signers match with the number of signatures
 	if len(instr.SignerIdentities) != len(instr.Signatures) {
-		return xerrors.New("lengh of identities does not match the length of signatures")
+		return xerrors.New("length of identities does not match the length of" +
+			" signatures")
 	}
 
 	// check the signature counters
@@ -377,13 +420,22 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops 
 		return xerrors.Errorf("action '%v' does not exist", instr.Action())
 	}
 
+	if instr.usesForbiddenIdentities() {
+		return xerrors.Errorf("instruction is using a forbidden signer identity")
+	}
+
 	// check the signature
 	// Save the identities that provide good signatures
-	goodIdentities := make([]string, 0)
+	identitiesWithCorrectSignatures := make([]string, 0)
 	for i := range instr.Signatures {
 		if err := instr.SignerIdentities[i].Verify(msg, instr.Signatures[i]); err == nil {
-			goodIdentities = append(goodIdentities, instr.SignerIdentities[i].String())
+			identitiesWithCorrectSignatures = append(identitiesWithCorrectSignatures, instr.SignerIdentities[i].String())
 		}
+	}
+
+	if len(identitiesWithCorrectSignatures) != len(instr.Signatures) {
+		log.Warn("Found invalid signatures - please make sure you're using" +
+			" byzcoin.NewClientTransaction before signing it!")
 	}
 
 	// check the expression
@@ -403,10 +455,10 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops 
 	}
 
 	if ops.EvalAttr != nil {
-		err := darc.EvalExprAttr(d.Rules.Get(darc.Action(instr.Action())), getDarc, ops.EvalAttr, goodIdentities...)
+		err := darc.EvalExprAttr(d.Rules.Get(darc.Action(instr.Action())), getDarc, ops.EvalAttr, identitiesWithCorrectSignatures...)
 		return cothority.ErrorOrNil(err, "evaluating darc")
 	}
-	err = darc.EvalExpr(d.Rules.Get(darc.Action(instr.Action())), getDarc, goodIdentities...)
+	err = darc.EvalExpr(d.Rules.Get(darc.Action(instr.Action())), getDarc, identitiesWithCorrectSignatures...)
 	return cothority.ErrorOrNil(err, "evaluating darc")
 }
 
@@ -434,6 +486,12 @@ func (instr Instruction) GetType() InstrType {
 		return DeleteType
 	}
 	return InvalidInstrType
+}
+
+// SetVersion makes sure the underlying data will use the implementation
+// of the given version.
+func (instr *Instruction) SetVersion(version Version) {
+	instr.version = version
 }
 
 // Instructions is a slice of Instruction
@@ -573,6 +631,8 @@ func (sc *StateChange) Op() trie.OpType {
 		return trie.OpSet
 	case Remove:
 		return trie.OpDel
+	case GenerateInstruction:
+		return trie.Nop
 	}
 	return 0
 }
@@ -618,6 +678,8 @@ const (
 	Update
 	// Remove allows to delete an existing key-value association.
 	Remove
+	// GenerateInstruction allows to generate an instruction
+	GenerateInstruction
 )
 
 // String returns a readable output of the action.
@@ -629,6 +691,8 @@ func (sc StateAction) String() string {
 		return "Update"
 	case Remove:
 		return "Remove"
+	case GenerateInstruction:
+		return "GenerateInstruction"
 	default:
 		return "Invalid stateChange"
 	}

@@ -8,9 +8,11 @@ import (
 	"testing"
 	"time"
 
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
-	"go.dedis.ch/onet/v4/network"
+	"github.com/stretchr/testify/require"
+
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 )
 
 type propagateMsg struct {
@@ -54,19 +56,19 @@ func propagate(t *testing.T, nbrNodes, nbrFailures []int) {
 					t.Error("Didn't receive correct data")
 					return errors.New("Didn't receive correct data")
 				}, nbrFailures[i])
-			log.ErrFatal(err)
+			require.NoError(t, err)
 		}
 
 		// shut down some servers to simulate failure
 		for k := 0; k < nbrFailures[i]; k++ {
 			err = servers[len(servers)-1-k].Close()
-			log.ErrFatal(err)
+			require.NoError(t, err)
 		}
 
 		// start the propagation
 		log.Lvl2("Starting to propagate", reflect.TypeOf(msg))
 		children, err := propFuncs[0](el, msg, 1*time.Second)
-		log.ErrFatal(err)
+		require.NoError(t, err)
 		if recvCount+nbrFailures[i] != n {
 			t.Fatal("Didn't get data-request")
 		}

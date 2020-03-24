@@ -1,12 +1,12 @@
-import nist from "./nist"
-import edwards25519 from "./edwards25519"
 import { Group } from "..";
+import edwards25519 from "./edwards25519";
+import nist from "./nist";
 
 function p256Group(): Group {
     return new nist.Curve(nist.Params.p256);
 }
 
-const mappings: Map<string,() => Group> = new Map([
+const mappings: Map<string, () => Group> = new Map([
     ["edwards25519", () => new edwards25519.Curve()],
     ["p256", p256Group],
 ]);
@@ -24,11 +24,11 @@ export function availableCurves(): string[] {
  */
 export function newCurve(name: string): Group {
     const got = mappings.get(name);
-    if (got === undefined) throw new Error("curve not known");
+    if (got === undefined) { throw new Error("curve not known"); }
     return got();
 }
 
 export {
     nist,
-    edwards25519
-}
+    edwards25519,
+};

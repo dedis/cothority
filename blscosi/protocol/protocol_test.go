@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/kyber/v4/pairing"
-	"go.dedis.ch/kyber/v4/sign"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/kyber/v3/sign"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 const FailureProtocolName = "FailureProtocol"
@@ -61,12 +61,12 @@ func TestMain(m *testing.M) {
 // Tests various trees configurations
 func TestProtocol_1_1(t *testing.T) {
 	_, _, err := runProtocol(1, 0, 1)
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func TestProtocol_5_1(t *testing.T) {
 	_, _, err := runProtocol(5, 1, 5)
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func TestProtocol_25_1(t *testing.T) {
@@ -75,12 +75,12 @@ func TestProtocol_25_1(t *testing.T) {
 	}
 
 	_, _, err := runProtocol(25, 1, 25)
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func TestProtocol_7_5(t *testing.T) {
 	_, _, err := runProtocol(7, 5, 7)
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func TestProtocol_25_5(t *testing.T) {
@@ -89,7 +89,7 @@ func TestProtocol_25_5(t *testing.T) {
 	}
 
 	_, _, err := runProtocol(25, 5, 25)
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func runProtocol(nbrNodes, nbrSubTrees, threshold int) (BlsSignature, *onet.Roster, error) {
@@ -133,13 +133,13 @@ func runProtocol(nbrNodes, nbrSubTrees, threshold int) (BlsSignature, *onet.Rost
 
 func TestQuickAnswerProtocol_2_1(t *testing.T) {
 	mask, err := runQuickAnswerProtocol(2, 1)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 1, mask.CountEnabled())
 }
 
 func TestQuickAnswerProtocol_5_4(t *testing.T) {
 	mask, err := runQuickAnswerProtocol(5, 4)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 2, mask.CountEnabled())
 }
 
@@ -149,7 +149,7 @@ func TestQuickAnswerProtocol_24_5(t *testing.T) {
 	}
 
 	mask, err := runQuickAnswerProtocol(24, 5)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.InEpsilon(t, 14, mask.CountEnabled(), 2)
 }
 
@@ -173,7 +173,7 @@ func runQuickAnswerProtocol(nbrNodes, nbrTrees int) (*sign.Mask, error) {
 
 func TestProtocol_FailingLeaves_5_1(t *testing.T) {
 	err := runProtocolFailingNodes(5, 1, 1, 4)
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func TestProtocol_FailingLeaves_25_9(t *testing.T) {
@@ -182,7 +182,7 @@ func TestProtocol_FailingLeaves_25_9(t *testing.T) {
 	}
 
 	err := runProtocolFailingNodes(25, 3, 2, 23)
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func runProtocolFailingNodes(nbrNodes, nbrTrees, nbrFailure, threshold int) error {
@@ -231,7 +231,7 @@ func runProtocolFailingNodes(nbrNodes, nbrTrees, nbrFailure, threshold int) erro
 
 func TestProtocol_FailingSubLeader_5_1(t *testing.T) {
 	err := runProtocolFailingSubLeader(5, 1)
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func TestProtocol_FailingSubLeader_25_3(t *testing.T) {
@@ -240,7 +240,7 @@ func TestProtocol_FailingSubLeader_25_3(t *testing.T) {
 	}
 
 	err := runProtocolFailingSubLeader(25, 3)
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func runProtocolFailingSubLeader(nbrNodes, nbrTrees int) error {
@@ -331,7 +331,7 @@ func TestProtocol_IntegrityCheck(t *testing.T) {
 
 func TestProtocol_AllFailing_5_1(t *testing.T) {
 	_, err := runProtocolAllFailing(5, 1, 1)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	_, err = runProtocolAllFailing(5, 1, 2)
 	require.NotNil(t, err)
@@ -343,7 +343,7 @@ func TestProtocol_AllFailing_25_3(t *testing.T) {
 	}
 
 	_, err := runProtocolAllFailing(25, 3, 1)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	_, err = runProtocolAllFailing(25, 3, 2)
 	require.NotNil(t, err)

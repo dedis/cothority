@@ -87,6 +87,9 @@ toc() {
         level="$(echo "$line" | $SED -E 's/^(#+).*/\1/; s/#/  /g; s/^  //')"
         title="$(echo "$line" | $SED -E 's/^#+ //')"
         anchor="$(echo "$title" | tr '[:upper:] ' '[:lower:]-' | tr -d "$INVALID_CHARS")"
+        # removing emojii from anchors
+        # found in https://apps.timwhitlock.info/emoji/tables/unicode
+        anchor="$(echo -e "$anchor" | $SED -E 's/[😁-🙏✂-➰🚀-🛀Ⓜ-🉑©-🗿😀-😶🚁-🛅🌍-🕧]//g')"
 
         # Check that new lines introduced are not duplicated. If so, introduce a
         # number at the end copying doctoc behavior.

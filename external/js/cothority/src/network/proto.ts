@@ -1,5 +1,5 @@
 import { Point, PointFactory } from "@dedis/kyber";
-import { createHash } from "crypto";
+import { createHash } from "crypto-browserify";
 import { Message, Properties } from "protobufjs/light";
 import UUID from "pure-uuid";
 import toml from "toml";
@@ -149,6 +149,21 @@ export class Roster extends Message<Roster> {
      */
     toBytes(): Buffer {
         return Buffer.from(Roster.encode(this).finish());
+    }
+
+    /**
+     * Returns a toml representation of the roster, not including the service public keys.
+     * @return string of toml representation
+     */
+    toTOML(): string {
+        return this.list.map((si) =>  `
+        [[servers]]
+          Address = "${si.address}"
+          Suite = "Ed25519"
+          Public = "${si.getPublic().marshalBinary().toString("hex")}"
+          Description = "${si.description}"
+          Url = "${si.url}"
+        `).join("\n");
     }
 }
 

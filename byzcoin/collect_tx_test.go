@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/skipchain"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/network"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/network"
 	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
@@ -46,7 +46,7 @@ func testRunCollectionTxProtocol(n, max, version int) ([]ClientTransaction, erro
 
 	getTx := func(leader *network.ServerIdentity, roster *onet.Roster, scID skipchain.SkipBlockID, latestID skipchain.SkipBlockID, max int) []ClientTransaction {
 		tx := ClientTransaction{
-			Instructions: []Instruction{Instruction{}},
+			Instructions: []Instruction{{}},
 		}
 		return []ClientTransaction{tx}
 	}
@@ -77,16 +77,8 @@ func testRunCollectionTxProtocol(n, max, version int) ([]ClientTransaction, erro
 	}
 
 	var txs []ClientTransaction
-outer:
-	for {
-		select {
-		case newTxs, more := <-root.TxsChan:
-			if more {
-				txs = append(txs, newTxs...)
-			} else {
-				break outer
-			}
-		}
+	for newTxs := range root.TxsChan {
+		txs = append(txs, newTxs...)
 	}
 
 	return txs, nil

@@ -264,4 +264,4 @@ bcadmin db merge --overwrite path/to/conode.db _bcID_ cached.db
 The `--overwrite` is necessary to store all blocks from the `cached.db` file 
 to the existing database.
 
-A `cached.db` is available at https://conode.c4dt.org/files/cached.db
+A `cached.db` is available at https://demo.c4dt.org/omniledger/cached.db

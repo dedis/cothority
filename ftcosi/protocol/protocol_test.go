@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/sign/cosi"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/sign/cosi"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 const FailureProtocolName = "FailureProtocol"
@@ -93,12 +93,8 @@ func TestProtocol(t *testing.T) {
 
 			// get and verify signature
 			_, err = getAndVerifySignature(cosiProtocol, publics, proposal, cosi.CompletePolicy{})
-			if err != nil {
-				local.CloseAll()
-				t.Fatal(err)
-			}
-
 			local.CloseAll()
+			require.NoError(t, err)
 		}
 	}
 }
@@ -150,7 +146,7 @@ func TestProtocolQuickAnswer(t *testing.T) {
 			}
 
 			mask, err := cosi.NewMask(testSuite, publics, nil)
-			require.Nil(t, err)
+			require.NoError(t, err)
 			lenRes := testSuite.PointLen() + testSuite.ScalarLen()
 			mask.SetMask(sig[lenRes:])
 			// Test that we have less than nNodes signatures
@@ -531,8 +527,5 @@ func refuse(n *onet.TreeNodeInstance, msg, data []byte) bool {
 	counter.Lock()
 	defer counter.Unlock()
 	defer func() { counter.veriCount++ }()
-	if n.TreeNode().RosterIndex == counter.refuseIdx {
-		return false
-	}
-	return true
+	return n.TreeNode().RosterIndex != counter.refuseIdx
 }

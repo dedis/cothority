@@ -1,31 +1,32 @@
-import BN from 'bn.js';
-import { randomBytes } from "crypto";
-import Ed25519 from "./curve";
-import { int } from "../../random"
+// tslint:disable:no-bitwise
+import BN from "bn.js";
+import { randomBytes } from "crypto-browserify";
 import { Scalar } from "../../index";
+import { int } from "../../random";
+import Ed25519 from "./curve";
 
 // based on DefinitelyTyped:types/bn.js/index.d.ts
 declare class RedBN extends BN {
-    fromRed(): BN
-    redAdd(_: BN): RedBN
-    redSub(_: BN): RedBN
-    redMul(_: BN): RedBN
-    redInvm(): RedBN
-    redNeg(): RedBN
+    fromRed(): BN;
+    redAdd(_: BN): RedBN;
+    redSub(_: BN): RedBN;
+    redMul(_: BN): RedBN;
+    redInvm(): RedBN;
+    redNeg(): RedBN;
 }
 
 export default class Ed25519Scalar implements Scalar {
     ref: {
         arr: RedBN,
         curve: Ed25519
-        red: any
-    }
+        red: any,
+    };
 
     constructor(curve: Ed25519, red: any) {
         this.ref = {
             arr: new BN(0, 16).toRed(red),
-            curve: curve,
-            red: red,
+            curve,
+            red,
         };
     }
 
@@ -56,7 +57,7 @@ export default class Ed25519Scalar implements Scalar {
     /** @inheritdoc */
     clone(): Scalar {
         return new Ed25519Scalar(this.ref.curve, this.ref.red).setBytes(
-            Buffer.from(this.ref.arr.toArray("le"))
+            Buffer.from(this.ref.arr.toArray("le")),
         );
     }
 
@@ -124,11 +125,11 @@ export default class Ed25519Scalar implements Scalar {
 
     /** @inheritdoc */
     equals(s2: Ed25519Scalar): boolean {
-        return this.ref.arr.cmp(s2.ref.arr) == 0;
+        return this.ref.arr.cmp(s2.ref.arr) === 0;
     }
 
     toString(): string {
         const bytes = this.ref.arr.toArray("le", 32);
-        return bytes.map(b => ("0" + (b & 0xff).toString(16)).slice(-2)).join("");
+        return bytes.map((b) => ("0" + (b & 0xff).toString(16)).slice(-2)).join("");
     }
 }

@@ -9,16 +9,16 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/byzcoinx"
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/pairing"
-	"go.dedis.ch/kyber/v4/sign"
-	"go.dedis.ch/kyber/v4/sign/bls"
-	"go.dedis.ch/kyber/v4/suites"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
-	"go.dedis.ch/onet/v4/network"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoinx"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/kyber/v3/sign"
+	"go.dedis.ch/kyber/v3/sign/bls"
+	"go.dedis.ch/kyber/v3/suites"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 	bbolt "go.etcd.io/bbolt"
 	uuid "gopkg.in/satori/go.uuid.v1"
 )
@@ -51,19 +51,19 @@ func TestSkipBlock_GetResponsible(t *testing.T) {
 	inter1.BackLinkIDs = []SkipBlockID{inter0.Hash}
 
 	b, err := db.GetResponsible(root0)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	assert.True(t, root0.Equal(b))
 
 	b, err = db.GetResponsible(root1)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	assert.True(t, root0.Equal(b))
 
 	b, err = db.GetResponsible(inter0)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	assert.Equal(t, root1.Hash, b.Hash)
 
 	b, err = db.GetResponsible(inter1)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	assert.True(t, inter0.Equal(b))
 }
 
@@ -270,10 +270,10 @@ func TestSkipBlock_GetFuzzy(t *testing.T) {
 
 	db.Update(func(tx *bbolt.Tx) error {
 		err := db.storeToTx(tx, sb0)
-		require.Nil(t, err)
+		require.NoError(t, err)
 
 		err = db.storeToTx(tx, sb1)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		return nil
 	})
 
@@ -282,34 +282,34 @@ func TestSkipBlock_GetFuzzy(t *testing.T) {
 	require.NotNil(t, err)
 
 	sb, err = db.GetFuzzy("01")
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, sb)
 	require.Equal(t, sb.Data[0], sb0.Data[0])
 
 	sb, err = db.GetFuzzy("02")
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, sb)
 	require.Equal(t, sb.Data[0], sb1.Data[0])
 
 	sb, err = db.GetFuzzy("03")
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Nil(t, sb)
 
 	sb, err = db.GetFuzzy("04")
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Nil(t, sb)
 
 	sb, err = db.GetFuzzy("05")
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, sb)
 	require.Equal(t, sb.Data[0], sb0.Data[0])
 
 	sb, err = db.GetFuzzy("06")
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Nil(t, sb)
 
 	sb, err = db.GetFuzzy("0102030605")
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, sb)
 	require.Equal(t, sb.Data[0], sb0.Data[0])
 }
@@ -379,11 +379,11 @@ func TestSkipBlockDB_GetProof(t *testing.T) {
 	sb2.GenesisID = root.Hash
 	sb2.BackLinkIDs = []SkipBlockID{sb1.Hash}
 	sb2.updateHash()
-	sb1.ForwardLink = []*ForwardLink{&ForwardLink{From: sb1.Hash, To: sb2.Hash}}
+	sb1.ForwardLink = []*ForwardLink{{From: sb1.Hash, To: sb2.Hash}}
 	require.NoError(t, sb1.ForwardLink[0].sign(ro))
 	root.ForwardLink = []*ForwardLink{
-		&ForwardLink{From: root.Hash, To: sb1.Hash},
-		&ForwardLink{From: root.Hash, To: sb2.Hash},
+		{From: root.Hash, To: sb1.Hash},
+		{From: root.Hash, To: sb2.Hash},
 	}
 	require.NoError(t, root.ForwardLink[0].sign(ro))
 	require.NoError(t, root.ForwardLink[1].sign(ro))
@@ -404,7 +404,7 @@ func TestSkipBlockDB_GetProof(t *testing.T) {
 	err = db.Update(func(tx *bbolt.Tx) error {
 		return tx.Bucket(db.bucketName).Delete(sb2.Hash)
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// last block is missing so it should return only until sb1.
 	bb, err := db.GetProof(root.Hash)
@@ -432,18 +432,18 @@ func TestProof_Verify(t *testing.T) {
 // The caller is responsible to close and remove the database file after using it.
 func setupSkipBlockDB(t *testing.T) (*SkipBlockDB, string) {
 	f, err := ioutil.TempFile("", "skipblock-test")
-	require.Nil(t, err)
+	require.NoError(t, err)
 	fname := f.Name()
 	require.Nil(t, f.Close())
 
 	db, err := bbolt.Open(fname, 0600, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	err = db.Update(func(tx *bbolt.Tx) error {
 		_, err := tx.CreateBucket([]byte("skipblock-test"))
 		return err
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	return NewSkipBlockDB(db, []byte("skipblock-test")), fname
 }

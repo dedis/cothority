@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/darc"
-	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/protobuf"
 )
 
@@ -22,11 +22,11 @@ func TestService_Naming(t *testing.T) {
 	s := local.GetServices(hosts, ByzCoinID)[0].(*Service)
 
 	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{"_name:" + ContractDarcID}, signer.Identity())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	gDarc := &genesisMsg.GenesisDarc
 	genesisMsg.BlockInterval = time.Second
 	cl, _, err := NewLedger(genesisMsg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Spawn the naming instance
 	spawnNamingTx, err := cl.CreateTransaction(Instruction{

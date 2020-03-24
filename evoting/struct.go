@@ -1,12 +1,12 @@
 package evoting
 
 import (
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/network"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/network"
 
-	"go.dedis.ch/cothority/v4/evoting/lib"
-	"go.dedis.ch/cothority/v4/skipchain"
+	"go.dedis.ch/cothority/v3/evoting/lib"
+	"go.dedis.ch/cothority/v3/skipchain"
 )
 
 func init() {
@@ -24,20 +24,19 @@ func init() {
 	network.RegisterMessages(Reconstruct{}, ReconstructReply{})
 }
 
-// LookupSciper takes a sciper number and returns elements of the user.
+// LookupSciper takes a SCIPER number and looks up the full name.
 type LookupSciper struct {
 	Sciper string
 	// If LookupURL is set, use it instead of the default (for testing).
 	LookupURL string
 }
 
-// LookupSciperReply returns the elements of the vcard from
-// https://people.epfl.ch/cgi-bin/people/vCard?id=sciper
+// LookupSciperReply returns user info, as looked up via LDAP.
 type LookupSciperReply struct {
 	FullName string
 	Email    string
-	URL      string
-	Title    string
+	URL      string // Deprecated: not currently returned.
+	Title    string // Deprecated: not currently returned.
 }
 
 // Link message.
@@ -130,7 +129,8 @@ type GetBox struct {
 
 // GetBoxReply message.
 type GetBoxReply struct {
-	Box *lib.Box // Box of encrypted ballots.
+	Box      *lib.Box      // Box of encrypted ballots.
+	Election *lib.Election // The current config of the election.
 }
 
 // GetMixes message.

@@ -7,14 +7,14 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4/byzcoinx"
-	"go.dedis.ch/cothority/v4/skipchain"
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/pairing"
-	"go.dedis.ch/kyber/v4/sign/bls"
-	"go.dedis.ch/kyber/v4/util/key"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/network"
+	"go.dedis.ch/cothority/v3/byzcoinx"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/kyber/v3/sign/bls"
+	"go.dedis.ch/kyber/v3/util/key"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 	bbolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
@@ -22,27 +22,27 @@ import (
 
 func TestNewProof(t *testing.T) {
 	s := createSC(t)
-	p, err := NewProof(s.c, s.s, skipchain.SkipBlockID{}, []byte{})
-	require.NotNil(t, err)
+	_, err := NewProof(s.c, s.s, skipchain.SkipBlockID{}, []byte{})
+	require.Error(t, err)
 
 	key := []byte{1}
-	p, err = NewProof(s.c, s.s, s.genesis.Hash, key)
-	require.Nil(t, err)
+	p, err := NewProof(s.c, s.s, s.genesis.Hash, key)
+	require.NoError(t, err)
 	require.False(t, p.InclusionProof.Match(key))
 
 	p, err = NewProof(s.c, s.s, s.genesis.Hash, s.key)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, p.InclusionProof.Match(s.key))
 }
 
 func TestVerify(t *testing.T) {
 	s := createSC(t)
 	p, err := NewProof(s.c, s.s, s.genesis.Hash, s.key)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, p.InclusionProof.Match(s.key))
 	require.Nil(t, p.Verify(s.genesis.SkipChainID()))
 	key, val, _, _, err := p.KeyValue()
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, s.key, key)
 	require.Equal(t, s.value, val)
 
@@ -54,7 +54,7 @@ func TestVerify(t *testing.T) {
 	p.Latest.Data, err = protobuf.Encode(&DataHeader{
 		TrieRoot: getSBID("123"),
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, xerrors.Is(p.Verify(s.genesis.SkipChainID()), ErrorVerifyTrieRoot))
 }
 
@@ -75,18 +75,18 @@ type sc struct {
 func createSC(t *testing.T) (s sc) {
 	bnsc := []byte("skipblock-test")
 	f, err := ioutil.TempFile("", string(bnsc))
-	require.Nil(t, err)
+	require.NoError(t, err)
 	fname := f.Name()
 	require.Nil(t, f.Close())
 
 	db, err := bbolt.Open(fname, 0600, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	err = db.Update(func(tx *bbolt.Tx) error {
 		_, err := tx.CreateBucket(bnsc)
 		return err
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	s.s = skipchain.NewSkipBlockDB(db, bnsc)
 
 	bucketName := []byte("a testing string")
@@ -94,7 +94,7 @@ func createSC(t *testing.T) (s sc) {
 		_, err := tx.CreateBucket(bucketName)
 		return err
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	s.c, err = newStateTrie(db, bucketName, []byte("nonce string"))
 	require.NoError(t, err)
 
@@ -113,13 +113,13 @@ func createSC(t *testing.T) (s sc) {
 	s.sb2.Data, err = protobuf.Encode(&DataHeader{
 		TrieRoot: s.c.GetRoot(),
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	s.sb2.Index = 1
 	s.sb2.Hash = s.sb2.CalculateHash()
 	s.genesis.ForwardLink = genForwardLink(t, s.genesis, s.sb2, s.genesisPrivs)
 
 	_, err = s.s.StoreBlocks([]*skipchain.SkipBlock{s.genesis, s.sb2})
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	s.genesis2 = skipchain.NewSkipBlock()
 	s.genesis2.Height = 1
@@ -142,7 +142,7 @@ func genForwardLink(t *testing.T, from, to *skipchain.SkipBlock, privs []kyber.S
 		Msg: fwd.Hash(),
 		Sig: sig,
 	}
-	require.Nil(t, err)
+	require.NoError(t, err)
 	return []*skipchain.ForwardLink{fwd}
 }
 

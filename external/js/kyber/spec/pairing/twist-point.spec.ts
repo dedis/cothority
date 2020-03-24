@@ -1,16 +1,16 @@
-import BN from 'bn.js';
-import TwistPoint from '../../src/pairing/twist-point';
-import { order } from '../../src/pairing/constants';
+import BN from "bn.js";
+import { order } from "../../src/pairing/constants";
+import TwistPoint from "../../src/pairing/twist-point";
 
-describe('Twist Point', () => {
-    it('should add one', () => {
+describe("Twist Point", () => {
+    it("should add one", () => {
         const g = new TwistPoint();
         g.mul(TwistPoint.generator, order);
         expect(g.isInfinity()).toBeTruthy();
 
         const one = new TwistPoint();
         one.mul(TwistPoint.generator, new BN(1));
-        
+
         g.add(g, one);
         g.makeAffine();
 
@@ -18,7 +18,7 @@ describe('Twist Point', () => {
         expect(g.isOnCurve()).toBeTruthy();
     });
 
-    it('should negate the point', () => {
+    it("should negate the point", () => {
         const p = new TwistPoint();
         p.mul(TwistPoint.generator, new BN(3));
 
@@ -35,7 +35,7 @@ describe('Twist Point', () => {
         expect(nn.getY().equals(p.getY())).toBeTruthy();
     });
 
-    it('should add and multiply', () => {
+    it("should add and multiply", () => {
         const p = new TwistPoint();
         p.mul(TwistPoint.generator, new BN(123456789));
 
@@ -51,7 +51,7 @@ describe('Twist Point', () => {
         expect(d.getY().equals(m.getY())).toBeTruthy();
     });
 
-    it('should add the infinity', () => {
+    it("should add the infinity", () => {
         const p = new TwistPoint();
         p.mul(TwistPoint.generator, new BN(123));
 
@@ -69,7 +69,7 @@ describe('Twist Point', () => {
         expect(t.getY().equals(p.getY())).toBeTruthy();
     });
 
-    it('should test the equality', () => {
+    it("should test the equality", () => {
         const p = new TwistPoint();
         p.mul(TwistPoint.generator, new BN(123));
 
@@ -85,10 +85,10 @@ describe('Twist Point', () => {
         expect(p.equals(null)).toBeFalsy();
     });
 
-    it('should stringify', () => {
+    it("should stringify", () => {
         const inf = new TwistPoint();
         inf.setInfinity();
 
-        expect(inf.toString()).toBe('((0,0),(0,1),(0,0))');
+        expect(inf.toString()).toBe("((0,0),(0,1),(0,0))");
     });
 });

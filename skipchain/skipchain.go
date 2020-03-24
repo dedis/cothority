@@ -23,17 +23,17 @@ import (
 
 	"golang.org/x/xerrors"
 
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/blscosi/protocol"
-	"go.dedis.ch/cothority/v4/byzcoinx"
-	"go.dedis.ch/cothority/v4/messaging"
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/pairing"
-	"go.dedis.ch/kyber/v4/sign/schnorr"
-	"go.dedis.ch/kyber/v4/util/random"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
-	"go.dedis.ch/onet/v4/network"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/blscosi/protocol"
+	"go.dedis.ch/cothority/v3/byzcoinx"
+	"go.dedis.ch/cothority/v3/messaging"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/kyber/v3/util/random"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 )
 
 // ServiceName can be used to refer to the name of this service
@@ -524,16 +524,7 @@ func (s *Service) GetUpdateChain(guc *GetUpdateChain) (*GetUpdateChainReply, err
 			// to issue a new GetUpdateChain with the
 			// latest Roster to keep traversing.
 			break
-		} else {
-			if i, _ := next.Roster.Search(s.ServerIdentity().ID); i < 0 {
-				// Likewise for the case where we know the block,
-				// but we are no longer in the Roster, stop searching.
-				// Don't add the block, as our node will not be contacted
-				// for new forward-links.
-				break
-			}
 		}
-
 		if next.Index <= block.Index {
 			return nil, ErrorInconsistentForwardLink
 		}
@@ -541,6 +532,17 @@ func (s *Service) GetUpdateChain(guc *GetUpdateChain) (*GetUpdateChainReply, err
 		block = next
 		blocks = append(blocks, next.Copy())
 	}
+
+	// Remove all blocks from the end of the result until a block is found
+	// where this node is part of.
+	for b := len(blocks) - 1; b > 0; b-- {
+		if i, _ := blocks[b].Roster.Search(s.ServerIdentity().ID); i < 0 {
+			blocks = blocks[:b]
+		} else {
+			break
+		}
+	}
+
 	log.Lvlf3("Found %d blocks", len(blocks))
 	reply := &GetUpdateChainReply{Update: blocks}
 

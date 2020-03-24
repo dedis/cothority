@@ -1,7 +1,7 @@
 package protocol
 
 import (
-	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v3"
 )
 
 // PromptDecrypt is sent from node to node prompting the receiver to perform

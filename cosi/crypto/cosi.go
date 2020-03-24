@@ -41,7 +41,7 @@ import (
 	"errors"
 	"fmt"
 
-	"go.dedis.ch/kyber/v4"
+	"go.dedis.ch/kyber/v3"
 )
 
 // CoSi is the struct that implements one round of a CoSi protocol.

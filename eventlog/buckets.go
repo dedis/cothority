@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 
-	"go.dedis.ch/cothority/v4/byzcoin"
+	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/protobuf"
 )
 

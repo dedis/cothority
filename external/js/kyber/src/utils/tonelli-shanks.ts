@@ -1,5 +1,5 @@
-import BN from 'bn.js';
-import { BNType, zeroBN, oneBN } from '../constants';
+import BN from "bn.js";
+import { BNType, oneBN, zeroBN } from "../constants";
 
 const ZERO = zeroBN;
 const ONE = oneBN;

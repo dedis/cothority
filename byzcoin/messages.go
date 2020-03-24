@@ -5,7 +5,7 @@ This holds the messages used to communicate with the service over the network.
 */
 
 import (
-	"go.dedis.ch/onet/v4/network"
+	"go.dedis.ch/onet/v3/network"
 )
 
 // We need to register all messages so the network knows how to handle them.
@@ -24,4 +24,4 @@ func init() {
 type Version int
 
 // CurrentVersion is what we're running now
-const CurrentVersion Version = 2
+const CurrentVersion Version = 3

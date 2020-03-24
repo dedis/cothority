@@ -5,16 +5,19 @@ import (
 	"flag"
 	"fmt"
 	"strings"
+	"time"
 
-	"go.dedis.ch/kyber/v4/pairing"
+	"go.dedis.ch/protobuf"
+
+	"go.dedis.ch/kyber/v3/pairing"
 
 	"github.com/urfave/cli"
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/byzcoin"
-	"go.dedis.ch/cothority/v4/skipchain"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
-	"go.dedis.ch/onet/v4/network"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 	"go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 )
@@ -130,13 +133,104 @@ func dbReplay(c *cli.Context) error {
 	}
 
 	log.Info("Replaying blocks")
-	_, err = fb.service.ReplayStateCont(start, fb.blockFetcher)
+	_, err = fb.service.ReplayStateContLog(start,
+		&sumFetcher{summarizeBlocks: c.Int("summarize"), bff: fb.blockFetcher})
 	if err != nil {
 		return xerrors.Errorf("couldn't replay blocks: %+v", err)
 	}
 	log.Info("Successfully checked and replayed all blocks.")
 
 	return nil
+}
+
+type sumFetcher struct {
+	summarizeBlocks int
+	bff             byzcoin.BlockFetcherFunc
+	totalTXs        int
+	accepted        int
+	seenBlocks      int
+	timeLastBlock   int64
+	timeLastSum     int64
+	maxTPS          float64
+	maxBlockSize    int
+	totalBlockSize  int
+}
+
+func (sf sumFetcher) BlockFetcherFunc(sid skipchain.SkipBlockID) (*skipchain.
+	SkipBlock, error) {
+	return sf.bff(sid)
+}
+
+func (sf sumFetcher) LogNewBlock(sb *skipchain.SkipBlock) {
+	if sf.summarizeBlocks == 1 {
+		log.Infof("Replaying block at index %d", sb.Index)
+	}
+}
+
+func (sf sumFetcher) LogWarn(sb *skipchain.SkipBlock, msg, dump string) {
+	log.Infof("Warning for block %d: %s", sb.Index, msg)
+}
+
+func (sf *sumFetcher) LogAppliedBlock(sb *skipchain.SkipBlock,
+	head byzcoin.DataHeader, body byzcoin.DataBody) {
+
+	for _, tx := range body.TxResults {
+		if tx.Accepted {
+			sf.accepted++
+		}
+	}
+	buf, err := protobuf.Encode(sb)
+	log.ErrFatal(err, "while encoding block")
+	if sf.summarizeBlocks > 1 {
+		sf.totalBlockSize += len(buf)
+		if len(buf) > sf.maxBlockSize {
+			sf.maxBlockSize = len(buf)
+		}
+	}
+	sf.totalTXs += len(body.TxResults)
+	sf.seenBlocks++
+	if sf.timeLastBlock == 0 {
+		sf.timeLastBlock = head.Timestamp
+		sf.timeLastSum = head.Timestamp
+		sf.maxTPS = 0
+	}
+
+	if sf.summarizeBlocks > 1 && head.Timestamp != sf.timeLastBlock {
+		tpsBlock := float64(len(body.TxResults)) /
+			float64((head.Timestamp-sf.timeLastBlock)/1e9)
+		if tpsBlock > sf.maxTPS {
+			sf.maxTPS = tpsBlock
+		}
+		sf.timeLastBlock = head.Timestamp
+	}
+
+	if sb.Index%sf.summarizeBlocks == (sf.summarizeBlocks - 1) {
+		tStr := time.Unix(head.Timestamp/1e9, 0).String()
+		tpsMean := float64(sf.totalTXs) /
+			float64((head.Timestamp-sf.timeLastSum)/1e9)
+		if sf.summarizeBlocks > 1 {
+			log.Infof("Processed blocks %d.."+
+				"%d [%s]: Txs total/accepted = %d/%d - "+
+				"tps max/mean: %.1f/%.1f\n"+
+				"\troster-size: %d, max/mean block size: %d/%d",
+				sb.Index-sf.seenBlocks+1, sb.Index, tStr,
+				sf.totalTXs, sf.accepted, sf.maxTPS, tpsMean,
+				len(sb.Roster.List),
+				sf.maxBlockSize, sf.totalBlockSize/sf.summarizeBlocks)
+		} else {
+			log.Infof("Got correct block from %s with %d txs, "+
+				"out of which %d txs got accepted. Tps: %.1f",
+				tStr, sf.totalTXs, sf.accepted, tpsMean)
+		}
+		sf.totalTXs = 0
+		sf.accepted = 0
+		sf.seenBlocks = 0
+		sf.timeLastBlock = head.Timestamp
+		sf.timeLastSum = head.Timestamp
+		sf.maxTPS = 0.0
+		sf.maxBlockSize = 0
+		sf.totalBlockSize = 0
+	}
 }
 
 // dbMerge takes new blocks from a conode-db and applies them to the replay-db.

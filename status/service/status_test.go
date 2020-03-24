@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"go.dedis.ch/kyber/v4/suites"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/kyber/v3/suites"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 var tSuite = suites.MustFind("Ed25519")
@@ -43,7 +43,7 @@ func TestStat_Connectivity(t *testing.T) {
 	require.NoError(t, local.WaitDone(time.Second))
 
 	servers[2].Pause()
-	repl, err = cl.CheckConnectivity(priv, ro.List, time.Second, false)
+	_, err = cl.CheckConnectivity(priv, ro.List, time.Second, false)
 	require.Error(t, err)
 
 	repl, err = cl.CheckConnectivity(priv, ro.List, time.Second, true)
@@ -66,7 +66,7 @@ func TestStat_Request(t *testing.T) {
 	client := NewTestClient(local)
 	log.Lvl1("Sending request to service...")
 	stat, err := client.Request(el.List[0])
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	log.Lvl1(stat)
 	assert.NotEmpty(t, stat.Status["Generic"].Field["Available_Services"])
 }

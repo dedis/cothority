@@ -5,13 +5,13 @@ import (
 	"errors"
 	"fmt"
 
-	"go.dedis.ch/cothority/v4"
-	status "go.dedis.ch/cothority/v4/status/service"
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/sign/schnorr"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
-	"go.dedis.ch/onet/v4/network"
+	"go.dedis.ch/cothority/v3"
+	status "go.dedis.ch/cothority/v3/status/service"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 )
 
 // Client is a structure to communicate with the Skipchain
@@ -269,7 +269,7 @@ func (c *Client) GetUpdateChainLevel(roster *onet.Roster, latest SkipBlockID,
 	for {
 		r2 := &GetUpdateChainReply{}
 
-		_, err = c.SendProtobufParallel(roster.List, &GetUpdateChain{
+		node, err := c.SendProtobufParallel(roster.List, &GetUpdateChain{
 			LatestID:  latest,
 			MaxHeight: maxLevel,
 			MaxBlocks: maxBlocks - len(update),
@@ -277,6 +277,8 @@ func (c *Client) GetUpdateChainLevel(roster *onet.Roster, latest SkipBlockID,
 		if err != nil {
 			return nil, fmt.Errorf("couldn't get update chain; last error: %v", err)
 		}
+
+		log.Lvlf3("Got %d blocks from node %s", len(r2.Update), node)
 
 		// Does this chain start where we expect it to?
 		if !r2.Update[0].Hash.Equal(latest) {
@@ -287,8 +289,16 @@ func (c *Client) GetUpdateChainLevel(roster *onet.Roster, latest SkipBlockID,
 		// the forward links, and that they link correctly backwards.
 		for j, b := range r2.Update {
 			if j == 0 && len(update) > 0 {
-				if update[len(update)-1].Hash.Equal(b.Hash) {
-					continue
+				last := update[len(update)-1]
+				if last.Hash.Equal(b.Hash) {
+					if b.GetForwardLen() <= last.GetForwardLen() {
+						// If there are no new forwardlinks, continue
+						continue
+					}
+					// else delete the latest block to check the links and
+					// then store it again.
+					log.Lvl3("Got longer forward-links")
+					update = update[:len(update)-1]
 				}
 			}
 
@@ -324,19 +334,28 @@ func (c *Client) GetUpdateChainLevel(roster *onet.Roster, latest SkipBlockID,
 			}
 			update = append(update, b)
 			if len(update) == maxBlocks {
-				return update, nil
+				break
 			}
 		}
 
 		last := update[len(update)-1]
+		if i, _ := last.Roster.Search(node.ID); i < 0 {
+			// Node is not part of the roster of the last block it sent back
+			// -> re-fetch block using new roster.
+			log.Warn("Got a wrong block from node", node)
+			latest = last.Hash
+			roster = last.Roster
+			// Remove latest block, as the new roster will give a new node
+			update = update[:len(update)-1]
+			continue
+		}
 
-		// If they updated us to the end of the chain, return.
 		if last.GetForwardLen() == 0 {
+			// Trust the node that it sent correct block, as it's in the roster.
 			return update, nil
 		}
 
-		// Otherwise update the roster and contact the new servers
-		// to continue following the chain.
+		// Trust the block sent back and fetch the next block it points to
 		flHeight := len(last.ForwardLink)
 		if maxLevel > 0 && flHeight > maxLevel {
 			flHeight = maxLevel

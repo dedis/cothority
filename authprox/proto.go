@@ -1,7 +1,7 @@
 package authprox
 
 import (
-	"go.dedis.ch/kyber/v4"
+	"go.dedis.ch/kyber/v3"
 )
 
 // PROTOSTART
@@ -36,14 +36,14 @@ type SignatureRequest struct {
 	Message  []byte
 }
 
-// PriShare is a local copy of go.dedis.ch/kyber/v4/share.PriShare
+// PriShare is a local copy of go.dedis.ch/kyber/v3/share.PriShare
 // because we do not have proto files for Kyber objects.
 type PriShare struct {
 	I int          // Index of the private share
 	V kyber.Scalar // Value of the private share
 }
 
-// PartialSig is a local copy of go.dedis.ch/kyber/v4/sign/dss.PartialSig
+// PartialSig is a local copy of go.dedis.ch/kyber/v3/sign/dss.PartialSig
 // because we do not have proto files for Kyber objects.
 type PartialSig struct {
 	Partial   PriShare

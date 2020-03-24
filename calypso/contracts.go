@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/byzcoin"
-	"go.dedis.ch/cothority/v4/darc"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
-	"go.dedis.ch/onet/v4/network"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 	"golang.org/x/xerrors"
 )
@@ -209,4 +209,19 @@ func intersectRosters(r1, r2 *onet.Roster) int {
 		}
 	}
 	return res
+}
+
+// VerifyInstruction uses a specific verification based on attr in the case it
+// is a read spawn. This will check if any makeAttInterpreter has been
+// registered in the service and apply them.
+func (c ContractWrite) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte) error {
+	if inst.GetType() == byzcoin.SpawnType && inst.Spawn.ContractID == ContractReadID {
+
+		evalAttr := darc.AttrInterpreters{}
+		for _, makeAttrInterpreterWrapper := range readMakeAttrInterpreter {
+			evalAttr[makeAttrInterpreterWrapper.name] = makeAttrInterpreterWrapper.interpreter(c, rst, inst)
+		}
+		return inst.VerifyWithOption(rst, ctxHash, &byzcoin.VerificationOptions{EvalAttr: evalAttr})
+	}
+	return inst.VerifyWithOption(rst, ctxHash, nil)
 }

@@ -1,11 +1,10 @@
 import { Point } from "@dedis/kyber";
-import { createHash, randomBytes } from "crypto";
+import { createHash, randomBytes } from "crypto-browserify";
 import { Message, Properties } from "protobufjs/light";
 import ByzCoinRPC from "../byzcoin/byzcoin-rpc";
 import ClientTransaction, { Argument, Instruction } from "../byzcoin/client-transaction";
 import Instance, { InstanceID } from "../byzcoin/instance";
 import Signer from "../darc/signer";
-import Log from "../log";
 import { EMPTY_BUFFER, registerMessage } from "../protobuf";
 
 export default class CredentialsInstance extends Instance {
@@ -66,7 +65,7 @@ export default class CredentialsInstance extends Instance {
 
         await bc.sendTransactionAndWait(ctx, 10);
 
-        return CredentialsInstance.fromByzcoin(bc, ctx.instructions[0].deriveId());
+        return CredentialsInstance.fromByzcoin(bc, ctx.instructions[0].deriveId(), 1);
     }
 
     /**
@@ -108,7 +107,6 @@ export default class CredentialsInstance extends Instance {
         Promise<CredentialsInstance> {
         return new CredentialsInstance(bc, await Instance.fromByzcoin(bc, iid, waitMatch, interval));
     }
-
     credential: CredentialStruct;
 
     constructor(private rpc: ByzCoinRPC, readonly inst: Instance) {
@@ -283,7 +281,12 @@ export class CredentialStruct extends Message<CredentialStruct> {
      * @param attribute     Name of the attribute
      * @param value         The value to set
      */
-    setAttribute(credential: string, attribute: string, value?: Buffer) {
+    setAttribute(credential: string, attribute: string, value?: Buffer | string) {
+        if (value === undefined) {
+            value = Buffer.from("");
+        } else if (typeof value === "string") {
+            value = Buffer.from(value);
+        }
         const attr = new Attribute({name: attribute, value});
         const cred = this.credentials.find((c) => c.name === credential);
         if (cred === undefined) {
@@ -368,6 +371,11 @@ export class Credential extends Message<Credential> {
             this.attributes = [];
         }
         this.attributes = this.attributes.slice();
+    }
+
+    toString(): string {
+        return `${this.name}= ` +
+            this.attributes.map((a) => `${a.name}=${a.value.toString("hex")}`).join(" - ");
     }
 }
 

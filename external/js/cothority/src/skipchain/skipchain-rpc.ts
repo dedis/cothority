@@ -1,4 +1,10 @@
-import { IConnection, LeaderConnection, RosterWSConnection, WebSocketConnection } from "../network/connection";
+import Log from "../log";
+import {
+    IConnection,
+    LeaderConnection,
+    RosterWSConnection,
+    WebSocketConnection,
+} from "../network/connection";
 import { Roster } from "../network/proto";
 import {
     GetAllSkipChainIDs,
@@ -16,18 +22,35 @@ import { SkipBlock } from "./skipblock";
 /**
  * SkipchainRPC provides basic tools to interact with a skipchain
  * with a given roster
+ *
+ * TODO:
+ * - make SkipchainRPC with only static methods
+ * - add Skipchain class that represents one single skipchain
  */
 export default class SkipchainRPC {
     static serviceName = "Skipchain";
 
+    /**
+     * Create a leader connection. As the roster can change over the course of a
+     * skipchain, this the leader is not always the same.
+     *
+     * @param roster list of nodes, the first one is taken as the leader
+     */
+    private static getLeader(roster: Roster): WebSocketConnection {
+        return new LeaderConnection(roster, SkipchainRPC.serviceName);
+    }
     private roster: Roster;
-    private pool: IConnection;
-    private leader: WebSocketConnection;
+    private conn: RosterWSConnection | IConnection | undefined;
 
-    constructor(roster: Roster) {
-        this.roster = roster;
-        this.pool = new RosterWSConnection(roster, SkipchainRPC.serviceName);
-        this.leader = new LeaderConnection(this.roster, SkipchainRPC.serviceName);
+    constructor(nodes: Roster | IConnection | RosterWSConnection) {
+        if (nodes instanceof Roster) {
+            this.roster = nodes;
+            this.conn = new RosterWSConnection(nodes, SkipchainRPC.serviceName);
+        } else if (nodes instanceof RosterWSConnection) {
+            this.conn = nodes.copy(SkipchainRPC.serviceName);
+        } else {
+            this.conn = nodes.copy(SkipchainRPC.serviceName);
+        }
     }
 
     /**
@@ -38,10 +61,17 @@ export default class SkipchainRPC {
      * @returns a promise that resolves with the genesis block
      */
     createSkipchain(baseHeight: number = 4, maxHeight: number = 32): Promise<StoreSkipBlockReply> {
-        const newBlock = new SkipBlock({roster: this.roster, maxHeight, baseHeight});
+        if (this.roster === undefined) {
+            throw new Error("Missing roster - initialize class with Roster");
+        }
+        const newBlock = new SkipBlock({
+            baseHeight,
+            maxHeight,
+            roster: this.roster,
+        });
         const req = new StoreSkipBlock({newBlock});
 
-        return this.leader.send(req, StoreSkipBlockReply);
+        return SkipchainRPC.getLeader(this.roster).send(req, StoreSkipBlockReply);
     }
 
     /**
@@ -51,13 +81,16 @@ export default class SkipchainRPC {
      * @throws an error if the request is not successful
      */
     addBlock(gid: Buffer, msg: Buffer): Promise<StoreSkipBlockReply> {
+        if (this.roster === undefined) {
+            throw new Error("Missing roster - initialize class with Roster");
+        }
         const newBlock = new SkipBlock({roster: this.roster, data: msg});
         const req = new StoreSkipBlock({
             newBlock,
             targetSkipChainID: gid,
         });
 
-        return this.leader.send(req, StoreSkipBlockReply);
+        return SkipchainRPC.getLeader(this.roster).send(req, StoreSkipBlockReply);
     }
 
     /**
@@ -69,7 +102,7 @@ export default class SkipchainRPC {
     async getSkipBlock(bid: Buffer): Promise<SkipBlock> {
         const req = new GetSingleBlock({id: bid});
 
-        const block = await this.pool.send<SkipBlock>(req, SkipBlock);
+        const block = await this.conn.send<SkipBlock>(req, SkipBlock);
         if (!block.computeHash().equals(block.hash)) {
             throw new Error("invalid block: hash does not match");
         }
@@ -87,7 +120,7 @@ export default class SkipchainRPC {
     async getSkipBlockByIndex(genesis: Buffer, index: number): Promise<GetSingleBlockByIndexReply> {
         const req = new GetSingleBlockByIndex({genesis, index});
 
-        const reply = await this.pool.send<GetSingleBlockByIndexReply>(req, GetSingleBlockByIndexReply);
+        const reply = await this.conn.send<GetSingleBlockByIndexReply>(req, GetSingleBlockByIndexReply);
         if (!reply.skipblock.computeHash().equals(reply.skipblock.hash)) {
             throw new Error("invalid block: hash does not match");
         }
@@ -103,39 +136,84 @@ export default class SkipchainRPC {
     async getAllSkipChainIDs(): Promise<Buffer[]> {
         const req = new GetAllSkipChainIDs();
 
-        const ret = await this.pool.send<GetAllSkipChainIDsReply>(req, GetAllSkipChainIDsReply);
+        const ret = await this.conn.send<GetAllSkipChainIDsReply>(req, GetAllSkipChainIDsReply);
 
         return ret.skipChainIDs.map((id) => Buffer.from(id));
     }
 
     /**
-     * Get the shortest path to the more recent block starting from latestID
+     * Get the shortest path to the more recent block starting from
+     * latestID. As the initial roster can change during the skipchain, this
+     * method tries hard to get the complete update, even if the roster changes.
      *
      * @param latestID  ID of the block
      * @param verify    Verify the integrity of the chain when true
      * @returns a promise that resolves with the list of blocks
      */
     async getUpdateChain(latestID: Buffer, verify = true): Promise<SkipBlock[]> {
-        const req = new GetUpdateChain({latestID});
-        const ret = await this.pool.send<GetUpdateChainReply>(req, GetUpdateChainReply);
-        const blocks = ret.update;
+        const blocks: SkipBlock[] = [];
+        // Run as long as there is a new blockID to be checked
+        for (let previousID = Buffer.alloc(0); !previousID.equals(latestID);) {
+            previousID = latestID;
+            const req = new GetUpdateChain({latestID});
+            const ret = await this.conn.send<GetUpdateChainReply>(req, GetUpdateChainReply);
+            const newBlocks = ret.update;
+            if (newBlocks.length === 0) {
+                if (this.conn instanceof RosterWSConnection) {
+                    this.conn.invalidate(this.conn.getURL());
+                    continue;
+                } else {
+                    Log.warn("Would need a RosterWSConnection to continue");
+                    break;
+                }
+            }
 
-        const last = blocks[blocks.length - 1];
-        if (last && last.forwardLinks.length > 0) {
-            // more blocks exist but typically the roster has changed
-            const rpc = new SkipchainRPC(last.roster);
-            const more = await rpc.getUpdateChain(last.hash, verify);
+            if (verify) {
+                const err = this.verifyChain(newBlocks, latestID);
+                if (err) {
+                    throw new Error(`invalid chain received: ${err.message}`);
+                }
+            }
+            blocks.push(...newBlocks);
 
-            blocks.splice(-1, 1, ...more);
-        }
+            // First check if the replying node is in the roster of the
+            // latest block.
+            const last = newBlocks[newBlocks.length - 1];
+            let isInRoster = false;
+            for (const n of last.roster.list) {
+                if (n.getWebSocketAddress() === this.conn.getURL()) {
+                    isInRoster = true;
+                    break;
+                }
+            }
+            if (!isInRoster) {
+                // A correct node will never return a last block where it is not in the roster.
+                // So this is in fact a wrong node.
+                Log.warn("Got a wrong return from node", this.conn.getURL());
+                latestID = last.hash;
+                if (this.conn instanceof RosterWSConnection) {
+                    this.conn.invalidate(this.conn.getURL());
+                    this.conn.setRoster(last.roster);
+                } else {
+                    this.conn = new RosterWSConnection(last.roster, SkipchainRPC.serviceName);
+                }
+                continue;
+            }
 
-        if (verify) {
-            const err = this.verifyChain(blocks, latestID);
-            if (err) {
-                throw new Error(`invalid chain received: ${err.message}`);
+            if (last.forwardLinks.length === 0) {
+                break;
+            }
+
+            const fl = last.forwardLinks.slice(-1)[0];
+            latestID = fl.to;
+            if (fl.newRoster) {
+                if (this.conn instanceof RosterWSConnection) {
+                    this.conn.setRoster(fl.newRoster);
+                } else {
+                    this.conn = new RosterWSConnection(fl.newRoster, SkipchainRPC.serviceName);
+                }
             }
         }
-
         return blocks;
     }
 

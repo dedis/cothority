@@ -1,11 +1,11 @@
-_: &language_go_1_12
-  name: "go 1.12"
-  language: go
-  go: "1.12.x"
 _: &language_go_1_13
   name: "go 1.13"
   language: go
   go: "1.13.x"
+_: &language_go_1_14
+  name: "go 1.14"
+  language: go
+  go: "1.14.x"
 _: &language_js
   language: node_js
   node_js: "lts/*"
@@ -13,19 +13,13 @@ _: &language_js
 _: &gen_link_kyber
   pushd external/js/kyber && npm ci && npm run link && popd
 _: &get_go
-  - gimme 1.12.10
-  - . $HOME/.gimme/envs/go1.12.10.env
+  - gimme 1.12.16
+  - . $HOME/.gimme/envs/go1.12.16.env
 
-_: &stage_lint_go
-  script:
-    - make -C conode verify
-    - GO111MODULE=on make test_{fmt,lint}
 _: &stage_build_go
   script:
     - make -C conode bindist tooldist
     - GO111MODULE=on go build ./...
-_: &stage_test_go
-  script: GO111MODULE=on make test_goveralls
 _: &stage_deploy_npm
   <<: *language_js
   before_deploy: echo "//registry.npmjs.org/:_authToken=${DEPLOY_NPM_TOKEN}" > $HOME/.npmrc
@@ -45,14 +39,37 @@ jobs:
       name: "protobuf"
       language: minimal
       script: make test_proto
-    - <<: *stage_lint_go
-      <<: *language_go_1_13
+    - <<: *language_go_1_13
+      script:
+        - go mod tidy && [ -z "$(git status --porcelain)" ]
+        - make -C conode verify
+        - GO111MODULE=on make test_{fmt,lint}
+    - <<: *language_go_1_14
+      script:
+        - make -C conode verify
+        - GO111MODULE=on make test_{fmt,lint}
+    - name: "js > kyber"
+      <<: *language_js
+      script:
+        - cd external/js/kyber
+        - npm ci
+        - npm run linter
+    - name: "js > cothority"
+      <<: *language_js
+      script:
+        - cd external/js/cothority
+        - npm ci
+        - npm run linter
 
     - stage: build
+      name: "go 1.12"
+      language: go
+      go: "1.12.x"
       <<: *stage_build_go
-      <<: *language_go_1_12
     - <<: *stage_build_go
       <<: *language_go_1_13
+    - <<: *stage_build_go
+      <<: *language_go_1_14
 
     - name: "js > kyber"
       <<: *language_js
@@ -71,7 +88,9 @@ jobs:
 
     - stage: test
       <<: *language_go_1_13
-      <<: *stage_test_go
+      script: GO111MODULE=on make test_goveralls
+    - <<: *language_go_1_14
+      script: GO111MODULE=on make test_goveralls
     - name: "java"
       language: java
       install: *get_go
@@ -81,7 +100,7 @@ jobs:
       script:
         - cd external/js/kyber
         - npm ci
-        - npm run test
+        - npm test
     - name: "js > cothority"
       <<: *language_js
       install: *get_go
@@ -92,7 +111,7 @@ jobs:
         - cd external/js/cothority
         - npm ci
         - npm link @dedis/kyber
-        - npm run test
+        - npm test
 
     - stage: deploy
       name: "NPM: js > kyber"
@@ -105,7 +124,7 @@ jobs:
           cd external/js/kyber &&
           npm ci &&
           npm version prerelease --preid=p`date +%y%m.%d%H.%M%S` &&
-          ./publish.sh --tag dev
+          npm run test-publish -- --tag dev
     - name: "NPM: js > cothority"
       <<: *stage_deploy_npm
       deploy:
@@ -113,12 +132,10 @@ jobs:
           branch: master
         provider: script
         script: >-
-          cd external/js/kyber && npm ci && npm run link && cd ../../.. &&
           cd external/js/cothority &&
           npm ci &&
-          npm link @dedis/kyber &&
           npm version prerelease --preid=p`date +%y%m.%d%H.%M%S` &&
-          ./publish.sh --tag dev
+          npm run test-publish -- --tag dev
 
 notifications:
   email: false

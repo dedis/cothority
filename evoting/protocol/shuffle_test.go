@@ -5,13 +5,13 @@ import (
 	"testing"
 	"time"
 
-	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v3"
 
 	"github.com/stretchr/testify/require"
 
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/evoting/lib"
-	"go.dedis.ch/cothority/v4/skipchain"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/evoting/lib"
+	"go.dedis.ch/cothority/v3/skipchain"
 )
 
 var shuffleServiceID onet.ServiceID
@@ -166,7 +166,7 @@ func runShuffle(t *testing.T, n int) {
 
 	select {
 	case err := <-shuffle.Finished:
-		require.Nil(t, err)
+		require.NoError(t, err)
 		box, _ := election.Box(services[0].(*shuffleService).skipchain)
 		mixes, _ := election.Mixes(services[0].(*shuffleService).skipchain)
 

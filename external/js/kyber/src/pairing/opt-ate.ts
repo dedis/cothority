@@ -1,22 +1,24 @@
-import GfP12 from "./gfp12";
 import { G1, G2, GT } from "./bn";
-import TwistPoint from "./twist-point";
+import { u, xiToPMinus1Over2, xiToPMinus1Over3, xiToPSquaredMinus1Over3 } from "./constants";
 import CurvePoint from "./curve-point";
+import GfP from "./gfp";
+import GfP12 from "./gfp12";
 import GfP2 from "./gfp2";
 import GfP6 from "./gfp6";
-import { u, xiToPMinus1Over3, xiToPMinus1Over2, xiToPSquaredMinus1Over3 } from "./constants";
-import GfP from "./gfp";
+import TwistPoint from "./twist-point";
 
-const sixuPlus2NAF = [0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, -1, 0, 1, 0, 0, 0, 1, 0, -1, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 1];
+const sixuPlus2NAF = [0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, -1,
+    0, 1, 0, 0, 0, 1, 0, -1, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 1];
 
 /**
  * Results from the line functions
  */
+// tslint:disable-next-line
 interface Result {
-    a: GfP2,
-    b: GfP2,
-    c: GfP2,
-    rOut: TwistPoint,
+    a: GfP2;
+    b: GfP2;
+    c: GfP2;
+    rOut: TwistPoint;
 }
 
 /**
@@ -35,14 +37,14 @@ function lineFunctionAdd(r: TwistPoint, p: TwistPoint, q: CurvePoint, r2: GfP2):
     const L1 = D.sub(r.getY()).sub(r.getY());
     const V = r.getX().mul(E);
 
-    let rx = L1.square().sub(J).sub(V).sub(V);
-    let rz = r.getZ().add(H).square().sub(r.getT()).sub(I);
-    
+    const rx = L1.square().sub(J).sub(V).sub(V);
+    const rz = r.getZ().add(H).square().sub(r.getT()).sub(I);
+
     let t = V.sub(rx).mul(L1);
-    let t2 = r.getY().mul(J)
+    let t2 = r.getY().mul(J);
     t2 = t2.add(t2);
-    let ry = t.sub(t2);
-    let rt = rz.square();
+    const ry = t.sub(t2);
+    const rt = rz.square();
 
     t = p.getY().add(rz).square().sub(r2).sub(rt);
     t2 = L1.mul(p.getX());
@@ -54,7 +56,7 @@ function lineFunctionAdd(r: TwistPoint, p: TwistPoint, q: CurvePoint, r2: GfP2):
 
     let b = GfP2.zero().sub(L1).mulScalar(q.getX());
     b = b.add(b);
-    
+
     return {
         a,
         b,
@@ -77,22 +79,22 @@ function lineFunctionDouble(r: TwistPoint, q: CurvePoint): Result {
     const E = A.add(A).add(A);
     const G = E.square();
 
-    let rx = G.sub(D).sub(D)
-    let rz = r.getY().add(r.getZ()).square().sub(B).sub(r.getT());
+    const rx = G.sub(D).sub(D);
+    const rz = r.getY().add(r.getZ()).square().sub(B).sub(r.getT());
     let ry = D.sub(rx).mul(E);
 
-    let t = C.add(C)
+    let t = C.add(C);
     t = t.add(t);
     t = t.add(t);
     ry = ry.sub(t);
 
-    let rt = rz.square();
+    const rt = rz.square();
 
     t = E.mul(r.getT());
     t = t.add(t);
     const b = GfP2.zero().sub(t).mulScalar(q.getX());
-    t = B.add(B)
-    t = t.add(t)
+    t = B.add(B);
+    t = t.add(t);
     const a = r.getX().add(E).square().sub(A).sub(G).sub(t);
     let c = rz.mul(r.getT());
     c = c.add(c).mulScalar(q.getY());
@@ -111,9 +113,9 @@ function mulLine(ret: GfP12, res: Result): GfP12 {
 
     const t = res.b.add(res.c);
     const t2 = new GfP6(GfP2.zero(), res.a, t);
-    
-    let tx = ret.getX().add(ret.getY()).mul(t2).sub(a2).sub(t3);
-    let ty = t3.add(a2.mulTau());
+
+    const tx = ret.getX().add(ret.getY()).mul(t2).sub(a2).sub(t3);
+    const ty = t3.add(a2.mulTau());
 
     return new GfP12(tx, ty);
 }
@@ -138,24 +140,24 @@ function miller(q: TwistPoint, p: CurvePoint): GfP12 {
     let r2 = aAffine.getY().square();
 
     for (let i = sixuPlus2NAF.length - 1; i > 0; i--) {
-        let res = lineFunctionDouble(r, bAffine);
-        if (i != sixuPlus2NAF.length - 1) {
+        let lfd = lineFunctionDouble(r, bAffine);
+        if (i !== sixuPlus2NAF.length - 1) {
             ret = ret.square();
         }
 
-        ret = mulLine(ret, res);
-        r = res.rOut;
+        ret = mulLine(ret, lfd);
+        r = lfd.rOut;
 
-        if (sixuPlus2NAF[i - 1] == 1) {
-            res = lineFunctionAdd(r, aAffine, bAffine, r2);
-        } else if (sixuPlus2NAF[i - 1] == -1) {
-            res = lineFunctionAdd(r, minusA, bAffine, r2);
+        if (sixuPlus2NAF[i - 1] === 1) {
+            lfd = lineFunctionAdd(r, aAffine, bAffine, r2);
+        } else if (sixuPlus2NAF[i - 1] === -1) {
+            lfd = lineFunctionAdd(r, minusA, bAffine, r2);
         } else {
             continue;
         }
 
-        ret = mulLine(ret, res);
-        r = res.rOut;
+        ret = mulLine(ret, lfd);
+        r = lfd.rOut;
     }
 
     const q1 = new TwistPoint(

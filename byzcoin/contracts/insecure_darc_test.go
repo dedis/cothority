@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/byzcoin"
-	"go.dedis.ch/cothority/v4/darc"
-	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/onet/v3"
 )
 
 func TestInsecureDarc(t *testing.T) {
@@ -20,12 +20,12 @@ func TestInsecureDarc(t *testing.T) {
 
 	genesisMsg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
 		[]string{"spawn:insecure_darc"}, signer.Identity())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	genesisMsg.DarcContractIDs = append(genesisMsg.DarcContractIDs, ContractInsecureDarcID)
 	gDarc := &genesisMsg.GenesisDarc
 	genesisMsg.BlockInterval = time.Second
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// spawn new darc
 	newDarc := gDarc.Copy()
@@ -76,6 +76,7 @@ func TestInsecureDarc(t *testing.T) {
 	require.NoError(t, newDarc2.EvolveFrom(newDarc))
 	newDarc2.Rules.AddRule("spawn:coin", []byte(signer.Identity().String()))
 	newDarc2Buf, err := newDarc2.ToProto()
+	require.NoError(t, err)
 	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
 		InstanceID: byzcoin.NewInstanceID(newDarc2.GetBaseID()),
 		Invoke: &byzcoin.Invoke{

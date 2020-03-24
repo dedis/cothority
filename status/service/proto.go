@@ -1,8 +1,8 @@
 package status
 
 import (
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/network"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/network"
 )
 
 // PROTOSTART

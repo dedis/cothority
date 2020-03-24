@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "@dedis/cothority",
-  "version": "3.1.7",
+  "version": "3.4.4",
   "description": "A typescript implementation of the cothority",
   "main": "index.js",
   "browser": "bundle.min.js",
@@ -12,8 +12,8 @@
   "types": "index.d.ts",
   "scripts": {
     "build": "npm run protobuf && tsc",
-    "linter": "node_modules/.bin/tslint 'src/{,**/}*.ts' 'spec/{,**/}*.ts'",
-    "linter:fix": "node_modules/.bin/tslint --fix 'src/{,**/}*.ts' 'spec/{,**/}*.ts'",
+    "linter": "tslint 'src/{,**/}*.ts' 'spec/{,**/}*.ts' && prettier --check *.html",
+    "linter:fix": "tslint --fix 'src/{,**/}*.ts' 'spec/{,**/}*.ts' && prettier --write *.html",
     "test": "npm run linter && npm run cover",
     "test:nocover": "ts-node node_modules/jasmine/bin/jasmine.js",
     "cover": "node_modules/.bin/nyc --reporter=lcov --reporter=text node_modules/jasmine/bin/jasmine.js",
@@ -21,6 +21,7 @@
     "bundle": "node node_modules/.bin/webpack",
     "doc": "node_modules/.bin/typedoc --out doc/ src/",
     "protobuf": "node scripts/build_proto.js",
+    "test-publish": "npm test && ./publish.sh",
     "link": "./publish.sh --link"
   },
   "keywords": [
@@ -31,7 +32,7 @@
   "license": "LGPL-3.0-or-later",
   "dependencies": {
     "@babel/polyfill": "^7.2.5",
-    "@dedis/kyber": "^3.0.9",
+    "@dedis/kyber": "^3.4.2",
     "@stablelib/blake2xs": "^0.10.4",
     "@types/crypto-js": "^3.1.43",
     "@types/node": "^12.7.12",
@@ -39,6 +40,7 @@
     "@types/url-parse": "^1.4.3",
     "buffer": "^5.2.1",
     "co": "^4.6.0",
+    "crypto-browserify": "^3.12.0",
     "file": "^0.2.2",
     "isomorphic-ws": "^4.0.1",
     "keccak": "^2.0.0",
@@ -48,10 +50,11 @@
     "os": "^0.1.1",
     "protobufjs": "^6.8.8",
     "pure-uuid": "^1.5.5",
+    "rxjs": "^6.5.4",
     "shuffle-array": "^1.0.1",
     "sprintf-js": "^1.1.2",
     "toml": "^2.3.5",
-    "url-parse": "^1.4.7",
+    "tslib": "^1.10.0",
     "util": "^0.11.1",
     "ws": "^6.1.2"
   },
@@ -60,7 +63,6 @@
     "@babel/preset-env": "^7.3.1",
     "@types/bn.js": "^4.11.4",
     "@types/dockerode": "^2.5.11",
-    "@types/elliptic": "^6.4.2",
     "@types/jasmine": "^3.3.5",
     "@types/lodash": "^4.14.139",
     "@types/long": "^4.0.0",
@@ -72,6 +74,7 @@
     "jasmine": "^3.3.1",
     "jasmine-console-reporter": "^3.1.0",
     "nyc": "^13.3.0",
+    "prettier": "^1.19.1",
     "ts-loader": "^5.3.3",
     "ts-node": "^8.0.1",
     "tslint": "^5.12.1",

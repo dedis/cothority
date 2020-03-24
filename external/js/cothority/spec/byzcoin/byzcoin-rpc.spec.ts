@@ -1,6 +1,10 @@
+import Long from "long";
+import { Log } from "../../src";
 import { ByzCoinRPC } from "../../src/byzcoin";
+import { LocalCache } from "../../src/byzcoin/byzcoin-rpc";
 import DarcInstance from "../../src/byzcoin/contracts/darc-instance";
 import Instance from "../../src/byzcoin/instance";
+import { Darc } from "../../src/darc";
 import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/conondes";
 
 describe("ByzCoinRPC Tests", () => {
@@ -51,4 +55,52 @@ describe("ByzCoinRPC Tests", () => {
             .toBeRejectedWith(new Error("key not in proof: 010203"));
         await expectAsync(DarcInstance.fromByzcoin(rpc, Buffer.alloc(32, 0))).toBeRejected();
     });
+
+    it("should get updated when an instance is updated", async () => {
+        const cache = new LocalCache();
+        const darc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster, "initial");
+        const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL, cache);
+
+        const instUpdate = await rpc.instanceObservable(darc.getBaseID());
+        const history: string[] = [];
+        instUpdate.subscribe((inst) => {
+            const d = Darc.decode(inst.value);
+            history.push(`${d.version}-${d.description.toString()}`);
+        });
+        expect(history[0]).toBe("0-initial");
+// Evolving the Darc we observe, we expect the history to be updated
+        const di = await DarcInstance.fromByzcoin(rpc, darc.getBaseID());
+        const newDI = new Darc({
+            ...darc.evolve(),
+            description: Buffer.from("new"),
+        });
+        await di.evolveDarcAndWait(newDI, [SIGNER], 10);
+
+        for (let i = 0; i < 5; i++) {
+            if (history.length === 2) {
+                break;
+            }
+            await wait100ms();
+        }
+        expect(history.length).toBe(2);
+        expect(history[1]).toBe("1-new");
+// Creating a new Darc, this should not update the history
+        const newDarc = Darc.createBasic([SIGNER], [SIGNER],
+            Buffer.from("darc 2"));
+        await di.spawnDarcAndWait(newDarc, [SIGNER], 2);
+        for (let i = 0; i < 5; i++) {
+            expect(history.length).toBe(2);
+            await wait100ms();
+        }
+// Getting a new proofObservable on the previously updated Darc should return the latest version of the Darc
+        const latestProof = (await rpc.instanceObservable(darc.getBaseID())).getValue();
+        expect(latestProof.stateChangeBody.version.equals(Long.fromNumber(1)))
+            .toBeTruthy();
+
+        rpc.closeNewBlocks();
+    });
 });
+
+async function wait100ms(): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, 100));
+}

@@ -20,7 +20,7 @@ export class PRNG {
 
     genByte() {
         this.seed = (this.seed * 9301 + 49297) % 233280;
-        let rnd = this.seed / 233280;
+        const rnd = this.seed / 233280;
 
         return Math.floor(rnd * 255);
     }
@@ -35,7 +35,7 @@ export class PRNG {
 }
 
 export function unhexlify(str: string): Buffer {
-    const result = Buffer.allocUnsafe(str.length >> 1);
+    const result = Buffer.allocUnsafe(str.length / 2);
     for (let c = 0, i = 0, l = str.length; i < l; i += 2, c++) {
         result[c] = parseInt(str.substr(i, 2), 16);
     }
@@ -43,9 +43,9 @@ export function unhexlify(str: string): Buffer {
 }
 
 export function hexToBuffer(hex: string): Buffer {
-    let bytes = Buffer.allocUnsafe(hex.length >> 1);
+    const bytes = Buffer.allocUnsafe(hex.length / 2);
     for (let i = 0; i < bytes.length; i++) {
-        bytes[i] = parseInt(hex.substr(i << 1, 2), 16);
+        bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
     }
     return bytes;
-};
+}

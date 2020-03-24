@@ -45,14 +45,18 @@ import (
 	"strconv"
 	"strings"
 
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/darc/expression"
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/sign/eddsa"
-	"go.dedis.ch/kyber/v4/sign/schnorr"
-	"go.dedis.ch/kyber/v4/suites"
-	"go.dedis.ch/kyber/v4/util/encoding"
-	"go.dedis.ch/kyber/v4/util/key"
+	"github.com/ethereum/go-ethereum/common"
+
+	"golang.org/x/xerrors"
+
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/darc/expression"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/sign/eddsa"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/kyber/v3/suites"
+	"go.dedis.ch/kyber/v3/util/encoding"
+	"go.dedis.ch/kyber/v3/util/key"
 	"go.dedis.ch/protobuf"
 )
 
@@ -505,8 +509,8 @@ func (id ID) Equal(other ID) bool {
 	return bytes.Equal([]byte(id), []byte(other))
 }
 
-// DarcsToGetDarcs is a convenience function that convers a slice of darcs into
-// the GetDarc callback.
+// DarcsToGetDarcs is a convenience function that converts a slice of darcs
+// into the GetDarc callback.
 func DarcsToGetDarcs(darcs []*Darc) GetDarc {
 	return func(s string, latest bool) *Darc {
 		// build a map to store the latest darcs
@@ -748,6 +752,8 @@ func (s Signer) Type() int {
 		return 2
 	case s.Proxy != nil:
 		return 3
+	case s.EvmContract != nil:
+		return 4
 	default:
 		return -1
 	}
@@ -763,6 +769,8 @@ func (s Signer) Identity() Identity {
 		return NewIdentityX509EC(s.X509EC.Point)
 	case 3:
 		return NewIdentityProxy(s.Proxy)
+	case 4:
+		return NewIdentityEvmContract(s.EvmContract)
 	default:
 		return Identity{}
 	}
@@ -782,6 +790,8 @@ func (s Signer) Sign(msg []byte) ([]byte, error) {
 		return s.X509EC.Sign(msg)
 	case 3:
 		return s.Proxy.Sign(msg)
+	case 4:
+		return s.EvmContract.Sign(msg)
 	default:
 		return nil, errors.New("unknown signer type")
 	}
@@ -814,6 +824,8 @@ func (id Identity) Equal(id2 *Identity) bool {
 		return id.X509EC.Equal(id2.X509EC)
 	case 3:
 		return id.Proxy.Equal(id2.Proxy)
+	case 4:
+		return id.EvmContract.Equal(id2.EvmContract)
 	}
 	return false
 }
@@ -830,6 +842,8 @@ func (id Identity) Type() int {
 		return 2
 	case id.Proxy != nil:
 		return 3
+	case id.EvmContract != nil:
+		return 4
 	}
 	return -1
 }
@@ -846,6 +860,8 @@ func (id Identity) PrimaryIdentity() bool {
 		return true
 	case id.Proxy != nil:
 		return true
+	case id.EvmContract != nil:
+		return true
 	}
 	return false
 }
@@ -861,6 +877,8 @@ func (id Identity) TypeString() string {
 		return "x509ec"
 	case 3:
 		return "proxy"
+	case 4:
+		return "evm_contract"
 	default:
 		return "No identity"
 	}
@@ -877,6 +895,10 @@ func (id Identity) String() string {
 		return fmt.Sprintf("%s:%x", id.TypeString(), id.X509EC.Public)
 	case 3:
 		return fmt.Sprintf("%s:%v:%v", id.TypeString(), id.Proxy.Public, id.Proxy.Data)
+	case 4:
+		bevmString := hex.EncodeToString(id.EvmContract.BEvmID)
+		addrString := id.EvmContract.Address.Hex()
+		return fmt.Sprintf("%s:%s:%s", id.TypeString(), bevmString, addrString)
 	default:
 		return "No identity"
 	}
@@ -894,6 +916,8 @@ func (id Identity) Verify(msg, sig []byte) error {
 		return id.X509EC.Verify(msg, sig)
 	case 3:
 		return id.Proxy.Verify(msg, sig)
+	case 4:
+		return id.EvmContract.Verify(msg, sig)
 	default:
 		return errors.New("unknown identity")
 	}
@@ -919,6 +943,8 @@ func (id Identity) GetPublicBytes() []byte {
 			return nil
 		}
 		return buf
+	case 4:
+		return id.EvmContract.Address[:]
 	default:
 		return nil
 	}
@@ -977,6 +1003,16 @@ func NewIdentityProxy(s *SignerProxy) Identity {
 	}
 }
 
+// NewIdentityEvmContract created a new identity for EVM contracts.
+func NewIdentityEvmContract(s *SignerEvmContract) Identity {
+	return Identity{
+		EvmContract: &IdentityEvmContract{
+			BEvmID:  s.BEvmID,
+			Address: s.Address,
+		},
+	}
+}
+
 // Equal returns true if both IdentityX509EC point to the same data.
 func (idkc IdentityX509EC) Equal(idkc2 *IdentityX509EC) bool {
 	return bytes.Compare(idkc.Public, idkc2.Public) == 0
@@ -985,6 +1021,12 @@ func (idkc IdentityX509EC) Equal(idkc2 *IdentityX509EC) bool {
 // Equal returns true if both IdentityProxy are the same.
 func (idp IdentityProxy) Equal(i2 *IdentityProxy) bool {
 	return idp.Data == i2.Data && idp.Public.Equal(i2.Public)
+}
+
+// Equal returns true if both IdentityEvmContract are the same.
+func (id IdentityEvmContract) Equal(id2 *IdentityEvmContract) bool {
+	return bytes.Compare(id.BEvmID, id2.BEvmID) == 0 &&
+		id.Address == id2.Address
 }
 
 type sigRS struct {
@@ -1026,6 +1068,21 @@ func (idp IdentityProxy) Verify(msg, s []byte) error {
 	return eddsa.Verify(idp.Public, msg2, s)
 }
 
+// Verify returns nil if the EVM contract signature is correct, or an error
+// otherwise.
+func (id IdentityEvmContract) Verify(msg, s []byte) error {
+	h := sha256.New()
+	h.Write(id.BEvmID)
+	h.Write(id.Address[:])
+	sig := h.Sum(nil)
+
+	if bytes.Equal(s, sig) {
+		return nil
+	}
+
+	return xerrors.Errorf("invalid EVM Contract signature")
+}
+
 // ParseIdentity returns an Identity structure that matches
 // the given string.
 func ParseIdentity(in string) (Identity, error) {
@@ -1042,6 +1099,8 @@ func ParseIdentity(in string) (Identity, error) {
 		return parseIDX509ec(fields[1])
 	case "proxy":
 		return parseIDProxy(fields[1])
+	case "evm_contract":
+		return parseIDEvmContract(fields[1])
 	default:
 		return Identity{}, fmt.Errorf("unknown identity type %v", fields[0])
 	}
@@ -1088,6 +1147,29 @@ func parseIDProxy(in string) (Identity, error) {
 		Public: p,
 		Data:   fields[1],
 	}}, nil
+}
+
+func parseIDEvmContract(in string) (Identity, error) {
+	fields := strings.Split(in, ":")
+	if len(fields) != 2 {
+		return Identity{}, xerrors.Errorf("failed to parse EVM contract " +
+			"identity: expected format 'evm_contract:bevm_id:contract_address'")
+	}
+
+	bevmID, err := hex.DecodeString(fields[0])
+	if err != nil {
+		return Identity{}, xerrors.Errorf("failed to parse BEvmID of EVM "+
+			"contract identity: %v", err)
+	}
+
+	address := common.HexToAddress(fields[1])
+
+	return Identity{
+		EvmContract: &IdentityEvmContract{
+			BEvmID:  bevmID,
+			Address: address,
+		},
+	}, nil
 }
 
 // NewSignerEd25519 initializes a new SignerEd25519 signer given public and
@@ -1237,6 +1319,23 @@ func NewSignerProxy(data string, pub kyber.Point, getSignature func([]byte) ([]b
 func (s SignerProxy) Sign(msg []byte) ([]byte, error) {
 	sig, err := s.getSignature(msg)
 	return sig, err
+}
+
+// NewSignerEvmContract creates a new SignerEvmContract
+func NewSignerEvmContract(BEvmID []byte, Address common.Address) Signer {
+	return Signer{
+		EvmContract: &SignerEvmContract{BEvmID, Address},
+	}
+}
+
+// Sign creates a signature for an EVM contract identity.
+func (s SignerEvmContract) Sign(msg []byte) ([]byte, error) {
+	h := sha256.New()
+	h.Write(s.BEvmID)
+	h.Write(s.Address[:])
+	sig := h.Sum(nil)
+
+	return sig, nil
 }
 
 func copyBytes(a []byte) []byte {

@@ -1,11 +1,11 @@
-import { sign, curve } from '../src';
+import { curve, sign } from "../src";
 
-describe('Kyber', () => {
-    it('should provide the curves', () => {
+describe("Kyber", () => {
+    it("should provide the curves", () => {
         expect(curve).toBeDefined();
     });
 
-    it('should provide the signatures', () => {
+    it("should provide the signatures", () => {
         expect(sign).toBeDefined();
     });
 });

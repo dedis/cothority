@@ -1,5 +1,5 @@
 import { Message, util } from "protobufjs/light";
-import URL from "url-parse";
+import { Observable } from "rxjs";
 import Log from "../log";
 import { Nodes } from "./nodes";
 import { Roster } from "./proto";
@@ -17,7 +17,9 @@ export function setFactory(generator: (path: string) => WebSocketAdapter): void 
 }
 
 /**
- * A connection allows to send a message to one or more distant peers
+ * A connection allows to send a message to one or more distant peers. It has a default
+ * service it is connected to, and can only be used to send messages to that service.
+ * To change service, a copy has to be created using the copy method.
  */
 export interface IConnection {
     /**
@@ -29,7 +31,7 @@ export interface IConnection {
     send<T extends Message>(message: Message, reply: typeof Message): Promise<T>;
 
     /**
-     * Get the complete distant address
+     * Get the origin of the distant address
      * @returns the address as a string
      */
     getURL(): string;
@@ -41,7 +43,23 @@ export interface IConnection {
     setTimeout(value: number): void;
 
     /**
+     * Creates a copy of the connection, but usable with the given service.
+     * @param service
+     */
+    copy(service: string): IConnection;
+
+    /**
+     * Send a message to the distant peer
+     * @param message Protobuf compatible message
+     * @param reply Protobuf type of the reply
+     */
+    sendStream<T extends Message>(message: Message, reply: typeof Message):
+        Observable<[T, WebSocketAdapter]>;
+
+    /**
      * Sets how many nodes will be contacted in parallel
+     * @deprecated - don't use IConnection for that, but rather directly a
+     * RosterWSConnection.
      * @param p number of nodes to contact in parallel
      */
     setParallel(p: number): void;
@@ -50,31 +68,51 @@ export interface IConnection {
 /**
  * Single peer connection to one single node.
  */
-export class WebSocketConnection {
-    private readonly url: string;
+export class WebSocketConnection implements IConnection {
+    private readonly url: URL;
     private readonly service: string;
     private timeout: number;
 
     /**
-     * @param addr      Address of the distant peer
+     * @param addr      Absolute address of the distant peer
      * @param service   Name of the service to reach
      */
-    constructor(addr: string, service: string) {
-        const url = new URL(addr, {});
+    constructor(addr: string | URL, service: string) {
+        let url: URL;
+        if (typeof addr === "string") {
+            url = new URL(addr);
+        } else {
+            url = addr;
+        }
+        // We want any pathname to contain a "/" at the end. This is motivated
+        // by the fact that URL will not allow you to have an empty pathname,
+        // which will always equal to "/" if there isn't any
+        if (url.pathname.slice(-1) !== "/") {
+            url.pathname = url.pathname + "/";
+        }
+        if (url.username !== "" || url.password !== "") {
+            throw new Error("addr contains authentication, which is not supported");
+        }
+        if (url.search !== "" || url.hash !== "") {
+            throw new Error("addr contains more data than the origin");
+        }
+
         if (typeof globalThis !== "undefined" && typeof globalThis.location !== "undefined") {
             if (globalThis.location.protocol === "https:") {
-                url.set("protocol", "wss");
+                url.protocol = "wss";
             }
         }
-        this.url = url.href;
 
         this.service = service;
         this.timeout = 30 * 1000; // 30s by default
+        this.url = url;
     }
 
     /** @inheritdoc */
     getURL(): string {
-        return this.url;
+        // Retro compatibility: this.url always ends with a slash, but the old
+        // behavior needs no trailing slash
+        return this.url.href.slice(0, -1);
     }
 
     /** @inheritdoc */
@@ -84,24 +122,53 @@ export class WebSocketConnection {
 
     /** @inheritdoc */
     async send<T extends Message>(message: Message, reply: typeof Message): Promise<T> {
+        return new Promise((complete, error) => {
+            this.sendStream(message, reply).subscribe({
+                complete,
+                error,
+                next: ([m, ws]) => {
+                    complete(m as T);
+                    ws.close(1000);
+                },
+            });
+        });
+    }
+
+    copy(service: string): IConnection {
+        return new WebSocketConnection(this.url, service);
+    }
+
+    /**
+     * @deprecated - use directly a RosterWSConnection if you want that
+     * @param p
+     */
+    setParallel(p: number): void {
+        if (p > 1) {
+            throw new Error("Single connection doesn't support more than one parallel");
+        }
+    }
+
+    /** @inheritdoc */
+    sendStream<T extends Message>(message: Message, reply: typeof Message):
+        Observable<[T, WebSocketAdapter]> {
+
         if (!message.$type) {
-            return Promise.reject(new Error(`message "${message.constructor.name}" is not registered`));
+            throw new Error(`message "${message.constructor.name}" is not registered`);
         }
-
         if (!reply.$type) {
-            return Promise.reject(new Error(`message "${reply}" is not registered`));
+            throw new Error(`message "${reply.constructor.name}" is not registered`);
         }
 
-        return new Promise((resolve, reject) => {
-            const path = this.url + "/" + this.service + "/" + message.$type.name.replace(/.*\./, "");
-            Log.lvl4(`Socket: new WebSocket(${path})`);
-            const ws = factory(path);
+        return new Observable((sub) => {
+            const url = new URL(this.url.href);
+            url.pathname += `${this.service}/${message.$type.name.replace(/.*\./, "")}`;
+            Log.lvl4(`Socket: new WebSocket(${url.href})`);
+            const ws = factory(url.href);
             const bytes = Buffer.from(message.$type.encode(message).finish());
-
             const timer = setTimeout(() => ws.close(1000, "timeout"), this.timeout);
 
             ws.onOpen(() => {
-                Log.lvl3("Sending message to", path);
+                Log.lvl3("Sending message to", url.href);
                 ws.send(bytes);
             });
 
@@ -112,34 +179,32 @@ export class WebSocketConnection {
 
                 try {
                     const ret = reply.decode(buf) as T;
-
-                    resolve(ret);
+                    sub.next([ret, ws]);
                 } catch (err) {
-                    if (err instanceof util.ProtocolError) {
-                        reject(err);
-                    } else {
-                        reject(
-                            new Error(`Error when trying to decode the message "${reply.$type.name}": ${err.message}`),
-                        );
-                    }
+                    sub.error(err);
                 }
-
-                ws.close(1000);
             });
 
             ws.onClose((code: number, reason: string) => {
                 // nativescript-websocket on iOS doesn't return error-code 1002 in case of error, but sets the 'reason'
                 // to non-null in case of error.
-                if (code !== 1000 || reason) {
-                    reject(new Error(reason));
+                if (code !== 1000 || (reason && reason !== "")) {
+                    sub.error(new Error(reason));
+                } else {
+                    sub.complete();
                 }
             });
 
             ws.onError((err: Error) => {
                 clearTimeout(timer);
 
-                reject(new Error("error in websocket " + path + ": " + err));
+                if (err !== undefined) {
+                    sub.error(new Error(`error in websocket ${url.href}: ${err.message}`));
+                } else {
+                    sub.complete();
+                }
             });
+
         });
     }
 }
@@ -160,19 +225,27 @@ export class RosterWSConnection implements IConnection {
     private readonly connNbr: number;
     private msgNbr = 0;
     private parallel: number;
+    private rID: string;
 
     /**
-     * @param r         The roster to use
+     * @param r         The roster to use or the rID of the Nodes
      * @param service   The name of the service to reach
      * @param parallel  How many nodes to contact in parallel. Can be changed afterwards
      */
-    constructor(r: Roster, private service: string, parallel: number = RosterWSConnection.defaultParallel) {
+    constructor(r: Roster | string, private service: string, parallel: number = RosterWSConnection.defaultParallel) {
         this.setParallel(parallel);
-        const rID = r.id.toString("hex");
-        if (!RosterWSConnection.nodes.has(rID)) {
-            RosterWSConnection.nodes.set(rID, new Nodes(r));
+        if (r instanceof Roster) {
+            this.rID = r.id.toString("hex");
+            if (!RosterWSConnection.nodes.has(this.rID)) {
+                RosterWSConnection.nodes.set(this.rID, new Nodes(r));
+            }
+        } else {
+            this.rID = r;
+            if (!RosterWSConnection.nodes.has(this.rID)) {
+                throw new Error("unknown roster-ID");
+            }
         }
-        this.nodes = RosterWSConnection.nodes.get(rID);
+        this.nodes = RosterWSConnection.nodes.get(this.rID);
         this.connNbr = RosterWSConnection.totalConnNbr;
         RosterWSConnection.totalConnNbr++;
     }
@@ -251,6 +324,44 @@ export class RosterWSConnection implements IConnection {
      */
     setTimeout(value: number) {
         this.nodes.setTimeout(value);
+    }
+
+    /** @inheritdoc */
+    sendStream<T extends Message>(message: Message, reply: typeof Message):
+        Observable<[T, WebSocketAdapter]> {
+        const list = this.nodes.newList(this.service, this.parallel);
+        return list.active[0].sendStream(message, reply);
+    }
+
+    /**
+     * Return a new RosterWSConnection for the given service.
+     * @param service
+     */
+    copy(service: string): RosterWSConnection {
+        return new RosterWSConnection(this.rID, service, this.parallel);
+    }
+
+    /**
+     * Invalidate a given address.
+     * @param address
+     */
+    invalidate(address: string): void {
+        this.nodes.gotError(address);
+    }
+
+    /**
+     * Update roster for this connection.
+     * @param r
+     */
+    setRoster(r: Roster) {
+        const newID = r.id.toString("hex");
+        if (newID !== this.rID) {
+            this.rID = newID;
+            if (!RosterWSConnection.nodes.has(this.rID)) {
+                RosterWSConnection.nodes.set(this.rID, new Nodes(r, this.nodes));
+            }
+            this.nodes = RosterWSConnection.nodes.get(this.rID);
+        }
     }
 }
 

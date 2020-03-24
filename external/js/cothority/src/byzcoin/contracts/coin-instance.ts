@@ -1,4 +1,4 @@
-import { createHash } from "crypto";
+import { createHash } from "crypto-browserify";
 import Long from "long";
 import { Message, Properties } from "protobufjs/light";
 import Signer from "../../darc/signer";
@@ -59,7 +59,7 @@ export default class CoinInstance extends Instance {
 
         await bc.sendTransactionAndWait(ctx, 10);
 
-        return CoinInstance.fromByzcoin(bc, ctx.instructions[0].deriveId());
+        return CoinInstance.fromByzcoin(bc, ctx.instructions[0].deriveId(), 1);
     }
 
     /**

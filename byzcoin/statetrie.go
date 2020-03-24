@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"encoding/binary"
 
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/byzcoin/trie"
-	"go.dedis.ch/cothority/v4/darc"
-	"go.dedis.ch/cothority/v4/skipchain"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/skipchain"
 	"go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 )
@@ -18,6 +18,7 @@ var errKeyNotSet = xerrors.New("key not set")
 type GlobalState interface {
 	ReadOnlyStateTrie
 	ReadOnlySkipChain
+	TimeReader
 }
 
 // ReadOnlyStateTrie is the read-only interface for StagingStateTrie and
@@ -40,6 +41,7 @@ type ReadOnlyStateTrie interface {
 	// the state changes to the copy. The implementation should make sure
 	// that the original read-only trie is not be modified.
 	StoreAllToReplica(StateChanges) (ReadOnlyStateTrie, error)
+	GetSignerCounter(id darc.Identity) (uint64, error)
 }
 
 // ReadOnlySkipChain holds the skipchain data.
@@ -50,9 +52,15 @@ type ReadOnlySkipChain interface {
 	GetBlockByIndex(idx int) (*skipchain.SkipBlock, error)
 }
 
+// TimeReader is an interface allowing to access time-related information
+type TimeReader interface {
+	GetCurrentBlockTimestamp() int64
+}
+
 type globalState struct {
 	ReadOnlyStateTrie
 	ReadOnlySkipChain
+	TimeReader
 }
 
 var _ GlobalState = (*globalState)(nil)
@@ -130,6 +138,10 @@ func (t *stagingStateTrie) StoreAllToReplica(scs StateChanges) (ReadOnlyStateTri
 		return nil, xerrors.Errorf("replica failed to store state changes: %v", err)
 	}
 	return newTrie, nil
+}
+
+func (t *stagingStateTrie) GetSignerCounter(id darc.Identity) (uint64, error) {
+	return getSignerCounter(t, id.String())
 }
 
 // GetVersion returns the version of the ByzCoin protocol.
@@ -260,6 +272,10 @@ func (t *stateTrie) StoreAllToReplica(scs StateChanges) (ReadOnlyStateTrie, erro
 	return nil, xerrors.New("unsupported operation")
 }
 
+func (t *stateTrie) GetSignerCounter(id darc.Identity) (uint64, error) {
+	return getSignerCounter(t, id.String())
+}
+
 // newMemStagingStateTrie creates an in-memory StagingStateTrie.
 func newMemStagingStateTrie(nonce []byte) (*stagingStateTrie, error) {
 	memTrie, err := trie.NewTrie(trie.NewMemDB(), nonce)
@@ -333,6 +349,14 @@ func (s *roSkipChain) GetBlockByIndex(idx int) (*skipchain.SkipBlock, error) {
 		return nil, xerrors.Errorf("reading block: %v", err)
 	}
 	return reply.SkipBlock, nil
+}
+
+type currentBlockInfo struct {
+	timestamp int64
+}
+
+func (info *currentBlockInfo) GetCurrentBlockTimestamp() int64 {
+	return info.timestamp
 }
 
 type metadataReader interface {

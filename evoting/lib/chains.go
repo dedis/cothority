@@ -5,14 +5,14 @@ import (
 	"errors"
 	"sync"
 
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/sign/schnorr"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
 
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/skipchain"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/skipchain"
 )
 
 // NewSkipchain creates a new skipchain for a given roster and verification function.

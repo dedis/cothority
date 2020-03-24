@@ -1,8 +1,8 @@
-import { randomBytes } from 'crypto';
-import BN from 'bn.js';
-import { Scalar } from '../index';
-import { p } from './constants';
-import { int } from '../random';
+import BN from "bn.js";
+import { randomBytes } from "crypto-browserify";
+import { Scalar } from "../index";
+import { int } from "../random";
+import { order } from "./constants";
 
 export type BNType = number | string | number[] | Buffer | BN;
 
@@ -13,7 +13,7 @@ export default class BN256Scalar implements Scalar {
     private v: BN;
 
     constructor(value?: BNType) {
-        this.v = new BN(value).umod(p);
+        this.v = new BN(value).umod(order);
     }
 
     /**
@@ -44,45 +44,45 @@ export default class BN256Scalar implements Scalar {
 
     /** @inheritdoc */
     add(a: BN256Scalar, b: BN256Scalar): BN256Scalar {
-        this.v = a.v.add(b.v).umod(p);
+        this.v = a.v.add(b.v).umod(order);
         return this;
     }
 
     /** @inheritdoc */
     sub(a: BN256Scalar, b: BN256Scalar): BN256Scalar {
-        this.v = a.v.sub(b.v).umod(p);
+        this.v = a.v.sub(b.v).umod(order);
         return this;
     }
 
     /** @inheritdoc */
     neg(a: BN256Scalar): BN256Scalar {
-        this.v = a.v.neg().umod(p);
+        this.v = a.v.neg().umod(order);
         return this;
     }
 
     /** @inheritdoc */
     div(a: BN256Scalar, b: BN256Scalar): BN256Scalar {
-        this.v = a.v.div(b.v).umod(p);
+        this.v = a.v.div(b.v).umod(order);
         return this;
     }
 
     /** @inheritdoc */
     mul(s1: BN256Scalar, b: BN256Scalar): BN256Scalar {
-        this.v = s1.v.mul(b.v).umod(p);
+        this.v = s1.v.mul(b.v).umod(order);
         return this;
     }
 
     /** @inheritdoc */
     inv(a: BN256Scalar): BN256Scalar {
-        this.v = a.v.invm(p);
+        this.v = a.v.invm(order);
         return this;
     }
 
     /** @inheritdoc */
     pick(callback?: (length: number) => Buffer): BN256Scalar {
         callback = callback || randomBytes;
-        
-        const bytes = int(p, callback);
+
+        const bytes = int(order, callback);
         this.setBytes(bytes);
         return this;
     }
@@ -95,7 +95,7 @@ export default class BN256Scalar implements Scalar {
 
     /** @inheritdoc */
     marshalBinary(): Buffer {
-        return this.v.toArrayLike(Buffer, 'be', 32);
+        return this.v.toArrayLike(Buffer, "be", 32);
     }
 
     /** @inheritdoc */
@@ -104,7 +104,7 @@ export default class BN256Scalar implements Scalar {
     }
 
     /** @inheritdoc */
-    marshalSize(): number{
+    marshalSize(): number {
         return 32;
     }
 

@@ -4,10 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4/darc/expression"
+	"go.dedis.ch/cothority/v3/darc/expression"
 )
 
 func TestRules(t *testing.T) {
@@ -39,7 +40,7 @@ func TestDarc_Copy(t *testing.T) {
 	// create two darcs
 	d1 := createDarc(1, "testdarc1").darc
 	err := d1.Rules.AddRule("ocs:write", d1.Rules.GetEvolutionExpr())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	d2 := d1.Copy()
 
 	// modify the first one
@@ -47,7 +48,7 @@ func TestDarc_Copy(t *testing.T) {
 	desc := []byte("testdarc2")
 	d1.Description = desc
 	err = d1.Rules.UpdateRule("ocs:write", []byte(createIdentity().String()))
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// the two darcs should be different
 	require.NotEqual(t, d1.Version, d2.Version)
@@ -177,13 +178,13 @@ func TestDarc_EvolveMoreOnline(t *testing.T) {
 	// create darcs that do not have the full path, i.e. we set VerificationDarcs to nil
 	lightDarc1 := darcs[len(darcs)-1].Copy()
 	lightDarc1.VerificationDarcs = nil
-	lightDarc1.Signatures = []Signature{Signature{
+	lightDarc1.Signatures = []Signature{{
 		Signature: copyBytes(darcs[len(darcs)-1].Signatures[0].Signature),
 		Signer:    darcs[len(darcs)-1].Signatures[0].Signer,
 	}}
 	lightDarc2 := darcs[len(darcs)-2].Copy()
 	lightDarc2.VerificationDarcs = nil
-	lightDarc2.Signatures = []Signature{Signature{
+	lightDarc2.Signatures = []Signature{{
 		Signature: copyBytes(darcs[len(darcs)-2].Signatures[0].Signature),
 		Signer:    darcs[len(darcs)-2].Signatures[0].Signer,
 	}}
@@ -211,51 +212,51 @@ func TestDarc_Rules(t *testing.T) {
 	user1 := NewSignerEd25519(nil, nil)
 	user2 := NewSignerEd25519(nil, nil)
 	err := d.Rules.AddRule("use", expression.InitOrExpr(user1.Identity().String(), user2.Identity().String()))
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	var r *Request
 
 	// happy case with signer 1
 	r, err = InitAndSignRequest(d.GetID(), "use", []byte("secrets are lies"), user1)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Nil(t, r.Verify(d))
 
 	// happy case with signer 2
 	r, err = InitAndSignRequest(d.GetID(), "use", []byte("sharing is caring"), user2)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Nil(t, r.Verify(d))
 
 	// happy case with both signers
 	r, err = InitAndSignRequest(d.GetID(), "use", []byte("privacy is theft"), user1, user2)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Nil(t, r.Verify(d))
 
 	// wrong ID
 	d2 := createDarc(1, "testdarc2").darc
 	r, err = InitAndSignRequest(d2.GetID(), "use", []byte("all animals are equal"), user1)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, r.Verify(d))
 
 	// wrong action
 	r, err = InitAndSignRequest(d.GetID(), "go", []byte("four legs good"), user1)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, r.Verify(d))
 
 	// wrong signer 1
 	user3 := NewSignerEd25519(nil, nil)
 	r, err = InitAndSignRequest(d.GetID(), "use", []byte("two legs bad"), user3)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, r.Verify(d))
 
 	// happy case where at least one signer is valid
 	r, err = InitAndSignRequest(d.GetID(), "use", []byte("four legs good"), user1, user3)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Nil(t, r.Verify(d))
 
 	// tampered signature
 	r, err = InitAndSignRequest(d.GetID(), "use", []byte("two legs better"), user1, user3)
 	r.Signatures[0] = copyBytes(r.Signatures[1])
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, r.Verify(d))
 }
 
@@ -283,19 +284,19 @@ func TestDarc_EvolveRequest(t *testing.T) {
 	// but the verification shold fail
 	badOwner := NewSignerEd25519(nil, nil)
 	r, _, err = dNew.MakeEvolveRequest(badOwner)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, r)
 	require.NotNil(t, r.Verify(td.darc))
 
 	// create the request with the right signer and it should pass
 	r, dNewBuf, err := dNew.MakeEvolveRequest(td.owners[0])
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, r)
 	require.Nil(t, r.Verify(td.darc))
 
 	// check that the evolution is actually OK
 	dNew2, err := r.MsgToDarc(dNewBuf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Nil(t, dNew2.VerifyWithCB(func(s string, latest bool) *Darc {
 		if latest {
 			return nil
@@ -539,11 +540,6 @@ func createDarc(nbrOwners int, desc string) testDarc {
 	return td
 }
 
-func createSigner() Signer {
-	s, _ := createSignerIdentity()
-	return s
-}
-
 func createIdentity() Identity {
 	_, id := createSignerIdentity()
 	return id
@@ -625,4 +621,23 @@ func TestParseIdentity(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, i.Proxy)
 	require.Equal(t, in, i.String())
+
+	in = "evm_contract:00"
+	i, err = ParseIdentity(in)
+	require.Error(t, err)
+
+	in = "evm_contract:xx:0xyy"
+	i, err = ParseIdentity(in)
+	require.Error(t, err)
+
+	in = "evm_contract:00:0x00:00"
+	i, err = ParseIdentity(in)
+	require.Error(t, err)
+
+	in = "evm_contract:00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff:0x00112233445566778899aabbccddeeff00112233"
+	i, err = ParseIdentity(in)
+	require.NoError(t, err)
+	require.NotNil(t, i.EvmContract)
+	// ToLower() because common.Address uses address checksum (EIP-55)
+	require.Equal(t, in, strings.ToLower(i.String()))
 }

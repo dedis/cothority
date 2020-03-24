@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4/byzcoin/trie"
-	"go.dedis.ch/cothority/v4/darc"
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
+	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/protobuf"
 )
 
@@ -20,7 +20,7 @@ func TestTransaction_Signing(t *testing.T) {
 
 	// create the tx
 	ctx, err := createOneClientTx(d.GetBaseID(), "dummy_kind", []byte("dummy_value"), signer)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// create a db/trie
 	mdb := trie.NewMemDB()
@@ -208,9 +208,7 @@ func combineInstrsAndSign(signer darc.Signer, instrs ...Instruction) (ClientTran
 	for i := range instrs {
 		instrs[i].SignerIdentities = []darc.Identity{signer.Identity()}
 	}
-	t := ClientTransaction{
-		Instructions: instrs,
-	}
+	t := NewClientTransaction(CurrentVersion, instrs...)
 	h := t.Instructions.Hash()
 	for i := range t.Instructions {
 		if err := t.Instructions[i].SignWith(h, signer); err != nil {

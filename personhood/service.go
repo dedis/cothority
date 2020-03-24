@@ -9,14 +9,20 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"errors"
+	"sort"
 	"time"
 
-	"go.dedis.ch/cothority/v4/skipchain"
-	"go.dedis.ch/kyber/v4/sign/anon"
+	"go.dedis.ch/cothority/v3/personhood/contracts"
 
-	"go.dedis.ch/cothority/v4/byzcoin"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3/sign/anon"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"golang.org/x/xerrors"
 )
 
 // Used for tests
@@ -29,24 +35,11 @@ func init() {
 	var err error
 	templateID, err = onet.RegisterNewService(ServiceName, newService)
 	log.ErrFatal(err)
-
-	err = byzcoin.RegisterGlobalContract(ContractPopPartyID, ContractPopPartyFromBytes)
-	if err != nil {
-		log.ErrFatal(err)
-	}
-	err = byzcoin.RegisterGlobalContract(ContractSpawnerID, ContractSpawnerFromBytes)
-	if err != nil {
-		log.ErrFatal(err)
-	}
-	err = byzcoin.RegisterGlobalContract(ContractCredentialID, ContractCredentialFromBytes)
-	if err != nil {
-		log.ErrFatal(err)
-	}
-	err = byzcoin.RegisterGlobalContract(ContractRoPaSciID, ContractRoPaSciFromBytes)
-	if err != nil {
-		log.ErrFatal(err)
-	}
 }
+
+// SetAdminDarcNonce can be used only once to calculate the signature of the
+// new adminDarcIDs.
+type SetAdminDarcNonce [32]byte
 
 // Service is our template-service
 type Service struct {
@@ -57,7 +50,7 @@ type Service struct {
 	// meetups is a list of last users calling.
 	meetups []UserLocation
 
-	storage *storage1
+	storage *storage2
 }
 
 // Capabilities returns the version of endpoints this conode offers:
@@ -130,6 +123,7 @@ func (s *Service) Poll(rq *Poll) (*PollResponse, error) {
 		s.storage.Polls[string(rq.ByzCoinID)] = &storagePolls{}
 		return s.Poll(rq)
 	}
+	log.Lvlf2("%s: Getting %+v", s.ServerIdentity(), rq)
 	switch {
 	case rq.NewPoll != nil:
 		np := PollStruct{
@@ -184,7 +178,7 @@ func (s *Service) Poll(rq *Poll) (*PollResponse, error) {
 		msg := append([]byte("Choice"), byte(rq.Answer.Choice))
 		scope := append([]byte("Poll"), append(rq.ByzCoinID, poll.PollID...)...)
 		scopeHash := sha256.Sum256(scope)
-		var ph *ContractPopParty
+		var ph *contracts.ContractPopParty
 		var err error
 		if poll.Personhood.Equal(byzcoin.ConfigInstanceID) {
 			ph, err = s.getPopContract(rq.ByzCoinID, rq.Answer.PartyID.Slice())
@@ -195,7 +189,8 @@ func (s *Service) Poll(rq *Poll) (*PollResponse, error) {
 			log.Error(err)
 			return nil, err
 		}
-		tag, err := anon.Verify(&suiteBlake2s{}, msg, ph.Attendees.Keys, scopeHash[:], rq.Answer.LRS)
+		tag, err := anon.Verify(&contracts.SuiteBlake2s{}, msg,
+			ph.Attendees.Keys, scopeHash[:], rq.Answer.LRS)
 		if err != nil {
 			log.Error(err)
 			return nil, err
@@ -232,14 +227,14 @@ func (s *Service) Poll(rq *Poll) (*PollResponse, error) {
 				return &PollResponse{Polls: []PollStruct{}}, s.save()
 			}
 		}
-		return nil, errors.New("didn't find poll to delete");
+		return nil, errors.New("didn't find poll to delete")
 	default:
 		s.storage.Polls[string(rq.ByzCoinID)] = &storagePolls{Polls: []*PollStruct{}}
 		return &PollResponse{Polls: []PollStruct{}}, s.save()
 	}
 }
 
-func (s *Service) getPopContract(bcID skipchain.SkipBlockID, phIID []byte) (*ContractPopParty, error) {
+func (s *Service) getPopContract(bcID skipchain.SkipBlockID, phIID []byte) (*contracts.ContractPopParty, error) {
 	gpr, err := s.Service(byzcoin.ServiceName).(*byzcoin.Service).GetProof(&byzcoin.GetProof{
 		Version: byzcoin.CurrentVersion,
 		Key:     phIID,
@@ -252,11 +247,11 @@ func (s *Service) getPopContract(bcID skipchain.SkipBlockID, phIID []byte) (*Con
 	if err != nil {
 		return nil, err
 	}
-	if cid != ContractPopPartyID {
+	if cid != contracts.ContractPopPartyID {
 		return nil, errors.New("this is not a personhood contract")
 	}
-	cpop, err := s.byzcoinService().GetContractInstance(ContractPopPartyID, val)
-	return cpop.(*ContractPopParty), err
+	cpop, err := s.byzcoinService().GetContractInstance(contracts.ContractPopPartyID, val)
+	return cpop.(*contracts.ContractPopParty), err
 }
 
 // RoPaSciList can either store a new rock-paper-scissors in the list, or just return the list of
@@ -266,7 +261,7 @@ func (s *Service) RoPaSciList(rq *RoPaSciList) (*RoPaSciListResponse, error) {
 	log.Lvl1(s.ServerIdentity(), "RoPaSciList:", rq, s.storage.RoPaSci)
 	if rq.Wipe != nil && *rq.Wipe {
 		log.Lvl2(s.ServerIdentity(), "Wiping all known rock-paper-scissor games")
-		s.storage.RoPaSci = []*RoPaSci{}
+		s.storage.RoPaSci = []*contracts.RoPaSci{}
 		return &RoPaSciListResponse{}, nil
 	}
 	if rq.NewRoPaSci != nil {
@@ -277,13 +272,13 @@ func (s *Service) RoPaSciList(rq *RoPaSciList) (*RoPaSciListResponse, error) {
 			if rps.RoPaSciID.Equal(rq.Lock.RoPaSciID) {
 				if rps.Locked == 0 {
 					rps.Locked = time.Now().Unix()
-					return &RoPaSciListResponse{RoPaScis: []RoPaSci{*rps}}, nil
+					return &RoPaSciListResponse{RoPaScis: []contracts.RoPaSci{*rps}}, nil
 				}
 			}
 		}
 		return nil, errors.New("couldn't lock this ropasci")
 	}
-	var roPaScis []RoPaSci
+	var roPaScis []contracts.RoPaSci
 	for i := 0; i < len(s.storage.RoPaSci); i++ {
 		rps := s.storage.RoPaSci[i]
 		err := func() error {
@@ -299,11 +294,11 @@ func (s *Service) RoPaSciList(rq *RoPaSciList) (*RoPaSciListResponse, error) {
 			if err != nil {
 				return err
 			}
-			cbc, err := s.byzcoinService().GetContractInstance(ContractRoPaSciID, buf)
+			cbc, err := s.byzcoinService().GetContractInstance(contracts.ContractRoPaSciID, buf)
 			if err != nil {
 				return err
 			}
-			if cbc.(*ContractRoPaSci).SecondPlayer >= 0 {
+			if cbc.(*contracts.ContractRoPaSci).SecondPlayer >= 0 {
 				return errors.New("finished game")
 			}
 			return nil
@@ -326,31 +321,35 @@ func (s *Service) RoPaSciList(rq *RoPaSciList) (*RoPaSciListResponse, error) {
 	return &RoPaSciListResponse{RoPaScis: roPaScis}, nil
 }
 
-// TODO: Check signature
+// verifySignature first makes sure that the signer is part of the admin darc
+// by asking our own node. If the signer is part of the admin darc, then the
+// signature on the msg is verified.
 func (s *Service) verifySignature(bcID skipchain.SkipBlockID, identity darc.Identity,
 	msg, signature []byte) (bool, error) {
-	log.Error("testing-mode")
-	return true, nil
-	// This is a hardcoded admin darc.
-	//admin, err := hex.DecodeString("b11b8ef2a60d4bd15d1b2859c40f8f2bd6ad14c7ed6860fa4409a024e86e6f50")
-	// This is the official, OpenHouse2019 admin key
-	admin, err := hex.DecodeString("28aa9504ad3d781611b57d98607e1bca25b1c92f3b32a08a7e341c3866db4675")
-	log.ErrFatal(err)
-	bc := s.Service(byzcoin.ServiceName).(*byzcoin.Service)
-	auth, err := bc.CheckAuthorization(&byzcoin.CheckAuthorization{
-		Version:    byzcoin.CurrentVersion,
-		ByzCoinID:  bcID,
-		DarcID:     admin,
-		Identities: []darc.Identity{identity},
-	})
-	if err != nil {
-		return false, err
+	for _, admin := range s.storage.AdminDarcIDs {
+		bc := s.Service(byzcoin.ServiceName).(*byzcoin.Service)
+		auth, err := bc.CheckAuthorization(&byzcoin.CheckAuthorization{
+			Version:    byzcoin.CurrentVersion,
+			ByzCoinID:  bcID,
+			DarcID:     admin,
+			Identities: []darc.Identity{identity},
+		})
+		if err != nil {
+			return false, err
+		}
+		sign := false
+		for _, action := range auth.Actions {
+			sign = sign || action == "_sign"
+		}
+		if !sign {
+			return false, nil
+		}
+		err = schnorr.Verify(cothority.Suite, identity.Ed25519.Point, msg, signature)
+		if err == nil {
+			return true, nil
+		}
 	}
-	sign := false
-	for _, action := range auth.Actions {
-		sign = sign || action == "_sign"
-	}
-	return sign, nil
+	return false, xerrors.New("didn't find matching adminDarc")
 }
 
 // PartyList can either store a new party in the list, or just return the list of
@@ -382,7 +381,7 @@ func (s *Service) PartyList(rq *PartyList) (*PartyListResponse, error) {
 	for _, p := range s.storage.Parties {
 		party, err := getParty(p)
 		// Remove finalized parties from the returned result
-		if err == nil && party.State < FinalizedState {
+		if err == nil && party.State < contracts.FinalizedState {
 			parties = append(parties, *p)
 		}
 	}
@@ -417,11 +416,39 @@ func (s *Service) Challenge(rq *Challenge) (*ChallengeReply, error) {
 	//return nil, nil
 }
 
+// GetAdminDarcIDs returns the stored admin darc IDs.
+func (s *Service) GetAdminDarcIDs(rq *GetAdminDarcIDs) (*GetAdminDarcIDsReply,
+	error) {
+	return &GetAdminDarcIDsReply{s.storage.AdminDarcIDs}, nil
+}
+
+// SetAdminDarcIDs sets a new set of admin darc IDs. The signature must be on
+//   sha256( NewAdminDarcID[0] | ... )
+//
+// and verifiable using the ServerIdentity's public key. The communication is
+// supposed to be secure and protected against replay-attacks, e.g., using
+// a certificate for the websocket port.
+func (s *Service) SetAdminDarcIDs(rq *SetAdminDarcIDs) (*SetAdminDarcIDsReply,
+	error) {
+	var msg []byte
+	for _, adid := range rq.NewAdminDarcIDs {
+		msg = append(msg, adid[:]...)
+	}
+	log.Printf("message is: %x", msg)
+	err := schnorr.Verify(cothority.Suite, s.ServerIdentity().Public, msg,
+		rq.Signature)
+	if err != nil {
+		return nil, err
+	}
+	s.storage.AdminDarcIDs = rq.NewAdminDarcIDs
+	return &SetAdminDarcIDsReply{}, s.save()
+}
+
 func (s *Service) byzcoinService() *byzcoin.Service {
 	return s.Service(byzcoin.ServiceName).(*byzcoin.Service)
 }
 
-func getParty(p *Party) (cpp *ContractPopParty, err error) {
+func getParty(p *Party) (cpp *contracts.ContractPopParty, err error) {
 	cl := byzcoin.NewClient(p.ByzCoinID, p.Roster)
 	pr, err := cl.GetProofFromLatest(p.InstanceID.Slice())
 	if err != nil {
@@ -431,20 +458,21 @@ func getParty(p *Party) (cpp *ContractPopParty, err error) {
 	if err != nil {
 		return
 	}
-	if cid != ContractPopPartyID {
+	if cid != contracts.ContractPopPartyID {
 		err = errors.New("didn't get a party instance")
 		return
 	}
-	cbc, err := ContractPopPartyFromBytes(buf)
-	return cbc.(*ContractPopParty), err
+	cbc, err := contracts.ContractPopPartyFromBytes(buf)
+	return cbc.(*contracts.ContractPopParty), err
 }
 
 func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
-	if err := s.RegisterHandlers(s.Capabilities, s.Meetup, s.Poll, s.RoPaSciList, s.PartyList,
-		s.Challenge); err != nil {
+	if err := s.RegisterHandlers(s.Capabilities, s.Meetup, s.Poll,
+		s.RoPaSciList, s.PartyList, s.Challenge, s.GetAdminDarcIDs,
+		s.SetAdminDarcIDs); err != nil {
 		return nil, errors.New("couldn't register messages")
 	}
 
@@ -452,7 +480,9 @@ func newService(c *onet.Context) (onet.Service, error) {
 		log.Error(err)
 		return nil, err
 	}
-	s.storage.RoPaSci = []*RoPaSci{}
+	if len(s.storage.RoPaSci) == 0 {
+		s.storage.RoPaSci = []*contracts.RoPaSci{}
+	}
 	if len(s.storage.Parties) == 0 {
 		s.storage.Parties = make(map[string]*Party)
 	}
@@ -461,6 +491,9 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 	if len(s.storage.Challenge) == 0 {
 		s.storage.Challenge = make(map[string]*ChallengeCandidate)
+	}
+	if len(s.storage.AdminDarcIDs) == 0 {
+		s.storage.AdminDarcIDs = []darc.ID{}
 	}
 	return s, s.save()
 }

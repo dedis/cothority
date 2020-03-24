@@ -11,12 +11,12 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4/blscosi/bdnproto"
-	"go.dedis.ch/cothority/v4/blscosi/protocol"
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/pairing"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/cothority/v3/blscosi/bdnproto"
+	"go.dedis.ch/cothority/v3/blscosi/protocol"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 var defaultTimeout = 20 * time.Second
@@ -116,7 +116,7 @@ func TestBftCoSi(t *testing.T) {
 	const protoName = "TestBftCoSi"
 
 	err := GlobalInitBFTCoSiProtocol(testSuite, verify, ack, protoName)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	for _, n := range []int{1, 2, 4, 9, 20} {
 		runProtocol(t, n, 0, 0, protoName, 0)
@@ -131,7 +131,7 @@ func TestBdnCoSi(t *testing.T) {
 	}
 
 	err := GlobalInitBdnCoSiProtocol(testSuite, verify, ack, protoName)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	for _, n := range nNodes {
 		runProtocol(t, n, 0, 0, protoName, 1)
@@ -143,7 +143,7 @@ func TestBftCoSiRefuse(t *testing.T) {
 	const protoName = "TestBftCoSiRefuse"
 
 	err := GlobalInitBFTCoSiProtocol(testSuite, verifyRefuse, ack, protoName)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// the refuseIndex has both leaf and sub leader failure
 	configs := []struct{ n, f, r int }{
@@ -161,7 +161,7 @@ func TestBftCoSiFault(t *testing.T) {
 	const protoName = "TestBftCoSiFault"
 
 	err := GlobalInitBFTCoSiProtocol(testSuite, verify, ack, protoName)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	configs := []struct{ n, f, r int }{
 		{4, 1, 0},
@@ -183,7 +183,7 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	require.NotNil(t, roster)
 
 	pi, err := local.CreateProtocol(protoName, tree)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	publics := roster.Publics()
 	bftCosiProto := pi.(*ByzCoinX)
@@ -209,11 +209,11 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	}
 
 	err = bftCosiProto.Start()
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// verify signature
 	err = getAndVerifySignature(bftCosiProto.FinalSignatureChan, publics, proposal, scheme)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// check the counters
 	counter.Lock()
@@ -238,7 +238,7 @@ func getAndVerifySignature(sigChan chan FinalSignature, publics []kyber.Point, p
 	if sig.Sig == nil {
 		return fmt.Errorf("signature is nil")
 	}
-	if bytes.Compare(sig.Msg, proposal) != 0 {
+	if !bytes.Equal(sig.Msg, proposal) {
 		return fmt.Errorf("message in the signature is different from proposal")
 	}
 	err := func() error {

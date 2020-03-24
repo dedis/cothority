@@ -6,14 +6,14 @@ import (
 	"math/rand"
 	"time"
 
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/darc"
-	"go.dedis.ch/cothority/v4/darc/expression"
-	"go.dedis.ch/cothority/v4/skipchain"
-	"go.dedis.ch/kyber/v4/sign/schnorr"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
-	"go.dedis.ch/onet/v4/network"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/darc/expression"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 	"golang.org/x/xerrors"
 )
@@ -165,6 +165,14 @@ func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxRe
 	if c.Genesis == nil {
 		if err := c.fetchGenesis(); err != nil {
 			return nil, xerrors.Errorf("fetching genesis: %v", err)
+		}
+	}
+
+	for _, inst := range tx.Instructions {
+		if inst.version != CurrentVersion {
+			return nil, xerrors.New(
+				"got instruction with wrong version - please use byzcoin." +
+					"NewClientTransaction")
 		}
 	}
 
