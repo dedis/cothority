@@ -134,7 +134,7 @@ export default class Proof extends Message<Proof> {
      * @returns an error if something is wrong, null otherwise
      * @deprecated use verifyFrom for a complete verification
      */
-    verify(latestID: InstanceID): Error {
+    verify(latestID: InstanceID): Error | undefined {
         if (!this.latest.computeHash().equals(this.latest.hash)) {
             return new Error("invalid latest block");
         }
@@ -182,7 +182,7 @@ export default class Proof extends Message<Proof> {
             return new Error("last forward link does not point to the latest block");
         }
 
-        return null;
+        return undefined;
     }
 
     /**
@@ -353,7 +353,7 @@ export class InclusionProof extends Message<InclusionProof> {
     leaf: LeafNode;
     empty: EmptyNode;
     nonce: Buffer;
-    protected _state: StateChangeBody;
+    private _state: StateChangeBody | undefined;
 
     constructor(props?: Properties<InclusionProof>) {
         super(props);

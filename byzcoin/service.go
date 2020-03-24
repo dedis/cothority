@@ -607,8 +607,6 @@ func (s *Service) GetSignerCounters(req *GetSignerCounters) (*GetSignerCountersR
 // GetUpdates returns instances that have a newer versions than the ones
 // passed to it.
 func (s *Service) GetUpdates(pr *GetUpdatesRequest) (*GetUpdatesReply, error) {
-	reply := &GetUpdatesReply{}
-	sendVersion0 := pr.Flags&GUFSendVersion0 > 0
 	sb := s.db().GetByID(pr.LatestBlockID)
 	if sb == nil {
 		return nil, xerrors.New("cannot find skipblock while getting proof")
@@ -616,20 +614,26 @@ func (s *Service) GetUpdates(pr *GetUpdatesRequest) (*GetUpdatesReply, error) {
 	if len(sb.ForwardLink) > 0 {
 		return nil, xerrors.New("can only give proofs for latest block")
 	}
+
 	st, err := s.GetReadOnlyStateTrie(sb.SkipChainID())
 	if err != nil {
 		return nil, xerrors.Errorf("getting state trie: %w", err)
 	}
+
+	sendVersion0 := pr.Flags&GUFSendVersion0 > 0
+	reply := &GetUpdatesReply{}
 	for _, idv := range pr.Instances {
 		_, ver, _, _, err := st.GetValues(idv.ID[:])
+		if err != nil {
+			return nil, fmt.Errorf("couldn't read values of instance: %v", err)
+		}
 		if ver <= idv.Version &&
 			!(sendVersion0 && ver == 0) {
 			continue
 		}
 		proof, err := st.GetProof(idv.ID[:])
 		if err != nil {
-			log.Warn("Error while looking up proof", err)
-			continue
+			return nil, fmt.Errorf("error while looking up proof: %v", err)
 		}
 		reply.Proofs = append(reply.Proofs, *proof)
 	}

@@ -13,8 +13,8 @@ _: &language_js
 _: &gen_link_kyber
   pushd external/js/kyber && npm ci && npm run link && popd
 _: &get_go
-  - gimme 1.12.16
-  - . $HOME/.gimme/envs/go1.12.16.env
+  - gimme 1.13
+  - . $HOME/.gimme/envs/go1.13.env
 
 _: &stage_build_go
   script:
@@ -83,9 +83,7 @@ jobs:
         - npm run build
 
     - stage: test
-      <<: *language_go_1_13
-      script: GO111MODULE=on make test_goveralls
-    - <<: *language_go_1_14
+      <<: *language_go_1_14
       script: GO111MODULE=on make test_goveralls
     - name: "java"
       language: java

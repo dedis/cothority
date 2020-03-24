@@ -379,7 +379,7 @@ func TestClient_GetUpdates(t *testing.T) {
 	s.sendTxAndWait(t, ctx, 10)
 
 	req.Flags = 0
-	gur, err = s.service().GetUpdates(req)
+	_, err = s.service().GetUpdates(req)
 	require.Error(t, err)
 	latest, err := s.service().db().GetLatest(s.genesis)
 	req.LatestBlockID = latest.Hash

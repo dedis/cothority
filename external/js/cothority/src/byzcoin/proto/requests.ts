@@ -244,16 +244,12 @@ export class GetUpdatesRequest extends Message<GetUpdatesRequest> {
     static readonly sendVersion0 = Long.fromNumber(1);
 
     static register() {
-        registerMessage("GetUpdatesRequest", GetUpdatesRequest);
+        registerMessage("GetUpdatesRequest", GetUpdatesRequest, IDVersion);
     }
 
     readonly instances: IDVersion[];
     readonly flags: Long;
     readonly latestblockid: Buffer;
-
-    constructor(props?: Properties<GetUpdatesRequest>) {
-        super(props);
-    }
 }
 
 /**
@@ -261,16 +257,12 @@ export class GetUpdatesRequest extends Message<GetUpdatesRequest> {
  */
 export class GetUpdatesReply extends Message<GetUpdatesReply> {
     static register() {
-        registerMessage("GetUpdatesReply", GetUpdatesReply);
+        registerMessage("GetUpdatesReply", GetUpdatesReply, InclusionProof, ForwardLink, SkipBlock);
     }
 
     readonly proofs: InclusionProof[];
     readonly links: ForwardLink[];
     readonly latest: SkipBlock;
-
-    constructor(props?: Properties<GetUpdatesReply>) {
-        super(props);
-    }
 }
 
 CreateGenesisBlock.register();
@@ -281,6 +273,5 @@ AddTxRequest.register();
 AddTxResponse.register();
 GetSignerCounters.register();
 GetSignerCountersResponse.register();
-IDVersion.register();
 GetUpdatesRequest.register();
 GetUpdatesReply.register();
