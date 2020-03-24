@@ -123,9 +123,9 @@ location / {
 ```
 
 As we will see later during the configuration phase, we will have to advertise
-this configuration in the `public.toml` configuration file with the `Url` field.
-In this case, the configuration would be `Url ="https://excellent.example.com"`
-for Apache and `Url = "example.com/conode"` for Nginx. More on that later.
+this configuration in the `public.toml` configuration file with the `URL` field.
+In this case, the configuration would be `URL ="https://excellent.example.com"`
+for Apache and `URL = "example.com/conode"` for Nginx. More on that later.
 
 ## Configuration setup
 
@@ -209,7 +209,7 @@ This will prompt the interactive setup and set the 2 configuration files in the
 ### Post setup instructions
 
 There are a few things you can do now that you have your configuration files.
-This first one is to update the `Url` field in the public.toml file in case you
+This first one is to update the `URL` field in the public.toml file in case you
 set up a WebSocket over TLS connection for the conode-client communication
 during the [Environment setup](#environment-setup).
 
@@ -610,7 +610,7 @@ $ sudo ufw allow 7770
 $ mkdir conode_data
 $ docker run -it --rm -p 7770-7771:7770-7771 --name conode -v ~/conode_data:/conode_data dedis/conode:latest ./conode setup
 $ vim ~/conode_data/public.toml
-> *update the Url field*
+> *update the URL field*
 $ docker run --restart always -d -p 7770-7771:7770-7771 --name conode -v ~/conode_data:/conode_data --log-opt max-size=10m --log-opt max-file=4 --log-opt compress=true dedis/conode:latest
 ```
 
