@@ -18,13 +18,16 @@ describe("Network Proto Tests", () => {
             Public = "e5e23e58539a09d3211d8fa0fb3475d48655e0c06d83e93c8e6e7d16aa87c106"
             Description = "conode2"
             Suite = "Ed25519"
-            Url = "ws:127.0.0.1:7010"
+            URL = "ws:127.0.0.1:7010"
         `;
-        const roster = Roster.fromTOML(str);
 
-        expect(roster.length).toBe(2);
-        expect(roster.slice(1, 2).length).toBe(1);
-        expect(roster.aggregate.length).toBeGreaterThan(0);
+        [str, str.replace("URL", "Url")].forEach((toml) => {
+            const roster = Roster.fromTOML(toml);
+            expect(roster.length).toBe(2);
+            expect(roster.slice(1, 2).length).toBe(1);
+            expect(roster.aggregate.length).toBeGreaterThan(0);
+            expect(roster.list[1].url).toBe("ws:127.0.0.1:7010");
+        });
     });
 
     it("should generate the roster ID", () => {

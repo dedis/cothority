@@ -56,7 +56,11 @@ export class Roster extends Message<Roster> {
     static fromTOML(data: string): Roster {
         const roster = toml.parse(data);
         const list = roster.servers.map((server: any) => {
-            const {Public, Suite, Address, Description, Services, Url} = server;
+            const {Public, Suite, Address, Description, Services} = server;
+            let url = server.URL;
+            if (url === undefined) {
+              url = server.Url;
+            }
             const p = PointFactory.fromToml(Suite, Public);
 
             return new ServerIdentity({
@@ -69,7 +73,7 @@ export class Roster extends Message<Roster> {
 
                     return new ServiceIdentity({name: key, public: point.toProto(), suite});
                 }),
-                url: Url,
+                url,
             });
         });
 
@@ -162,7 +166,7 @@ export class Roster extends Message<Roster> {
           Suite = "Ed25519"
           Public = "${si.getPublic().marshalBinary().toString("hex")}"
           Description = "${si.description}"
-          Url = "${si.url}"
+          URL = "${si.url}"
         `).join("\n");
     }
 }
