@@ -118,7 +118,7 @@ jobs:
           cd external/js/kyber &&
           npm ci &&
           npm version prerelease --preid=p`date +%y%m.%d%H.%M%S` &&
-          ./publish --tag dev
+          ./publish.sh --tag dev
     - name: "NPM: js > cothority"
       <<: *stage_deploy_npm
       deploy:
@@ -129,7 +129,7 @@ jobs:
           cd external/js/cothority &&
           npm ci &&
           npm version prerelease --preid=p`date +%y%m.%d%H.%M%S` &&
-          ./publish --tag dev
+          ./publish.sh --tag dev
 
 notifications:
   email: false
