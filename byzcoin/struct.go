@@ -717,3 +717,12 @@ func (c ChainConfig) String() string {
 	}
 	return res.String()
 }
+
+// GetUpdatesFlags define how the proofs will be returned
+type GetUpdatesFlags uint64
+
+const (
+	// GUFSendVersion0 will make GetUpdates to send all instances with
+	// version 0, even those that are note updated.
+	GUFSendVersion0 = GetUpdatesFlags(1 << iota)
+)

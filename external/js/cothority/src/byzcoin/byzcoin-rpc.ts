@@ -7,11 +7,7 @@ import Darc from "../darc/darc";
 import IdentityEd25519 from "../darc/identity-ed25519";
 import IdentityWrapper, { IIdentity } from "../darc/identity-wrapper";
 import { WebSocketAdapter } from "../network";
-import {
-    IConnection,
-    LeaderConnection,
-    RosterWSConnection,
-} from "../network/connection";
+import { IConnection, LeaderConnection, RosterWSConnection } from "../network/connection";
 import { Roster } from "../network/proto";
 import { SkipBlock } from "../skipchain/skipblock";
 import SkipchainRPC from "../skipchain/skipchain-rpc";
@@ -19,7 +15,7 @@ import ClientTransaction, { ICounterUpdater } from "./client-transaction";
 import ChainConfig from "./config";
 import DarcInstance from "./contracts/darc-instance";
 import { InstanceID } from "./instance";
-import Proof from "./proof";
+import Proof, { InclusionProof } from "./proof";
 import { DataHeader } from "./proto";
 import CheckAuthorization, { CheckAuthorizationResponse } from "./proto/check-auth";
 import {
@@ -31,6 +27,9 @@ import {
     GetProofResponse,
     GetSignerCounters,
     GetSignerCountersResponse,
+    GetUpdatesReply,
+    GetUpdatesRequest,
+    IDVersion,
 } from "./proto/requests";
 import { StreamingRequest, StreamingResponse } from "./proto/stream";
 
@@ -387,6 +386,29 @@ export default class ByzCoinRPC implements ICounterUpdater {
         this._latest = reply.proof.latest;
 
         return reply.proof;
+    }
+
+    /**
+     * Gets one or more proofs for updated instances. The client can ask an array of instances and their latest
+     * known version, and the service will return all instances that have been updated in the meantim.
+     *
+     * Instead of returning full proofs, it only returns the InclusionProofs.
+     *
+     * @param instances
+     * @param flags
+     */
+    async getUpdates(instances: IDVersion[], flags: Long): Promise<InclusionProof[]> {
+        const req = new GetUpdatesRequest({
+            flags,
+            instances,
+            latestblockid: this.latest.hash,
+        });
+
+        const header = DataHeader.decode(this.latest.data);
+        const reply = await this.conn.send<GetUpdatesReply>(req, GetUpdatesReply);
+        return reply.proofs.filter((pr) => pr.hashInterior(0).equals(header.trieRoot))
+            .filter((pr) => instances.find((inst) => inst.id.equals(pr.key)))
+            .filter((pr) => pr.exists(pr.key));
     }
 
     /**

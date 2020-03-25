@@ -77,7 +77,7 @@ message IdentityDarc {
 // IdentityEvmContract holds the address of an EVM contract.
 message IdentityEvmContract {
   // 	BEvmID  []byteBEvm InstanceID
-  required common.Address address = 1;
+  required bytes address = 1;
 }
 
 // Signature is a signature on a Darc to accept a given decision.
@@ -119,7 +119,7 @@ message SignerProxy {
 // SignerEvmContract holds the address of an EVM contract.
 message SignerEvmContract {
   // 	BEvmID  []byteBEvm InstanceID
-  required common.Address address = 1;
+  required bytes address = 1;
 }
 
 // Request is the structure that the client must provide to be verified

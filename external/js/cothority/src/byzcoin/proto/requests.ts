@@ -3,9 +3,9 @@ import { Message, Properties } from "protobufjs/light";
 import Darc from "../../darc/darc";
 import { Roster } from "../../network/proto";
 import { registerMessage } from "../../protobuf";
-import { SkipBlock } from "../../skipchain/skipblock";
+import { ForwardLink, SkipBlock } from "../../skipchain/skipblock";
 import ClientTransaction from "../client-transaction";
-import Proof from "../proof";
+import Proof, { InclusionProof } from "../proof";
 
 /**
  * Request to create a byzcoin skipchain
@@ -224,6 +224,47 @@ export class GetSignerCountersResponse extends Message<GetSignerCountersResponse
     }
 }
 
+/**
+ * Holds an instanceID and it's latest known version.
+ */
+export class IDVersion extends Message<IDVersion> {
+    static register() {
+        registerMessage("IDVersion", IDVersion);
+    }
+
+    readonly id: Buffer;
+    readonly version: Long;
+}
+
+/**
+ * Requests a set of proofs that will be returned in a single message.
+ * The reply will only hold proofs for instances that have a higher version than the ones given here.
+ */
+export class GetUpdatesRequest extends Message<GetUpdatesRequest> {
+    static readonly sendVersion0 = Long.fromNumber(1);
+
+    static register() {
+        registerMessage("GetUpdatesRequest", GetUpdatesRequest, IDVersion);
+    }
+
+    readonly instances: IDVersion[];
+    readonly flags: Long;
+    readonly latestblockid: Buffer;
+}
+
+/**
+ * The requested proofs
+ */
+export class GetUpdatesReply extends Message<GetUpdatesReply> {
+    static register() {
+        registerMessage("GetUpdatesReply", GetUpdatesReply, InclusionProof, ForwardLink, SkipBlock);
+    }
+
+    readonly proofs: InclusionProof[];
+    readonly links: ForwardLink[];
+    readonly latest: SkipBlock;
+}
+
 CreateGenesisBlock.register();
 CreateGenesisBlockResponse.register();
 GetProof.register();
@@ -232,3 +273,5 @@ AddTxRequest.register();
 AddTxResponse.register();
 GetSignerCounters.register();
 GetSignerCountersResponse.register();
+GetUpdatesRequest.register();
+GetUpdatesReply.register();

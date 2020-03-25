@@ -483,3 +483,25 @@ message DebugRemoveRequest {
   required bytes byzcoinid = 1;
   required bytes signature = 2;
 }
+
+// IDVersion holds the InstanceID and the latest known version of an instance.
+message IDVersion {
+  required bytes id = 1;
+  required uint64 version = 2;
+}
+
+// GetUpdatesRequest allows to request changes to existing instances by
+// sending a slice of known versions.
+message GetUpdatesRequest {
+  repeated IDVersion instances = 1;
+  required uint64 flags = 2;
+  required bytes latestblockid = 3;
+}
+
+// GetUpdatesReply only sends back the instances that have a new version,
+// but will not send any proof for an instance that didn't change.
+message GetUpdatesReply {
+  repeated trie.Proof proofs = 1;
+  repeated skipchain.ForwardLink links = 2;
+  optional skipchain.SkipBlock latest = 3;
+}
