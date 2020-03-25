@@ -2567,7 +2567,6 @@ func (s *Service) TestRestart() error {
 }
 
 func (s *Service) cleanupGoroutines() {
-	log.Lvl1(s.ServerIdentity(), "closing go-routines 1")
 	s.heartbeats.closeAll()
 	s.closeLeaderMonitorChan <- true
 	s.viewChangeMan.closeAll()
@@ -2579,9 +2578,7 @@ func (s *Service) cleanupGoroutines() {
 		delete(s.pollChan, k)
 	}
 	s.pollChanMut.Unlock()
-	log.Lvl1(s.ServerIdentity(), "closing go-routines 2")
 	s.pollChanWG.Wait()
-	log.Lvl1(s.ServerIdentity(), "closing go-routines 3")
 }
 
 func (s *Service) monitorLeaderFailure() {

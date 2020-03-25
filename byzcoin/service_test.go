@@ -2711,7 +2711,7 @@ func (s *ser) testDarcEvolution(t *testing.T, d2 darc.Darc, fail bool) (pr *Proo
 
 func (s *ser) deleteDBs(t *testing.T, index int) {
 	bc := s.services[index]
-	log.Lvl1("Deleting DB of node", index, bc.ServerIdentity())
+	log.Lvlf1("%s: Deleting DB of node %d", bc.ServerIdentity(), index)
 	bc.TestClose()
 	for scid := range bc.stateTries {
 		require.NoError(t, deleteDB(bc.ServiceProcessor, []byte(scid)))

@@ -111,8 +111,8 @@ func (s *defaultTxProcessor) CollectTx() (*collectTxResult, error) {
 	}
 
 	if s.skService().ChainIsProcessing(s.scID) {
-		// When a block is processed, wait for the block to be done
-		time.Sleep(bcConfig.BlockInterval / 2)
+		// When a block is processed,
+		// return immediately without processing any tx from the nodes.
 		return &collectTxResult{Txs: nil, CommonVersion: CurrentVersion - 1}, nil
 	}
 
