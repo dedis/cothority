@@ -1028,7 +1028,8 @@ func sendTransactionWithCounter(t *testing.T, s *ser, client int, kind string, w
 		InclusionWait: wait,
 	})
 
-	for doCatchUp := false; !doCatchUp && wait != 0; _, doCatchUp = s.services[client].skService().WaitBlock(s.genesis.SkipChainID(), nil) {
+	for isProcessing := true; isProcessing && wait != 0; {
+		isProcessing = ser.skService().ChainIsProcessing(s.genesis.SkipChainID())
 		time.Sleep(s.interval)
 	}
 
@@ -2707,8 +2708,8 @@ func (s *ser) testDarcEvolution(t *testing.T, d2 darc.Darc, fail bool) (pr *Proo
 }
 
 func (s *ser) deleteDBs(t *testing.T, index int) {
-	log.Lvl1("Deleting DB of node", index)
 	bc := s.services[index]
+	log.Lvlf1("%s: Deleting DB of node %d", bc.ServerIdentity(), index)
 	bc.TestClose()
 	for scid := range bc.stateTries {
 		require.NoError(t, deleteDB(bc.ServiceProcessor, []byte(scid)))
@@ -2719,8 +2720,7 @@ func (s *ser) deleteDBs(t *testing.T, index int) {
 	sc := bc.Service(skipchain.ServiceName).(*skipchain.Service)
 	require.NoError(t, deleteDB(sc.ServiceProcessor, []byte("skipblocks")))
 	require.NoError(t, deleteDB(sc.ServiceProcessor, []byte("skipchainconfig")))
-	sc.TestRestart()
-	require.NoError(t, bc.startAllChains())
+	require.NoError(t, bc.TestRestart())
 }
 
 // Waits to have a coherent view in all nodes with at least the block
