@@ -1,10 +1,9 @@
 import Log from "../log";
+import { IConnection, WebSocketConnection } from "../network";
 import {
-    IConnection,
     LeaderConnection,
     RosterWSConnection,
-    WebSocketConnection,
-} from "../network/connection";
+} from "../network";
 import { Roster } from "../network/proto";
 import {
     GetAllSkipChainIDs,

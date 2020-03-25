@@ -1,7 +1,7 @@
 import { Log } from "../../src";
 import ByzCoinRPC from "../../src/byzcoin/byzcoin-rpc";
 import { PaginateRequest, PaginateResponse } from "../../src/byzcoin/proto/stream";
-import { WebSocketConnection } from "../../src/network/connection";
+import { WebSocketConnection } from "../../src/network";
 import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/conondes";
 
 describe("Stream Tests", () => {

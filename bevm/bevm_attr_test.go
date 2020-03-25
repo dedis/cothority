@@ -122,6 +122,7 @@ func TestAttrBevm(t *testing.T) {
 	// Create new ledger
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
 	require.NoError(t, err)
+	require.NoError(t, cl.UseNode(0))
 
 	// Spawn a new BEvm instance
 	bevmID, err := NewBEvm(cl, signer, gDarc)

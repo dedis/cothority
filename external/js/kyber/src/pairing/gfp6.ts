@@ -1,11 +1,5 @@
-import {
-    xiTo2PMinus2Over3,
-    xiTo2PSquaredMinus2Over3,
-    xiToPMinus1Over3,
-    xiToPSquaredMinus1Over3,
-} from "./constants";
 import GfP from "./gfp";
-import GfP2 from "./gfp2";
+import GfP2, { xiTo2PMinus2Over3, xiTo2PSquaredMinus2Over3, xiToPMinus1Over3, xiToPSquaredMinus1Over3 } from "./gfp2";
 
 /**
  * Group field of size p^6
