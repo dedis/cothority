@@ -1,7 +1,7 @@
-import { LeaderConnection, RosterWSConnection } from "./connection";
 import { IConnection } from "./nodes";
 import { Roster, ServerIdentity, ServiceIdentity } from "./proto";
-import { setFactory, WebSocketConnection } from "./websocket";
+import { RosterWSConnection } from "./rosterwsconnection";
+import { LeaderConnection, setFactory, WebSocketConnection } from "./websocket";
 import { BrowserWebSocketAdapter, WebSocketAdapter } from "./websocket-adapter";
 
 export {

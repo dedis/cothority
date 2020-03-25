@@ -3,7 +3,7 @@ import { IConnection, WebSocketConnection } from "../network";
 import {
     LeaderConnection,
     RosterWSConnection,
-} from "../network/connection";
+} from "../network";
 import { Roster } from "../network/proto";
 import {
     GetAllSkipChainIDs,

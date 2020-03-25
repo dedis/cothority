@@ -161,20 +161,3 @@ export class RosterWSConnection implements IConnection {
         }
     }
 }
-
-/**
- * Single peer connection that reaches only the leader of the roster
- */
-export class LeaderConnection extends WebSocketConnection {
-    /**
-     * @param roster    The roster to use
-     * @param service   The name of the service
-     */
-    constructor(roster: Roster, service: string) {
-        if (roster.list.length === 0) {
-            throw new Error("Roster should have at least one node");
-        }
-
-        super(roster.list[0].getWebSocketAddress(), service);
-    }
-}

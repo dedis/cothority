@@ -1,9 +1,11 @@
 import { Message } from "protobufjs/light";
-import { BrowserWebSocketAdapter, setFactory, WebSocketConnection } from "../../src/network";
 import {
+    BrowserWebSocketAdapter,
     LeaderConnection,
     RosterWSConnection,
-} from "../../src/network/connection";
+    setFactory,
+    WebSocketConnection,
+} from "../../src/network";
 import { Roster, ServerIdentity } from "../../src/network/proto";
 import { ROSTER } from "../support/conondes";
 import TestWebSocket from "./websocket-test-adapter";
@@ -175,9 +177,15 @@ describe("WebSocketAdapter Tests with sendStream", () => {
         const msg = new Roster();
 
         conn.sendStream(msg, Roster).subscribe({
-            complete: () => {throw new Error("should not complete"); },
-            error: () => {throw new Error("should not get error"); },
-            next: () => {done(); },
+            complete: () => {
+                throw new Error("should not complete");
+            },
+            error: () => {
+                throw new Error("should not get error");
+            },
+            next: () => {
+                done();
+            },
         });
     });
 
@@ -188,12 +196,16 @@ describe("WebSocketAdapter Tests with sendStream", () => {
         const msg = new Roster();
 
         conn.sendStream(msg, Roster).subscribe({
-            complete: () => {throw new Error("should not complete"); },
+            complete: () => {
+                throw new Error("should not complete");
+            },
             error: (err: Error) => {
                 expect(err).toEqual(new Error("reason to close"));
                 done();
             },
-            next: () => {throw new Error("should not get value"); },
+            next: () => {
+                throw new Error("should not get value");
+            },
         });
     });
 
@@ -205,12 +217,16 @@ describe("WebSocketAdapter Tests with sendStream", () => {
         const msg = new Roster();
 
         conn.sendStream(msg, Roster).subscribe({
-            complete: () => {throw new Error("should not complete"); },
+            complete: () => {
+                throw new Error("should not complete");
+            },
             error: (err: Error) => {
                 expect(err).toEqual(new Error("timeout"));
                 done();
             },
-            next: () => {throw new Error("should not get value"); },
+            next: () => {
+                throw new Error("should not get value");
+            },
         });
     });
 
@@ -220,9 +236,13 @@ describe("WebSocketAdapter Tests with sendStream", () => {
         const conn = new WebSocketConnection("http://example.com", "");
 
         conn.sendStream(new Roster(), Roster).subscribe({
-            complete: () => {throw new Error("shouldn't complete"); },
+            complete: () => {
+                throw new Error("shouldn't complete");
+            },
             error: () => done(),
-            next: () => {throw new Error("should not get value"); },
+            next: () => {
+                throw new Error("should not get value");
+            },
         });
     });
 

@@ -4,7 +4,7 @@ import fs from "fs";
 import Long from "long";
 
 import SignerEd25519 from "../../src/darc/signer-ed25519";
-import { RosterWSConnection } from "../../src/network/connection";
+import { RosterWSConnection } from "../../src/network";
 import { Roster } from "../../src/network/proto";
 
 const docker = new Docker();
