@@ -140,7 +140,7 @@ func (s *Service) ContractRead(cdb byzcoin.CollectionView, inst byzcoin.Instruct
 		}
 		//TODO: Ceyhun
 		if cid != ContractWriteID && cid != ContractSemiWriteID {
-			return nil, nil, errors.New("referenced write-id is not a write or simplewrite instance, got " + cid)
+			return nil, nil, errors.New("referenced write-id is not a write or semiwrite instance, got " + cid)
 			//return nil, nil, errors.New("referenced write-id is not a write instance, got " + cid)
 		}
 		return byzcoin.StateChanges{byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""), ContractReadID, r, darcID)}, c, nil
