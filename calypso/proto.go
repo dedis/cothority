@@ -21,7 +21,7 @@ import (
 // ***
 
 // TODO: Ceyhun
-type SimpleWrite struct {
+type SemiWrite struct {
 	//Data     []byte
 	DataHash  []byte
 	K         kyber.Point

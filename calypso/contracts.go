@@ -15,7 +15,7 @@ import (
 var ContractWriteID = "calypsoWrite"
 
 //TODO: Ceyhun
-var ContractSimpleWriteID = "calypsoSimpleWrite"
+var ContractSemiWriteID = "calypsoSemiWrite"
 
 //var ContractLotteryWriteID = "calypsoLotteryWrite"
 
@@ -58,19 +58,19 @@ func (s *Service) ContractWrite(cdb byzcoin.CollectionView, inst byzcoin.Instruc
 			instID := inst.DeriveID("")
 			log.Lvlf3("Successfully verified write request and will store in %x", instID)
 			sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, instID, ContractWriteID, w, darcID))
-		case ContractSimpleWriteID:
+		case ContractSemiWriteID:
 			w := inst.Spawn.Args.Search("write")
 			if w == nil || len(w) == 0 {
 				return nil, nil, errors.New("need a write request in 'write' argument")
 			}
 			//var wr Write
 			//err := protobuf.DecodeWithConstructors(w, &wr, network.DefaultConstructors(cothority.Suite))
-			var sw SimpleWrite
+			var sw SemiWrite
 			err := protobuf.DecodeWithConstructors(w, &sw, network.DefaultConstructors(cothority.Suite))
 			if err != nil {
 				return nil, nil, errors.New("couldn't unmarshal write: " + err.Error())
 			}
-			// TODO: Ceyhun - SimpleWrite does its equivalent of
+			// TODO: Ceyhun - SemiWrite does its equivalent of
 			// CheckProof later when a decryption request is
 			// received
 			//if err = wr.CheckProof(cothority.Suite, darcID); err != nil {
@@ -78,7 +78,7 @@ func (s *Service) ContractWrite(cdb byzcoin.CollectionView, inst byzcoin.Instruc
 			//}
 			instID := inst.DeriveID("")
 			log.Lvlf3("Successfully verified write request and will store in %x", instID)
-			sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, instID, ContractSimpleWriteID, w, darcID))
+			sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, instID, ContractSemiWriteID, w, darcID))
 		case ContractReadID:
 			var scs byzcoin.StateChanges
 			var err error
@@ -139,7 +139,7 @@ func (s *Service) ContractRead(cdb byzcoin.CollectionView, inst byzcoin.Instruct
 			return nil, nil, errors.New("referenced write-id is not correct: " + err.Error())
 		}
 		//TODO: Ceyhun
-		if cid != ContractWriteID && cid != ContractSimpleWriteID {
+		if cid != ContractWriteID && cid != ContractSemiWriteID {
 			return nil, nil, errors.New("referenced write-id is not a write or simplewrite instance, got " + cid)
 			//return nil, nil, errors.New("referenced write-id is not a write instance, got " + cid)
 		}

@@ -302,7 +302,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	byzcoin.RegisterContract(c, ContractWriteID, s.ContractWrite)
 	byzcoin.RegisterContract(c, ContractReadID, s.ContractRead)
 	//TODO: Ceyhun
-	byzcoin.RegisterContract(c, ContractSimpleWriteID, s.ContractWrite)
+	byzcoin.RegisterContract(c, ContractSemiWriteID, s.ContractWrite)
 	//byzcoin.RegisterContract(c, ContractLotteryWriteID, s.ContractWrite)
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
