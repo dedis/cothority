@@ -71,6 +71,8 @@ export class OnChainSecretInstance extends Instance {
 export class CalypsoWriteInstance extends Instance {
     static readonly contractID = "calypsoWrite";
     static readonly argumentWrite = "write";
+    static readonly argumentDarcID = "darcID";
+    static readonly argumentPreID = "preID";
 
     /**
      * Spawn a calypsoWrite instance
@@ -79,6 +81,7 @@ export class CalypsoWriteInstance extends Instance {
      * @param darcID    The darc instance ID
      * @param write The write structure containing the encrypted secret
      * @param signers   The list of signers for the transaction
+     * @param preID used to calculate the ID of the write instance
      * @returns a promise that resolves with the new instance
      */
     static async spawn(
@@ -86,17 +89,23 @@ export class CalypsoWriteInstance extends Instance {
         darcID: InstanceID,
         write: Write,
         signers: Signer[],
+        preID?: Buffer,
     ): Promise<CalypsoWriteInstance> {
         const ctx = ClientTransaction.make(bc.getProtocolVersion(), Instruction.createSpawn(
             darcID,
             CalypsoWriteInstance.contractID,
-            [new Argument({name: CalypsoWriteInstance.argumentWrite,
-                value: Buffer.from(Write.encode(write).finish())})],
+            [new Argument({
+                name: CalypsoWriteInstance.argumentWrite,
+                value: Buffer.from(Write.encode(write).finish()),
+            })],
         ));
+        if (preID) {
+            ctx.instructions[0].spawn.args.push(new Argument({name: this.argumentPreID, value: preID}));
+        }
         await ctx.updateCountersAndSign(bc, [signers]);
         await bc.sendTransactionAndWait(ctx, 10);
 
-        return CalypsoWriteInstance.fromByzcoin(bc, ctx.instructions[0].deriveId(), 1);
+        return CalypsoWriteInstance.fromByzcoin(bc, ctx.instructions[0].deriveIdArg(), 1);
     }
 
     /**
@@ -109,6 +118,14 @@ export class CalypsoWriteInstance extends Instance {
         Promise<CalypsoWriteInstance> {
         return new CalypsoWriteInstance(bc, await Instance.fromByzcoin(bc, iid, waitMatch, interval));
     }
+
+    /**
+     * Returns the instanceID given a preID.
+     * @param preID
+     */
+    static preToInstID(preID: Buffer): InstanceID {
+        return Instance.calcInstID(this.contractID, preID);
+    }
     write: Write;
 
     constructor(private rpc: ByzCoinRPC, inst: Instance) {
@@ -120,7 +137,7 @@ export class CalypsoWriteInstance extends Instance {
         this.write = Write.decode(inst.data);
     }
 
-    async spawnRead(pub: Point, signers: Signer[], coin?: CoinInstance, coinSigners?: Signer[]):
+    async spawnRead(pub: Point, signers: Signer[], coin?: CoinInstance, coinSigners?: Signer[], preID?: Buffer):
         Promise<CalypsoReadInstance> {
         if (this.write.cost && (!coin || !coinSigners)) {
             throw new Error("spawning a read instance costs coins");
@@ -131,15 +148,17 @@ export class CalypsoWriteInstance extends Instance {
                 new Argument({name: CoinInstance.argumentCoins, value: Buffer.from(this.write.cost.value.toBytesLE())}),
             ]);
         }
-        return CalypsoReadInstance.spawn(this.rpc, this.id, pub, signers, pay);
+        return CalypsoReadInstance.spawn(this.rpc, this.id, pub, signers, pay, preID);
     }
 }
 
 export class CalypsoReadInstance extends Instance {
     static readonly contractID = "calypsoRead";
     static readonly argumentRead = "read";
+    static readonly argumentPreID = "preID";
 
-    static async spawn(bc: ByzCoinRPC, writeId: InstanceID, pub: Point, signers: Signer[], pay?: Instruction):
+    static async spawn(bc: ByzCoinRPC, writeId: InstanceID, pub: Point, signers: Signer[], pay?: Instruction,
+                       preID?: Buffer):
         Promise<CalypsoReadInstance> {
         const read = new Read({write: writeId, xc: pub.marshalBinary()});
         const instrs = [Instruction.createSpawn(writeId, CalypsoReadInstance.contractID, [
@@ -148,6 +167,9 @@ export class CalypsoReadInstance extends Instance {
                 value: Buffer.from(Read.encode(read).finish()),
             }),
         ])];
+        if (preID) {
+            instrs[0].spawn.args.push(new Argument({name: this.argumentPreID, value: preID}));
+        }
         const ctxSigners = [signers];
         if (pay) {
             instrs.unshift(pay);
@@ -160,7 +182,7 @@ export class CalypsoReadInstance extends Instance {
         await ctx.updateCountersAndSign(bc, ctxSigners);
         await bc.sendTransactionAndWait(ctx);
 
-        return CalypsoReadInstance.fromByzcoin(bc, ctx.instructions[ctx.instructions.length - 1].deriveId(), 1);
+        return CalypsoReadInstance.fromByzcoin(bc, ctx.instructions[ctx.instructions.length - 1].deriveIdArg(), 1);
     }
 
     /**
@@ -172,6 +194,14 @@ export class CalypsoReadInstance extends Instance {
     static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID, waitMatch: number = 0, interval: number = 1000):
         Promise<CalypsoReadInstance> {
         return new CalypsoReadInstance(bc, await Instance.fromByzcoin(bc, iid, waitMatch, interval));
+    }
+
+    /**
+     * Returns the instanceID given a preID.
+     * @param preID
+     */
+    static preToInstID(preID: Buffer): InstanceID {
+        return Instance.calcInstID(this.contractID, preID);
     }
     read: Read;
 
@@ -213,8 +243,8 @@ export class Write extends Message<Write> {
      * @param X the aggregate public key under which the symmetric key will be encrypted
      * @param key the symmetric key to be encrypted
      */
-    static async createWrite(ltsid: InstanceID, writeDarc: InstanceID, X: Point, key: Buffer,
-                             rand?: (length: number) => Buffer): Promise<Write> {
+    static createWrite(ltsid: InstanceID, writeDarc: InstanceID, X: Point, key: Buffer,
+                       rand?: (length: number) => Buffer): Write {
         // wr := &Write{LTSID: ltsid}
         const wr = new Write();
         // r := suite.Scalar().Pick(suite.RandomStream())
@@ -229,7 +259,7 @@ export class Write extends Message<Write> {
         // 	return nil
         // }
         if (key.length > curve25519.point().embedLen()) {
-            return Promise.reject("key is too long");
+            throw new Error("key is too long");
         }
         // kp := suite.Point().Embed(key, suite.RandomStream())
         const kp = curve25519.point().embed(key, rand);
@@ -272,26 +302,30 @@ export class Write extends Message<Write> {
         wr.ltsid = ltsid;
         return wr;
     }
+
+    // Data should be encrypted by the application under the symmetric key
     // in U and C
     data: Buffer;
     // U is the encrypted random value for the ElGamal encryption
     u: Buffer;
 
-    // Data should be encrypted by the application under the symmetric key
     // Ubar is used for the log-equality proof
     ubar: Buffer;
     // E is the non-interactive challenge as scalar
     e: Buffer;
+
     // Ubar, E and f will be used by the server to verify the writer did
     // correctly encrypt the key. It binds the policy (the darc) with the
     // cyphertext.
+
     // f is the proof
     f: Buffer;
+    // C is the ElGamal parts for the symmetric key material (might also
     // contain an IV)
     c: Buffer;
     // ExtraData is clear text and application-specific
     extradata: Buffer;
-    // C is the ElGamal parts for the symmetric key material (might also
+
     // LTSID points to the identity of the lts group
     ltsid: InstanceID;
     // Cost reflects how many coins you'll have to pay for a read-request

@@ -180,7 +180,8 @@ export default class SkipchainRPC {
             const last = newBlocks[newBlocks.length - 1];
             let isInRoster = false;
             for (const n of last.roster.list) {
-                if (n.getWebSocketAddress() === this.conn.getURL()) {
+                if (n.getWebSocketAddress().replace(/^ws+:\/\//, "") ===
+                    this.conn.getURL().replace(/^ws+:\/\//, "")) {
                     isInRoster = true;
                     break;
                 }
@@ -188,7 +189,7 @@ export default class SkipchainRPC {
             if (!isInRoster) {
                 // A correct node will never return a last block where it is not in the roster.
                 // So this is in fact a wrong node.
-                Log.warn("Got a wrong return from node", this.conn.getURL());
+                Log.warn("A node replied that is not in the roster", this.conn.getURL());
                 latestID = last.hash;
                 if (this.conn instanceof RosterWSConnection) {
                     this.conn.invalidate(this.conn.getURL());

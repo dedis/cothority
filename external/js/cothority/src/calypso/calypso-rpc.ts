@@ -98,7 +98,7 @@ export class LongTermSecret extends OnChainSecretRPC {
      * @param signers needed to authenticate longTermSecret spawns
      * @param roster if given, the roster for the DKG, if null, the full roster of bc will be used
      */
-    static async spawn(bc: ByzCoinRPC, darcID: InstanceID, signers: [Signer], roster?: Roster):
+    static async spawn(bc: ByzCoinRPC, darcID: InstanceID, signers: Signer[], roster?: Roster):
         Promise<LongTermSecret> {
         if (!roster) {
             roster = bc.getConfig().roster;

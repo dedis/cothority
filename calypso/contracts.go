@@ -79,7 +79,11 @@ func (c ContractWrite) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 			err = xerrors.Errorf("proof of write failed: %v", err)
 			return
 		}
-		instID := inst.DeriveID("")
+		instID, err := inst.DeriveIDArg("", "preID")
+		if err != nil {
+			return nil, nil, xerrors.Errorf(
+				"couldn't get ID for instance: %v", err)
+		}
 		log.Lvlf3("Successfully verified write request and will store in %x", instID)
 		sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, instID, ContractWriteID, w, darcID))
 	case ContractReadID:
@@ -107,7 +111,13 @@ func (c ContractWrite) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 				}
 			}
 		}
-		sc = byzcoin.StateChanges{byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""), ContractReadID, r, darcID)}
+		instID, err := inst.DeriveIDArg("", "preID")
+		if err != nil {
+			return nil, nil, xerrors.Errorf(
+				"couldn't get ID for instance: %v", err)
+		}
+		sc = byzcoin.StateChanges{byzcoin.NewStateChange(byzcoin.Create,
+			instID, ContractReadID, r, darcID)}
 	default:
 		err = xerrors.New("can only spawn writes and reads")
 	}

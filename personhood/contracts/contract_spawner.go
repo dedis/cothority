@@ -124,7 +124,8 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 				"popParty\\.(barrier|finalize|mine|addParty)|" +
 				"ropasci\\.(second|confirm)|" +
 				"value\\.update)|" +
-				"spawn:(calypsoRead))$")
+				"spawn:(calypsoRead)|" +
+				"delete:.*)$")
 			for _, rule := range d.Rules.List {
 				if !allowed.MatchString(string(rule.Action)) {
 					return nil, nil, errors.New("cannot spawn darc with rule: " +

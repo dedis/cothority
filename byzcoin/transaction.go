@@ -231,6 +231,23 @@ func (instr Instruction) DeriveID(what string) InstanceID {
 	// strict domain separation now.
 }
 
+// DeriveIDArg calculates the id of the new instance for a spawn-instruction.
+// If the 'arg' is not present in the spawn-arguments,
+// it behaves like DeriveID(what).
+// If the instruction is not a spawn-instruction, it returns an error.
+func (instr Instruction) DeriveIDArg(what, arg string) (InstanceID, error) {
+	if instr.GetType() != SpawnType {
+		return NewInstanceID(nil), xerrors.New("can only get ID from spawn")
+	}
+	if instIDBuf := instr.Spawn.Args.Search(arg); instIDBuf != nil {
+		h := sha256.New()
+		h.Write([]byte(instr.Spawn.ContractID))
+		h.Write(instIDBuf)
+		return NewInstanceID(h.Sum(nil)), nil
+	}
+	return instr.DeriveID(what), nil
+}
+
 // Action returns the action that the user wants to do with this
 // instruction.
 func (instr Instruction) Action() string {

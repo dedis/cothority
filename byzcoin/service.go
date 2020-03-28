@@ -2468,6 +2468,10 @@ func (s *Service) executeInstruction(gs GlobalState, cin []Coin,
 	default:
 		return nil, nil, xerrors.New("unexpected contract type")
 	}
+	if err != nil {
+		return nil, nil, xerrors.Errorf(
+			"error while executing instruction %s: %v", instr, err)
+	}
 
 	// As the InstanceID of each sc is not necessarily the same as the
 	// instruction, we need to get the version from the trie

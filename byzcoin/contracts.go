@@ -296,9 +296,17 @@ func (b BasicContract) Invoke(ReadOnlyStateTrie, Instruction, []Coin) (sc []Stat
 
 // Delete is not implmented in a BasicContract. Types which embed BasicContract
 // must override this method if they support deleting.
-func (b BasicContract) Delete(ReadOnlyStateTrie, Instruction, []Coin) (sc []StateChange, c []Coin, err error) {
-	err = notImpl("Delete")
-	return
+func (b BasicContract) Delete(ro ReadOnlyStateTrie, inst Instruction,
+	coins []Coin) (sc []StateChange, c []Coin, err error) {
+	_, _, cID, _, err := ro.GetValues(inst.InstanceID[:])
+	if err != nil {
+		return nil, nil, xerrors.Errorf("couldn't get contractID: %v", err)
+	}
+	if cID != inst.Delete.ContractID {
+		return nil, nil, xerrors.New("wrong contractID")
+	}
+	return []StateChange{NewStateChange(Remove, inst.InstanceID, cID, nil,
+		nil)}, c, nil
 }
 
 //
