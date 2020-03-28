@@ -140,6 +140,7 @@ export class Instruction extends Message<Instruction> {
         }
         throw new Error("instruction without type");
     }
+
     /**
      * @see README#Message classes
      */

@@ -1,11 +1,12 @@
 import Long from "long";
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject, fromEvent, Subscription } from "rxjs";
 import { tap } from "rxjs/internal/operators/tap";
-import { distinctUntilChanged, filter, map, mergeMap } from "rxjs/operators";
+import { map, throttleTime } from "rxjs/operators";
 import { Rule } from "../darc";
 import Darc from "../darc/darc";
 import IdentityEd25519 from "../darc/identity-ed25519";
 import IdentityWrapper, { IIdentity } from "../darc/identity-wrapper";
+import Log from "../log";
 import { IConnection, LeaderConnection, Roster, RosterWSConnection, WebSocketAdapter } from "../network";
 import { SkipBlock } from "../skipchain/skipblock";
 import SkipchainRPC from "../skipchain/skipchain-rpc";
@@ -144,7 +145,10 @@ export default class ByzCoinRPC implements ICounterUpdater {
     private genesis: SkipBlock;
     private conn: IConnection;
     private db: IStorage;
-    private cache = new Map<InstanceID, BehaviorSubject<Proof>>();
+    private cache = new Map<string, BehaviorSubject<Proof>>();
+    private updateInstances: BehaviorSubject<SkipBlock>;
+    private subscriberListenOnline: Subscription;
+    private subscriberNewBlocks: Subscription;
 
     private _latest: SkipBlock;
 
@@ -198,54 +202,52 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * @throws an error if the instance does not exist
      */
     async instanceObservable(id: InstanceID): Promise<BehaviorSubject<Proof>> {
-        const bs = this.cache.get(id);
+        const idStr = id.toString("hex");
+        const bs = this.cache.get(idStr);
         if (bs !== undefined) {
             return bs;
         }
 
         // Check if the db already has a version, which might be outdated,
         // but still better than to wait for the network.
-        // might be old, but be informed as soon as the correct values arrive.
-        // This makes it possible to have a quick display of values that
-        const idStr = id.toString("hex");
-        const proofBuf = await this.db.get(idStr);
-        let dbProof: Proof;
-        if (proofBuf === undefined) {
-            dbProof = await this.getProofFromLatest(id);
+        // This makes it possible to have a quick display of a value that
+        // might be outdated, but be informed as soon as the correct value arrives.
+        const ipBuf = await this.db.get(idStr);
+        let dbIP: InclusionProof;
+        if (ipBuf !== undefined) {
+            dbIP = InclusionProof.decode(ipBuf);
         } else {
-            dbProof = Proof.decode(proofBuf);
+            try {
+                const gp = await this.getUpdates([new IDVersion({id, version: Long.fromNumber(0)})],
+                    GetUpdatesRequest.sendVersion0);
+                if (gp.length !== 1) {
+                    throw new Error("couldn't find this instance");
+                }
+                dbIP = gp[0];
+                await this.db.set(idStr, Buffer.from(InclusionProof.encode(dbIP).finish()));
+            } catch (e) {
+                Log.error("couldn't getUpdate", e);
+                throw new Error(e);
+            }
         }
-        if (!dbProof.exists(id)) {
+        if (!dbIP.exists(id)) {
             throw new Error("this instance does not exist");
         }
 
         // Create a new BehaviorSubject with the proof, which might not be
         // current, but a best guess from the db of a previous session.
-        const bsNew = new BehaviorSubject(dbProof);
-        this.cache.set(id, bsNew);
+        const bsNew = new BehaviorSubject(new Proof({inclusionproof: dbIP, links: [], latest: this.latest}));
+        this.cache.set(idStr, bsNew);
 
-        // Set up a pipe from the block to fetch new versions if a new block
-        // arrives.
-        // Start with an observable that emits each new block as it arrives.
-        (await this.getNewBlocks())
-            .pipe(
-                // Make sure only newer blocks than the proof are taken into
-                // account
-                filter((block) => block.index > dbProof.latest.index),
-                // Get a new proof of the instance
-                mergeMap(() => this.getProofFromLatest(id)),
-                // Don't emit proofs that are already known
-                distinctUntilChanged((a, b) =>
-                    a.stateChangeBody.version.equals(b.stateChangeBody.version)),
-                // Store new proofs in the db for later use
-                tap((proof) =>
-                    this.db.set(idStr, Buffer.from(Proof.encode(proof).finish()))),
-                // Link to the BehaviorSubject
-            ).subscribe(bsNew);
+        // Need to initialize it anyway, even if the instance is not in the cache.
+        const updateInst = await this.getUpdateInstances();
+        if (ipBuf !== undefined) {
+            // If the instance came from the cache, schedule update of all instances by simulating a new block.
+            updateInst.next(this.latest);
+        }
 
-        // Return the BehaviorSubject - the pipe will continue to run in the
-        // background and check if the proof changed on the emission of
-        // every new block.
+        // Return the BehaviorSubject. The subscription on the getNewBlocks will take care
+        // of all updates.
         return bsNew;
     }
 
@@ -395,7 +397,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * @param instances
      * @param flags
      */
-    async getUpdates(instances: IDVersion[], flags: Long): Promise<InclusionProof[]> {
+    async getUpdates(instances: IDVersion[], flags = Long.fromNumber(0)): Promise<InclusionProof[]> {
         const req = new GetUpdatesRequest({
             flags,
             instances,
@@ -403,10 +405,14 @@ export default class ByzCoinRPC implements ICounterUpdater {
         });
 
         const header = DataHeader.decode(this.latest.data);
-        const reply = await this.conn.send<GetUpdatesReply>(req, GetUpdatesReply);
-        return reply.proofs.filter((pr) => pr.hashInterior(0).equals(header.trieRoot))
-            .filter((pr) => instances.find((inst) => inst.id.equals(pr.key)))
-            .filter((pr) => pr.exists(pr.key));
+        try {
+            const reply = await this.conn.send<GetUpdatesReply>(req, GetUpdatesReply);
+            return reply.proofs.filter((pr) => pr.hashInterior(0).equals(header.trieRoot))
+                .filter((pr) => instances.find((inst) => inst.id.equals(pr.key)))
+                .filter((pr) => pr.exists(pr.key));
+        } catch (e) {
+            return Log.rcatch(e);
+        }
     }
 
     /**
@@ -498,18 +504,12 @@ export default class ByzCoinRPC implements ICounterUpdater {
         if (this.newBlock !== undefined) {
             return this.newBlock;
         }
-        if (this._latest === undefined) {
-            await this.getProofFromLatest(CONFIG_INSTANCE_ID);
-        }
+
+        // Get the latest block - this is faster than getUpdateBlocks
+        await this.getProofFromLatest(CONFIG_INSTANCE_ID);
+
         this.newBlock = new BehaviorSubject(this._latest);
-        const msgBlock = new StreamingRequest({
-            id: this.genesisID,
-        });
-        this.conn.sendStream<StreamingResponse>(msgBlock,
-            StreamingResponse).pipe(map(([sr, ws]) => {
-            this.newBlockWS = ws;
-            return sr.block;
-        })).subscribe(this.newBlock);
+        this.listenNewBlocks();
         return this.newBlock;
     }
 
@@ -522,6 +522,84 @@ export default class ByzCoinRPC implements ICounterUpdater {
             this.newBlockWS.close(1000);
             this.newBlock = undefined;
         }
+    }
+
+    private async getUpdateInstances(): Promise<BehaviorSubject<SkipBlock>> {
+        if (this.updateInstances === undefined) {
+            // For every new block, send the latest known version of all instances, and then
+            // call `next` for all received updates.
+            this.updateInstances = new BehaviorSubject(this.latest);
+            (await this.getNewBlocks()).subscribe(this.updateInstances);
+            this.updateInstances.pipe(throttleTime(1000))
+                .subscribe({
+                    next: async () => {
+                        const idvs = [...this.cache.values()].map((pr) =>
+                            new IDVersion({
+                                    id: pr.getValue().key,
+                                    version: pr.getValue().stateChangeBody.version,
+                                },
+                            ));
+                        const updates = await this.getUpdates(idvs);
+                        await updates.forEach(async (update) => {
+                            const ids = update.key.toString("hex");
+                            await this.db.set(ids, Buffer.from(InclusionProof.encode(update).finish()));
+                            const pr = new Proof({
+                                inclusionproof: update,
+                                latest: this.latest,
+                                links: [],
+                            });
+                            this.cache.get(ids).next(pr);
+                        });
+                        Log.lvl2("Processed", updates.length, "updates");
+                    },
+                });
+        }
+        return this.updateInstances;
+    }
+
+    private listenNewBlocks() {
+        const msgBlock = new StreamingRequest({
+            id: this.genesisID,
+        });
+
+        if (this.subscriberListenOnline === undefined) {
+            if (typeof window !== "undefined") {
+                try {
+                    this.subscriberListenOnline = fromEvent(window, "online").subscribe(() => {
+                        Log.warn("Got online on", new Date());
+                        this.listenNewBlocks();
+                        this.updateInstances.next(this.latest);
+                    });
+                } catch (e) {
+                    Log.error(e);
+                }
+            }
+        }
+
+        if (this.subscriberNewBlocks !== undefined) {
+            this.subscriberNewBlocks.unsubscribe();
+        }
+
+        Log.lvl2("Starting new subscription for newBlocks");
+        this.subscriberNewBlocks = this.conn.sendStream<StreamingResponse>(msgBlock, StreamingResponse).pipe(
+            map(([sr, ws]) => {
+                this.newBlockWS = ws;
+                return sr.block;
+            }),
+            tap((sb) => this._latest = sb),
+        ).subscribe({
+            complete: () => {
+                setTimeout(() => this.listenNewBlocks(), 1000);
+            },
+            error: (err) => {
+                Log.error("while listening to blocks:", err);
+                setTimeout(() => this.listenNewBlocks(), 1000);
+            },
+            next: (sb) => {
+                Log.lvl2("Got new block", sb.index);
+                this.newBlock.next(sb);
+            },
+        });
     }
 
     private counters(): Map<string, Long> {
