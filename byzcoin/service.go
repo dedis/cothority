@@ -2596,10 +2596,10 @@ func (s *Service) TestClose() {
 // TestRestart activates a test that has been closed using TestClose. This
 // allows to simulate restarting of nodes in the tests.
 func (s *Service) TestRestart() error {
-	if err := s.startAllChains(); err != nil {
+	if err := s.skService().TestRestart(); err != nil {
 		return err
 	}
-	return s.skService().TestRestart()
+	return s.startAllChains()
 }
 
 func (s *Service) cleanupGoroutines() {

@@ -113,7 +113,7 @@ func (s *defaultTxProcessor) CollectTx() (*collectTxResult, error) {
 	if s.skService().ChainIsProcessing(s.scID) {
 		// When a block is processed,
 		// return immediately without processing any tx from the nodes.
-		return &collectTxResult{Txs: nil, CommonVersion: CurrentVersion - 1}, nil
+		return &collectTxResult{Txs: nil, CommonVersion: 0}, nil
 	}
 
 	latest, err := s.db().GetLatestByID(s.scID)

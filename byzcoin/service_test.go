@@ -239,7 +239,7 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 			// Now read the key/values from a new service
 			log.Lvl1("Recreate services and fetch keys again")
 			s.service().TestClose()
-			require.NoError(t, s.service().startAllChains())
+			require.NoError(t, s.service().TestRestart())
 		}
 		for _, tx := range txs {
 			pr := s.waitProofWithIdx(t, tx.Instructions[0].Hash(), 0)
@@ -260,7 +260,7 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 	if failure {
 		log.Lvl1("bringing the failed node back up")
 		s.hosts[len(s.hosts)-1].Unpause()
-		require.NoError(t, s.services[len(s.hosts)-1].startAllChains())
+		require.NoError(t, s.services[len(s.hosts)-1].TestRestart())
 
 		for _, tx := range txs {
 			pr := s.waitProofWithIdx(t, tx.Instructions[0].Hash(), len(s.hosts)-1)
