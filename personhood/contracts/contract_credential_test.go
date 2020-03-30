@@ -11,9 +11,9 @@ import (
 
 func TestContractCredential_Spawn(t *testing.T) {
 	cc := &ContractCredential{}
-	rost := newRstSimul()
+	rost := byzcoin.NewROSTSimul()
 	cred := CredentialStruct{}
-	d, err := rost.addDarc(nil, "credential")
+	d, err := rost.CreateBasicDarc(nil, "credential")
 	require.NoError(t, err)
 	inst, err := NewInstructionCredentialSpawn(byzcoin.NewInstanceID(nil), d.GetBaseID(),
 		byzcoin.NewInstanceID(nil), cred)

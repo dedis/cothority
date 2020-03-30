@@ -11,8 +11,8 @@ import (
 
 func TestContractSpawner(t *testing.T) {
 	iid := byzcoin.NewInstanceID([]byte("some coin"))
-	s := newRstSimul()
-	s.values[string(iid.Slice())] = byzcoin.StateChangeBody{}
+	s := byzcoin.NewROSTSimul()
+	s.Values[string(iid.Slice())] = byzcoin.StateChangeBody{}
 	cs := &ContractSpawner{}
 	cost := byzcoin.Coin{Name: iid, Value: 200}
 	costBuf, err := protobuf.Encode(&cost)
@@ -42,8 +42,8 @@ func TestContractSpawner(t *testing.T) {
 
 func TestContractSpawnerCoin(t *testing.T) {
 	iid := byzcoin.NewInstanceID([]byte("some coin"))
-	s := newRstSimul()
-	s.values[string(iid.Slice())] = byzcoin.StateChangeBody{}
+	s := byzcoin.NewROSTSimul()
+	s.Values[string(iid.Slice())] = byzcoin.StateChangeBody{}
 	cs := &ContractSpawner{}
 	cost := byzcoin.Coin{Name: contracts.CoinName, Value: 200}
 	costBuf, err := protobuf.Encode(&cost)
@@ -60,7 +60,8 @@ func TestContractSpawnerCoin(t *testing.T) {
 	scs, _, err := cs.Spawn(s, inst, nil)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(scs))
-	s.Process(scs)
+	_, err = s.StoreAllToReplica(scs)
+	require.NoError(t, err)
 
 	coin1 := byzcoin.Coin{Name: contracts.CoinName, Value: uint64(1000)}
 	err = protobuf.Decode(scs[0].Value, cs)

@@ -27,8 +27,8 @@ import (
 // TestContractRoPaSci does a classical Rock-Paper-Scissors game and checks that all
 // combinations give the correct payout.
 func TestContractRoPaSci(t *testing.T) {
-	rost := newRstSimul()
-	d, err := rost.addDarc(nil, "pp")
+	rost := byzcoin.NewROSTSimul()
+	d, err := rost.CreateBasicDarc(nil, "pp")
 	require.NoError(t, err)
 
 	for move1 := 0; move1 <= 2; move1++ {
@@ -53,7 +53,7 @@ func TestContractRoPaSci(t *testing.T) {
 			scs, _, err := cRPS.Spawn(rost, inst, []byzcoin.Coin{tr.stakeCoin1})
 			require.NoError(t, err)
 			require.Equal(t, 1, len(scs))
-			rost.Process(scs)
+			rost.StoreAllToReplica(scs)
 			rpsID := byzcoin.NewInstanceID(scs[0].InstanceID)
 			require.NoError(t, protobuf.Decode(scs[0].Value, cRPS))
 
@@ -63,7 +63,7 @@ func TestContractRoPaSci(t *testing.T) {
 			scs, _, err = cRPS.Invoke(rost, inst, []byzcoin.Coin{tr.stakeCoin2})
 			require.NoError(t, err)
 			require.Equal(t, 1, len(scs))
-			rost.Process(scs)
+			rost.StoreAllToReplica(scs)
 			require.NoError(t, protobuf.Decode(scs[0].Value, cRPS))
 
 			// First player reveals his choice
@@ -71,11 +71,11 @@ func TestContractRoPaSci(t *testing.T) {
 			inst.InstanceID = rpsID
 			scs, _, err = cRPS.Invoke(rost, inst, nil)
 			require.NoError(t, err)
-			rost.Process(scs)
+			rost.StoreAllToReplica(scs)
 
-			coin1New, err := rost.getCoin(tr.coin1)
+			coin1New, err := rost.GetCoin(tr.coin1)
 			require.NoError(t, err)
-			coin2New, err := rost.getCoin(tr.coin2)
+			coin2New, err := rost.GetCoin(tr.coin2)
 			require.NoError(t, err)
 			require.Equal(t, coin1expected, coin1New.Value)
 			require.Equal(t, coin2expected, coin2New.Value)
@@ -87,8 +87,8 @@ func TestContractRoPaSci(t *testing.T) {
 // prehash of player 1 in a CalypsoWrite, so that player 2 doesn't have to wait for
 // player 1 to reveal.
 func TestContractRoPaSciCalypso(t *testing.T) {
-	rost := newRstSimul()
-	d, err := rost.addDarc(nil, "pp")
+	rost := byzcoin.NewROSTSimul()
+	d, err := rost.CreateBasicDarc(nil, "pp")
 	require.NoError(t, err)
 
 	for move1 := 0; move1 <= 2; move1++ {
@@ -120,7 +120,7 @@ func TestContractRoPaSciCalypso(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, 2, len(scs))
 			require.Equal(t, calypso.ContractWriteID, scs[0].ContractID)
-			rost.Process(scs)
+			rost.StoreAllToReplica(scs)
 			rpsID := byzcoin.NewInstanceID(scs[1].InstanceID)
 			require.NoError(t, protobuf.Decode(scs[1].Value, cRPS))
 
@@ -134,7 +134,7 @@ func TestContractRoPaSciCalypso(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, 2, len(scs))
 			require.Equal(t, calypso.ContractReadID, scs[0].ContractID)
-			rost.Process(scs)
+			rost.StoreAllToReplica(scs)
 			require.NoError(t, protobuf.Decode(scs[1].Value, cRPS))
 
 			// TODO: test if returned calypsoRead allows to recover the prehash
@@ -144,11 +144,11 @@ func TestContractRoPaSciCalypso(t *testing.T) {
 			inst.InstanceID = rpsID
 			scs, _, err = cRPS.Invoke(rost, inst, nil)
 			require.NoError(t, err)
-			rost.Process(scs)
+			rost.StoreAllToReplica(scs)
 
-			coin1New, err := rost.getCoin(tr.coin1)
+			coin1New, err := rost.GetCoin(tr.coin1)
 			require.NoError(t, err)
-			coin2New, err := rost.getCoin(tr.coin2)
+			coin2New, err := rost.GetCoin(tr.coin2)
 			require.NoError(t, err)
 			require.Equal(t, coin1expected, coin1New.Value)
 			require.Equal(t, coin2expected, coin2New.Value)
@@ -169,19 +169,19 @@ type testRPS struct {
 }
 
 // newTestRPS creates a new test-structure for RoPaSci games, including an LTS.
-func newTestRPS(t *testing.T, s *rstSimul, firstMove int, stake uint64) (tr testRPS) {
+func newTestRPS(t *testing.T, s *byzcoin.ROSTSimul, firstMove int, stake uint64) (tr testRPS) {
 	var err error
 
 	tr.initial = 1e6
-	tr.coin1, err = s.createCoin("RoPaSci", tr.initial)
+	tr.coin1, err = s.CreateCoin("RoPaSci", tr.initial)
 	require.NoError(t, err, "couldn't create 1st coin")
-	tr.coin2, err = s.createCoin("RoPaSci", tr.initial)
+	tr.coin2, err = s.CreateCoin("RoPaSci", tr.initial)
 	require.NoError(t, err, "couldn't create 2nd coin")
 	tr.firstMove = firstMove
 	tr.stake = stake
-	_, tr.stakeCoin1, err = s.withdrawCoin(tr.coin1, stake)
+	_, tr.stakeCoin1, err = s.WithdrawCoin(tr.coin1, stake)
 	require.NoError(t, err, "couldn't withdraw stake 1")
-	_, tr.stakeCoin2, err = s.withdrawCoin(tr.coin2, stake)
+	_, tr.stakeCoin2, err = s.WithdrawCoin(tr.coin2, stake)
 	require.NoError(t, err, "couldn't withdraw stake 2")
 	// Only take 28 random bytes so that it also fits into the calypsoWrite
 	tr.prehash = append([]byte{byte(firstMove)},
