@@ -2,17 +2,13 @@ package byzcoin
 
 import (
 	"errors"
-
-	"go.dedis.ch/protobuf"
-
-	"go.dedis.ch/kyber/v3/util/random"
 	"golang.org/x/xerrors"
 
 	"go.dedis.ch/cothority/v3"
-
 	"go.dedis.ch/cothority/v3/byzcoin/trie"
-
 	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/kyber/v3/util/random"
+	"go.dedis.ch/protobuf"
 )
 
 // ROSTSimul makes it easy to test contracts without having to use the whole
@@ -108,16 +104,10 @@ func (s *ROSTSimul) CreateBasicDarc(signer *darc.Identity, desc string) (*darc.D
 	}
 	ids := []darc.Identity{*signer}
 	d := darc.NewDarc(darc.InitRules(ids, ids), []byte(desc))
-	buf, err := d.ToProto()
+	err := s.CreateSCB(Create, ContractDarcID,
+		NewInstanceID(d.GetBaseID()), d, nil)
 	if err != nil {
-		return nil, xerrors.Errorf("couldn't convert darc to protobuf: %+v",
-			err)
-	}
-	s.Values[string(d.GetBaseID())] = StateChangeBody{
-		Value:      buf,
-		Version:    0,
-		ContractID: ContractDarcID,
-		DarcID:     nil,
+		return nil, xerrors.Errorf("store darc: %v", err)
 	}
 	return d, nil
 }
@@ -127,19 +117,7 @@ func (s *ROSTSimul) CreateCoin(name string, value uint64) (id InstanceID,
 	err error) {
 	coin := Coin{Name: NewInstanceID([]byte(name)),
 		Value: value}
-	id = NewInstanceID(random.Bits(256, true, random.New()))
-	coinBuf, err := protobuf.Encode(&coin)
-	if err != nil {
-		err = xerrors.Errorf("couldn't encode coin: %+v", err)
-	}
-	s.Values[string(id[:])] = StateChangeBody{
-		StateAction: Create,
-		ContractID:  coinID,
-		Value:       coinBuf,
-		Version:     0,
-		DarcID:      make([]byte, 32),
-	}
-	return
+	return s.CreateRandomInstance(coinID, &coin, nil)
 }
 
 // CreateRandomInstance adds a new instance given by the contractID and the
@@ -148,6 +126,15 @@ func (s *ROSTSimul) CreateCoin(name string, value uint64) (id InstanceID,
 func (s *ROSTSimul) CreateRandomInstance(cID string,
 	value interface{}, darcID darc.ID) (id InstanceID, err error) {
 	id = NewInstanceID(random.Bits(256, true, random.New()))
+	err = s.CreateSCB(Create, cID, id, value, darcID)
+	return
+}
+
+// CreateSCB adds a new instance given by the contractID and the
+// contract-structure. The ID will be chosen randomly,
+// the darcID can be nil, in which case it will be initialized to all-zeros.
+func (s *ROSTSimul) CreateSCB(sa StateAction, cID string, id InstanceID,
+	value interface{}, darcID darc.ID) (err error) {
 	valueBuf, err := protobuf.Encode(value)
 	if err != nil {
 		err = xerrors.Errorf("couldn't encode coin: %+v", err)
@@ -155,14 +142,18 @@ func (s *ROSTSimul) CreateRandomInstance(cID string,
 	if darcID == nil {
 		darcID = make([]byte, 32)
 	}
+	version := uint64(0)
+	if sa == Update {
+		version = s.Values[string(id[:])].Version + 1
+	}
 	s.Values[string(id[:])] = StateChangeBody{
-		StateAction: Create,
+		StateAction: sa,
 		ContractID:  cID,
 		Value:       valueBuf,
-		Version:     0,
+		Version:     version,
 		DarcID:      darcID,
 	}
-	return id, nil
+	return nil
 }
 
 // SetCoin 'mints' coins by setting its value directly.
@@ -172,18 +163,7 @@ func (s *ROSTSimul) SetCoin(id InstanceID, value uint64) error {
 		return xerrors.Errorf("couldn't get coin: %+v", err)
 	}
 	coin.Value = value
-	coinBuf, err := protobuf.Encode(&coin)
-	if err != nil {
-		return xerrors.Errorf("couldn't encode coin: %+v", err)
-	}
-	s.Values[string(id[:])] = StateChangeBody{
-		StateAction: Update,
-		ContractID:  coinID,
-		Value:       coinBuf,
-		Version:     0,
-		DarcID:      make([]byte, 32),
-	}
-	return nil
+	return s.CreateSCB(Update, coinID, id, &coin, nil)
 }
 
 // GetCoin returns a coin given its id.

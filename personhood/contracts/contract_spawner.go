@@ -154,7 +154,7 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 			if arg.Name == "coinValue" {
 				if len(arg.Value) < 8 {
 					return nil, nil,
-						errors.New("GetCoin needs to have a value of 8 bytes")
+						errors.New("getCoin needs to have a value of 8 bytes")
 				}
 				addCoin = binary.LittleEndian.Uint64(arg.Value)
 			}
