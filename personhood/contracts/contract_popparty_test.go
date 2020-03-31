@@ -13,8 +13,8 @@ import (
 // Creates a party, activates the barrier point, finalizes it, and mines the coins.
 func TestContractPopParty(t *testing.T) {
 	cpp := &ContractPopParty{}
-	rost := newRstSimul()
-	d, err := rost.addDarc(nil, "pp")
+	rost := byzcoin.NewROSTSimul()
+	d, err := rost.CreateBasicDarc(nil, "pp")
 	require.NoError(t, err)
 	desc := PopDesc{
 		Name:     "Test",
