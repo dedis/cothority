@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	bolt "github.com/coreos/bbolt"
+	//bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
@@ -19,7 +19,8 @@ import (
 	"github.com/dedis/onet/network"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/satori/go.uuid.v1"
+	bolt "github.com/coreos/bbolt"
+	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
 func init() {

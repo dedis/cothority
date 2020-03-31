@@ -6,8 +6,9 @@ import (
 	"os"
 	"testing"
 
-	bolt "github.com/coreos/bbolt"
+	//bolt "github.com/coreos/bbolt"
 	"github.com/stretchr/testify/require"
+	bolt "github.com/coreos/bbolt"
 )
 
 var testName = []byte("coll1")

@@ -17,7 +17,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	bolt "github.com/coreos/bbolt"
+	//bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/identity"
 	"github.com/dedis/cothority/skipchain"
@@ -29,6 +29,7 @@ import (
 	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	bolt "github.com/coreos/bbolt"
 	"gopkg.in/urfave/cli.v1"
 )
 

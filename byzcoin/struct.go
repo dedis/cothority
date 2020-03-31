@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"sync"
 
-	bolt "github.com/coreos/bbolt"
+	//bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority/byzcoin/collection"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	bolt "github.com/coreos/bbolt"
 )
 
 func init() {

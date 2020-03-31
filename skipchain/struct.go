@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	bolt "github.com/coreos/bbolt"
+	//bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoinx"
 	"github.com/dedis/kyber"
@@ -19,7 +19,8 @@ import (
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
-	"gopkg.in/satori/go.uuid.v1"
+	bolt "github.com/coreos/bbolt"
+	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
 // How long to wait before a timeout is generated in the propagation. It is not

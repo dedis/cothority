@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	bolt "github.com/coreos/bbolt"
+	//bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoinx"
 	"github.com/dedis/cothority/skipchain"
@@ -17,6 +17,7 @@ import (
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 	"github.com/stretchr/testify/require"
+	bolt "github.com/coreos/bbolt"
 )
 
 func TestNewProof(t *testing.T) {

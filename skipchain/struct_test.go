@@ -6,12 +6,13 @@ import (
 	"os"
 	"testing"
 
-	bolt "github.com/coreos/bbolt"
+	//bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	bolt "github.com/coreos/bbolt"
 )
 
 func TestSkipBlock_GetResponsible(t *testing.T) {
