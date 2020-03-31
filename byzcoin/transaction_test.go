@@ -124,6 +124,21 @@ func TestTransactionBuffer_TakeDisabled(t *testing.T) {
 	require.False(t, ok)
 }
 
+func TestInstruction_DeriveIDArg(t *testing.T) {
+	inst := Instruction{
+		InstanceID: NewInstanceID([]byte("new instance")),
+	}
+	_, err := inst.DeriveIDArg("", "testID")
+	require.Error(t, err)
+	inst.Spawn = &Spawn{ContractID: "test"}
+	id1, err := inst.DeriveIDArg("", "testID")
+	require.NoError(t, err)
+	inst.Spawn.Args = Arguments{{Name: "testID", Value: []byte("testing")}}
+	id2, err := inst.DeriveIDArg("", "testID")
+	require.NoError(t, err)
+	require.NotEqual(t, id1, id2)
+}
+
 func setSignerCounter(sst *stagingStateTrie, id string, v uint64) error {
 	key := publicVersionKey(id)
 	verBuf := make([]byte, 8)

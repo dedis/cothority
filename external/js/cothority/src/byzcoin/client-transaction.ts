@@ -5,11 +5,13 @@ import { Message, Properties } from "protobufjs/light";
 import IdentityWrapper, { IIdentity } from "../darc/identity-wrapper";
 import Signer from "../darc/signer";
 import { EMPTY_BUFFER, registerMessage } from "../protobuf";
-import { InstanceID } from "./instance";
+import Instance, { InstanceID } from "./instance";
 
 export interface ICounterUpdater {
     getSignerCounters(signers: IIdentity[], increment: number): Promise<Long[]>;
+
     updateCachedCounters(signers: IIdentity[]): Promise<Long[]>;
+
     getNextCounter(signer: IIdentity): Long;
 }
 
@@ -35,7 +37,7 @@ export default class ClientTransaction extends Message<ClientTransaction> {
             instrs = instrs.map((i) => new InstructionV1(i));
         }
 
-        return new ClientTransaction({ instructions: instrs });
+        return new ClientTransaction({instructions: instrs});
     }
 
     readonly instructions: Instruction[];
@@ -294,6 +296,25 @@ export class Instruction extends Message<Instruction> {
         });
         h.update(Buffer.from(what));
         return h.digest();
+    }
+
+    /**
+     * Returns the instance ID of the new instance to be spawned. If the argument 'arg' exists, it is used to
+     * calculate a client-defined ID. If the argument 'arg' doesn't exist, the normal deriveId is used.
+     * It throws an error if the instruction is not of type spawn.
+     *
+     * @param what to be used if arg is not given
+     * @param arg holding the pre-image of the instanceID
+     */
+    deriveIdArg(what = "", arg = "preID"): InstanceID {
+        if (this.type !== Instruction.typeSpawn) {
+            throw new Error("can only search args for spawn-instruction");
+        }
+        const id = this.spawn.args.find((a) => a.name === arg);
+        if (id) {
+            return Instance.calcInstID(this.spawn.contractID, id.value);
+        }
+        return this.deriveId(what);
     }
 
     protected hashForVersion(version: number): Buffer {

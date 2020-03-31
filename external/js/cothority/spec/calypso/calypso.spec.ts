@@ -153,4 +153,20 @@ describe("Online Calypso Tests", async () => {
         const newKey = await readInst.decrypt(lts, signer.secret);
         expect(newKey).toEqual(key);
     });
+
+    it("should create a write, and a read, using preID", async () => {
+        const key = Buffer.from("Very Secret Key");
+
+        const preID = Buffer.from("some text");
+        const write = await Write.createWrite(lts.id, darc.id, lts.X, key);
+        const wrInst = await CalypsoWriteInstance.spawn(bc, darc.id, write, [SIGNER], preID);
+        expect(wrInst.id.equals(CalypsoWriteInstance.preToInstID(preID))).toBeTruthy();
+
+        const signer = SignerEd25519.random();
+        const readInst = await wrInst.spawnRead(signer.public, [SIGNER], undefined, undefined,
+            preID);
+        expect(readInst.id.equals(CalypsoReadInstance.preToInstID(preID))).toBeTruthy();
+        const newKey = await readInst.decrypt(lts, signer.secret);
+        expect(newKey).toEqual(key);
+    });
 });

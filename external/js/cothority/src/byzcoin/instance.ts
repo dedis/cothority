@@ -1,3 +1,4 @@
+import { createHash } from "crypto-browserify";
 import { Properties } from "protobufjs/light";
 import ByzCoinRPC from "./byzcoin-rpc";
 import Proof from "./proof";
@@ -51,6 +52,17 @@ export default class Instance {
         });
     }
 
+    /**
+     * Returns the instanceID given a contract and a preID
+     * @param contractID
+     * @param preID
+     */
+    static calcInstID(contractID: string, preID: Buffer): InstanceID {
+        const h = createHash("sha256");
+        h.update(contractID);
+        h.update(preID);
+        return h.digest();
+    }
     readonly id: InstanceID;
     readonly contractID: string;
     darcID: InstanceID;
