@@ -114,7 +114,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	for i := 0; i < nFailures; i++ {
 		log.Lvl1("starting node at index", i)
 		s.hosts[i].Unpause()
-		require.NoError(t, s.services[i].startAllChains())
+		require.NoError(t, s.services[i].TestRestart())
 	}
 	for i := 0; i < nFailures; i++ {
 		pr = s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID.Slice(), i)
@@ -131,6 +131,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	require.NoError(t, err)
 	s.sendTxToAndWait(t, tx1, nFailures, 10)
 	log.Lvl1("Sent two tx")
+	s.waitPropagation(t, -1)
 }
 
 // Tests that a view change can happen when the leader index is out of bound
