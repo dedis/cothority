@@ -80,7 +80,7 @@ fi
 rm -f public.toml
 mkdir -p log
 touch running
-for n in $( seq $nbr_nodes -1 1 ); do
+for n in $( seq $nbr_nodes ); do
   co=co$n
   PORT=$(($base_port + 2 * n - 2))
   if [ ! -d $co ]; then

@@ -285,9 +285,11 @@ func scCreate(c *cli.Context) error {
 		log.Infof("Found link for %s and using signed request", remote.Address)
 		priv = remote.Private
 	} else {
-		log.Infof("Trying to connect without signature to %s", group.Roster.List[0].Address)
+		log.Infof("Trying to connect without signature to %+v",
+			group.Roster.List[0].Address)
 	}
-	log.Infof("Creating new skipchain with leader %s and roster %s.", group.Roster.List[0], group.Roster)
+	log.Infof("Creating new skipchain with leader %s and roster %+v.",
+		group.Roster.List[0], group.Roster)
 	log.Infof("Base-height: %d; Maximum-height: %d", c.Int("base"), c.Int("height"))
 	sb, err := skipchain.NewClient().CreateGenesisSignature(group.Roster, c.Int("base"), c.Int("height"),
 		skipchain.VerificationStandard, nil, priv)
@@ -397,10 +399,13 @@ func scAdd(c *cli.Context) error {
 	}
 
 	log.Info("Adding new block to skipchain.")
-	ssbr, err := skipchain.NewClient().StoreSkipBlockSignature(latest, roster, dataMsg, priv)
+	cl := skipchain.NewClient()
+	cl.UseNode(0)
+	ssbr, err := cl.StoreSkipBlockSignature(latest, roster, dataMsg, priv)
 	if err != nil {
 		return errors.New("while storing block: " + err.Error())
 	}
+	cfg.Db.Store(ssbr.Previous)
 	cfg.Db.Store(ssbr.Latest)
 	log.ErrFatal(cfg.save(c))
 	log.Infof("Added new block %x to chain %x", ssbr.Latest.Hash, ssbr.Latest.SkipChainID())

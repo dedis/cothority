@@ -31,7 +31,7 @@ you can use with scmgr. In the following examples, we suppose that the
 directory and that you installed `scmgr` using
 
 ```bash
-go get github.com/dedis/cothority/scmgr
+go build ../scmgr
 ```
 
 ## Securing the conode by creating a link
@@ -58,7 +58,7 @@ in each of those directories.
 So for the testing system, the command is:
 
 ```bash
-scmgr link add co1/private.toml
+./scmgr link add co1/private.toml
 ```
 
 This command will create a new private/public keypair for your client and
@@ -70,7 +70,7 @@ Now that you are linked to your conode, you can create a new skipchain on it,
 with its only participant being _co1_:
 
 ```bash
-scmgr skipchain create -b 10 -he 10 co1/public.toml
+./scmgr skipchain create -b 10 -he 10 co1/public.toml
 ```
 
 This will ask the first node in the `public.toml` file to be the leader and to
@@ -98,27 +98,27 @@ For our example, we will tell _co2_ and _co3_ to follow the skipchain created
 above and to accept any new block added to that skipchain:
 
 ```bash
-scmgr link add co2/private.toml
-scmgr link add co3/private.toml
-scmgr follow add single SKIPCHAIN_ID 127.0.0.1:7004
-scmgr follow add single SKIPCHAIN_ID 127.0.0.1:7006
+./scmgr link add co2/private.toml
+./scmgr link add co3/private.toml
+./scmgr follow add single SKIPCHAIN_ID localhost:7772
+./scmgr follow add single SKIPCHAIN_ID localhost:7774
 ```
 
 Where _SKIPCHAIN_ID_ has to be replaced by the ID of the skipchain returned from
 the `scmgr skipchain create` command above.
-`127.0.0.1:7004` and `127.0.0.1:7006` are the IP addresses and port numbers of _co2_
-and _co3_ respectively.
+`localhost:7772` and `localhost:7774` are the IP addresses and port numbers of
+ _co2_ and _co3_ respectively.
 
 Now you can ask your first conode to extend the conodes that participate in the
 skipchain to all conodes:
 
 ```bash
-scmgr skipchain block add -roster public.toml SKIPCHAIN_ID
+./scmgr skipchain block add -roster public.toml SKIPCHAIN_ID
 ```
 
 Now you have a skipchain that includes all of your testing conodes. To see the block that
 you just created, you can use:
 
 ```bash
-scmgr skipchain block print SKIPBLOCK_ID
+./scmgr skipchain block print SKIPBLOCK_ID
 ```
