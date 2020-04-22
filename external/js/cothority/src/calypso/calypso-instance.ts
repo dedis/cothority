@@ -70,9 +70,12 @@ export class OnChainSecretInstance extends Instance {
 
 export class CalypsoWriteInstance extends Instance {
     static readonly contractID = "calypsoWrite";
+    static readonly commandUpdate = "update";
     static readonly argumentWrite = "write";
     static readonly argumentDarcID = "darcID";
     static readonly argumentPreID = "preID";
+    static readonly argumentData = "data";
+    static readonly argumentExtraData = "extraData";
 
     /**
      * Spawn a calypsoWrite instance
@@ -149,6 +152,28 @@ export class CalypsoWriteInstance extends Instance {
             ]);
         }
         return CalypsoReadInstance.spawn(this.rpc, this.id, pub, signers, pay, preID);
+    }
+
+    /**
+     * Update sends an update command to an existing CalypsoWriteInstance and changes the data and/or the extraData
+     * field of the Write structure. If neither data, nor extraData is given, it returns without sending a
+     * transaction to byzcoin.
+     * @param u a structure holding the data and/or extraData to be updated.
+     */
+    async update(u: {data?: Buffer; extraData?: Buffer}) {
+        const args: Argument[] = [];
+        if (u.data) {
+            args.push(new Argument({name: CalypsoWriteInstance.argumentData, value: u.data}));
+        }
+        if (u.extraData) {
+            args.push(new Argument({name: CalypsoWriteInstance.argumentExtraData, value: u.extraData}));
+        }
+        if (args.length === 0) {
+            return;
+        }
+        const ctx = ClientTransaction.make(this.rpc.getProtocolVersion(), Instruction.createInvoke(
+            this.id, this.contractID, CalypsoWriteInstance.commandUpdate, args));
+        return this.rpc.sendTransactionAndWait(ctx, 10);
     }
 }
 

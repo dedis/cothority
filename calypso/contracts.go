@@ -124,6 +124,49 @@ func (c ContractWrite) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 	return
 }
 
+// Invoke supports the following command:
+//  - update - it takes a 'data' and/or 'extraData' argument that is used to
+//    update the data and/or extradata part of the write structure.
+func (c *ContractWrite) Invoke(rst byzcoin.ReadOnlyStateTrie,
+	inst byzcoin.Instruction, cin []byzcoin.Coin) ([]byzcoin.StateChange,
+	[]byzcoin.Coin, error) {
+
+	_, _, _, darcID, err := rst.GetValues(inst.InstanceID.Slice())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	update := false
+
+	switch inst.Invoke.Command {
+	case "update":
+		data := inst.Invoke.Args.Search("data")
+		if data != nil {
+			c.Data = data
+			update = true
+		}
+		extraData := inst.Invoke.Args.Search("extraData")
+		if extraData != nil {
+			c.ExtraData = extraData
+			update = true
+		}
+	default:
+		return nil, nil, xerrors.New("only know 'update' command")
+	}
+
+	if !update {
+		return nil, nil, xerrors.New("neither data nor extraData update")
+	}
+
+	var ciBuf []byte
+	ciBuf, err = protobuf.Encode(&c.Write)
+	if err != nil {
+		return nil, nil, err
+	}
+	return []byzcoin.StateChange{byzcoin.NewStateChange(byzcoin.Update,
+		inst.InstanceID, ContractWriteID, ciBuf, darcID)}, cin, nil
+}
+
 // ContractReadID references a read contract system-wide.
 const ContractReadID = "calypsoRead"
 

@@ -123,6 +123,7 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 				"credential\\.(update|recover)|" +
 				"popParty\\.(barrier|finalize|mine|addParty)|" +
 				"ropasci\\.(second|confirm)|" +
+				"calypsoWrite\\.update|" +
 				"value\\.update)|" +
 				"spawn:(calypsoRead)|" +
 				"delete:.*)$")
