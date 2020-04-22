@@ -162,10 +162,10 @@ export class CalypsoWriteInstance extends Instance {
      */
     async update(u: {data?: Buffer; extraData?: Buffer}) {
         const args: Argument[] = [];
-        if (u.data && u.data.length > 0) {
+        if (u.data) {
             args.push(new Argument({name: CalypsoWriteInstance.argumentData, value: u.data}));
         }
-        if (u.extraData && u.extraData.length > 0) {
+        if (u.extraData) {
             args.push(new Argument({name: CalypsoWriteInstance.argumentExtraData, value: u.extraData}));
         }
         if (args.length === 0) {

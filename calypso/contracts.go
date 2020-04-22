@@ -128,14 +128,12 @@ func (c ContractWrite) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 //  - update - it takes a 'data' and/or 'extraData' argument that is used to
 //    update the data and/or extradata part of the write structure.
 func (c *ContractWrite) Invoke(rst byzcoin.ReadOnlyStateTrie,
-	inst byzcoin.Instruction, cin []byzcoin.Coin) (sc []byzcoin.StateChange,
-	cout []byzcoin.Coin, err error) {
-	cin = cout
+	inst byzcoin.Instruction, cin []byzcoin.Coin) ([]byzcoin.StateChange,
+	[]byzcoin.Coin, error) {
 
-	var darcID darc.ID
-	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
+	_, _, _, darcID, err := rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return
+		return nil, nil, err
 	}
 
 	update := false
@@ -157,16 +155,16 @@ func (c *ContractWrite) Invoke(rst byzcoin.ReadOnlyStateTrie,
 	}
 
 	if !update {
-		return
+		return nil, nil, xerrors.New("neither data nor extraData update")
 	}
 
 	var ciBuf []byte
 	ciBuf, err = protobuf.Encode(&c.Write)
-	if err == nil {
-		sc = append(sc, byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
-			ContractWriteID, ciBuf, darcID))
+	if err != nil {
+		return nil, nil, err
 	}
-	return
+	return []byzcoin.StateChange{byzcoin.NewStateChange(byzcoin.Update,
+		inst.InstanceID, ContractWriteID, ciBuf, darcID)}, cin, nil
 }
 
 // ContractReadID references a read contract system-wide.
