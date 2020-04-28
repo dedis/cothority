@@ -2662,6 +2662,8 @@ func (s *Service) monitorLeaderFailure() {
 						LeaderIndex: 1,
 					},
 				}
+				log.Lvlf2("Starting a view-change by putting our own request"+
+					": %+v", req)
 				s.viewChangeMan.addReq(req)
 			}
 		case <-s.closeLeaderMonitorChan:
@@ -2804,8 +2806,10 @@ func (s *Service) startChain(genesisID skipchain.SkipBlockID) error {
 	if err != nil {
 		return xerrors.Errorf("getting initial duration: %v", err)
 	}
-	s.viewChangeMan.add(s.sendViewChangeReq, s.sendNewView, s.isLeader, string(genesisID))
-	s.viewChangeMan.start(s.ServerIdentity().ID, genesisID, initialDur, s.getFaultThreshold(genesisID))
+	s.viewChangeMan.add(s.sendViewChangeReq, s.sendNewView, s.isLeader,
+		string(genesisID))
+	s.viewChangeMan.start(s.ServerIdentity().ID, genesisID, initialDur,
+		s.getFaultThreshold(latest.Hash))
 
 	return nil
 }

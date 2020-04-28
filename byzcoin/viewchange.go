@@ -156,7 +156,8 @@ func (s *Service) sendNewView(proof []viewchange.InitReq) {
 	if len(proof) == 0 {
 		log.Error(s.ServerIdentity(), "no proofs")
 	}
-	log.Lvl2(s.ServerIdentity(), "sending new-view request for view:", proof[0].View)
+	log.Lvlf2("%s: sending new-view request with %d proofs for view: %+v",
+		s.ServerIdentity(), len(proof), proof[0].View)
 
 	// Our own proof might not be signed, so sign it.
 	for i := range proof {
@@ -269,6 +270,7 @@ func (s *Service) handleViewChangeReq(env *network.Envelope) error {
 		return xerrors.Errorf("%v: %v", s.ServerIdentity(), err)
 	}
 
+	log.Lvlf2("Adding valid view-change from %s: %+v", env.ServerIdentity, req)
 	// Store it in our log.
 	s.viewChangeMan.addReq(*req)
 	return nil
