@@ -163,6 +163,8 @@ func (c *Controller) Start(myID network.ServerIdentityID, genesis skipchain.Skip
 					ctr = c.processAnomaly(reqNew, &meta, ctr)
 				}
 			}
+			log.Lvlf2("counter: %d, f: %d, meta (ctr/state): %d/%d, "+
+				"req: %+v", ctr, f, meta.countOf(ctr), meta.stateOf(ctr), req)
 			if meta.countOf(ctr) > 2*f && meta.stateOf(ctr) < startedTimerState && meta.acceptOf(ctr) {
 				// To avoid starting the next view-change too
 				// soon, start view-change timer after
@@ -270,7 +272,8 @@ func (c *Controller) processAnomaly(req InitReq, meta *stateLogs, ctr int) int {
 		// controller has already moved on and it will
 		// only wait for relevant messages for its
 		// current or later view.
-		log.Lvl4("Controller is not accepting anomalies for earlier views")
+		log.Lvlf4("Controller is not accepting anomalies for earlier views"+
+			": %d <= %d", req.View.LeaderIndex, ctr)
 	}
 	return ctr
 }
