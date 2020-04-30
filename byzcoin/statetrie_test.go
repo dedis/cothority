@@ -2,22 +2,23 @@ package byzcoin
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/hex"
 	"math/big"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
 
-	"go.dedis.ch/onet/v3"
+	"golang.org/x/xerrors"
+
+	"github.com/stretchr/testify/require"
+
+	"go.dedis.ch/onet/v3/log"
 
 	"go.dedis.ch/kyber/v3/util/random"
 
-	"github.com/ethereum/go-ethereum/common/math"
-	"go.dedis.ch/onet/v3/log"
-
-	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3/darc"
-	"golang.org/x/xerrors"
 )
 
 // TestStateTrie is a sanity check for setting and retrieving keys, values and
@@ -92,80 +93,74 @@ func TestStateTrie(t *testing.T) {
 func TestDarcRetrieval(t *testing.T) {
 	darcDepth := 3
 	darcWidth := 10
-	entries := 10000
+	entries := 1000
 
 	s := newSer(t, 1, 10*time.Second)
 	defer s.local.CloseAll()
-	s.local.Check = onet.CheckNone
+	// When running with `-cpuprofile`, additional go-routines are added,
+	// which should be ignored.
+	log.AddUserUninterestingGoroutine("/runtime/cpuprof.go")
 
 	st, err := s.service().getStateTrie(s.genesis.SkipChainID())
 	require.NoError(t, err)
-	require.NotNil(t, st)
 	require.NotEqual(t, -1, st.GetIndex())
 
 	log.Lvl1("Creating random entries")
-	value := random.Bits(1024, true, random.New())
-	start := time.Now()
-	var scs []StateChange
-	for e := 1; e <= entries; e++ {
-		scs = append(scs, StateChange{
+	value := make([]byte, 128)
+	scs := make([]StateChange, entries)
+	for e := 0; e < entries; e++ {
+		scs[e] = StateChange{
 			StateAction: Create,
 			InstanceID:  random.Bits(256, true, random.New()),
 			ContractID:  ContractDarcID,
 			Value:       value,
-		})
-		if e%100 == 0 {
-			st.StoreAll(scs, 5, CurrentVersion)
-			scs = []StateChange{}
-			log.Print(e, time.Now().Sub(start))
-			start = time.Now()
 		}
 	}
+	require.NoError(t, st.StoreAll(scs, 5, CurrentVersion))
 
 	log.Lvl1("Creating darcs")
-	counter := big.NewInt(0)
+	counter := 0
 	// Store the tree of darcs in a 2D-array with the root in index 0 and
 	// the leafs in index darcDepth-1
 	darcs := make([][]*darc.Darc, darcDepth)
 	for d := darcDepth - 1; d >= 0; d-- {
-		width := math.Exp(big.NewInt(int64(darcWidth)),
-			big.NewInt(int64(d))).Int64()
+		width := big.NewInt(0).Exp(big.NewInt(int64(darcWidth)),
+			big.NewInt(int64(d)), nil).Int64()
 		darcs[d] = make([]*darc.Darc, width)
 		// The leafs just hold a dummy reference to a darc
 		if d == darcDepth-1 {
 			for i := range darcs[d] {
-				counter.Add(counter, big.NewInt(1))
+				counter++
 				id := make([]byte, 32)
-				copy(id, counter.Bytes())
+				binary.BigEndian.PutUint64(id, uint64(counter))
 				ids := []darc.Identity{darc.NewIdentityDarc(id)}
 				rules := darc.InitRules(ids, ids)
-				darcs[d][i] = darc.NewDarc(rules, []byte(counter.String()))
+				darcs[d][i] = darc.NewDarc(rules, []byte(strconv.Itoa(counter)))
 			}
 		} else {
 			for i := range darcs[d] {
-				counter.Add(counter, big.NewInt(1))
+				counter++
 				ids := make([]darc.Identity, darcWidth)
 				for id := range ids {
 					ids[id] = darc.NewIdentityDarc(
 						darcs[d+1][i*darcWidth+id].GetBaseID())
 				}
 				rules := darc.InitRules(ids, ids)
-				darcs[d][i] = darc.NewDarc(rules, []byte(counter.String()))
+				darcs[d][i] = darc.NewDarc(rules, []byte(strconv.Itoa(counter)))
 			}
 		}
 	}
 
-	scs = make([]StateChange, 0, counter.Int64())
-	for d := range darcs {
-		for w := range darcs[d] {
-			td := darcs[d][w]
+	scs = make([]StateChange, 0, counter)
+	for d, dd := range darcs {
+		for w, dw := range dd {
 			log.Lvlf3("darc[%d][%d]: %x has %s", d, w,
-				td.GetBaseID(), td.Rules)
-			buf, err := td.ToProto()
+				dw.GetBaseID(), dw.Rules)
+			buf, err := dw.ToProto()
 			require.NoError(t, err)
 			scs = append(scs, StateChange{
 				StateAction: Create,
-				InstanceID:  td.GetBaseID(),
+				InstanceID:  dw.GetBaseID(),
 				ContractID:  ContractDarcID,
 				Value:       buf,
 				Version:     0,
@@ -184,21 +179,21 @@ func TestDarcRetrieval(t *testing.T) {
 			log.Error("invalid darc id", s, len(id), err)
 			return nil
 		}
-		d, err := st.LoadDarcFromTrie(id)
+		d, err := st.LoadDarc(id)
 		if err != nil {
 			return nil
 		}
 		return d
 	}
 
+	log.Lvl1("Starting to search")
 	root := darcs[0][0]
 	rootSign := root.Rules.GetSignExpr()
-	start = time.Now()
+	start := time.Now()
 	for i := range darcs[darcDepth-1] {
 		id := darc.ID(make([]byte, 32))
-		copy(id, big.NewInt(int64(i+1)).Bytes())
+		binary.BigEndian.PutUint64(id, uint64(i+1))
 		darcID := darc.NewIdentityDarc(id)
-		log.Print("Searching id", darcID.String())
 		err = darc.EvalExprDarc(rootSign, getDarcs, true, darcID.String())
 		require.NoError(t, err)
 	}

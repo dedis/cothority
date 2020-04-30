@@ -319,11 +319,11 @@ func (ct cvTest) GetSignerCounter(id darc.Identity) (uint64, error) {
 	return 0, xerrors.Errorf("not yet implemented")
 }
 
-func (ct cvTest) LoadConfigFromTrie() (*byzcoin.ChainConfig, error) {
+func (ct cvTest) LoadConfig() (*byzcoin.ChainConfig, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (ct cvTest) LoadDarcFromTrie(id darc.ID) (*darc.Darc, error) {
+func (ct cvTest) LoadDarc(id darc.ID) (*darc.Darc, error) {
 	return nil, errors.New("not implemented")
 }
 

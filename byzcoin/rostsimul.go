@@ -72,13 +72,13 @@ func (s *ROSTSimul) ForEach(func(k, v []byte) error) error {
 	return errors.New("not implemented")
 }
 
-// LoadConfigFromTrie is not implemented
-func (s *ROSTSimul) LoadConfigFromTrie() (*ChainConfig, error) {
+// LoadConfig is not implemented
+func (s *ROSTSimul) LoadConfig() (*ChainConfig, error) {
 	return nil, errors.New("not implemented")
 }
 
-// LoadDarcFromTrie is not implemented
-func (s *ROSTSimul) LoadDarcFromTrie(id darc.ID) (*darc.Darc, error) {
+// LoadDarc is not implemented
+func (s *ROSTSimul) LoadDarc(id darc.ID) (*darc.Darc, error) {
 	return nil, errors.New("not implemented")
 }
 

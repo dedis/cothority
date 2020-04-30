@@ -543,7 +543,7 @@ func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthor
 	if err != nil {
 		return nil, xerrors.Errorf("getting trie: %v", err)
 	}
-	d, err := st.LoadDarcFromTrie(req.DarcID)
+	d, err := st.LoadDarc(req.DarcID)
 	if err != nil {
 		return nil, xerrors.Errorf("couldn't find darc: %v", err)
 	}
@@ -557,7 +557,7 @@ func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthor
 			log.Error("invalid darc id", s, len(id), err)
 			return nil
 		}
-		d, err := st.LoadDarcFromTrie(id)
+		d, err := st.LoadDarc(id)
 		if err != nil {
 			log.Error("didn't find darc")
 			return nil
@@ -1852,7 +1852,7 @@ func (s *Service) LoadConfig(scID skipchain.SkipBlockID) (*ChainConfig, error) {
 	if err != nil {
 		return nil, xerrors.Errorf("getting trie: %v", err)
 	}
-	cfg, err := st.LoadConfigFromTrie()
+	cfg, err := st.LoadConfig()
 	return cfg, cothority.ErrorOrNil(err, "reading trie")
 }
 
@@ -1886,7 +1886,7 @@ func (s *Service) LoadBlockInfo(scID skipchain.SkipBlockID) (time.Duration, int,
 }
 
 func loadBlockInfo(st ReadOnlyStateTrie) (time.Duration, int, error) {
-	config, err := st.LoadConfigFromTrie()
+	config, err := st.LoadConfig()
 	if err != nil {
 		if xerrors.Is(err, errKeyNotSet) {
 			err = nil
@@ -2062,7 +2062,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		return false
 	}
 
-	config, err := sst.LoadConfigFromTrie()
+	config, err := sst.LoadConfig()
 	if err != nil {
 		log.Error(s.ServerIdentity(), err)
 		return false
