@@ -26,7 +26,7 @@ func TestTransaction_Signing(t *testing.T) {
 	mdb := trie.NewMemDB()
 	tr, err := trie.NewTrie(mdb, []byte("my nonce"))
 	require.NoError(t, err)
-	sst := &stagingStateTrie{*tr.MakeStagingTrie()}
+	sst := &stagingStateTrie{*tr.MakeStagingTrie(), trieCache{}}
 
 	// verification should fail because trie is empty
 	ctxHash := ctx.Instructions.Hash()

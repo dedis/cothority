@@ -503,7 +503,7 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		}
 
 		var oldConfig *ChainConfig
-		oldConfig, err = LoadConfigFromTrie(rst)
+		oldConfig, err = rst.LoadConfigFromTrie()
 		if err != nil {
 			return nil, nil, xerrors.Errorf("reading trie: %v", err)
 		}
@@ -557,7 +557,7 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 }
 
 func updateRosterScs(rst ReadOnlyStateTrie, darcID darc.ID, newRoster onet.Roster) (StateChanges, error) {
-	config, err := LoadConfigFromTrie(rst)
+	config, err := rst.LoadConfigFromTrie()
 	if err != nil {
 		return nil, xerrors.Errorf("reading trie: %v", err)
 	}
@@ -570,26 +570,6 @@ func updateRosterScs(rst ReadOnlyStateTrie, darcID darc.ID, newRoster onet.Roste
 	return []StateChange{
 		NewStateChange(Update, NewInstanceID(nil), ContractConfigID, configBuf, darcID),
 	}, nil
-}
-
-// LoadConfigFromTrie loads the configuration data from the trie.
-func LoadConfigFromTrie(st ReadOnlyStateTrie) (*ChainConfig, error) {
-	// Find the genesis-darc ID.
-	val, _, contract, _, err := GetValueContract(st, NewInstanceID(nil).Slice())
-	if err != nil {
-		return nil, xerrors.Errorf("reading trie: %w", err)
-	}
-	if string(contract) != ContractConfigID {
-		return nil, xerrors.New("did not get " + ContractConfigID)
-	}
-
-	config := ChainConfig{}
-	err = protobuf.DecodeWithConstructors(val, &config, network.DefaultConstructors(cothority.Suite))
-	if err != nil {
-		return nil, xerrors.Errorf("decoding config: %v", err)
-	}
-
-	return &config, nil
 }
 
 // GetValueContract gets all the information in an instance, an error is
@@ -631,30 +611,4 @@ func getInstanceDarc(c ReadOnlyStateTrie, iid InstanceID, darcContractIDs []stri
 	}
 	darc, err := darc.NewFromProtobuf(value)
 	return darc, cothority.ErrorOrNil(err, "decoding darc")
-}
-
-// LoadDarcFromTrie loads a darc which should be stored in key.
-func LoadDarcFromTrie(st ReadOnlyStateTrie, key []byte) (*darc.Darc, error) {
-	darcBuf, _, contract, _, err := st.GetValues(key)
-	if err != nil {
-		return nil, xerrors.Errorf("reading trie: %v", err)
-	}
-	config, err := LoadConfigFromTrie(st)
-	if err != nil {
-		return nil, xerrors.Errorf("reading trie: %v", err)
-	}
-	var ok bool
-	for _, id := range config.DarcContractIDs {
-		if contract == id {
-			ok = true
-		}
-	}
-	if !ok {
-		return nil, xerrors.New("the contract \"" + contract + "\" is not in the set of DARC contracts")
-	}
-	d, err := darc.NewFromProtobuf(darcBuf)
-	if err != nil {
-		return nil, xerrors.Errorf("decoding darc: %v", err)
-	}
-	return d, nil
 }

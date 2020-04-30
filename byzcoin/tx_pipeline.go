@@ -259,7 +259,7 @@ func (s *defaultTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcesso
 // ProposeBlock basically calls s.createNewBlock which might block. There is
 // nothing we can do about it other than waiting for the timeout.
 func (s *defaultTxProcessor) ProposeBlock(state *txProcessorState) error {
-	config, err := LoadConfigFromTrie(state.sst)
+	config, err := state.sst.LoadConfigFromTrie()
 	if err != nil {
 		return xerrors.Errorf("reading trie: %v", err)
 	}

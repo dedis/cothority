@@ -86,7 +86,7 @@ func (c *contractInsecureDarc) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoi
 		if err != nil {
 			return nil, nil, err
 		}
-		oldD, err := byzcoin.LoadDarcFromTrie(rst, darcID)
+		oldD, err := rst.LoadDarcFromTrie(darcID)
 		if err != nil {
 			return nil, nil, err
 		}

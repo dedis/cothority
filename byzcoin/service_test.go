@@ -2513,7 +2513,7 @@ func TestService_Repair(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			intermediateStateTrie = &stateTrie{*intermediateTrie}
+			intermediateStateTrie = &stateTrie{*intermediateTrie, trieCache{}}
 		} else if i == n-1 {
 			tmpTrie, err := s.service().getStateTrie(s.genesis.SkipChainID())
 			require.NoError(t, err)

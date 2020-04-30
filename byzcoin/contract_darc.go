@@ -125,7 +125,7 @@ func (c *contractSecureDarc) Invoke(rst ReadOnlyStateTrie, inst Instruction, coi
 		if err != nil {
 			return nil, nil, xerrors.Errorf("darc encoding: %v", err)
 		}
-		oldD, err := LoadDarcFromTrie(rst, darcID)
+		oldD, err := rst.LoadDarcFromTrie(darcID)
 		if err != nil {
 			return nil, nil, xerrors.Errorf("darc from trie: %v", err)
 		}
@@ -161,7 +161,7 @@ func (c *contractSecureDarc) Invoke(rst ReadOnlyStateTrie, inst Instruction, coi
 		if err != nil {
 			return nil, nil, xerrors.Errorf("encoding darc: %v", err)
 		}
-		oldD, err := LoadDarcFromTrie(rst, darcID)
+		oldD, err := rst.LoadDarcFromTrie(darcID)
 		if err != nil {
 			return nil, nil, xerrors.Errorf("darc from trie: %v", err)
 		}

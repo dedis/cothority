@@ -3,6 +3,10 @@ package byzcoin
 import (
 	"bytes"
 	"encoding/binary"
+	"sync"
+
+	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/protobuf"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin/trie"
@@ -42,6 +46,8 @@ type ReadOnlyStateTrie interface {
 	// that the original read-only trie is not be modified.
 	StoreAllToReplica(StateChanges) (ReadOnlyStateTrie, error)
 	GetSignerCounter(id darc.Identity) (uint64, error)
+	LoadConfigFromTrie() (*ChainConfig, error)
+	LoadDarcFromTrie(id darc.ID) (*darc.Darc, error)
 }
 
 // ReadOnlySkipChain holds the skipchain data.
@@ -69,6 +75,7 @@ var _ GlobalState = (*globalState)(nil)
 // byzcoin.
 type stagingStateTrie struct {
 	trie.StagingTrie
+	trieCache
 }
 
 // Clone makes a copy of the staged data of the structure, the source Trie is
@@ -81,6 +88,7 @@ func (t *stagingStateTrie) Clone() *stagingStateTrie {
 
 // StoreAll puts all the state changes and the index in the staging area.
 func (t *stagingStateTrie) StoreAll(scs StateChanges) error {
+	t.invalidate()
 	pairs := make([]trie.KVPair, len(scs))
 	for i := range pairs {
 		pairs[i] = &scs[i]
@@ -149,6 +157,88 @@ func (t *stagingStateTrie) GetVersion() Version {
 	return readVersion(t)
 }
 
+func (t *stagingStateTrie) LoadConfigFromTrie() (*ChainConfig, error) {
+	return t.loadConfigFromTrie(t)
+}
+
+func (t *stagingStateTrie) LoadDarcFromTrie(id darc.ID) (*darc.Darc, error) {
+	return t.loadDarcFromTrie(t, id)
+}
+
+type trieCache struct {
+	config *ChainConfig
+	darcs  map[string]*darc.Darc
+	sync.Mutex
+}
+
+func (tc *trieCache) invalidate() {
+	tc.Lock()
+	tc.config = nil
+	tc.darcs = nil
+	tc.Unlock()
+}
+
+func (tc *trieCache) loadConfigFromTrie(st ReadOnlyStateTrie) (*ChainConfig, error) {
+	tc.Lock()
+	defer tc.Unlock()
+	if tc.config != nil {
+		return tc.config, nil
+	}
+
+	// Find the genesis-darc ID.
+	val, _, contract, _, err := GetValueContract(st, NewInstanceID(nil).Slice())
+	if err != nil {
+		return nil, xerrors.Errorf("reading trie: %w", err)
+	}
+	if string(contract) != ContractConfigID {
+		return nil, xerrors.New("did not get " + ContractConfigID)
+	}
+
+	tc.config = &ChainConfig{}
+	err = protobuf.DecodeWithConstructors(val, tc.config,
+		network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		return nil, xerrors.Errorf("decoding config: %v", err)
+	}
+
+	return tc.config, nil
+}
+
+func (tc *trieCache) loadDarcFromTrie(st ReadOnlyStateTrie,
+	id darc.ID) (*darc.Darc, error) {
+	tc.Lock()
+	defer tc.Unlock()
+	if len(tc.darcs) > 0 {
+		if d := tc.darcs[string(id)]; d != nil {
+			return d, nil
+		}
+	} else {
+		tc.darcs = make(map[string]*darc.Darc)
+	}
+	darcBuf, _, contract, _, err := st.GetValues(id)
+	if err != nil {
+		return nil, xerrors.Errorf("reading trie: %v", err)
+	}
+	config, err := tc.loadConfigFromTrie(st)
+	if err != nil {
+		return nil, xerrors.Errorf("reading trie: %v", err)
+	}
+	var ok bool
+	for _, id := range config.DarcContractIDs {
+		if contract == id {
+			ok = true
+		}
+	}
+	if !ok {
+		return nil, xerrors.New("the contract \"" + contract + "\" is not in the set of DARC contracts")
+	}
+	tc.darcs[string(id)], err = darc.NewFromProtobuf(darcBuf)
+	if err != nil {
+		return nil, xerrors.Errorf("decoding darc: %v", err)
+	}
+	return tc.darcs[string(id)], nil
+}
+
 const trieIndexKey = "trieIndexKey"
 const trieVersionKey = "trieVersionKey"
 
@@ -156,6 +246,7 @@ const trieVersionKey = "trieVersionKey"
 // index.
 type stateTrie struct {
 	trie.Trie
+	trieCache
 }
 
 // loadStateTrie loads an existing StateTrie, an error is returned if no trie
@@ -187,6 +278,7 @@ func (t *stateTrie) StoreAll(scs StateChanges, index int, version Version) error
 // checks whether the expectedRoot hash matches the computed root hash and returns an
 // error if it doesn't.
 func (t *stateTrie) VerifiedStoreAll(scs StateChanges, index int, version Version, expectedRoot []byte) error {
+	t.invalidate()
 	pairs := make([]trie.KVPair, len(scs))
 	for i := range pairs {
 		pairs[i] = &scs[i]
@@ -274,6 +366,14 @@ func (t *stateTrie) StoreAllToReplica(scs StateChanges) (ReadOnlyStateTrie, erro
 
 func (t *stateTrie) GetSignerCounter(id darc.Identity) (uint64, error) {
 	return getSignerCounter(t, id.String())
+}
+
+func (t *stateTrie) LoadConfigFromTrie() (*ChainConfig, error) {
+	return t.loadConfigFromTrie(t)
+}
+
+func (t *stateTrie) LoadDarcFromTrie(id darc.ID) (*darc.Darc, error) {
+	return t.loadDarcFromTrie(t, id)
 }
 
 // newMemStagingStateTrie creates an in-memory StagingStateTrie.

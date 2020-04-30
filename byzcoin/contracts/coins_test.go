@@ -3,6 +3,7 @@ package contracts
 import (
 	"crypto/sha256"
 	"encoding/binary"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -316,6 +317,14 @@ func (ct cvTest) StoreAllToReplica(scs byzcoin.StateChanges) (byzcoin.ReadOnlySt
 
 func (ct cvTest) GetSignerCounter(id darc.Identity) (uint64, error) {
 	return 0, xerrors.Errorf("not yet implemented")
+}
+
+func (ct cvTest) LoadConfigFromTrie() (*byzcoin.ChainConfig, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (ct cvTest) LoadDarcFromTrie(id darc.ID) (*darc.Darc, error) {
+	return nil, errors.New("not implemented")
 }
 
 func (ct cvTest) setSignatureCounter(id string, v uint64) {
