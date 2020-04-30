@@ -302,7 +302,7 @@ func checkDarcRule(rst byzcoin.ReadOnlyStateTrie, d *darc.Darc, id string) error
 		if err != nil {
 			return nil
 		}
-		d, err := rst.LoadDarcFromTrie(darcID)
+		d, err := rst.LoadDarc(darcID)
 		if err != nil {
 			return nil
 		}

@@ -10,14 +10,16 @@ import (
 
 	"go.dedis.ch/onet/v3"
 
-	"go.dedis.ch/kyber/v3/util/random"
+	"golang.org/x/xerrors"
 
 	"github.com/ethereum/go-ethereum/common/math"
+	"github.com/stretchr/testify/require"
+
 	"go.dedis.ch/onet/v3/log"
 
-	"github.com/stretchr/testify/require"
+	"go.dedis.ch/kyber/v3/util/random"
+
 	"go.dedis.ch/cothority/v3/darc"
-	"golang.org/x/xerrors"
 )
 
 // TestStateTrie is a sanity check for setting and retrieving keys, values and
@@ -92,35 +94,30 @@ func TestStateTrie(t *testing.T) {
 func TestDarcRetrieval(t *testing.T) {
 	darcDepth := 3
 	darcWidth := 10
-	entries := 10000
+	entries := 1000
 
 	s := newSer(t, 1, 10*time.Second)
 	defer s.local.CloseAll()
+	// If the test fails, the profile will be empty.
+	// So disable testing of go-routines started by the profiler.
 	s.local.Check = onet.CheckNone
 
 	st, err := s.service().getStateTrie(s.genesis.SkipChainID())
 	require.NoError(t, err)
-	require.NotNil(t, st)
 	require.NotEqual(t, -1, st.GetIndex())
 
 	log.Lvl1("Creating random entries")
-	value := random.Bits(1024, true, random.New())
-	start := time.Now()
-	var scs []StateChange
-	for e := 1; e <= entries; e++ {
-		scs = append(scs, StateChange{
+	value := make([]byte, 128)
+	scs := make([]StateChange, entries)
+	for e := 0; e < entries; e++ {
+		scs[e] = StateChange{
 			StateAction: Create,
 			InstanceID:  random.Bits(256, true, random.New()),
 			ContractID:  ContractDarcID,
 			Value:       value,
-		})
-		if e%100 == 0 {
-			st.StoreAll(scs, 5, CurrentVersion)
-			scs = []StateChange{}
-			log.Print(e, time.Now().Sub(start))
-			start = time.Now()
 		}
 	}
+	require.NoError(t, st.StoreAll(scs, 5, CurrentVersion))
 
 	log.Lvl1("Creating darcs")
 	counter := big.NewInt(0)
@@ -156,16 +153,15 @@ func TestDarcRetrieval(t *testing.T) {
 	}
 
 	scs = make([]StateChange, 0, counter.Int64())
-	for d := range darcs {
-		for w := range darcs[d] {
-			td := darcs[d][w]
+	for d, dd := range darcs {
+		for w, dw := range dd {
 			log.Lvlf3("darc[%d][%d]: %x has %s", d, w,
-				td.GetBaseID(), td.Rules)
-			buf, err := td.ToProto()
+				dw.GetBaseID(), dw.Rules)
+			buf, err := dw.ToProto()
 			require.NoError(t, err)
 			scs = append(scs, StateChange{
 				StateAction: Create,
-				InstanceID:  td.GetBaseID(),
+				InstanceID:  dw.GetBaseID(),
 				ContractID:  ContractDarcID,
 				Value:       buf,
 				Version:     0,
@@ -184,7 +180,7 @@ func TestDarcRetrieval(t *testing.T) {
 			log.Error("invalid darc id", s, len(id), err)
 			return nil
 		}
-		d, err := st.LoadDarcFromTrie(id)
+		d, err := st.LoadDarc(id)
 		if err != nil {
 			return nil
 		}
@@ -193,12 +189,11 @@ func TestDarcRetrieval(t *testing.T) {
 
 	root := darcs[0][0]
 	rootSign := root.Rules.GetSignExpr()
-	start = time.Now()
+	start := time.Now()
 	for i := range darcs[darcDepth-1] {
 		id := darc.ID(make([]byte, 32))
 		copy(id, big.NewInt(int64(i+1)).Bytes())
 		darcID := darc.NewIdentityDarc(id)
-		log.Print("Searching id", darcID.String())
 		err = darc.EvalExprDarc(rootSign, getDarcs, true, darcID.String())
 		require.NoError(t, err)
 	}

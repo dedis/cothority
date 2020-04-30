@@ -115,7 +115,7 @@ func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 	if err != nil {
 		return xerrors.Errorf("failed to get the rst values of %s: %v", value, err)
 	}
-	d, err := rst.LoadDarcFromTrie(dID)
+	d, err := rst.LoadDarc(dID)
 	if err != nil {
 		return xerrors.Errorf("failed to load darc from tries: %v", err)
 	}
@@ -147,7 +147,7 @@ func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 		if err != nil {
 			return nil
 		}
-		d, err := rst.LoadDarcFromTrie(darcID)
+		d, err := rst.LoadDarc(darcID)
 		if err != nil {
 			return nil
 		}

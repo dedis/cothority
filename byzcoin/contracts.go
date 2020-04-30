@@ -503,7 +503,7 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		}
 
 		var oldConfig *ChainConfig
-		oldConfig, err = rst.LoadConfigFromTrie()
+		oldConfig, err = rst.LoadConfig()
 		if err != nil {
 			return nil, nil, xerrors.Errorf("reading trie: %v", err)
 		}
@@ -557,7 +557,7 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 }
 
 func updateRosterScs(rst ReadOnlyStateTrie, darcID darc.ID, newRoster onet.Roster) (StateChanges, error) {
-	config, err := rst.LoadConfigFromTrie()
+	config, err := rst.LoadConfig()
 	if err != nil {
 		return nil, xerrors.Errorf("reading trie: %v", err)
 	}

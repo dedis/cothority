@@ -418,7 +418,7 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops 
 	}
 
 	// get the valid DARC contract IDs from the configuration
-	config, err := st.LoadConfigFromTrie()
+	config, err := st.LoadConfig()
 	if err != nil {
 		return xerrors.Errorf("reading trie: %v", err)
 	}
@@ -464,7 +464,7 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops 
 		if err != nil {
 			return nil
 		}
-		d, err := st.LoadDarcFromTrie(darcID)
+		d, err := st.LoadDarc(darcID)
 		if err != nil {
 			return nil
 		}
