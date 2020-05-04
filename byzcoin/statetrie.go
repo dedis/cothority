@@ -82,6 +82,7 @@ var _ GlobalState = (*globalState)(nil)
 type stagingStateTrie struct {
 	trie.StagingTrie
 	trieCache
+	sync.Mutex
 }
 
 // Clone makes a copy of the staged data of the structure, the source Trie is
@@ -94,6 +95,8 @@ func (t *stagingStateTrie) Clone() *stagingStateTrie {
 
 // StoreAll puts all the state changes and the index in the staging area.
 func (t *stagingStateTrie) StoreAll(scs StateChanges) error {
+	t.Lock()
+	defer t.Unlock()
 	t.invalidate()
 	pairs := make([]trie.KVPair, len(scs))
 	for i := range pairs {
@@ -108,6 +111,8 @@ func (t *stagingStateTrie) StoreAll(scs StateChanges) error {
 // GetValues returns the associated value, contract ID and darcID. An error is
 // returned if the key does not exist or another issue occurs.
 func (t *stagingStateTrie) GetValues(key []byte) (value []byte, version uint64, contractID string, darcID darc.ID, err error) {
+	t.Lock()
+	defer t.Unlock()
 	var buf []byte
 	buf, err = t.Get(key)
 	if err != nil {
@@ -135,12 +140,21 @@ func (t *stagingStateTrie) GetValues(key []byte) (value []byte, version uint64, 
 
 // Commit commits the staged data to the source trie.
 func (t *stagingStateTrie) Commit() error {
+	t.Lock()
+	defer t.Unlock()
 	return cothority.ErrorOrNil(t.StagingTrie.Commit(), "commit failed")
 }
 
 // GetIndex returns the index of the current trie.
 func (t *stagingStateTrie) GetIndex() int {
-	index := binary.LittleEndian.Uint32(t.StagingTrie.GetMetadata([]byte(trieIndexKey)))
+	t.Lock()
+	defer t.Unlock()
+	indexBuf := t.StagingTrie.GetMetadata([]byte(trieIndexKey))
+	if len(indexBuf) != 4 {
+		return -1
+	}
+
+	index := binary.LittleEndian.Uint32(indexBuf)
 	return int(index)
 }
 
@@ -160,6 +174,8 @@ func (t *stagingStateTrie) GetSignerCounter(id darc.Identity) (uint64, error) {
 
 // GetVersion returns the version of the ByzCoin protocol.
 func (t *stagingStateTrie) GetVersion() Version {
+	t.Lock()
+	defer t.Unlock()
 	return readVersion(t)
 }
 
@@ -266,6 +282,7 @@ const trieVersionKey = "trieVersionKey"
 type stateTrie struct {
 	trie.Trie
 	trieCache
+	sync.Mutex
 }
 
 // loadStateTrie loads an existing StateTrie, an error is returned if no trie
@@ -297,6 +314,8 @@ func (t *stateTrie) StoreAll(scs StateChanges, index int, version Version) error
 // checks whether the expectedRoot hash matches the computed root hash and returns an
 // error if it doesn't.
 func (t *stateTrie) VerifiedStoreAll(scs StateChanges, index int, version Version, expectedRoot []byte) error {
+	t.Lock()
+	defer t.Unlock()
 	t.invalidate()
 	pairs := make([]trie.KVPair, len(scs))
 	for i := range pairs {
@@ -329,6 +348,8 @@ func (t *stateTrie) VerifiedStoreAll(scs StateChanges, index int, version Versio
 // GetValues returns the associated value, contractID and darcID. An error is
 // returned if the key does not exist.
 func (t *stateTrie) GetValues(key []byte) (value []byte, version uint64, contractID string, darcID darc.ID, err error) {
+	t.Lock()
+	defer t.Unlock()
 	var buf []byte
 	buf, err = t.Get(key)
 	if err != nil {
@@ -356,6 +377,8 @@ func (t *stateTrie) GetValues(key []byte) (value []byte, version uint64, contrac
 
 // GetIndex gets the latest index.
 func (t *stateTrie) GetIndex() int {
+	t.Lock()
+	defer t.Unlock()
 	indexBuf := t.GetMetadata([]byte(trieIndexKey))
 	if indexBuf == nil {
 		return -1
