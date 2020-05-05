@@ -725,4 +725,7 @@ const (
 	// GUFSendVersion0 will make GetUpdates to send all instances with
 	// version 0, even those that are note updated.
 	GUFSendVersion0 = GetUpdatesFlags(1 << iota)
+	// GUFSendMissingProofs will make GetUpdates send proofs for missing
+	// instances. If not present, missing instances are ignored.
+	GUFSendMissingProofs
 )

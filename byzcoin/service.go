@@ -624,17 +624,29 @@ func (s *Service) GetUpdates(pr *GetUpdatesRequest) (*GetUpdatesReply, error) {
 	sendVersion0 := pr.Flags&GUFSendVersion0 > 0
 	reply := &GetUpdatesReply{}
 	for _, idv := range pr.Instances {
-		_, ver, _, _, err := st.GetValues(idv.ID[:])
-		if err != nil {
-			return nil, fmt.Errorf("couldn't read values of instance: %v", err)
-		}
-		if ver <= idv.Version &&
-			!(sendVersion0 && ver == 0) {
-			continue
-		}
 		proof, err := st.GetProof(idv.ID[:])
 		if err != nil {
 			return nil, fmt.Errorf("error while looking up proof: %v", err)
+		}
+
+		// Only send missing proofs if flag is set
+		if !proof.Match(idv.ID[:]) {
+			if pr.Flags&GUFSendMissingProofs > 0 {
+				reply.Proofs = append(reply.Proofs, *proof)
+			}
+			continue
+		}
+
+		// Check if it's a new version
+		var inst StateChangeBody
+		err = protobuf.Decode(proof.Get(idv.ID[:]), &inst)
+		if err != nil {
+			return nil, fmt.Errorf("invalid instance stored in trie: %v",
+				err)
+		}
+		if inst.Version <= idv.Version &&
+			!(sendVersion0 && inst.Version == 0) {
+			continue
 		}
 		reply.Proofs = append(reply.Proofs, *proof)
 	}
