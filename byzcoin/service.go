@@ -2675,8 +2675,8 @@ func (s *Service) monitorLeaderFailure() {
 						LeaderIndex: 1,
 					},
 				}
-				log.Lvlf2("Starting a view-change by putting our own request"+
-					": %+v", req)
+				log.Lvlf2("%s: Starting a view-change by putting our own"+
+					" request: %+v", s.ServerIdentity(), req)
 				s.viewChangeMan.addReq(req)
 			}
 		case <-s.closeLeaderMonitorChan:

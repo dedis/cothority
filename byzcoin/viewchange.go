@@ -2,8 +2,12 @@ package byzcoin
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"sync"
 	"time"
+
+	"go.dedis.ch/kyber/v3/sign"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/blscosi/protocol"
@@ -159,6 +163,21 @@ func (s *Service) sendNewView(proof []viewchange.InitReq) {
 	log.Lvlf2("%s: sending new-view request with %d proofs for view: %+v",
 		s.ServerIdentity(), len(proof), proof[0].View)
 
+	// Our node might not be in the proofs.
+	inProof := false
+	for _, p := range proof {
+		if p.SignerID.Equal(s.ServerIdentity().ID) {
+			inProof = true
+			break
+		}
+	}
+	if !inProof {
+		proof = append(proof, viewchange.InitReq{
+			View:     proof[0].View,
+			SignerID: s.ServerIdentity().ID,
+		})
+	}
+
 	// Our own proof might not be signed, so sign it.
 	for i := range proof {
 		if proof[i].SignerID.Equal(s.ServerIdentity().ID) && len(proof[i].Signature) == 0 {
@@ -276,14 +295,30 @@ func (s *Service) handleViewChangeReq(env *network.Envelope) error {
 	return nil
 }
 
+// startViewChangeCosi takes a request that must be valid and tries to get it
+// signed to make sure that all nodes are OK with it.
 func (s *Service) startViewChangeCosi(req viewchange.NewViewReq) ([]byte, error) {
 	defer log.Lvl2(s.ServerIdentity(), "finished view-change blscosi")
 	sb := s.db().GetByID(req.GetView().ID)
-	newRoster := rotateRoster(sb.Roster, req.GetView().LeaderIndex)
-	if !newRoster.List[0].Equal(s.ServerIdentity()) {
-		return nil, xerrors.New("startViewChangeCosi should not be called by non-leader")
+
+	// Set up a new roster with all nodes that replied.
+	// This helps BLSCoSi because it will not have to work around failing nodes.
+	var siList []*network.ServerIdentity
+	for _, p := range req.Proof {
+		_, si := sb.Roster.Search(p.SignerID)
+		if si == nil {
+			return nil, errors.New("found invalid node in viewchange request")
+		}
+		siList = append(siList, si)
 	}
-	proto, err := s.CreateProtocol(viewChangeFtCosi, newRoster.GenerateBinaryTree())
+	blsRoster := onet.NewRoster(siList)
+	tree := blsRoster.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
+	if tree == nil {
+		return nil, errors.New("couldn't create tree")
+	}
+
+	proto, err := s.CreateProtocol(viewChangeFtCosi,
+		blsRoster.GenerateNaryTreeWithRoot(2, s.ServerIdentity()))
 	if err != nil {
 		return nil, xerrors.Errorf("creating protocol: %v", err)
 	}
@@ -302,14 +337,51 @@ func (s *Service) startViewChangeCosi(req viewchange.NewViewReq) ([]byte, error)
 	cosiProto.Data = payload
 	cosiProto.CreateProtocol = s.CreateProtocol
 	cosiProto.Timeout = interval * 2
+	cosiProto.Threshold = protocol.DefaultThreshold(len(blsRoster.List))
 
-	log.Lvl2("Starting protocol for getting leadership", newRoster.List)
+	log.Lvl2("Starting protocol for getting leadership", blsRoster.List)
 	if err := cosiProto.Start(); err != nil {
 		return nil, xerrors.Errorf("starting protocol: %v", err)
 	}
 	// The protocol should always send FinalSignature because it has a
 	// timeout, so we don't need a select.
-	return <-cosiProto.FinalSignature, nil
+	sigBuf := <-cosiProto.FinalSignature
+	if len(sigBuf) == 0 {
+		return nil, errors.New("didn't get blscosi signature")
+	}
+
+	return switchMask(sigBuf, blsRoster.Publics(), req.Roster.Publics())
+}
+
+// Switch the mask from the modified roster back to the original roster.
+// This is quite tedious, as the mask is a bit-field over multiple bytes,
+// and the correspondance between two masks goes through checking the
+// public keys.
+func switchMask(oldSig protocol.BlsSignature, oldPubs,
+	newPubs []kyber.Point) ([]byte, error) {
+	blsMask, err := protocol.BlsSignature(oldSig).GetMask(pairingSuite, oldPubs)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't get mask: %v", err)
+	}
+	blsPubs := blsMask.Participants()
+	reqMask, err := sign.NewMask(pairingSuite, newPubs, nil)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't get byzcoin-mask: %v", err)
+	}
+	for i, pub := range newPubs {
+		enabled := false
+		for _, p := range blsPubs {
+			if p.Equal(pub) {
+				enabled = true
+				break
+			}
+		}
+		err := reqMask.SetBit(i, enabled)
+		if err != nil {
+			return nil, fmt.Errorf("couldn't set bit: %v", err)
+		}
+	}
+	return append(oldSig[:pairingSuite.G1().PointLen()], reqMask.Mask()...), nil
 }
 
 // verifyViewChange is registered in the view-change ftcosi.
@@ -331,6 +403,15 @@ func (s *Service) verifyViewChange(msg []byte, data []byte) bool {
 		log.Error(s.ServerIdentity(), "view does not exist")
 		return false
 	}
+	if len(sb.ForwardLink) > 0 {
+		log.Error("view-change for an old block is not allowed")
+		return false
+	}
+	if !sb.SkipChainID().Equal(req.GetGen()) {
+		log.Error(s.ServerIdentity(),
+			"got view-change for an invalid skipchain")
+		return false
+	}
 	newRosterID := rotateRoster(sb.Roster, req.GetView().LeaderIndex).ID
 	if !newRosterID.Equal(req.Roster.ID) {
 		log.Error(s.ServerIdentity(), "invalid roster in request")
@@ -344,7 +425,8 @@ func (s *Service) verifyViewChange(msg []byte, data []byte) bool {
 		for _, p := range req.Proof {
 			ind, si := req.Roster.Search(p.SignerID)
 			if ind >= 0 {
-				log.Lvl2("Got view-change signature from", si)
+				log.Lvl2(s.ServerIdentity(), "Got view-change signature from",
+					si)
 			} else {
 				log.Lvl2("Got view-change signature from invalid node")
 				continue
@@ -355,7 +437,7 @@ func (s *Service) verifyViewChange(msg []byte, data []byte) bool {
 		return len(signers), len(views)
 	}()
 	f := s.getFaultThreshold(sb.Hash)
-	if uniqueSigners <= 2*f {
+	if uniqueSigners < len(sb.Roster.List)-f {
 		log.Errorf("%s: not enough proofs: %v < %v",
 			s.ServerIdentity(), uniqueSigners, 2*f+1)
 		return false

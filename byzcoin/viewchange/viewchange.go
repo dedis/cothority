@@ -145,11 +145,13 @@ func (c *Controller) Start(myID network.ServerIdentityID, genesis skipchain.Skip
 			// the timer and move the state if there are 2f+1 valid
 			// requests.
 			if myID.Equal(req.SignerID) {
-				log.Lvl4("adding anomaly:", req.View.LeaderIndex, req.SignerID.String())
+				log.Lvl4("adding anomaly:", req.View.LeaderIndex,
+					req.SignerID.String())
 				meta.add(req)
 				ctr = c.processAnomaly(req, &meta, ctr)
 			} else {
-				log.Lvl4("adding req:", req.View.LeaderIndex, req.SignerID.String())
+				log.Lvl4("adding req:", req.View.LeaderIndex,
+					req.SignerID.String())
 				meta.add(req)
 				if meta.highest() > ctr && meta.countOf(meta.highest()) > f {
 					// To avoid starting view-change too late, if

@@ -262,6 +262,8 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 		if index != -1 {
 			responses[index] = own
 		}
+	} else {
+		log.Warn("Subleader didn't sign", p.ServerIdentity())
 	}
 
 	// we need to timeout the children faster than the root timeout to let it
@@ -311,7 +313,8 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 				log.Warnf("Duplicate refusal from %v", reply.ServerIdentity)
 			}
 		case <-timeout:
-			log.Lvlf3("Subleader reached timeout waiting for children responses: %v", p.ServerIdentity())
+			log.Lvlf3("Subleader reached timeout waiting for children"+
+				" responses: %v", p.ServerIdentity())
 			// Use whatever we received until then to try to finish
 			// the protocol
 			done = len(p.Children())

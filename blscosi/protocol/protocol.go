@@ -197,7 +197,8 @@ func (p *BlsCosi) runSubProtocols() {
 	p.subProtocolsLock.Lock()
 	p.subProtocols = make([]*SubBlsCosi, len(p.subTrees))
 	for i, tree := range p.subTrees {
-		log.Lvlf3("Invoking start sub protocol on %v", tree.Root.ServerIdentity)
+		log.Lvlf3("Invoking start sub protocol on %v\n%s",
+			tree.Root.ServerIdentity, tree.Dump())
 		var err error
 		p.subProtocols[i], err = p.startSubProtocol(tree)
 		if err != nil {
@@ -280,7 +281,8 @@ func (p *BlsCosi) startSubProtocol(tree *onet.Tree) (*SubBlsCosi, error) {
 	// responses. The main protocol will deal with early answers.
 	cosiSubProtocol.Threshold = tree.Size() - 1
 
-	log.Lvlf3("Starting sub protocol with subleader %v", tree.Root.Children[0].ServerIdentity)
+	log.Lvlf3("Starting sub protocol with subleader %v",
+		tree.Root.Children[0].ServerIdentity)
 	err = cosiSubProtocol.Start()
 	if err != nil {
 		return nil, err
@@ -380,7 +382,6 @@ func (p *BlsCosi) collectSignatures() (ResponseMap, error) {
 					count := mask.CountEnabled()
 					numSignature += count
 					numFailure += res.SubtreeCount() + 1 - count
-
 					responseMap[index] = &res.Response
 				}
 			}

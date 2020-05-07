@@ -271,14 +271,15 @@ func TestViewChange_MonitorFailure(t *testing.T) {
 // is offline, it will never catch up.
 func TestViewChange_NeedCatchUp(t *testing.T) {
 	rw := time.Duration(3)
-	s := newSerN(t, 1, testInterval, 5, rw)
+	s := newSerN(t, 1, testInterval, 4, rw)
 	defer s.local.CloseAll()
 
 	for _, service := range s.services {
 		service.SetPropagationTimeout(2 * testInterval)
 	}
 
-	s.hosts[3].Pause()
+	log.Lvl1("Closing", s.hosts[3].ServerIdentity)
+	s.services[3].TestClose()
 
 	// Create a block that host 4 will miss
 	tx1, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
@@ -289,12 +290,13 @@ func TestViewChange_NeedCatchUp(t *testing.T) {
 
 	// Kill the leader, but the view change won't happen as
 	// 2 nodes are down
+	log.Lvl1("Closing and pausing", s.hosts[0].ServerIdentity)
 	s.services[0].TestClose()
-	s.hosts[0].Pause()
 
-	s.hosts[3].Unpause()
+	log.Lvl1("Starting again", s.hosts[3].ServerIdentity)
+	s.services[3].TestRestart()
 	// This will trigger the proof to be propagated. In that test, the catch up
-	// won't be trigger as only one block is missing.
+	// won't be triggered as only one block is missing.
 	s.services[3].sendViewChangeReq(viewchange.View{
 		ID:          s.genesis.Hash,
 		Gen:         s.genesis.SkipChainID(),
@@ -305,7 +307,7 @@ func TestViewChange_NeedCatchUp(t *testing.T) {
 	// more if it goes to the leader index 2 so we give enough time.
 	sb := s.genesis
 	for i := 0; i < 60 && sb.Index != 2; i++ {
-		proof, err := s.services[4].skService().GetDB().GetProof(s.genesis.Hash)
+		proof, err := s.services[3].skService().GetDB().GetProof(s.genesis.Hash)
 		require.NoError(t, err)
 		sb = proof[len(proof)-1]
 
@@ -314,7 +316,7 @@ func TestViewChange_NeedCatchUp(t *testing.T) {
 	}
 
 	// Check that a view change was finally executed
-	leader, err := s.services[4].getLeader(s.genesis.SkipChainID())
+	leader, err := s.services[3].getLeader(s.genesis.SkipChainID())
 	require.NoError(t, err)
 	require.NotNil(t, leader)
 	require.False(t, leader.Equal(s.services[0].ServerIdentity()))
