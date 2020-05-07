@@ -14,7 +14,9 @@ package viewchange
 import (
 	"crypto/sha256"
 	"encoding/binary"
+	"errors"
 	"fmt"
+	"go.dedis.ch/cothority/v3/blscosi/protocol"
 	"math"
 	"time"
 
@@ -336,6 +338,25 @@ type NewViewReq struct {
 	Proof  []InitReq
 }
 
+// NewNewViewReq creates a new view request given the current roster and a
+// set of proofs.
+// It verifies that all proofs are unique,
+// point to the same view, and that the signatures are correct.
+func NewNewViewReq(old *onet.Roster, proofs []InitReq) (*NewViewReq, error) {
+	newRoster := rotateRoster(old, proofs[0].View.LeaderIndex)
+	nvr := &NewViewReq{
+		Roster: *newRoster,
+		Proof:  proofs,
+	}
+	if err := nvr.VerifySignatures(old); err != nil {
+		return nil, err
+	}
+	if err := nvr.VerifyUniqueness(); err != nil {
+		return nil, err
+	}
+	return nvr, nil
+}
+
 // Hash computes the digest of the request.
 func (req NewViewReq) Hash() []byte {
 	h := sha256.New()
@@ -362,6 +383,80 @@ func (req NewViewReq) GetView() *View {
 		return &p.View
 	}
 	return nil
+}
+
+// Verify that the view request is correct.
+// The skipblock passed must be the latest skipblock available.
+func (req NewViewReq) Verify(sb *skipchain.SkipBlock) error {
+	if !sb.Hash.Equal(req.GetView().ID) {
+		return errors.New("wrong block id")
+	}
+
+	// Check that we know about the view and the new roster in the request
+	// matches the view-change proofs.
+	newRoster := rotateRoster(sb.Roster, req.GetView().LeaderIndex)
+	equal, err := newRoster.Equal(&req.Roster)
+	if err != nil {
+		return fmt.Errorf("while comparing rosters: %v", err)
+	}
+	if !equal {
+		return errors.New("invalid roster in request")
+	}
+
+	if err := req.VerifyUniqueness(); err != nil {
+		return fmt.Errorf("proofs are not unique: %v", err)
+	}
+	threshold := protocol.DefaultThreshold(len(sb.Roster.List))
+	uniqueSigners := len(req.Proof)
+	if uniqueSigners < threshold {
+		return fmt.Errorf("not enough proofs: %d < %d", uniqueSigners,
+			threshold)
+	}
+
+	defer log.Lvl2("view-change verification OK")
+	return req.VerifySignatures(sb.Roster)
+}
+
+// VerifyUniqueness makes sure that all requests are unique and point to the
+// same view.
+func (req NewViewReq) VerifyUniqueness() error {
+	ids := make(map[network.ServerIdentityID]bool)
+	for _, p := range req.Proof {
+		ids[p.SignerID] = true
+		if !req.Proof[0].View.Equal(p.View) {
+			return errors.New("have different view")
+		}
+	}
+
+	if len(ids) != len(req.Proof) {
+		return errors.New("got one or more signer twice or more")
+	}
+
+	return nil
+}
+
+// VerifySignatures verifies that all individual signatures of the proofs are
+// correct.
+func (req NewViewReq) VerifySignatures(r *onet.Roster) error {
+	for _, p := range req.Proof {
+		_, sid := r.Search(p.SignerID)
+		if sid == nil {
+			return errors.New("the signer is not in the roster")
+		}
+		// Check that the signature is correct.
+		if err := schnorr.Verify(cothority.Suite, sid.Public, p.Hash(), p.Signature); err != nil {
+			return fmt.Errorf("proof signature failed: %v", err)
+		}
+	}
+	return nil
+}
+
+func rotateRoster(roster *onet.Roster, i int) *onet.Roster {
+	// handle catastrophic situations where a round of the roster
+	// is not enough to find a new leader
+	i = i % len(roster.List)
+
+	return onet.NewRoster(append(roster.List[i:], roster.List[:i]...))
 }
 
 type state int
