@@ -2,6 +2,7 @@ package byzcoin
 
 import (
 	"errors"
+
 	"golang.org/x/xerrors"
 
 	"go.dedis.ch/cothority/v3"
@@ -69,6 +70,16 @@ func (s *ROSTSimul) GetNonce() ([]byte, error) {
 // ForEach is not implemented.
 func (s *ROSTSimul) ForEach(func(k, v []byte) error) error {
 	return errors.New("not implemented")
+}
+
+// LoadConfig is not implemented
+func (s *ROSTSimul) LoadConfig() (*ChainConfig, error) {
+	return nil, errors.New("not implemented")
+}
+
+// LoadDarc is not implemented
+func (s *ROSTSimul) LoadDarc(id darc.ID) (*darc.Darc, error) {
+	return nil, errors.New("not implemented")
 }
 
 // StoreAllToReplica stores all stateChanges, without checking for validity!

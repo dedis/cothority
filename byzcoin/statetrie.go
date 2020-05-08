@@ -3,6 +3,12 @@ package byzcoin
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
+	"fmt"
+	"sync"
+
+	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/protobuf"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin/trie"
@@ -41,7 +47,13 @@ type ReadOnlyStateTrie interface {
 	// the state changes to the copy. The implementation should make sure
 	// that the original read-only trie is not be modified.
 	StoreAllToReplica(StateChanges) (ReadOnlyStateTrie, error)
+	// GetSignerCounter returns the latest counters available.
 	GetSignerCounter(id darc.Identity) (uint64, error)
+	// LoadConfig returns the config,
+	// or a cache of it to speed up if there are many lookups.
+	LoadConfig() (*ChainConfig, error)
+	// LoadDarc returns a darc, or a cache of it.
+	LoadDarc(id darc.ID) (*darc.Darc, error)
 }
 
 // ReadOnlySkipChain holds the skipchain data.
@@ -69,6 +81,8 @@ var _ GlobalState = (*globalState)(nil)
 // byzcoin.
 type stagingStateTrie struct {
 	trie.StagingTrie
+	trieCache
+	sync.Mutex
 }
 
 // Clone makes a copy of the staged data of the structure, the source Trie is
@@ -81,6 +95,9 @@ func (t *stagingStateTrie) Clone() *stagingStateTrie {
 
 // StoreAll puts all the state changes and the index in the staging area.
 func (t *stagingStateTrie) StoreAll(scs StateChanges) error {
+	t.Lock()
+	defer t.Unlock()
+	t.invalidate()
 	pairs := make([]trie.KVPair, len(scs))
 	for i := range pairs {
 		pairs[i] = &scs[i]
@@ -94,6 +111,8 @@ func (t *stagingStateTrie) StoreAll(scs StateChanges) error {
 // GetValues returns the associated value, contract ID and darcID. An error is
 // returned if the key does not exist or another issue occurs.
 func (t *stagingStateTrie) GetValues(key []byte) (value []byte, version uint64, contractID string, darcID darc.ID, err error) {
+	t.Lock()
+	defer t.Unlock()
 	var buf []byte
 	buf, err = t.Get(key)
 	if err != nil {
@@ -121,12 +140,21 @@ func (t *stagingStateTrie) GetValues(key []byte) (value []byte, version uint64, 
 
 // Commit commits the staged data to the source trie.
 func (t *stagingStateTrie) Commit() error {
+	t.Lock()
+	defer t.Unlock()
 	return cothority.ErrorOrNil(t.StagingTrie.Commit(), "commit failed")
 }
 
 // GetIndex returns the index of the current trie.
 func (t *stagingStateTrie) GetIndex() int {
-	index := binary.LittleEndian.Uint32(t.StagingTrie.GetMetadata([]byte(trieIndexKey)))
+	t.Lock()
+	defer t.Unlock()
+	indexBuf := t.StagingTrie.GetMetadata([]byte(trieIndexKey))
+	if len(indexBuf) != 4 {
+		return -1
+	}
+
+	index := binary.LittleEndian.Uint32(indexBuf)
 	return int(index)
 }
 
@@ -146,7 +174,104 @@ func (t *stagingStateTrie) GetSignerCounter(id darc.Identity) (uint64, error) {
 
 // GetVersion returns the version of the ByzCoin protocol.
 func (t *stagingStateTrie) GetVersion() Version {
+	t.Lock()
+	defer t.Unlock()
 	return readVersion(t)
+}
+
+func (t *stagingStateTrie) LoadConfig() (*ChainConfig, error) {
+	return t.loadConfigFromTrie(t)
+}
+
+func (t *stagingStateTrie) LoadDarc(id darc.ID) (*darc.Darc, error) {
+	return t.loadDarcFromTrie(t, id)
+}
+
+type trieCache struct {
+	config *ChainConfig
+	darcs  map[string]*darc.Darc
+	sync.Mutex
+}
+
+// use a very defensive cache mechanism,
+// where every write to the trie invalidates all the cache.
+// This avoids having to search through the cache to find invalid entries on
+// each write.
+func (tc *trieCache) invalidate() {
+	tc.Lock()
+	tc.config = nil
+	tc.darcs = nil
+	tc.Unlock()
+}
+
+func (tc *trieCache) loadConfigFromTrie(st ReadOnlyStateTrie) (*ChainConfig, error) {
+	tc.Lock()
+	defer tc.Unlock()
+	if tc.config != nil {
+		return tc.config, nil
+	}
+
+	// Find the genesis-darc ID.
+	val, _, contract, _, err := GetValueContract(st, NewInstanceID(nil).Slice())
+	if err != nil {
+		return nil, fmt.Errorf("reading trie: %w", err)
+	}
+	if contract != ContractConfigID {
+		return nil, errors.New("did not get " + ContractConfigID)
+	}
+
+	tc.config = &ChainConfig{}
+	err = protobuf.DecodeWithConstructors(val, tc.config,
+		network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		return nil, fmt.Errorf("decoding config: %v", err)
+	}
+
+	return tc.config, nil
+}
+
+func (tc *trieCache) loadDarcFromTrie(st ReadOnlyStateTrie,
+	id darc.ID) (*darc.Darc, error) {
+	tc.Lock()
+	defer tc.Unlock()
+	if tc.darcs == nil {
+		tc.darcs = make(map[string]*darc.Darc)
+	} else {
+		if d, ok := tc.darcs[string(id)]; ok {
+			return d, nil
+		}
+	}
+
+	darcBuf, _, contract, _, err := st.GetValues(id)
+	if err != nil {
+		return nil, fmt.Errorf("reading trie: %v", err)
+	}
+
+	tc.Unlock()
+	config, err := tc.loadConfigFromTrie(st)
+	tc.Lock()
+
+	if err != nil {
+		return nil, fmt.Errorf("reading trie: %v", err)
+	}
+	var ok bool
+	for _, id := range config.DarcContractIDs {
+		if contract == id {
+			ok = true
+			break
+		}
+	}
+
+	if !ok {
+		return nil, fmt.Errorf("the contract '%s' is not in"+
+			" the set of DARC contracts", contract)
+	}
+	d, err := darc.NewFromProtobuf(darcBuf)
+	if err != nil {
+		return nil, fmt.Errorf("decoding darc: %v", err)
+	}
+	tc.darcs[string(id)] = d
+	return d, nil
 }
 
 const trieIndexKey = "trieIndexKey"
@@ -156,6 +281,8 @@ const trieVersionKey = "trieVersionKey"
 // index.
 type stateTrie struct {
 	trie.Trie
+	trieCache
+	sync.Mutex
 }
 
 // loadStateTrie loads an existing StateTrie, an error is returned if no trie
@@ -187,6 +314,9 @@ func (t *stateTrie) StoreAll(scs StateChanges, index int, version Version) error
 // checks whether the expectedRoot hash matches the computed root hash and returns an
 // error if it doesn't.
 func (t *stateTrie) VerifiedStoreAll(scs StateChanges, index int, version Version, expectedRoot []byte) error {
+	t.Lock()
+	defer t.Unlock()
+	t.invalidate()
 	pairs := make([]trie.KVPair, len(scs))
 	for i := range pairs {
 		pairs[i] = &scs[i]
@@ -209,7 +339,7 @@ func (t *stateTrie) VerifiedStoreAll(scs StateChanges, index int, version Versio
 		}
 
 		if expectedRoot != nil && !bytes.Equal(t.GetRootWithBucket(b), expectedRoot) {
-			return xerrors.New("root verfication failed")
+			return xerrors.New("root verification failed")
 		}
 		return nil
 	})
@@ -218,6 +348,8 @@ func (t *stateTrie) VerifiedStoreAll(scs StateChanges, index int, version Versio
 // GetValues returns the associated value, contractID and darcID. An error is
 // returned if the key does not exist.
 func (t *stateTrie) GetValues(key []byte) (value []byte, version uint64, contractID string, darcID darc.ID, err error) {
+	t.Lock()
+	defer t.Unlock()
 	var buf []byte
 	buf, err = t.Get(key)
 	if err != nil {
@@ -245,6 +377,8 @@ func (t *stateTrie) GetValues(key []byte) (value []byte, version uint64, contrac
 
 // GetIndex gets the latest index.
 func (t *stateTrie) GetIndex() int {
+	t.Lock()
+	defer t.Unlock()
 	indexBuf := t.GetMetadata([]byte(trieIndexKey))
 	if indexBuf == nil {
 		return -1
@@ -274,6 +408,14 @@ func (t *stateTrie) StoreAllToReplica(scs StateChanges) (ReadOnlyStateTrie, erro
 
 func (t *stateTrie) GetSignerCounter(id darc.Identity) (uint64, error) {
 	return getSignerCounter(t, id.String())
+}
+
+func (t *stateTrie) LoadConfig() (*ChainConfig, error) {
+	return t.loadConfigFromTrie(t)
+}
+
+func (t *stateTrie) LoadDarc(id darc.ID) (*darc.Darc, error) {
+	return t.loadDarcFromTrie(t, id)
 }
 
 // newMemStagingStateTrie creates an in-memory StagingStateTrie.

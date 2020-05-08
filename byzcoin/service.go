@@ -543,7 +543,7 @@ func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthor
 	if err != nil {
 		return nil, xerrors.Errorf("getting trie: %v", err)
 	}
-	d, err := LoadDarcFromTrie(st, req.DarcID)
+	d, err := st.LoadDarc(req.DarcID)
 	if err != nil {
 		return nil, xerrors.Errorf("couldn't find darc: %v", err)
 	}
@@ -557,7 +557,7 @@ func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthor
 			log.Error("invalid darc id", s, len(id), err)
 			return nil
 		}
-		d, err := LoadDarcFromTrie(st, id)
+		d, err := st.LoadDarc(id)
 		if err != nil {
 			log.Error("didn't find darc")
 			return nil
@@ -1637,7 +1637,8 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	log.Lvlf2("%s Updating %d transactions for %x on index %v", s.ServerIdentity(), len(body.TxResults), sb.SkipChainID(), sb.Index)
 	_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), sb.SkipChainID(), body.TxResults, noTimeout, header.Version, header.Timestamp)
 
-	log.Lvlf3("%s Storing index %d with %d state changes %v", s.ServerIdentity(), sb.Index, len(scs), scs.ShortStrings())
+	log.Lvlf3("%s Storing index %d with %d state changes %v",
+		s.ServerIdentity(), sb.Index, len(scs), scs.ShortStrings())
 	// Update our global state using all state changes.
 	if err = st.VerifiedStoreAll(scs, sb.Index, header.Version, header.TrieRoot); err != nil {
 		return xerrors.Errorf("storing state changes: %v", err)
@@ -1864,7 +1865,7 @@ func (s *Service) LoadConfig(scID skipchain.SkipBlockID) (*ChainConfig, error) {
 	if err != nil {
 		return nil, xerrors.Errorf("getting trie: %v", err)
 	}
-	cfg, err := LoadConfigFromTrie(st)
+	cfg, err := st.LoadConfig()
 	return cfg, cothority.ErrorOrNil(err, "reading trie")
 }
 
@@ -1898,7 +1899,7 @@ func (s *Service) LoadBlockInfo(scID skipchain.SkipBlockID) (time.Duration, int,
 }
 
 func loadBlockInfo(st ReadOnlyStateTrie) (time.Duration, int, error) {
-	config, err := LoadConfigFromTrie(st)
+	config, err := st.LoadConfig()
 	if err != nil {
 		if xerrors.Is(err, errKeyNotSet) {
 			err = nil
@@ -2074,7 +2075,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		return false
 	}
 
-	config, err := LoadConfigFromTrie(sst)
+	config, err := sst.LoadConfig()
 	if err != nil {
 		log.Error(s.ServerIdentity(), err)
 		return false
