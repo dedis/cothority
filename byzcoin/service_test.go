@@ -2536,6 +2536,59 @@ func TestService_Repair(t *testing.T) {
 	require.Equal(t, finalRoot, newRoot)
 }
 
+func TestService_GetUpdates(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	req := &GetUpdatesRequest{
+		Instances:     nil,
+		Flags:         0,
+		LatestBlockID: nil,
+	}
+	_, err := s.service().GetUpdates(req)
+	require.Error(t, err)
+
+	req.Instances = []IDVersion{{ConfigInstanceID, 0}}
+	req.LatestBlockID = s.genesis.SkipChainID()
+	gur, err := s.service().GetUpdates(req)
+	require.NoError(t, err)
+	require.Equal(t, 0, len(gur.Proofs))
+
+	req.Flags = GUFSendVersion0
+	gur, err = s.service().GetUpdates(req)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(gur.Proofs))
+	require.True(t, gur.Proofs[0].Match(ConfigInstanceID[:]))
+
+	ctx, _ := createConfigTxWithCounter(t, time.Millisecond*100, *s.roster,
+		1e5, s, 1)
+	s.sendTxAndWait(t, ctx, 10)
+
+	req.Flags = 0
+	_, err = s.service().GetUpdates(req)
+	require.Error(t, err)
+	latest, err := s.service().db().GetLatest(s.genesis)
+	req.LatestBlockID = latest.Hash
+	require.NoError(t, err)
+
+	gur, err = s.service().GetUpdates(req)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(gur.Proofs))
+	require.True(t, gur.Proofs[0].Match(ConfigInstanceID[:]))
+
+	invID := sha256.Sum256([]byte("invalid instance"))
+	req.Instances = append(req.Instances, IDVersion{invID, 0})
+	gur, err = s.service().GetUpdates(req)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(gur.Proofs))
+
+	req.Flags = GUFSendMissingProofs
+	gur, err = s.service().GetUpdates(req)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(gur.Proofs))
+	require.False(t, gur.Proofs[1].Match(invID[:]))
+}
+
 func createBadConfigTx(t *testing.T, s *ser, intervalBad, szBad bool) (ClientTransaction, ChainConfig) {
 	switch {
 	case intervalBad:
