@@ -42,7 +42,8 @@ func (m *viewChangeManager) add(SendInitReq viewchange.SendInitReqFunc,
 
 // actually starts the viewchange monitor. This should always be called after
 // `add`, else `started` will not work
-func (m *viewChangeManager) start(myID network.ServerIdentityID, scID skipchain.SkipBlockID, initialDuration time.Duration, f int) {
+func (m *viewChangeManager) start(myID network.ServerIdentityID,
+	scID skipchain.SkipBlockID, initialDuration time.Duration, threshold int) {
 	k := string(scID)
 	m.Lock()
 	defer m.Unlock()
@@ -50,7 +51,7 @@ func (m *viewChangeManager) start(myID network.ServerIdentityID, scID skipchain.
 	if !ok {
 		panic("never start without add first: " + log.Stack())
 	}
-	go c.Start(myID, scID, initialDuration, f)
+	go c.Start(myID, scID, initialDuration, threshold)
 }
 
 // started returns true if the monitor is started. This supposes that `start`
@@ -214,9 +215,9 @@ func (s *Service) computeInitialDuration(scID skipchain.SkipBlockID) (time.Durat
 	return s.rotationWindow * interval, nil
 }
 
-func (s *Service) getFaultThreshold(sbID skipchain.SkipBlockID) int {
+func (s *Service) getSignatureThreshold(sbID skipchain.SkipBlockID) int {
 	sb := s.db().GetByID(sbID)
-	return (len(sb.Roster.List) - 1) / 3
+	return protocol.DefaultThreshold(len(sb.Roster.List))
 }
 
 // handleViewChangeReq should be registered as a handler for viewchange.InitReq
@@ -324,6 +325,7 @@ func (s *Service) verifyViewChange(msg []byte, data []byte) bool {
 		log.Error(s.ServerIdentity(), "digest doesn't verify")
 		return false
 	}
+
 	// Check that we know about the view and the new roster in the request
 	// matches the view-change proofs.
 	sb := s.db().GetByID(req.GetView().ID)
@@ -336,6 +338,7 @@ func (s *Service) verifyViewChange(msg []byte, data []byte) bool {
 		log.Error(s.ServerIdentity(), "invalid roster in request")
 		return false
 	}
+
 	// Check the signers are unique, they are in the roster and the
 	// signatures are correct.
 	uniqueSigners, uniqueViews := func() (int, int) {
@@ -354,16 +357,18 @@ func (s *Service) verifyViewChange(msg []byte, data []byte) bool {
 		}
 		return len(signers), len(views)
 	}()
-	f := s.getFaultThreshold(sb.Hash)
-	if uniqueSigners <= 2*f {
+
+	thr := s.getSignatureThreshold(sb.Hash)
+	if uniqueSigners < thr {
 		log.Errorf("%s: not enough proofs: %v < %v",
-			s.ServerIdentity(), uniqueSigners, 2*f+1)
+			s.ServerIdentity(), uniqueSigners, thr)
 		return false
 	}
 	if uniqueViews != 1 {
 		log.Error(s.ServerIdentity(), "conflicting views")
 		return false
 	}
+
 	// Put the roster in a map so that it's more efficient to search.
 	rosterMap := make(map[network.ServerIdentityID]*network.ServerIdentity)
 	for _, sid := range sb.Roster.List {

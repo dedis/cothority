@@ -1732,7 +1732,8 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 			// Start viewchange monitor that will fire if we don't get updates in time.
 			log.Lvlf2("%s started viewchangeMonitor for %x", s.ServerIdentity(), sb.SkipChainID())
 			s.viewChangeMan.add(s.sendViewChangeReq, s.sendNewView, s.isLeader, string(sb.SkipChainID()))
-			s.viewChangeMan.start(s.ServerIdentity().ID, sb.SkipChainID(), initialDur, s.getFaultThreshold(sb.Hash))
+			s.viewChangeMan.start(s.ServerIdentity().ID, sb.SkipChainID(), initialDur,
+				s.getSignatureThreshold(sb.Hash))
 		}
 	} else {
 		if s.heartbeats.exists(scIDstr) {
@@ -2822,7 +2823,7 @@ func (s *Service) startChain(genesisID skipchain.SkipBlockID) error {
 	s.viewChangeMan.add(s.sendViewChangeReq, s.sendNewView, s.isLeader,
 		string(genesisID))
 	s.viewChangeMan.start(s.ServerIdentity().ID, genesisID, initialDur,
-		s.getFaultThreshold(latest.Hash))
+		s.getSignatureThreshold(latest.Hash))
 
 	return nil
 }
