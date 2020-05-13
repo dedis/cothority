@@ -38,8 +38,9 @@ func testSetupViewChangeF1(t *testing.T, signerID [16]byte, dur time.Duration, f
 		vcChan <- true
 		return nil
 	}
-	nvF := func(proof []InitReq) {
+	nvF := func(proof []InitReq) error {
 		nvChan <- true
+		return nil
 	}
 	vcl := NewController(vcF, nvF, func(v View) bool { return true })
 	go vcl.Start(signerID, []byte{}, dur, 2*f+1)

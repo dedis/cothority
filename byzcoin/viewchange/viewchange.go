@@ -70,7 +70,7 @@ type SendInitReqFunc func(view View) error
 // is called when the Controller decides to propose itself as the new leader.
 // The function should not block. The successful execution of this function
 // should send a signal back to the Controller by calling Done.
-type SendNewViewReqFunc func(proof []InitReq)
+type SendNewViewReqFunc func(proof []InitReq) error
 
 // IsLeaderFunc is a callback that must be registered in Controller. It should
 // say whether the node itself is the leader in the given view.
@@ -173,6 +173,7 @@ func (c *Controller) Start(myID network.ServerIdentityID,
 				// receiving 2*f+1 view-change messages.
 				timeout := maxTimeout
 				backoff := float64(ctr)
+
 				// Do some maths to make sure that it will not calculate a value
 				// bigger than maxTimeout.
 				//   maxTimeout = 2**backoff * initialDuration
@@ -193,10 +194,14 @@ func (c *Controller) Start(myID network.ServerIdentityID,
 				case c.startTimerChan <- ctr:
 				default:
 				}
+
 				// If I am the leader, send the new-view message,
 				// which means starting ftcosi.
 				if c.isLeader(meta.currOf(ctr)) {
-					c.sendNewViewReq(meta.getProof(ctr))
+					if err := c.sendNewViewReq(meta.getProof(ctr)); err != nil {
+						log.Errorf("couldn't send view-change request: %+v",
+							err)
+					}
 				}
 			}
 		case view := <-c.doneChan:

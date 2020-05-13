@@ -2,6 +2,8 @@ package byzcoin
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -152,10 +154,15 @@ func (s *Service) sendViewChangeReq(view viewchange.View) error {
 	return nil
 }
 
-func (s *Service) sendNewView(proof []viewchange.InitReq) {
+// sendNewView proposes the new view to all other nodes.
+// For CurrentVersion < VersionViewchange,
+// a blsCoSi signature is generated to prove that all is OK.
+// For CurrentVersion >= VersionViewchange,
+// the block is directly sent to all nodes for confirmation.
+func (s *Service) sendNewView(proof []viewchange.InitReq) error {
 
 	if len(proof) == 0 {
-		log.Error(s.ServerIdentity(), "no proofs")
+		return errors.New("no proofs given")
 	}
 	log.Lvlf2("%s: sending new-view request with %d proofs for view: %+v",
 		s.ServerIdentity(), len(proof), proof[0].View)
@@ -165,7 +172,7 @@ func (s *Service) sendNewView(proof []viewchange.InitReq) {
 		if proof[i].SignerID.Equal(s.ServerIdentity().ID) && len(proof[i].Signature) == 0 {
 			err := proof[i].Sign(s.getPrivateKey())
 			if err != nil {
-				log.Error(s.ServerIdentity(), "Couldn't sign our proof")
+				return errors.New("couldn't sign our proof")
 			}
 		}
 	}
@@ -174,17 +181,17 @@ func (s *Service) sendNewView(proof []viewchange.InitReq) {
 	sb := s.db().GetByID(proof[0].View.ID)
 	req, err := viewchange.NewNewViewReq(sb.Roster, proof)
 	if err != nil {
-		log.Errorf("couldn't create request: %v", err)
+		return fmt.Errorf("couldn't create request: %v", err)
+	}
+
+	var header DataHeader
+	if err := protobuf.Decode(sb.Data, &header); err != nil {
+		return fmt.Errorf("couldn't get header of block: %+v", err)
 	}
 
 	go func() {
 		s.working.Add(1)
 		defer s.working.Done()
-		var header DataHeader
-		if err := protobuf.Decode(sb.Data, &header); err != nil {
-			log.Errorf("couldn't get header of block: %+v", err)
-			return
-		}
 		var sig []byte
 		// Only version < VersionViewchange uses the signing of the view-change
 		// request.
@@ -207,6 +214,7 @@ func (s *Service) sendNewView(proof []viewchange.InitReq) {
 			log.Error(s.ServerIdentity(), err)
 		}
 	}()
+	return nil
 }
 
 func (s *Service) computeInitialDuration(scID skipchain.SkipBlockID) (time.Duration, error) {
