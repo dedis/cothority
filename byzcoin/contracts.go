@@ -541,12 +541,28 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		if err != nil {
 			return nil, nil, xerrors.Errorf("decoding: %v", err)
 		}
-		// If everything is correctly signed, then we trust it, no need
-		// to do additional verification.
-		sigBuf := inst.Invoke.Args.Search("multisig")
-		err = protocol.BlsSignature(sigBuf).Verify(pairingSuite, req.Hash(), req.Roster.ServicePublics(ServiceName))
-		if err != nil {
-			return nil, nil, xerrors.Errorf("invalid signature: %v", err)
+		if rst.GetVersion() < VersionViewchange {
+			// If everything is correctly signed, then we trust it, no need
+			// to do additional verification.
+			sigBuf := inst.Invoke.Args.Search("multisig")
+			err = protocol.BlsSignature(sigBuf).Verify(pairingSuite, req.Hash(), req.Roster.ServicePublics(ServiceName))
+			if err != nil {
+				return nil, nil, xerrors.Errorf("invalid signature: %v", err)
+			}
+		} else {
+			// For byzcoin version >= VersionViewchange,
+			// the contract has to verify all the proofs.
+			// But it avoids having to do a BLS signature.
+			sb, err := rst.(ReadOnlySkipChain).GetBlockByIndex(rst.GetIndex())
+			if err != nil {
+				return nil, nil,
+					fmt.Errorf("couldn't get latest skipblock: %v", err)
+			}
+			err = req.Verify(sb)
+			if err != nil {
+				return nil, nil,
+					fmt.Errorf("verification of requests failed: %v", err)
+			}
 		}
 
 		sc, err := updateRosterScs(rst, darcID, req.Roster)

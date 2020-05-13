@@ -2,6 +2,8 @@ package byzcoin
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -152,10 +154,15 @@ func (s *Service) sendViewChangeReq(view viewchange.View) error {
 	return nil
 }
 
-func (s *Service) sendNewView(proof []viewchange.InitReq) {
+// sendNewView proposes the new view to all other nodes.
+// For CurrentVersion < VersionViewchange,
+// a blsCoSi signature is generated to prove that all is OK.
+// For CurrentVersion >= VersionViewchange,
+// the block is directly sent to all nodes for confirmation.
+func (s *Service) sendNewView(proof []viewchange.InitReq) error {
 
 	if len(proof) == 0 {
-		log.Error(s.ServerIdentity(), "no proofs")
+		return errors.New("no proofs given")
 	}
 	log.Lvlf2("%s: sending new-view request with %d proofs for view: %+v",
 		s.ServerIdentity(), len(proof), proof[0].View)
@@ -165,46 +172,49 @@ func (s *Service) sendNewView(proof []viewchange.InitReq) {
 		if proof[i].SignerID.Equal(s.ServerIdentity().ID) && len(proof[i].Signature) == 0 {
 			err := proof[i].Sign(s.getPrivateKey())
 			if err != nil {
-				log.Error(s.ServerIdentity(), "Couldn't sign our proof")
+				return errors.New("couldn't sign our proof")
 			}
 		}
 	}
 
+	log.Lvl2(s.ServerIdentity(), "Got", len(proof), "proofs")
 	sb := s.db().GetByID(proof[0].View.ID)
-	req := viewchange.NewViewReq{
-		Roster: *rotateRoster(sb.Roster, proof[0].View.LeaderIndex),
-		Proof:  proof,
+	req, err := viewchange.NewNewViewReq(sb.Roster, proof)
+	if err != nil {
+		return fmt.Errorf("couldn't create request: %v", err)
 	}
 
-	log.Lvl2(s.ServerIdentity(), "Got", len(proof), "proofs")
-	pl, err := protobuf.Encode(&req)
-	if err != nil {
-		log.Error("Couldn't encode request:", err)
-		return
-	}
-	if !s.verifyViewChange(req.Hash(), pl) {
-		log.Error("Will not ask for view change I cannot verify")
-		return
+	var header DataHeader
+	if err := protobuf.Decode(sb.Data, &header); err != nil {
+		return fmt.Errorf("couldn't get header of block: %+v", err)
 	}
 
 	go func() {
 		s.working.Add(1)
 		defer s.working.Done()
-		// This go-routine eventually exists because both cosi and
-		// block creation have a timeout.
-		sig, err := s.startViewChangeCosi(req)
-		if err != nil {
-			log.Error(s.ServerIdentity(), "Error while starting view-change:", err)
-			return
+		var sig []byte
+		// Only version < VersionViewchange uses the signing of the view-change
+		// request.
+		// Versions >= VersionViewchange use the normal verification
+		// mechanism of/the/block verification.
+		if header.Version < VersionViewchange {
+			// This go-routine eventually exists because both cosi and
+			// block creation have a timeout.
+			sig, err = s.startViewChangeCosi(*req)
+			if err != nil {
+				log.Error(s.ServerIdentity(), "Error while starting view-change:", err)
+				return
+			}
+			if len(sig) == 0 {
+				log.Error(s.ServerIdentity(), "empty viewchange cosi signature")
+				return
+			}
 		}
-		if len(sig) == 0 {
-			log.Error(s.ServerIdentity(), "empty viewchange cosi signature")
-			return
-		}
-		if err := s.createViewChangeBlock(req, sig); err != nil {
+		if err := s.createViewChangeBlock(*req, sig); err != nil {
 			log.Error(s.ServerIdentity(), err)
 		}
 	}()
+	return nil
 }
 
 func (s *Service) computeInitialDuration(scID skipchain.SkipBlockID) (time.Duration, error) {
@@ -277,6 +287,7 @@ func (s *Service) handleViewChangeReq(env *network.Envelope) error {
 	return nil
 }
 
+// DEPRECATED - with Byzcoin version 4, this method is not used anymore.
 func (s *Service) startViewChangeCosi(req viewchange.NewViewReq) ([]byte, error) {
 	defer log.Lvl2(s.ServerIdentity(), "finished view-change blscosi")
 	sb := s.db().GetByID(req.GetView().ID)
@@ -314,6 +325,7 @@ func (s *Service) startViewChangeCosi(req viewchange.NewViewReq) ([]byte, error)
 }
 
 // verifyViewChange is registered in the view-change ftcosi.
+// DEPRECATED - with Byzcoin version 4, this method is not used anymore.
 func (s *Service) verifyViewChange(msg []byte, data []byte) bool {
 	// Parse message and check hash.
 	var req viewchange.NewViewReq
@@ -398,8 +410,12 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 	if err != nil {
 		return xerrors.Errorf("getting latest: %v", err)
 	}
-	if len(sb.Roster.List) < 4 {
+	if len(req.Roster.List) < 4 {
 		return xerrors.New("roster size is too small, must be >= 4")
+	}
+	header, err := decodeBlockHeader(sb)
+	if err != nil {
+		return xerrors.Errorf("decoding header: %v", err)
 	}
 
 	reqBuf, err := protobuf.Encode(&req)
@@ -429,10 +445,6 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 						Name:  "newview",
 						Value: reqBuf,
 					},
-					{
-						Name:  "multisig",
-						Value: multisig,
-					},
 				},
 			},
 			SignerIdentities: []darc.Identity{signer.Identity()},
@@ -440,9 +452,11 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 		}},
 	}
 
-	header, err := decodeBlockHeader(sb)
-	if err != nil {
-		return xerrors.Errorf("decoding header: %v", err)
+	// Only add the multisignature if it's a version that still signs the
+	// requests.
+	if header.Version < VersionViewchange {
+		ctx.Instructions[0].Invoke.Args = append(ctx.Instructions[0].Invoke.
+			Args, Argument{Name: "multisig", Value: multisig})
 	}
 
 	ctx.Instructions.SetVersion(header.Version)

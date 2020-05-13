@@ -24,4 +24,7 @@ func init() {
 type Version int
 
 // CurrentVersion is what we're running now
-const CurrentVersion Version = 3
+const CurrentVersion Version = 4
+
+// VersionViewchange removed the BLS-signature on the view-change requests
+const VersionViewchange = 4
