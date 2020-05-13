@@ -125,7 +125,9 @@ func (c *Controller) Stop() {
 }
 
 // Start begins a blocking process that processes incoming view-requests.
-func (c *Controller) Start(myID network.ServerIdentityID, genesis skipchain.SkipBlockID, initialDuration time.Duration, f int) {
+func (c *Controller) Start(myID network.ServerIdentityID,
+	genesis skipchain.SkipBlockID, initialDuration time.Duration,
+	threshold int) {
 	meta := newStateLogs()
 	// Timer is only valid for the current ctr. It starts in the stopped
 	// state, we can't set it to nil because it gets de-referenced in
@@ -142,30 +144,28 @@ func (c *Controller) Start(myID network.ServerIdentityID, genesis skipchain.Skip
 		select {
 		case req := <-c.reqChan:
 			// Transition: received a view-change request, start
-			// the timer and move the state if there are 2f+1 valid
+			// the timer and move the state if there are 'threshold' valid
 			// requests.
 			if myID.Equal(req.SignerID) {
-				log.Lvl4("adding anomaly:", req.View.LeaderIndex, req.SignerID.String())
+				log.Lvl4("adding anomaly:", req.View.LeaderIndex,
+					req.SignerID.String())
 				meta.add(req)
 				ctr = c.processAnomaly(req, &meta, ctr)
 			} else {
-				log.Lvl4("adding req:", req.View.LeaderIndex, req.SignerID.String())
+				log.Lvl4("adding req:", req.View.LeaderIndex,
+					req.SignerID.String())
 				meta.add(req)
-				if meta.highest() > ctr && meta.countOf(meta.highest()) > f {
-					// To avoid starting view-change too late, if
-					// another honest node detects an anomaly,
-					// we'll report it too.
-					stopTimer(timer, c.stopTimerChan, ctr)
-					reqNew := InitReq{
-						View:     req.View,
-						SignerID: myID,
-					}
-					ctr = c.processAnomaly(reqNew, &meta, ctr)
-				}
+				// Previously the node started to propagate view-changes
+				// already if enough other nodes sent a view-change.
+				// But this means that a node would participate in a view
+				// -change, even if it thinks it's not correct.
+				// So this code has been removed.
+				// But it might be breaking stuff :(
 			}
-			log.Lvlf2("counter: %d, f: %d, meta (ctr/state): %d/%d, "+
-				"req: %+v", ctr, f, meta.countOf(ctr), meta.stateOf(ctr), req)
-			if meta.countOf(ctr) > 2*f && meta.stateOf(ctr) < startedTimerState && meta.acceptOf(ctr) {
+			log.Lvlf2("counter: %d, thr: %d, meta[ctr] (#/state): %d/%d, "+
+				"req: %+v", ctr, threshold, meta.countOf(ctr), meta.stateOf(ctr), req)
+			if meta.countOf(ctr) >= threshold && meta.stateOf(
+				ctr) < startedTimerState && meta.acceptOf(ctr) {
 				// To avoid starting the next view-change too
 				// soon, start view-change timer after
 				// receiving 2*f+1 view-change messages.

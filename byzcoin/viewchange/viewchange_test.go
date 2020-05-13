@@ -24,14 +24,6 @@ func TestViewChange_Timeout2(t *testing.T) {
 	testTimeout(t, 2)
 }
 
-func TestViewChange_AutoStart1(t *testing.T) {
-	testAutoStart(t, 1)
-}
-
-func TestViewChange_AutoStart2(t *testing.T) {
-	testAutoStart(t, 2)
-}
-
 // testSetupViewChangeF1 sets up the view-change log and sends f view-change
 // messages. If anomaly is set then it sends one more message to the anomaly
 // channel.
@@ -50,7 +42,7 @@ func testSetupViewChangeF1(t *testing.T, signerID [16]byte, dur time.Duration, f
 		nvChan <- true
 	}
 	vcl := NewController(vcF, nvF, func(v View) bool { return true })
-	go vcl.Start(signerID, []byte{}, dur, f)
+	go vcl.Start(signerID, []byte{}, dur, 2*f+1)
 
 	// We receive view-change requests and send our own because we detected
 	// an anomaly.
@@ -176,40 +168,5 @@ func testTimeout(t *testing.T, f int) {
 		require.Equal(t, 2, i)
 	case <-time.After(4*dur + dur/2):
 		require.Fail(t, "expected timer to expire")
-	}
-}
-
-// testAutoStart checks that we can start view-change not from sending in an
-// anomaly (e.g., detected a timeout) but from receiving many view-change
-// messages from other nodes.
-func testAutoStart(t *testing.T, f int) {
-	dur := 100 * time.Millisecond
-	mySignerID := [16]byte{byte(255)}
-	vcChan, nvChan, view, vcl := testSetupViewChangeF1(t, mySignerID, dur, f, false)
-	defer vcl.Stop()
-	// Send a in regular request instead of an anomaly should trigger the
-	// anomaly case.
-	vcl.AddReq(InitReq{
-		SignerID: [16]byte{byte(f)},
-		View:     view,
-	})
-	select {
-	case <-vcChan:
-	case <-time.After(10 * time.Millisecond):
-		require.Fail(t, "view change function should have been called")
-	}
-
-	// Then add more messages until we have 2f+1 should trigger a new-view
-	// message.
-	for i := f + 1; i < 2*f+1; i++ {
-		vcl.AddReq(InitReq{
-			SignerID: [16]byte{byte(i)},
-			View:     view,
-		})
-	}
-	select {
-	case <-nvChan:
-	case <-time.After(10 * time.Millisecond):
-		require.Fail(t, "new view function should have been called")
 	}
 }
