@@ -468,7 +468,7 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		root.NewTx = req
 		err = proto.Start()
 		if err != nil {
-			return nil, xerrors.Errorf("Error starting the protocol", err)
+			return nil, xerrors.Errorf("Error starting the protocol: %v", err)
 		}
 
 		select {
