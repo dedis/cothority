@@ -470,20 +470,29 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		if err != nil {
 			return nil, xerrors.Errorf("Error starting the protocol", err)
 		}
-		if err := <-root.DoneChan; err != nil {
-			log.Print("root failed - need to request a view-change")
-			var err error
-			if req.Flags&1 > 0 {
-				err = s.startViewChange(req.SkipchainID, nil)
-			} else {
-				err = s.startViewChange(req.SkipchainID, &req.Transaction)
-			}
-			if err != nil {
-				return nil, fmt.Errorf(
-					"leader failed and couldn't contact other nodes: %v", err)
-			}
+
+		select {
+			case err := <-root.DoneChan :
+				if err != nil {
+					log.Print("root failed - need to request a view-change")
+					var err error
+					if req.Flags&1 > 0 {
+						err = s.startViewChange(req.SkipchainID, nil)
+					} else {
+						err = s.startViewChange(req.SkipchainID, &req.Transaction)
+					}
+					if err != nil {
+						return nil, fmt.Errorf(
+							"leader failed and couldn't contact other nodes: %v", err)
+					}
+				}
+			case <-time.After(1*time.Second):
+				return nil, errors.New("timeout on adding transaction")
 		}
-	}
+		
+		}
+
+
 
 	// Note to my future self: s.txBuffer.add used to be out here. It used to work
 	// even. But while investigating other race conditions, we realized that
@@ -2585,50 +2594,6 @@ func (s *Service) getLeader(scID skipchain.SkipBlockID) (*network.ServerIdentity
 		return nil, xerrors.New("roster is empty")
 	}
 	return scConfig.Roster.List[0], nil
-}
-
-//TODO : remove
-// getTxs is primarily used as a callback in the RollupTx protocol to retrieve
-// a set of pending transactions. However, it is a very useful way to piggy
-// back additional functionalities that need to be executed at every interval,
-// such as synchronising the state.
-func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, scID skipchain.SkipBlockID, latestID skipchain.SkipBlockID, maxNumTxs int) []ClientTransaction {
-	s.closedMutex.Lock()
-	if s.closed {
-		s.closedMutex.Unlock()
-		return nil
-	}
-	s.working.Add(1)
-	s.closedMutex.Unlock()
-	defer s.working.Done()
-
-	// First we check if we are up-to-date with this chain and catch up
-	// if necessary.
-	if !s.skService().ChainHasBlock(scID, latestID) {
-		// The function will prevent multiple request to catch up so we can securely call it here
-		err := s.catchupFromID(roster, scID, latestID)
-		if err != nil {
-			log.Error(s.ServerIdentity(), err)
-			return []ClientTransaction{}
-		}
-	}
-
-	// Then we make sure who's the leader. It may happen that the node is one block away
-	// from the leader (i.e. block still processing) but if the leaders are matching, we
-	// accept to deliver the transactions as an optimization. The leader is expected to
-	// wait on the processing to start collecting and in the worst case scenario, txs will
-	// simply be lost and will have to be resend.
-	actualLeader, err := s.getLeader(scID)
-	if err != nil {
-		log.Lvlf2("%v: could not find a leader on %x with error: %s", s.ServerIdentity(), scID, err)
-		return []ClientTransaction{}
-	}
-	if !leader.Equal(actualLeader) {
-		log.Lvlf2("%v: getTxs came from a wrong leader %v should be %v", s.ServerIdentity(), leader, actualLeader)
-		return []ClientTransaction{}
-	}
-
-	return s.txBuffer.take(string(scID), maxNumTxs)
 }
 
 // loadNonceFromTxs gets the nonce from a TxResults. This only works for the genesis-block.
