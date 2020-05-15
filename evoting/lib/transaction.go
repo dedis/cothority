@@ -192,6 +192,16 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 			return err
 		}
 
+		now := time.Now()
+		start := time.Unix(election.Start, 0)
+		end := time.Unix(election.End, 0)
+		if now.Before(start) {
+			return errors.New("election is not yet open")
+		}
+		if now.After(end) {
+			return errors.New("election is already closed")
+		}
+
 		// t.User is trusted at this point, so make sure that they did not try to sneak
 		// through a different user-id in the ballot.
 		if t.User != t.Ballot.User {

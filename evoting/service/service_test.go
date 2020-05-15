@@ -23,6 +23,8 @@ import (
 )
 
 var defaultTimeout = 20 * time.Second
+var yesterday = time.Now().AddDate(0, 0, -1)
+var tomorrow = time.Now().AddDate(0, 0, 1)
 
 func TestMain(m *testing.M) {
 	flag.Parse()
@@ -94,7 +96,8 @@ func TestService(t *testing.T) {
 		Creator: idAdmin,
 		Users:   []uint32{idUser1, idUser2, idUser3, idAdmin},
 		Roster:  roster,
-		End:     time.Now().Unix() + 86400,
+		Start:   yesterday.Unix(),
+		End:     tomorrow.Unix(),
 	}
 
 	// Try to create a new election on server[1], should fail.
@@ -304,6 +307,149 @@ func TestService(t *testing.T) {
 	}
 }
 
+func TestAfterEnd(t *testing.T) {
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+
+	nodeKP := key.NewKeyPair(cothority.Suite)
+
+	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
+	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
+	sc0 := local.GetServices(nodes, onet.ServiceFactory.ServiceID(skipchain.ServiceName))[0].(*skipchain.Service)
+	// Set a lower timeout for the tests
+	sc0.SetPropTimeout(defaultTimeout)
+
+	// Creating master skipchain
+	replyLink, err := s0.Link(&evoting.Link{
+		Pin:    s0.pin,
+		Roster: roster,
+		Key:    nodeKP.Public,
+		Admins: []uint32{idAdmin},
+	})
+	require.NoError(t, err)
+
+	idAdminSig := generateSignature(nodeKP.Private, replyLink.ID, idAdmin)
+	idUser1Sig := generateSignature(nodeKP.Private, replyLink.ID, idUser1)
+
+	elec := &lib.Election{
+		Name: map[string]string{
+			"en": "name in english",
+			"fr": "name in french",
+		},
+		Subtitle: map[string]string{
+			"en": "name in english",
+			"fr": "name in french",
+		},
+		MoreInfoLang: map[string]string{
+			"en": "https://epfl.ch/elections",
+			"fr": "httsp://epfl.ch/votations",
+		},
+		Creator: idAdmin,
+		Users:   []uint32{idUser1, idUser2, idUser3, idAdmin},
+		Roster:  roster,
+		Start:   yesterday.Unix(),
+		End:     time.Now().Unix(),
+	}
+
+	// Create a new election
+	replyOpen, err := s0.Open(&evoting.Open{
+		ID:        replyLink.ID,
+		Election:  elec,
+		User:      idAdmin,
+		Signature: idAdminSig,
+	})
+	require.NoError(t, err)
+	elec.ID = replyOpen.ID
+
+	// Cast a vote, will fail because time.Now() after end.
+	time.Sleep(200 * time.Millisecond)
+	log.Lvl1("Casting empty ballot")
+	k0, c0 := lib.Encrypt(replyOpen.Key, []byte{})
+	ballot := &lib.Ballot{
+		User:  idUser1,
+		Alpha: k0,
+		Beta:  c0,
+	}
+	_, err = s0.Cast(&evoting.Cast{
+		ID:        replyOpen.ID,
+		Ballot:    ballot,
+		User:      idUser1,
+		Signature: idUser1Sig,
+	})
+	require.Error(t, err)
+}
+
+func TestBeforeStart(t *testing.T) {
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+
+	nodeKP := key.NewKeyPair(cothority.Suite)
+
+	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
+	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
+	sc0 := local.GetServices(nodes, onet.ServiceFactory.ServiceID(skipchain.ServiceName))[0].(*skipchain.Service)
+	// Set a lower timeout for the tests
+	sc0.SetPropTimeout(defaultTimeout)
+
+	// Creating master skipchain
+	replyLink, err := s0.Link(&evoting.Link{
+		Pin:    s0.pin,
+		Roster: roster,
+		Key:    nodeKP.Public,
+		Admins: []uint32{idAdmin},
+	})
+	require.NoError(t, err)
+
+	idAdminSig := generateSignature(nodeKP.Private, replyLink.ID, idAdmin)
+	idUser1Sig := generateSignature(nodeKP.Private, replyLink.ID, idUser1)
+
+	elec := &lib.Election{
+		Name: map[string]string{
+			"en": "name in english",
+			"fr": "name in french",
+		},
+		Subtitle: map[string]string{
+			"en": "name in english",
+			"fr": "name in french",
+		},
+		MoreInfoLang: map[string]string{
+			"en": "https://epfl.ch/elections",
+			"fr": "httsp://epfl.ch/votations",
+		},
+		Creator: idAdmin,
+		Users:   []uint32{idUser1, idUser2, idUser3, idAdmin},
+		Roster:  roster,
+		Start:   tomorrow.Unix(),
+		End:     tomorrow.Unix() + 1,
+	}
+
+	// Create a new election
+	replyOpen, err := s0.Open(&evoting.Open{
+		ID:        replyLink.ID,
+		Election:  elec,
+		User:      idAdmin,
+		Signature: idAdminSig,
+	})
+	require.NoError(t, err)
+	elec.ID = replyOpen.ID
+
+	// Cast a vote, will fail because the election starts tomorrow.
+	log.Lvl1("Casting empty ballot")
+	k0, c0 := lib.Encrypt(replyOpen.Key, []byte{})
+	ballot := &lib.Ballot{
+		User:  idUser1,
+		Alpha: k0,
+		Beta:  c0,
+	}
+	_, err = s0.Cast(&evoting.Cast{
+		ID:        replyOpen.ID,
+		Ballot:    ballot,
+		User:      idUser1,
+		Signature: idUser1Sig,
+	})
+	require.Error(t, err)
+}
+
 func runAnElection(t *testing.T, local *onet.LocalTest, s *Service, replyLink *evoting.LinkReply, nodeKP *key.Pair, admin uint32) {
 	adminSig := generateSignature(nodeKP.Private, replyLink.ID, admin)
 
@@ -313,7 +459,8 @@ func runAnElection(t *testing.T, local *onet.LocalTest, s *Service, replyLink *e
 		Election: &lib.Election{
 			Creator: admin,
 			Users:   []uint32{idUser1, idUser2, idUser3, admin},
-			End:     time.Now().Unix() + 86400,
+			Start:   yesterday.Unix(),
+			End:     tomorrow.Unix(),
 		},
 		User:      admin,
 		Signature: adminSig,
@@ -451,7 +598,8 @@ func setupElection(t *testing.T, s0 *Service, rl *evoting.LinkReply, nodeKP *key
 		Election: &lib.Election{
 			Creator: idAdmin,
 			Users:   []uint32{idUser1, idUser2, idUser3, idAdmin},
-			End:     time.Now().Unix() + 86400,
+			Start:   yesterday.Unix(),
+			End:     tomorrow.Unix(),
 		},
 		User:      idAdmin,
 		Signature: adminSig,
@@ -774,7 +922,8 @@ func TestCastNodeFailureShuffleAllOk(t *testing.T) {
 		Election: &lib.Election{
 			Creator: idAdmin,
 			Users:   []uint32{idUser1, idUser2, idUser3, idAdmin},
-			End:     time.Now().Unix() + 86400,
+			Start:   yesterday.Unix(),
+			End:     tomorrow.Unix(),
 		},
 		User:      idAdmin,
 		Signature: adminSig,

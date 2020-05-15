@@ -130,6 +130,17 @@ func (s *Shuffle) HandlePrompt(prompt MessagePrompt) error {
 		}
 
 		a, b := lib.Split(ballots)
+		// Protect from missing input.
+		for i := range a {
+			if a[i] == nil {
+				a[i] = cothority.Suite.Point()
+			}
+		}
+		for i := range b {
+			if b[i] == nil {
+				b[i] = cothority.Suite.Point()
+			}
+		}
 		g, d, prov := shuffle.Shuffle(cothority.Suite, nil, s.Election.Key, a, b, random.New())
 		proof, err := proof.HashProve(cothority.Suite, "", prov)
 		if err != nil {
