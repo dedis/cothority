@@ -237,6 +237,25 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 		s.mutex.Unlock()
 		s.save()
 
+		// Autovote mode: cast 1 empty ballot for the first user; useful to test shuffles in the UI
+		// without having to login as two users. Will cause unit tests to fail.
+		autovoteMode := false
+		if autovoteMode {
+			secret := cothority.Suite.Scalar().Pick(random.New())
+			public := cothority.Suite.Point().Mul(secret, nil)
+			K, C := lib.Encrypt(public, nil)
+			b := &lib.Ballot{
+				User:  req.Election.Users[0],
+				Alpha: K,
+				Beta:  C,
+			}
+			transaction = lib.NewTransaction(b, b.User)
+			_, err := lib.Store(s.skipchain, req.Election.ID, transaction, s.ServerIdentity().GetPrivate())
+			if err != nil {
+				return nil, fmt.Errorf("could not cast ballot on election %x for user %v: %v", req.Election.ID, b.User, err)
+			}
+		}
+
 		return &evoting.OpenReply{ID: genesis.Hash, Key: secret.X}, nil
 	case <-time.After(timeout):
 		return nil, errors.New("open error, protocol timeout")
