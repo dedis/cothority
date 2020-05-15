@@ -472,27 +472,24 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		}
 
 		select {
-			case err := <-root.DoneChan :
-				if err != nil {
-					log.Print("root failed - need to request a view-change")
-					var err error
-					if req.Flags&1 > 0 {
-						err = s.startViewChange(req.SkipchainID, nil)
-					} else {
-						err = s.startViewChange(req.SkipchainID, &req.Transaction)
-					}
-					if err != nil {
-						return nil, fmt.Errorf(
-							"leader failed and couldn't contact other nodes: %v", err)
-					}
+		case err := <-root.DoneChan:
+			if err != nil {
+				log.Print("root failed - need to request a view-change")
+				var err error
+				if req.Flags&1 > 0 {
+					err = s.startViewChange(req.SkipchainID, nil)
+				} else {
+					err = s.startViewChange(req.SkipchainID, &req.Transaction)
 				}
-			case <-time.After(1*time.Second):
-				return nil, errors.New("timeout on adding transaction")
+				if err != nil {
+					return nil, fmt.Errorf(
+						"leader failed and couldn't contact other nodes: %v", err)
+				}
+			}
+		case <-time.After(1 * time.Second):
+			return nil, errors.New("timeout on adding transaction")
 		}
-		
-		}
-
-
+	}
 
 	// Note to my future self: s.txBuffer.add used to be out here. It used to work
 	// even. But while investigating other race conditions, we realized that
