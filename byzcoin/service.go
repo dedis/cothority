@@ -2740,8 +2740,7 @@ func (s *Service) startViewChange(gen skipchain.SkipBlockID,
 			for _, si := range latest.Roster.List[1:] {
 				_, err := cl.Send(si, "AddTxRequest", buf)
 				if err != nil {
-					log.Error(s.ServerIdentity(), "couldn't send transaction to",
-						si, err)
+					return fmt.Errorf("couldn't send transaction: %v", err)
 				}
 				log.Lvlf2("Starting a view-change by putting our own request"+
 					": %+v", req)
