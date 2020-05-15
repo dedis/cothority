@@ -2428,7 +2428,6 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction,
 			s.addError(tx, err)
 			return nil, nil, err
 		}
-		//sstStoreAll.Record()
 
 		statesTemp = append(statesTemp, scs...)
 		statesTemp = append(statesTemp, counterScs...)
