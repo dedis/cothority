@@ -486,7 +486,7 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 						"leader failed and couldn't contact other nodes: %v", err)
 				}
 			}
-		case <-time.After(1 * time.Second):
+		case <-time.After(defaultInterval):
 			return nil, errors.New("timeout on adding transaction")
 		}
 	}
