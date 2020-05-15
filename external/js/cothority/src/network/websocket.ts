@@ -152,7 +152,7 @@ export class WebSocketConnection implements IConnection {
                 if (err !== undefined) {
                     sub.error(new Error(`error in websocket ${url.href}: ${err.message}`));
                 } else {
-                    sub.complete();
+                    sub.error(new Error("unknown reason"));
                 }
             });
 
