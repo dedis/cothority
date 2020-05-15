@@ -448,8 +448,7 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		}
 
 		//create new roster with self and leader
-		list := make([]*network.ServerIdentity, 0)
-		list = append(list, []*network.ServerIdentity{s.ServerIdentity(), leader}...)
+		list := []*network.ServerIdentity{s.ServerIdentity(), leader}
 		newRost := onet.NewRoster(list)
 		tree := newRost.GenerateNaryTree(len(newRost.List))
 
