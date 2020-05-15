@@ -107,6 +107,11 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 		require.True(t, leader.Equal(s.services[nFailures].ServerIdentity()), fmt.Sprintf("%v", leader))
 	}
 
+	tx1, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, tx1ID,
+		s.signer, 2)
+	require.NoError(t, err)
+	s.sendTxTo(t, tx1, nFailures+1)
+
 	// wait for the transaction to be stored everywhere
 	for i := nFailures; i < nHosts; i++ {
 		pr := s.waitProofWithIdx(t, tx1ID, i)
@@ -127,11 +132,13 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	s.waitPropagation(t, 0)
 
 	log.Lvl1("Sending 1st tx")
-	tx1, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 2)
+	tx1, err = createOneClientTxWithCounter(s.darc.GetBaseID(),
+		dummyContract, s.value, s.signer, 3)
 	require.NoError(t, err)
 	s.sendTxToAndWait(t, tx1, nFailures, 10)
 	log.Lvl1("Sending 2nd tx")
-	tx1, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 3)
+	tx1, err = createOneClientTxWithCounter(s.darc.GetBaseID(),
+		dummyContract, s.value, s.signer, 4)
 	require.NoError(t, err)
 	s.sendTxToAndWait(t, tx1, nFailures, 10)
 	log.Lvl1("Sent two tx")
