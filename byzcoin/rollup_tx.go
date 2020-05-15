@@ -23,17 +23,11 @@ const rollupTxProtocol = "RollupTxProtocol"
 const defaultMaxNumTxs = 100
 
 // RollupTxProtocol is a protocol for collecting pending transactions.
-// Add channel here
 type RollupTxProtocol struct {
 	*onet.TreeNodeInstance
 	TxsChan chan []ClientTransaction
 	NewTx   *AddTxRequest
 	CtxChan chan ClientTransaction
-	// TODO - somehow propagate the latest version available from this node
-	// to the leader.
-	// Previously it has been done while collecting the transactions.
-	// Now a new way needs to be found to send the latest version of the node
-	// to the leader.
 	CommonVersionChan chan Version
 	SkipchainID       skipchain.SkipBlockID
 	LatestID          skipchain.SkipBlockID
@@ -65,7 +59,7 @@ type RequestAdded struct {
 }
 
 // NewRollupTxProtocol is used for registering the protocol.
-// was in the signature before :
+// This was in the signature before.
 func NewRollupTxProtocol(node *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	c := &RollupTxProtocol{
 		TreeNodeInstance: node,
