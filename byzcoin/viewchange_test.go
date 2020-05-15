@@ -2,6 +2,7 @@ package byzcoin
 
 import (
 	"fmt"
+	"go.dedis.ch/cothority/v3/skipchain"
 	"math"
 	"testing"
 	"time"
@@ -53,7 +54,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 		service.SetPropagationTimeout(2 * interval)
 	}
 
-	// Wait for all the genesis config to be written on all nodes.
+	log.Lvl1("Wait for all the genesis config to be written on all nodes.")
 	genesisInstanceID := InstanceID{}
 	for i := range s.services {
 		s.waitProofWithIdx(t, genesisInstanceID.Slice(), i)
@@ -67,6 +68,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 		s.hosts[i].Pause()
 	}
 
+	log.Lvl1("creating a first tx to trigger the view-change")
 	tx0, err := createOneClientTx(s.darc.GetBaseID(), dummyContract,
 		NewInstanceID([]byte{1}).Slice(), s.signer)
 	require.NoError(t, err)
@@ -76,11 +78,23 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	// has taken over. First, we sleep for the duration that an honest node
 	// will wait before starting a view-change. Then, we sleep a little
 	// longer for the view-change transaction to be stored in the block.
-	time.Sleep(s.interval * rw)
-
-	for i := 0; i < nFailures; i++ {
-		time.Sleep(time.Duration(math.Pow(2, float64(i+1))) * s.interval * rw)
+	sameRoster := true
+	loops := int(math.Pow(2, float64(nFailures+1)))
+	for i := 0; i < loops; i++ {
+		log.Lvlf1("waiting for new leader: %d/%d", i+1, loops)
+		time.Sleep(s.interval * rw)
+		gucr, err := s.services[nFailures].skService().GetUpdateChain(&skipchain.
+			GetUpdateChain{LatestID: s.genesis.SkipChainID()})
+		require.NoError(t, err)
+		sameRoster, err = gucr.Update[len(gucr.Update)-1].Roster.Equal(s.roster)
+		require.NoError(t, err)
+		if !sameRoster {
+			break
+		}
 	}
+	require.False(t, sameRoster)
+
+	log.Lvl1("Waiting for the propagation to be finished")
 	s.waitPropagation(t, 0)
 	config, err := s.services[nFailures].LoadConfig(s.genesis.SkipChainID())
 	require.NoError(t, err)
@@ -89,6 +103,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 
 	// try to send a transaction to the node on index nFailures+1, which is
 	// a follower (not the new leader)
+	log.Lvl1("Sending a transaction to the node after the new leader")
 	tx1ID := NewInstanceID([]byte{2}).Slice()
 	tx1, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, tx1ID,
 		s.signer)
@@ -98,6 +113,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	// check that the leader is updated for all nodes
 	// Note: check is done after a tx has been sent so that nodes catch up if the
 	// propagation failed
+	log.Lvl1("Waiting for the new transaction to go through")
 	s.waitPropagation(t, 0)
 	for _, service := range s.services[nFailures:] {
 		// everyone should have the same leader after the genesis block is stored
@@ -107,11 +123,12 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 		require.True(t, leader.Equal(s.services[nFailures].ServerIdentity()), fmt.Sprintf("%v", leader))
 	}
 
-	tx1, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, tx1ID,
-		s.signer, 2)
-	require.NoError(t, err)
-	s.sendTxTo(t, tx1, nFailures+1)
+	log.Lvl1("Creating new TX")
+	counter := uint64(2)
+	s.sendDummyTx(t, nFailures+1, counter, 4)
+	counter++
 
+	log.Lvl1("waiting for the tx to be stored")
 	// wait for the transaction to be stored everywhere
 	for i := nFailures; i < nHosts; i++ {
 		pr := s.waitProofWithIdx(t, tx1ID, i)
@@ -125,22 +142,30 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 		s.hosts[i].Unpause()
 		require.NoError(t, s.services[i].TestRestart())
 	}
+
+	time.Sleep(3 * time.Second)
+
+	log.Lvl1("Adding a new tx for the resurrected nodes to catch up")
+	s.sendDummyTx(t, nFailures+1, counter, 4)
+	counter++
+	log.Lvl1("Adding a new tx for the resurrected nodes to catch up")
+	s.sendDummyTx(t, nFailures+1, counter, 4)
+	counter++
+
+	log.Lvl1("Make sure resurrected nodes have caught up")
 	for i := 0; i < nFailures; i++ {
 		pr := s.waitProofWithIdx(t, tx1ID, i)
 		require.True(t, pr.InclusionProof.Match(tx1ID))
 	}
 	s.waitPropagation(t, 0)
 
-	log.Lvl1("Sending 1st tx")
-	tx1, err = createOneClientTxWithCounter(s.darc.GetBaseID(),
-		dummyContract, s.value, s.signer, 3)
-	require.NoError(t, err)
-	s.sendTxToAndWait(t, tx1, nFailures, 10)
-	log.Lvl1("Sending 2nd tx")
-	tx1, err = createOneClientTxWithCounter(s.darc.GetBaseID(),
-		dummyContract, s.value, s.signer, 4)
-	require.NoError(t, err)
-	s.sendTxToAndWait(t, tx1, nFailures, 10)
+	log.Lvl1("Two final transactions")
+	for tx := 0; tx < 2; tx++ {
+		log.Lvlf1("Sending tx %d", tx)
+		s.sendDummyTx(t, nFailures, counter, 4)
+		counter++
+	}
+
 	log.Lvl1("Sent two tx")
 	s.waitPropagation(t, -1)
 }
@@ -307,6 +332,12 @@ func TestViewChange_NeedCatchUp(t *testing.T) {
 		Gen:         s.genesis.SkipChainID(),
 		LeaderIndex: 1,
 	})
+
+	// Trigger a viewchange
+	// Create a block that host 4 will miss
+	tx1, err = createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
+	require.NoError(t, err)
+	s.sendTxTo(t, tx1, 3)
 
 	// It will need a few seconds if it catches the leader index 1 and a bit
 	// more if it goes to the leader index 2 so we give enough time.

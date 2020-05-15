@@ -67,7 +67,7 @@ func NewRollupTxProtocol(node *onet.TreeNodeInstance) (onet.ProtocolInstance, er
 		CommonVersionChan: make(chan Version, len(node.List())),
 		MaxNumTxs:         defaultMaxNumTxs,
 		Finish:            make(chan bool),
-		DoneChan:          make(chan error),
+		DoneChan:          make(chan error, 2),
 		closing:           make(chan bool),
 		version:           1,
 	}
@@ -91,7 +91,7 @@ func (p *RollupTxProtocol) Start() error {
 	err := p.SendTo(p.Children()[0], p.NewTx)
 	if err != nil {
 		p.Done()
-		return err
+		p.DoneChan <- err
 	}
 
 	return nil
@@ -105,7 +105,7 @@ func (p *RollupTxProtocol) Dispatch() error {
 		case <-p.requestAddedChan:
 			p.DoneChan <- nil
 			return nil
-		case <-time.After(time.Second):
+		case <-time.After(defaultInterval):
 			err := errors.New("timeout while waiting for leader's reply")
 			p.DoneChan <- err
 			return err
