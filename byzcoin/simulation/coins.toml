@@ -5,6 +5,7 @@ Rounds = 1
 RunWait = "6000s"
 Suite = "Ed25519"
 Accounts = 10
+
 # Keep the different columns in case someboday wants to run another battery
 # of tests
 
@@ -19,8 +20,3 @@ true,   20,          1,          3,     10,    "1s"
 #true,   2000,          2,          5,     10,    "1s"
 #true,   2000,          5,          5,     10,    "1s"
 #true,   2000,          10,          5,     10,    "1s"
-
-
-#true,   200,          10,         10,     10,    "2s"
-#true,   200,          20,         10,     10,    "2s"
-
