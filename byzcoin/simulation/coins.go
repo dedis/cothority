@@ -212,7 +212,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	balance[account1.String()] = binary.LittleEndian.Uint64(coins)
 
 	// Check the balance of account1
-	_, err := s.ViewBalance(account1, c)
+	_, err = s.ViewBalance(account1, c)
 	if err != nil {
 		return xerrors.Errorf("Error checking balance: %v", err)
 	}
