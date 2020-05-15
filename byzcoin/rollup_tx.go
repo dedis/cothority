@@ -26,9 +26,9 @@ const defaultMaxNumTxs = 100
 // RollupTxProtocol is a protocol for collecting pending transactions.
 type RollupTxProtocol struct {
 	*onet.TreeNodeInstance
-	TxsChan chan []ClientTransaction
-	NewTx   *AddTxRequest
-	CtxChan chan ClientTransaction
+	TxsChan           chan []ClientTransaction
+	NewTx             *AddTxRequest
+	CtxChan           chan ClientTransaction
 	CommonVersionChan chan Version
 	SkipchainID       skipchain.SkipBlockID
 	LatestID          skipchain.SkipBlockID
