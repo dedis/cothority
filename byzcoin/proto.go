@@ -104,6 +104,10 @@ type AddTxRequest struct {
 	// is empty, the proof will start from the genesis block. The proof is
 	// returned only when InclusionWait is above 0.
 	ProofFrom skipchain.SkipBlockID `protobuf:"opt"`
+	// Flags can hold additional flags to pass to the endpoint.
+	// Current flags supported are:
+	//  - 1: leader check - don't propagate further
+	Flags int `protobuf:"opt"`
 }
 
 // AddTxResponse is the reply after an AddTxRequest is finished.

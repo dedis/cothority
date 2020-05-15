@@ -350,6 +350,7 @@ func (s *Service) verifyViewChange(msg []byte, data []byte) bool {
 	equals, err := req.Roster.Equal(rotateRoster(sb.Roster, req.GetView().LeaderIndex))
 	if err != nil {
 		log.Error(s.ServerIdentity(), "couldn't compare rosters: %+v", err)
+		return false
 	}
 	if !equals {
 		log.Error(s.ServerIdentity(), "invalid roster in request")

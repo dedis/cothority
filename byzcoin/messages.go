@@ -24,7 +24,7 @@ func init() {
 type Version int
 
 // CurrentVersion is what we're running now
-const CurrentVersion Version = VersionSpawnerCoins
+const CurrentVersion Version = VersionRollup
 
 const (
 	// VersionInstructionHash is the first version and indicates that a new,
@@ -41,4 +41,7 @@ const (
 	// VersionSpawnerCoins indicates a fixed spawner contract that will treat
 	// the coins correctly
 	VersionSpawnerCoins = 6
+	// VersionRollup indicates that the followers send their transactions to
+	// the leader, instead of polling by the leader.
+	VersionRollup = 7
 )
