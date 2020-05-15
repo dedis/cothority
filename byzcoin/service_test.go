@@ -45,7 +45,7 @@ const stateChangeCacheContract = "stateChangeCacheTest"
 
 func TestMain(m *testing.M) {
 	log.SetShowTime(true)
-	log.MainTest(m, 1)
+	log.MainTest(m)
 }
 
 func TestService_GetAllByzCoinIDs(t *testing.T) {
