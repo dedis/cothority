@@ -18,8 +18,6 @@ import (
 	"go.dedis.ch/onet/v3/network"
 )
 
-//var tSuite = suites.MustFind("Ed25519")
-
 // Tests a 2, 5 and 13-node system. It is good practice to test different
 // sizes of trees to make sure your protocol is stable.
 func TestNode(t *testing.T) {
