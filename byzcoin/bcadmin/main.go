@@ -1075,6 +1075,9 @@ func debugBlock(c *cli.Context) error {
 			sb.Roster.List,
 			strings.Join(blinks, "\n"),
 			strings.Join(flinks, "\n"))
+		out += fmt.Sprintf("Header:\n\tTrieRoot: %x\n"+
+			"\tTimestamp: %d\n\tVersion: %d\n", dHead.TrieRoot,
+			dHead.Timestamp, dHead.Version)
 		if c.Bool("txDetails") {
 			var txs []string
 			for _, tx := range dBody.TxResults {
