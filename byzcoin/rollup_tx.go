@@ -17,7 +17,8 @@ func init() {
 	log.ErrFatal(err)
 }
 
-type getTxsCallback func(*network.ServerIdentity, *onet.Roster, skipchain.SkipBlockID, skipchain.SkipBlockID, int) []ClientTransaction
+type getTxsCallback func(*network.ServerIdentity, *onet.Roster,
+	skipchain.SkipBlockID, skipchain.SkipBlockID, int) []ClientTransaction
 
 const rollupTxProtocol = "RollupTxProtocol"
 const defaultMaxNumTxs = 100
@@ -25,9 +26,9 @@ const defaultMaxNumTxs = 100
 // RollupTxProtocol is a protocol for collecting pending transactions.
 type RollupTxProtocol struct {
 	*onet.TreeNodeInstance
-	TxsChan chan []ClientTransaction
-	NewTx   *AddTxRequest
-	CtxChan chan ClientTransaction
+	TxsChan           chan []ClientTransaction
+	NewTx             *AddTxRequest
+	CtxChan           chan ClientTransaction
 	CommonVersionChan chan Version
 	SkipchainID       skipchain.SkipBlockID
 	LatestID          skipchain.SkipBlockID

@@ -190,7 +190,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 
 	txAccounts, err := s.SpawnAccounts(c, gm, signer)
 	if err != nil {
-		xerrors.Errorf("Cannot spawn accounts")
+		return xerrors.Errorf("Cannot spawn accounts: %v", err)
 	}
 
 	account1 := txAccounts.Instructions[0].DeriveID("")
@@ -206,13 +206,16 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	// the spawn is done.`
 	err = s.Credit(account1, c, binary.LittleEndian.Uint64(coins), signer)
 	if err != nil {
-		xerrors.Errorf("Error crediting", err)
+		return xerrors.Errorf("Error crediting: %v", err)
 	}
 
 	balance[account1.String()] = binary.LittleEndian.Uint64(coins)
 
-	//Check the balance of account1
-	s.ViewBalance(account1, c)
+	// Check the balance of account1
+	_, err := s.ViewBalance(account1, c)
+	if err != nil {
+		return xerrors.Errorf("Error checking balance: %v", err)
+	}
 
 	coinOne := make([]byte, 8)
 	coinOne[0] = byte(1)

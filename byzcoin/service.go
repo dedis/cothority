@@ -448,8 +448,7 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		}
 
 		//create new roster with self and leader
-		list := make([]*network.ServerIdentity, 0)
-		list = append(list, []*network.ServerIdentity{s.ServerIdentity(), leader}...)
+		list := []*network.ServerIdentity{s.ServerIdentity(), leader}
 		newRost := onet.NewRoster(list)
 		tree := newRost.GenerateNaryTree(len(newRost.List))
 
@@ -2438,7 +2437,6 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction,
 			s.addError(tx, err)
 			return nil, nil, err
 		}
-		//sstStoreAll.Record()
 
 		statesTemp = append(statesTemp, scs...)
 		statesTemp = append(statesTemp, counterScs...)
@@ -2702,8 +2700,7 @@ func (s *Service) startViewChange(gen skipchain.SkipBlockID,
 			for _, si := range latest.Roster.List[1:] {
 				_, err := cl.Send(si, "AddTxRequest", buf)
 				if err != nil {
-					log.Error(s.ServerIdentity(), "couldn't send transaction to",
-						si, err)
+					return fmt.Errorf("couldn't send transaction: %v", err)
 				}
 				log.Lvlf2("Starting a view-change by putting our own request"+
 					": %+v", req)
