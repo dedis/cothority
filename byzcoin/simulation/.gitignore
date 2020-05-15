@@ -1,3 +1,7 @@
 build/
 test_data/
 server_list
+
+logs.txt
+simulation
+

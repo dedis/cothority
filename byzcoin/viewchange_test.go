@@ -20,6 +20,7 @@ import (
 // followers. Finally, we bring the failed nodes back up and they should
 // contain the transactions that they missed.
 func TestViewChange_Basic(t *testing.T) {
+	log.SetDebugVisible(2)
 	testViewChange(t, 4, 1, testInterval)
 }
 
@@ -65,6 +66,12 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 		s.services[i].TestClose()
 		s.hosts[i].Pause()
 	}
+
+	tx0, err := createOneClientTx(s.darc.GetBaseID(), dummyContract,
+		NewInstanceID([]byte{1}).Slice(), s.signer)
+	require.NoError(t, err)
+	s.sendTxTo(t, tx0, nFailures)
+
 	// Wait for proof that the new expected leader, s.services[nFailures],
 	// has taken over. First, we sleep for the duration that an honest node
 	// will wait before starting a view-change. Then, we sleep a little
@@ -82,7 +89,9 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 
 	// try to send a transaction to the node on index nFailures+1, which is
 	// a follower (not the new leader)
-	tx1, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
+	tx1ID := NewInstanceID([]byte{2}).Slice()
+	tx1, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, tx1ID,
+		s.signer)
 	require.NoError(t, err)
 	s.sendTxTo(t, tx1, nFailures+1)
 
@@ -98,15 +107,10 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 		require.True(t, leader.Equal(s.services[nFailures].ServerIdentity()), fmt.Sprintf("%v", leader))
 	}
 
-	// wait for the transaction to be stored on the new leader, because it
-	// polls for new transactions
-	pr := s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID.Slice(), nFailures)
-	require.True(t, pr.InclusionProof.Match(tx1.Instructions[0].InstanceID.Slice()))
-
-	// The transaction should also be stored on followers
-	for i := nFailures + 1; i < nHosts; i++ {
-		pr = s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID.Slice(), i)
-		require.True(t, pr.InclusionProof.Match(tx1.Instructions[0].InstanceID.Slice()))
+	// wait for the transaction to be stored everywhere
+	for i := nFailures; i < nHosts; i++ {
+		pr := s.waitProofWithIdx(t, tx1ID, i)
+		require.True(t, pr.InclusionProof.Match(tx1ID))
 	}
 
 	// We need to bring the failed (the first nFailures) nodes back up and
@@ -117,8 +121,8 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 		require.NoError(t, s.services[i].TestRestart())
 	}
 	for i := 0; i < nFailures; i++ {
-		pr = s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID.Slice(), i)
-		require.True(t, pr.InclusionProof.Match(tx1.Instructions[0].InstanceID.Slice()))
+		pr := s.waitProofWithIdx(t, tx1ID, i)
+		require.True(t, pr.InclusionProof.Match(tx1ID))
 	}
 	s.waitPropagation(t, 0)
 
@@ -260,23 +264,6 @@ func TestViewChange_LostSync(t *testing.T) {
 		require.NotNil(t, leader)
 		require.True(t, leader.Equal(s.services[3].ServerIdentity()))
 	}
-}
-
-func TestViewChange_MonitorFailure(t *testing.T) {
-	s := newSerN(t, 1, time.Second, 3, defaultRotationWindow)
-	defer s.local.CloseAll()
-
-	log.OutputToBuf()
-	defer log.OutputToOs()
-
-	// heartbeats an unknown skipchain: this should NOT panic or crash
-	s.service().heartbeatsTimeout <- "abc"
-
-	time.Sleep(1 * time.Second)
-
-	stderr := log.GetStdErr()
-	require.Contains(t, stderr, "heartbeat monitors are started after the creation")
-	require.Contains(t, stderr, "failed to get the latest block")
 }
 
 // Test to make sure the view change triggers a proof propagation when a conode

@@ -363,19 +363,16 @@ type corruptedService struct {
 
 func newTestService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
-		ServiceProcessor:       onet.NewServiceProcessor(c),
-		contracts:              newContractRegistry(),
-		txBuffer:               newTxBuffer(),
-		storage:                &bcStorage{},
-		darcToSc:               make(map[string]skipchain.SkipBlockID),
-		stateChangeCache:       newStateChangeCache(),
-		stateChangeStorage:     newStateChangeStorage(c),
-		heartbeatsTimeout:      make(chan string, 1),
-		closeLeaderMonitorChan: make(chan bool, 1),
-		heartbeats:             newHeartbeats(),
-		viewChangeMan:          newViewChangeManager(),
-		streamingMan:           streamingManager{},
-		closed:                 true,
+		ServiceProcessor:   onet.NewServiceProcessor(c),
+		contracts:          newContractRegistry(),
+		txBuffer:           newTxBuffer(),
+		storage:            &bcStorage{},
+		darcToSc:           make(map[string]skipchain.SkipBlockID),
+		stateChangeCache:   newStateChangeCache(),
+		stateChangeStorage: newStateChangeStorage(c),
+		viewChangeMan:      newViewChangeManager(),
+		streamingMan:       streamingManager{},
+		closed:             true,
 	}
 
 	cs := &corruptedService{Service: s}

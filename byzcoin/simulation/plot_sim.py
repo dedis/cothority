@@ -36,37 +36,49 @@ batch = list(set(df['batch']))
 for delay in delays:
     for k in keep:
         for b in batch:
-            titlestring = 'Transactions: 1000, delay: {}, keep: {}, batch: {}'.format(delay, k, b)
+            titlestring = 'Ground Truth localhost 5 hosts'
             # No whitespace, colons or commata in filenames
             namestring = titlestring.replace(' ','').replace(':','-').replace(',','_')
-            data = df.ix[df['delay'] == delay].sort_values('hosts')
-            data = data.ix[data['keep'] == k]
-            data = data.ix[data['batch'] == b]
+            data = df.loc[df['delay'] == delay].sort_values('hosts')
+            data = data.loc[data['keep'] == k]
+            data = data.loc[data['batch'] == b]
             data = data.reset_index()
 
-            ax = data.plot.bar(\
-                    x='hosts',\
-                    y=['prepare_wall_sum','send_wall_sum','confirm_wall_avg'],\
-                    stacked=True)
+
+            ax = data.plot.bar(
+                    y=['prepare_wall_sum','send_wall_sum','sst_user_sum','confirm_wall_avg'],\
+
+                    stacked=True,
+                    )
+
+
+            labels = ["20/1", "20/5", "20/10", "200/1", "200/5", "200/10", "2000/1", "2000/5", "2000/10", "2000/100"]
+
+            ax.set_xticklabels(labels)
+
+
+
             data.plot(y='round_wall_avg', marker='o', ax=ax)
 
-            plt.xlabel('number of hosts')
-            plt.ylabel('time in seconds')
+
+            plt.xlabel('transactions / instructions')
+            plt.ylabel('Time in seconds')
             plt.title(titlestring)
             plt.savefig(data_dir + 'barplot_' + namestring + '.png')
             plt.close()
 
 
-            ax = data.plot.bar(\
-                    x='hosts',\
+            ax = data.plot.bar(
                     y=['prepare_wall_sum','send_wall_sum','confirm_wall_avg'],\
                     stacked=True)
             data.plot(y='round_wall_avg', marker='o', ax=ax)
-
             ax.set_yscale('log')
+            ax.set_xticklabels(labels)
 
-            plt.xlabel('number of hosts')
+            plt.xlabel('transactions / instructions')
             plt.ylabel('logarithm of time in seconds')
             plt.title(titlestring)
-            plt.savefig(data_dir + 'barplot_log_delay_' + namestring + '.png')
+
+
+            plt.savefig(data_dir + 'barplot_log_delay_' + namestring + '.png', bbox_inches='tight')
             plt.close()

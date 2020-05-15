@@ -83,6 +83,8 @@ message AddTxRequest {
   // is empty, the proof will start from the genesis block. The proof is
   // returned only when InclusionWait is above 0.
   optional bytes prooffrom = 5;
+  // Flags can hold additional flags to pass to the endpoint
+  optional sint32 flags = 6;
 }
 
 // AddTxResponse is the reply after an AddTxRequest is finished.

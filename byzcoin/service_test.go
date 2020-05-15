@@ -45,7 +45,7 @@ const stateChangeCacheContract = "stateChangeCacheTest"
 
 func TestMain(m *testing.M) {
 	log.SetShowTime(true)
-	log.MainTest(m)
+	log.MainTest(m, 1)
 }
 
 func TestService_GetAllByzCoinIDs(t *testing.T) {
@@ -278,6 +278,7 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 		// Try to add a new transaction to the node that failed (but is
 		// now running) and it should work.
 		log.Lvl1("making a last transaction")
+		log.Print("making a last transaction")
 		pr, k, resp, err, err2 := sendTransaction(t, s, len(s.hosts)-1, dummyContract, 10)
 		transactionOK(t, resp, err)
 		require.NoError(t, err2)
@@ -476,7 +477,7 @@ func TestService_AddTransactionVersion(t *testing.T) {
 	tx1, err := createOneClientTxWithCounter(s.darc.GetBaseID(), versionContract, []byte{0}, s.signer, 1)
 	require.NoError(t, err)
 	atx := &AddTxRequest{
-		Version:       CurrentVersion,
+		Version:       0,
 		SkipchainID:   s.genesis.SkipChainID(),
 		Transaction:   tx1,
 		InclusionWait: 10,
@@ -492,7 +493,7 @@ func TestService_AddTransactionVersion(t *testing.T) {
 	tx2, err := createOneClientTxWithCounter(s.darc.GetBaseID(), versionContract, []byte{1}, s.signer, 2)
 	require.NoError(t, err)
 	atx = &AddTxRequest{
-		Version:       CurrentVersion,
+		Version:       1,
 		SkipchainID:   s.genesis.SkipChainID(),
 		Transaction:   tx2,
 		InclusionWait: 10,
@@ -504,7 +505,7 @@ func TestService_AddTransactionVersion(t *testing.T) {
 	tx3, err := createOneClientTxWithCounter(s.darc.GetBaseID(), versionContract, []byte{0}, s.signer, 3)
 	require.NoError(t, err)
 	atx = &AddTxRequest{
-		Version:       CurrentVersion,
+		Version:       0,
 		SkipchainID:   s.genesis.SkipChainID(),
 		Transaction:   tx3,
 		InclusionWait: 10,
@@ -573,11 +574,14 @@ func TestService_AutomaticVersionUpgrade(t *testing.T) {
 
 		header, err := decodeBlockHeader(&proof.Proof.Latest)
 		require.NoError(t, err)
+
+		log.Print("verify header vs current", header.Version, CurrentVersion)
 		if header.Version == CurrentVersion {
 			close(closing)
 			wg.Wait()
 			return
 		}
+		log.Print("should have returned", i)
 	}
 
 	close(closing)

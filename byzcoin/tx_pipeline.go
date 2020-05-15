@@ -13,9 +13,9 @@ import (
 	"golang.org/x/xerrors"
 )
 
-// collectTxResult contains the aggregated response of the conodes to the
-// collectTx protocol.
-type collectTxResult struct {
+// rollupTxResult contains the aggregated response of the conodes to the
+// rollupTx protocol.
+type rollupTxResult struct {
 	Txs           []ClientTransaction
 	CommonVersion Version
 }
@@ -23,9 +23,9 @@ type collectTxResult struct {
 // txProcessor is the interface that must be implemented. It is used in the
 // stateful pipeline txPipeline that takes transactions and creates blocks.
 type txProcessor interface {
-	// CollectTx implements a blocking function that returns transactions
+	// RollupTx implements a blocking function that returns transactions
 	// that should go into new blocks. These transactions are not verified.
-	CollectTx() (*collectTxResult, error)
+	RollupTx() (*rollupTxResult, error)
 	// ProcessTx attempts to apply the given tx to the input state and then
 	// produce new state(s). If the new tx is too big to fit inside a new
 	// state, the function will return more states. Where the older states
@@ -100,7 +100,7 @@ type defaultTxProcessor struct {
 	sync.Mutex
 }
 
-func (s *defaultTxProcessor) CollectTx() (*collectTxResult, error) {
+func (s *defaultTxProcessor) RollupTx() (*rollupTxResult, error) {
 	// Need to update the config, as in the meantime a new block should have
 	// arrived with a possible new configuration.
 	bcConfig, err := s.LoadConfig(s.scID)
@@ -108,12 +108,6 @@ func (s *defaultTxProcessor) CollectTx() (*collectTxResult, error) {
 		log.Error(s.ServerIdentity(), "couldn't get configuration - this is bad and probably "+
 			"a problem with the database! ", err)
 		return nil, xerrors.Errorf("reading config: %v", err)
-	}
-
-	if s.skService().ChainIsProcessing(s.scID) {
-		// When a block is processed,
-		// return immediately without processing any tx from the nodes.
-		return &collectTxResult{Txs: nil, CommonVersion: 0}, nil
 	}
 
 	latest, err := s.db().GetLatestByID(s.scID)
@@ -131,8 +125,7 @@ func (s *defaultTxProcessor) CollectTx() (*collectTxResult, error) {
 
 	log.Lvlf3("%s: Starting new block %d (%x) for chain %x", s.ServerIdentity(), latest.Index+1, latest.Hash, s.scID)
 	tree := bcConfig.Roster.GenerateNaryTree(len(bcConfig.Roster.List))
-
-	proto, err := s.CreateProtocol(collectTxProtocol, tree)
+	proto, err := s.CreateProtocol(rollupTxProtocol, tree)
 	if err != nil {
 		log.Error(s.ServerIdentity(), "Protocol creation failed with error."+
 			" This panic indicates that there is most likely a programmer error,"+
@@ -141,18 +134,9 @@ func (s *defaultTxProcessor) CollectTx() (*collectTxResult, error) {
 			" the server in a strange state, so we panic.", err)
 		return nil, xerrors.Errorf("creating protocol: %v", err)
 	}
-	root := proto.(*CollectTxProtocol)
+	root := proto.(*RollupTxProtocol)
 	root.SkipchainID = s.scID
 	root.LatestID = latest.Hash
-
-	log.Lvl3("Asking", root.Roster().List, "for Txs")
-	if err := root.Start(); err != nil {
-		log.Error(s.ServerIdentity(), "Failed to start the protocol with error."+
-			" Start() only returns an error when the protocol is not initialised correctly,"+
-			" e.g., not all the required fields are set."+
-			" If you see this message then there may be a programmer error.", err)
-		return nil, xerrors.Errorf("starting protocol: %v", err)
-	}
 
 	// When we poll, the child nodes must reply within half of the block
 	// interval, because we'll use the other half to process the
@@ -162,38 +146,29 @@ func (s *defaultTxProcessor) CollectTx() (*collectTxResult, error) {
 	var txs []ClientTransaction
 	commonVersion := Version(0)
 
-collectTxLoop:
+rollupTxLoop:
 	for {
 		select {
 		case commonVersion = <-root.CommonVersionChan:
 			// The value gives a version that is the same for a threshold of conodes but it
 			// can be the latest version available so it needs to check that to not create a
 			// block to upgrade from version x to x (which is not an upgrade per se).
-		case newTxs, more := <-root.TxsChan:
-			if more {
-				for _, ct := range newTxs {
-					txsz := txSize(TxResult{ClientTransaction: ct})
-					if txsz < bcConfig.MaxBlockSize {
-						txs = append(txs, ct)
-					} else {
-						log.Lvl2(s.ServerIdentity(), "dropping collected transaction with length", txsz)
-					}
-				}
-			} else {
-				break collectTxLoop
-			}
+		case newTxs, _ := <-root.CtxChan:
+			log.Print("RECEIVED SOMETHING HERE?", newTxs)
+			txs = append(txs, newTxs)
+			break rollupTxLoop
 		case <-protocolTimeout:
 			log.Lvl2(s.ServerIdentity(), "timeout while collecting transactions from other nodes")
 			close(root.Finish)
-			break collectTxLoop
+			break rollupTxLoop
 		case <-s.stopCollect:
 			log.Lvl2(s.ServerIdentity(), "abort collection of transactions")
 			close(root.Finish)
-			break collectTxLoop
+			break rollupTxLoop
 		}
 	}
 
-	return &collectTxResult{Txs: txs, CommonVersion: commonVersion}, nil
+	return &rollupTxResult{Txs: txs, CommonVersion: commonVersion}, nil
 }
 
 func (s *defaultTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcessorState) ([]*txProcessorState, error) {
@@ -323,49 +298,12 @@ func (p *txPipeline) start(initialState *txProcessorState, stopSignal chan bool)
 	p.ctxChan = make(chan ClientTransaction, 200)
 	p.needUpgrade = make(chan Version, 1)
 
-	p.collectTx()
 	p.processTxs(initialState)
-
 	<-stopSignal
-	close(p.stopCollect)
+
+	close(p.ctxChan)
 	p.processor.Stop()
 	p.wg.Wait()
-}
-
-func (p *txPipeline) collectTx() {
-	p.wg.Add(1)
-
-	// set the polling interval to half of the block interval
-	go func() {
-		defer p.wg.Done()
-		for {
-			interval := p.processor.GetInterval()
-			select {
-			case <-p.stopCollect:
-				log.Lvl3("stopping tx collector")
-				close(p.ctxChan)
-				return
-			case <-time.After(interval / 2):
-				res, err := p.processor.CollectTx()
-				if err != nil {
-					log.Error("failed to collect transactions", err)
-				}
-
-				// If a common version is found, it is sent anyway and the processing
-				// will check if it is necessary to upgrade.
-				p.needUpgrade <- res.CommonVersion
-
-				for _, tx := range res.Txs {
-					select {
-					case p.ctxChan <- tx:
-						// channel not full, do nothing
-					default:
-						log.Warn("dropping transactions because there are too many")
-					}
-				}
-			}
-		}
-	}()
 }
 
 var maxTxHashes = 1000
@@ -413,6 +351,7 @@ func (p *txPipeline) processTxs(initialState *txProcessorState) {
 				}
 
 				currentVersion = version
+			//TODO : change this name to create block signal
 			case <-intervalChan:
 				// update the interval every time because it might've changed
 				intervalChan = getInterval()
@@ -443,7 +382,6 @@ func (p *txPipeline) processTxs(initialState *txProcessorState) {
 				// find the right state and propose it in the block
 				var inState *txProcessorState
 				currentState, inState = proposeInputState(currentState)
-
 				go func(state *txProcessorState) {
 					p.wg.Add(1)
 					defer p.wg.Done()
@@ -460,6 +398,7 @@ func (p *txPipeline) processTxs(initialState *txProcessorState) {
 					}
 					proposalResult <- nil
 				}(inState)
+
 			case tx, ok := <-p.ctxChan:
 				select {
 				// This case has a higher priority so we force the select to go through it
@@ -474,6 +413,8 @@ func (p *txPipeline) processTxs(initialState *txProcessorState) {
 					log.Lvl3("stopping txs processor")
 					return
 				}
+				//log.Print("received new tx from service", len(tx.Instructions), ok)
+
 				txh := tx.Instructions.HashWithSignatures()
 				for _, txHash := range txHashes {
 					if bytes.Compare(txHash, txh) == 0 {
@@ -496,6 +437,7 @@ func (p *txPipeline) processTxs(initialState *txProcessorState) {
 					// it might be getting updated and then append newStates.
 					currentState = append(currentState[:len(currentState)-1], newStates...)
 				}
+
 			}
 		}
 	}()

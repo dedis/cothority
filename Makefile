@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := test
 
-EXCLUDE_LINT := should be.*UI
+EXCLUDE_LINT := should be UI
 
 Coding/bin/Makefile.base:
 	git clone https://github.com/dedis/Coding

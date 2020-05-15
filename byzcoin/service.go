@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math"
 	"net"
@@ -14,8 +15,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	uuid "gopkg.in/satori/go.uuid.v1"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/blscosi/protocol"
@@ -33,6 +32,7 @@ import (
 	"go.dedis.ch/protobuf"
 	"go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
+	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
 var pairingSuite = suites.MustFind("bn256.adapter").(*pairing.SuiteBn256)
@@ -59,8 +59,6 @@ var catchupFetchDBEntries = 100
 const defaultRotationWindow time.Duration = 10
 
 const noTimeout time.Duration = 0
-
-const collectTxProtocol = "CollectTxProtocol"
 
 const viewChangeSubFtCosi = "viewchange_sub_ftcosi"
 const viewChangeFtCosi = "viewchange_ftcosi"
@@ -132,9 +130,7 @@ type Service struct {
 	// restarting after shutdown, answer getTxs requests and so on.
 	txBuffer txBuffer
 
-	heartbeats             heartbeats
-	heartbeatsTimeout      chan string
-	closeLeaderMonitorChan chan bool
+	txPipeline *txPipeline
 
 	// contracts map kinds to kind specific verification functions
 	contracts *contractRegistry
@@ -427,6 +423,70 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		log.Lvlf2("Instruction[%d]: %s on instance ID %s", i, instr.Action(), instr.InstanceID.String())
 	}
 
+	//Either send the transaction to the leader, or, if this node is the leader, directly send it to ctxChan.
+	//For every new tx create a new protocol, like in skipchain
+
+	leader, err := s.getLeader(req.SkipchainID)
+	if err != nil {
+		log.LLvl1("Error getting the leader", err)
+	}
+
+	ctxHash := req.Transaction.Instructions.Hash()
+
+	if s.ServerIdentity().Equal(leader) {
+		s.txPipeline.ctxChan <- req.Transaction
+		if header.Version < req.Version {
+			s.txPipeline.needUpgrade <- req.Version
+		}
+	} else {
+		latest, err := s.db().GetLatestByID(req.SkipchainID)
+		if err != nil {
+			log.Errorf("Error while searching for %x", req.SkipchainID[:])
+			log.Error("DB is in bad state and cannot find skipchain anymore."+
+				" This function should never be called on a skipchain that does not exist.", err)
+			return nil, xerrors.Errorf("reading latest: %v", err)
+		}
+
+		//create new roster with self and leader
+		list := make([]*network.ServerIdentity, 0)
+		list = append(list, []*network.ServerIdentity{s.ServerIdentity(), leader}...)
+		newRost := onet.NewRoster(list)
+		tree := newRost.GenerateNaryTree(len(newRost.List))
+
+		proto, err := s.CreateProtocol(rollupTxProtocol, tree)
+		if err != nil {
+			log.Error(s.ServerIdentity(), "Protocol creation failed with error."+
+				" This panic indicates that there is most likely a programmer error,"+
+				" e.g., the protocol does not exist."+
+				" Hence, we cannot recover from this failure without putting"+
+				" the server in a strange state, so we panic.", err)
+			return nil, xerrors.Errorf("creating protocol: %v", err)
+		}
+
+		root := proto.(*RollupTxProtocol)
+		root.SkipchainID = req.SkipchainID
+		root.LatestID = latest.Hash
+		root.NewTx = req
+		err = proto.Start()
+		if err != nil {
+			log.LLvl1("Error starting the protocol", err)
+		}
+		log.Print("follower started protocol", s.ServerIdentity())
+		if err := <-root.DoneChan; err != nil {
+			log.Print("root failed - need to request a view-change")
+			var err error
+			if req.Flags&1 > 0 {
+				err = s.startViewChange(req.SkipchainID, nil)
+			} else {
+				err = s.startViewChange(req.SkipchainID, &req.Transaction)
+			}
+			if err != nil {
+				return nil, fmt.Errorf(
+					"leader failed and couldn't contact other nodes: %v", err)
+			}
+		}
+	}
+
 	// Note to my future self: s.txBuffer.add used to be out here. It used to work
 	// even. But while investigating other race conditions, we realized that
 	// IF there will be a wait channel, THEN it must exist before the call to add().
@@ -434,7 +494,6 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 	// be created and (not) notified before the wait channel is created. Moving
 	// add() after createWaitChannel() solves this, but then we need a second add() for the
 	// no inclusion wait case.
-
 	if req.InclusionWait > 0 {
 		s.working.Add(1)
 		defer s.working.Done()
@@ -445,10 +504,10 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 			return nil, xerrors.Errorf("couldn't get block info: %v", err)
 		}
 
-		ctxHash := req.Transaction.Instructions.Hash()
 		ch := s.notifications.registerForBlocks()
 		defer s.notifications.unregisterForBlocks(ch)
 
+		//TODO : create new block if txBuffer is not empty directly after creating another one
 		s.txBuffer.add(string(req.SkipchainID), req.Transaction)
 
 		// In case we don't have any blocks, because there are no transactions,
@@ -476,10 +535,7 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 				return nil, xerrors.Errorf("transaction didn't get included after %v (2 * t_block * %d)", tooLongDur, req.InclusionWait)
 			}
 		}
-	} else {
-		s.txBuffer.add(string(req.SkipchainID), req.Transaction)
 	}
-
 	return &AddTxResponse{Version: CurrentVersion}, nil
 }
 
@@ -932,10 +988,6 @@ func (s *Service) DebugRemove(req *DebugRemoveRequest) (*DebugResponse, error) {
 		return nil, xerrors.Errorf("verifying signature: %v", err)
 	}
 	idStr := string(req.ByzCoinID)
-	if s.heartbeats.exists(idStr) {
-		log.Lvl2("Removing heartbeat")
-		s.heartbeats.stop(idStr)
-	}
 
 	s.pollChanMut.Lock()
 	pc, exists := s.pollChan[idStr]
@@ -994,6 +1046,23 @@ func (s *Service) SetPropagationTimeout(p time.Duration) {
 	s.storage.Unlock()
 	s.save()
 	s.skService().SetPropTimeout(p)
+}
+
+// NewProtocol is called by onet whenever a new protocol arrives.
+// Here we use it to pass our s.txPipeline.ctxChan to the RollupTxProtocol.
+func (s *Service) NewProtocol(ti *onet.TreeNodeInstance, conf *onet.GenericConfig) (pi onet.ProtocolInstance, err error) {
+	// This is the byzcoin leader receiving a new ClientTransaction from a node.
+	if ti.ProtocolName() == rollupTxProtocol {
+		pi, err = NewRollupTxProtocol(ti)
+		if err != nil {
+			log.LLvl1("Error calling new proto", err)
+			return
+		}
+
+		rtx := pi.(*RollupTxProtocol)
+		rtx.CtxChan = s.txPipeline.ctxChan
+	}
+	return
 }
 
 // createNewBlock creates a new block and proposes it to the
@@ -1703,25 +1772,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	s.pollChanMut.Unlock()
 
 	// Check if viewchange needs to be started/stopped
-	// Check whether the heartbeat monitor exists, if it doesn't we start a
-	// new one
-	interval, _, err := s.LoadBlockInfo(sb.SkipChainID())
-	if err != nil {
-		return xerrors.Errorf("loading block info: %v", err)
-	}
 	if nodeInNew && !s.catchingUp {
-		// Update or start heartbeats
-		if s.heartbeats.exists(string(sb.SkipChainID())) {
-			log.Lvlf3("%s sending heartbeat monitor for %x with window %v", s.ServerIdentity(), sb.SkipChainID(), interval*s.rotationWindow)
-			s.heartbeats.updateTimeout(string(sb.SkipChainID()), interval*s.rotationWindow)
-		} else {
-			log.Lvlf2("%s starting heartbeat monitor for %x with window %v", s.ServerIdentity(), sb.SkipChainID(), interval*s.rotationWindow)
-			err = s.heartbeats.start(string(sb.SkipChainID()), interval*s.rotationWindow, s.heartbeatsTimeout)
-			if err != nil {
-				log.Errorf("%s heartbeat failed to start with error: %+v", s.ServerIdentity(), err)
-			}
-		}
-
 		// If it is a view-change transaction, confirm it's done
 		view := isViewChangeTx(body.TxResults)
 
@@ -1737,11 +1788,6 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 			s.viewChangeMan.add(s.sendViewChangeReq, s.sendNewView, s.isLeader, string(sb.SkipChainID()))
 			s.viewChangeMan.start(s.ServerIdentity().ID, sb.SkipChainID(), initialDur,
 				s.getSignatureThreshold(sb.Hash))
-		}
-	} else {
-		if s.heartbeats.exists(scIDstr) {
-			log.Lvlf2("%s stopping heartbeat monitor for %x with window %v", s.ServerIdentity(), sb.SkipChainID(), interval*s.rotationWindow)
-			s.heartbeats.stop(scIDstr)
 		}
 	}
 	if !nodeInNew && s.viewChangeMan.started(sb.SkipChainID()) {
@@ -1914,13 +1960,25 @@ func loadBlockInfo(st ReadOnlyStateTrie) (time.Duration, int, error) {
 }
 
 func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
+	latest, err := s.db().GetLatestByID(scID)
+	if err != nil {
+		log.Errorf("Error while searching for %x", scID[:])
+		log.Error("DB is in bad state and cannot find skipchain anymore."+
+			" This function should never be called on a skipchain that does not exist.", err)
+		//return nil, xerrors.Errorf("reading latest: %v", err)
+	}
+
 	pipeline := txPipeline{
 		processor: &defaultTxProcessor{
 			stopCollect: make(chan bool),
+			latest:      latest,
 			scID:        scID,
 			Service:     s,
 		},
 	}
+	//Registering the pipeline into the service
+	s.txPipeline = &pipeline
+
 	st, err := s.getStateTrie(scID)
 	if err != nil {
 		panic("the state trie must exist because we only start polling after creating/loading the skipchain")
@@ -1943,10 +2001,9 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 		s.working.Add(1)
 		defer s.working.Done()
 		s.closedMutex.Unlock()
-
-		pipeline.start(&initialState, stopChan)
+		log.Print("started pipeline", s.ServerIdentity())
+		s.txPipeline.start(&initialState, stopChan)
 	}()
-
 	return stopChan
 }
 
@@ -2369,13 +2426,14 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction,
 		tx.Instructions = append(tx.Instructions, newInstructions...)
 		copy(tx.Instructions[i+1+len(newInstructions):], tx.Instructions[i+1:])
 		copy(tx.Instructions[i+1:], newInstructions)
-
 		if err = sst.StoreAll(counterScs); err != nil {
 			err = xerrors.Errorf("%s StoreAll failed to add counter changes: %v",
 				s.ServerIdentity(), err)
 			s.addError(tx, err)
 			return nil, nil, err
 		}
+		//sstStoreAll.Record()
+
 		statesTemp = append(statesTemp, scs...)
 		statesTemp = append(statesTemp, counterScs...)
 		cin = cout
@@ -2534,10 +2592,11 @@ func (s *Service) getLeader(scID skipchain.SkipBlockID) (*network.ServerIdentity
 	return scConfig.Roster.List[0], nil
 }
 
-// getTxs is primarily used as a callback in the CollectTx protocol to retrieve
+//TODO : remove
+// getTxs is primarily used as a callback in the RollupTx protocol to retrieve
 // a set of pending transactions. However, it is a very useful way to piggy
 // back additional functionalities that need to be executed at every interval,
-// such as updating the heartbeat monitor and synchronising the state.
+// such as synchronising the state.
 func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, scID skipchain.SkipBlockID, latestID skipchain.SkipBlockID, maxNumTxs int) []ClientTransaction {
 	s.closedMutex.Lock()
 	if s.closed {
@@ -2573,8 +2632,6 @@ func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, sc
 		log.Lvlf2("%v: getTxs came from a wrong leader %v should be %v", s.ServerIdentity(), leader, actualLeader)
 		return []ClientTransaction{}
 	}
-
-	s.heartbeats.beat(string(scID))
 
 	return s.txBuffer.take(string(scID), maxNumTxs)
 }
@@ -2624,8 +2681,7 @@ func (s *Service) TestRestart() error {
 }
 
 func (s *Service) cleanupGoroutines() {
-	s.heartbeats.closeAll()
-	s.closeLeaderMonitorChan <- true
+	log.Lvl1(s.ServerIdentity(), "closing go-routines")
 	s.viewChangeMan.closeAll()
 	s.streamingMan.stopAll()
 
@@ -2638,56 +2694,62 @@ func (s *Service) cleanupGoroutines() {
 	s.pollChanWG.Wait()
 }
 
-func (s *Service) monitorLeaderFailure() {
+func (s *Service) startViewChange(gen skipchain.SkipBlockID,
+	tx *ClientTransaction) error {
 	s.closedMutex.Lock()
 	if s.closed {
 		s.closedMutex.Unlock()
-		return
+		return errors.New("cannot start viewchange when closing")
 	}
 	s.working.Add(1)
 	defer s.working.Done()
 	s.closedMutex.Unlock()
 
-	for {
-		select {
-		case key := <-s.heartbeatsTimeout:
-			log.Lvlf3("%s: missed heartbeat for %x", s.ServerIdentity(), key)
-			gen := []byte(key)
-
-			genBlock := s.db().GetByID(gen)
-			if genBlock == nil {
-				// This should not happen as the heartbeats are started after
-				// a new skipchain is created or when the conode starts ..
-				log.Error("heartbeat monitors are started after " +
-					"the creation of the genesis block, " +
-					"so the block should always exist")
-				// .. but just in case we stop the heartbeat
-				s.heartbeats.stop(key)
-			}
-
-			latest, err := s.db().GetLatestByID(gen)
+	latest, err := s.db().GetLatestByID(gen)
+	if err != nil {
+		return fmt.Errorf("failed to get the latest block: %v", err)
+	}
+	// Send only if the latest block is consistent as it wouldn't
+	// anyway if we're out of sync with the chain
+	req := viewchange.InitReq{
+		SignerID: s.ServerIdentity().ID,
+		View: viewchange.View{
+			ID:          latest.Hash,
+			Gen:         gen,
+			LeaderIndex: 1,
+		},
+	}
+	s.viewChangeMan.addReq(req)
+	if tx != nil {
+		cl := onet.NewClient(cothority.Suite, ServiceName)
+		buf, err := protobuf.Encode(&AddTxRequest{
+			Version:       CurrentVersion,
+			SkipchainID:   latest.SkipChainID(),
+			Transaction:   *tx,
+			InclusionWait: 0,
+			Flags:         1,
+		})
+		if err != nil {
+			return fmt.Errorf("couldn't encode request: %v", err)
+		}
+		for _, si := range latest.Roster.List[1:] {
+			_, err := cl.Send(si, "AddTxRequest", buf)
 			if err != nil {
-				log.Errorf("failed to get the latest block: %v", err)
-			} else {
-				// Send only if the latest block is consistent as it wouldn't
-				// anyway if we're out of sync with the chain
-				req := viewchange.InitReq{
-					SignerID: s.ServerIdentity().ID,
-					View: viewchange.View{
-						ID:          latest.Hash,
-						Gen:         gen,
-						LeaderIndex: 1,
-					},
+				return fmt.Errorf("couldn't encode request: %v", err)
+			}
+			for _, si := range latest.Roster.List[1:] {
+				_, err := cl.Send(si, "AddTxRequest", buf)
+				if err != nil {
+					log.Error(s.ServerIdentity(), "couldn't send transaction to",
+						si, err)
 				}
 				log.Lvlf2("Starting a view-change by putting our own request"+
 					": %+v", req)
 				s.viewChangeMan.addReq(req)
 			}
-		case <-s.closeLeaderMonitorChan:
-			log.Lvl2(s.ServerIdentity(), "closing heartbeat timeout monitor")
-			return
 		}
 	}
+	return nil
 }
 
 // startAllChains loads the configuration, updates the data in the service if
@@ -2754,8 +2816,6 @@ func (s *Service) startAllChains() error {
 				log.Error("catch up error: ", err)
 			}
 		}
-
-		go s.monitorLeaderFailure()
 	}()
 
 	return nil
@@ -2812,13 +2872,7 @@ func (s *Service) startChain(genesisID skipchain.SkipBlockID) error {
 		return xerrors.Errorf("fixing inconsistency: %v", err)
 	}
 
-	// load the metadata to prepare for starting the managers (heartbeat, viewchange)
-	interval, _, err := s.LoadBlockInfo(genesisID)
-	if err != nil {
-		return xerrors.Errorf("%s ignoring chain %x because we can't load blockInterval: %v",
-			s.ServerIdentity(), genesisID, err)
-	}
-
+	// load the metadata to prepare for starting the managers (viewchange)
 	if s.db().GetByID(genesisID) == nil {
 		return xerrors.Errorf("%s ignoring chain with missing genesis-block %x",
 			s.ServerIdentity(), genesisID)
@@ -2834,6 +2888,7 @@ func (s *Service) startChain(genesisID skipchain.SkipBlockID) error {
 		return xerrors.Errorf("getLeader should not return an error if roster is initialised: %v",
 			err)
 	}
+
 	if leader.Equal(s.ServerIdentity()) {
 		log.Lvlf2("%s: Starting as a leader for chain %x", s.ServerIdentity(), latest.SkipChainID())
 		s.pollChanMut.Lock()
@@ -2849,13 +2904,6 @@ func (s *Service) startChain(genesisID skipchain.SkipBlockID) error {
 	s.darcToScMut.Lock()
 	s.darcToSc[string(d.GetBaseID())] = genesisID
 	s.darcToScMut.Unlock()
-
-	// start the heartbeat
-	if s.heartbeats.exists(string(genesisID)) {
-		return xerrors.New("we are just starting the service, there should be no existing heartbeat monitors")
-	}
-	log.Lvlf2("%s started heartbeat monitor for block %d of %x", s.ServerIdentity(), latest.Index, genesisID)
-	s.heartbeats.start(string(genesisID), interval*s.rotationWindow, s.heartbeatsTimeout)
 
 	// initiate the view-change manager
 	initialDur, err := s.computeInitialDuration(genesisID)
@@ -3025,22 +3073,19 @@ var existingDB = regexp.MustCompile(`^ByzCoin_[0-9a-f]+$`)
 // deployments.
 func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
-		ServiceProcessor:       onet.NewServiceProcessor(c),
-		contracts:              globalContractRegistry.clone(),
-		txBuffer:               newTxBuffer(),
-		storage:                &bcStorage{},
-		darcToSc:               make(map[string]skipchain.SkipBlockID),
-		stateChangeCache:       newStateChangeCache(),
-		stateChangeStorage:     newStateChangeStorage(c),
-		heartbeatsTimeout:      make(chan string, 1),
-		closeLeaderMonitorChan: make(chan bool, 1),
-		heartbeats:             newHeartbeats(),
-		viewChangeMan:          newViewChangeManager(),
-		streamingMan:           streamingManager{},
-		closed:                 true,
-		catchingUpHistory:      make(map[string]time.Time),
-		rotationWindow:         defaultRotationWindow,
-		defaultVersion:         CurrentVersion,
+		ServiceProcessor:   onet.NewServiceProcessor(c),
+		contracts:          globalContractRegistry.clone(),
+		txBuffer:           newTxBuffer(),
+		storage:            &bcStorage{},
+		darcToSc:           make(map[string]skipchain.SkipBlockID),
+		stateChangeCache:   newStateChangeCache(),
+		stateChangeStorage: newStateChangeStorage(c),
+		viewChangeMan:      newViewChangeManager(),
+		streamingMan:       streamingManager{},
+		closed:             true,
+		catchingUpHistory:  make(map[string]time.Time),
+		rotationWindow:     defaultRotationWindow,
+		defaultVersion:     CurrentVersion,
 		// We need a large enough buffer for all errors in 2 blocks
 		// where each block might be 1 MB in size and each tx is 1 KB.
 		txErrorBuf: newRingBuf(2048),
@@ -3075,10 +3120,6 @@ func newService(c *onet.Context) (onet.Service, error) {
 		log.ErrFatal(err)
 	}
 
-	if _, err := s.ProtocolRegister(collectTxProtocol, NewCollectTxProtocol(s.getTxs)); err != nil {
-		return nil, xerrors.Errorf("registering protocol: %v", err)
-	}
-
 	// Register the view-change cosi protocols.
 	_, err = s.ProtocolRegister(viewChangeSubFtCosi, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		return protocol.NewSubBlsCosi(n, s.verifyViewChange, pairingSuite)
@@ -3092,7 +3133,6 @@ func newService(c *onet.Context) (onet.Service, error) {
 	if err != nil {
 		return nil, xerrors.Errorf("registering protocol: %v", err)
 	}
-
 	ver, err := s.LoadVersion()
 	if err != nil {
 		return nil, xerrors.Errorf("loading version: %v", err)
@@ -3136,5 +3176,6 @@ func newService(c *onet.Context) (onet.Service, error) {
 	if err := s.startAllChains(); err != nil {
 		return nil, xerrors.Errorf("starting chains: %v", err)
 	}
+
 	return s, nil
 }
