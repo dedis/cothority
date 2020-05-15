@@ -700,6 +700,12 @@ var cmds = cli.Commands{
 				},
 			},
 			{
+				Name:      "remove",
+				Usage:     "removes one or more blocks and the forward-links",
+				ArgsUsage: "conode.db [bcID] [blocks]",
+				Action:    dbRemove,
+			},
+			{
 				Name: "check",
 				Usage: "Check that the chain is in a correct state with" +
 					" regard to hashes, forward-, and backward-links",

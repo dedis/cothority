@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/hex"
+	"errors"
 	"flag"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -345,6 +347,57 @@ func dbReset(c *cli.Context) error {
 	return nil
 }
 
+// dbRemove deletes a number of blocks from the end
+func dbRemove(c *cli.Context) error {
+	fb, err := newFetchBlocks(c)
+	if err != nil {
+		return xerrors.Errorf("couldn't create fetchBlock: %+v", err)
+	}
+
+	if fb.bcID == nil {
+		return xerrors.New("need bcID")
+	}
+
+	latest, err := fb.db.GetLatestByID(*fb.bcID)
+	if err != nil {
+		return fmt.Errorf("couldn't get latest block: %v", err)
+	}
+
+	blocks := 1
+	if c.NArg() > 2 {
+		blocks, err = strconv.Atoi(c.Args().Get(2))
+		if err != nil {
+			return fmt.Errorf("couldn't convert %s to int: %v",
+				c.Args().Get(2), err)
+		}
+	}
+
+	for i := 0; i < blocks; i++ {
+		log.Info("deleting block", latest.Index)
+		if err := fb.db.RemoveBlock(latest.Hash); err != nil {
+			return fmt.Errorf("couldn't remove block: %v", err)
+		}
+		for i, bl := range latest.BackLinkIDs {
+			tmp := fb.db.GetByID(bl)
+			if tmp == nil {
+				return errors.New("didn't find backlink")
+			}
+			log.Info("Removing backlink", i, tmp.Index)
+			if err := fb.db.RemoveBlock(bl); err != nil {
+				return fmt.Errorf("couldn't remove block: %v", err)
+			}
+			tmp.ForwardLink = tmp.ForwardLink[:i]
+			fb.db.Store(tmp)
+		}
+		latest = fb.db.GetByID(latest.BackLinkIDs[0])
+		if latest == nil {
+			return errors.New("couldn't get previous block")
+		}
+	}
+
+	return fb.db.Close()
+}
+
 // dbCheck verifies all the hashes and links from the blocks.
 func dbCheck(c *cli.Context) error {
 	fb, err := newFetchBlocks(c)
@@ -490,6 +543,7 @@ func newFetchBlocks(c *cli.Context) (*fetchBlocks,
 	servers := fb.local.GenServers(1)
 	fb.service = servers[0].Service(byzcoin.ServiceName).(*byzcoin.Service)
 
+	log.Info("Opening database", c.Args().First())
 	fb.db, fb.boltDB, err = fb.openDB(c.Args().First())
 	if err != nil {
 		return nil, xerrors.Errorf("couldn't open DB: %+v", err)
@@ -516,6 +570,7 @@ func (fb *fetchBlocks) needBcID() error {
 		return nil
 	}
 	var scIDs []string
+	log.Info("No bcID given - searching for all skipchains")
 	sbs, err := fb.db.GetSkipchains()
 	if err != nil {
 		return xerrors.Errorf("couldn't list all blocks: %+v", err)
