@@ -576,9 +576,7 @@ func (fb *fetchBlocks) needBcID() error {
 		return xerrors.Errorf("couldn't list all blocks: %+v", err)
 	}
 	for _, sb := range sbs {
-		if sb.Index == 0 {
-			scIDs = append(scIDs, hex.EncodeToString(sb.SkipChainID()))
-		}
+		scIDs = append(scIDs, hex.EncodeToString(sb.SkipChainID()))
 	}
 	log.Info("The following chains are available in your db:",
 		strings.Join(scIDs, "\n"))
