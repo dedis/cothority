@@ -207,6 +207,8 @@ func (s *Service) sendNewView(proof []viewchange.InitReq) {
 	}()
 }
 
+// computeInitialDuration returns `rotationWindow * interval` of the given
+// skipchain.
 func (s *Service) computeInitialDuration(scID skipchain.SkipBlockID) (time.Duration, error) {
 	interval, _, err := s.LoadBlockInfo(scID)
 	if err != nil {

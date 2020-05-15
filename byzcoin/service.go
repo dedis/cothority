@@ -1335,6 +1335,7 @@ func (s *Service) catchupAll() error {
 	}
 
 	for _, scID := range gasr.IDs {
+		log.Lvlf2("Catching up instance %x", scID)
 		if !s.hasByzCoinVerification(scID) {
 			continue
 		}
@@ -1343,6 +1344,8 @@ func (s *Service) catchupAll() error {
 		if err != nil {
 			return xerrors.Errorf("getting latest: %v", err)
 		}
+
+		log.Lvlf2("Our latest block: %d / %x", sb.Index, sb.Hash)
 
 		cl := skipchain.NewClient()
 		// Get the latest block known by the Cothority.
@@ -2743,6 +2746,8 @@ func (s *Service) startAllChains() error {
 			return
 		}
 
+		s.cleanupBuckets(gasr.IDs)
+
 		for _, gen := range gasr.IDs {
 			err := s.startChain(gen)
 			if err != nil {
@@ -2756,7 +2761,44 @@ func (s *Service) startAllChains() error {
 	return nil
 }
 
+// Cleans up buckets from previous versions where each new block created a
+// new bucket.
+func (s *Service) cleanupBuckets(ids []skipchain.SkipBlockID) {
+	if len(ids) == 0 {
+		return
+	}
+
+	db, _ := s.GetAdditionalBucket([]byte(fmt.Sprintf("%x", ids[0])))
+	bcBucket := regexp.MustCompile("^ByzCoin_[0-9a-f]{64}$")
+	err := db.Update(func(tx *bbolt.Tx) error {
+		return tx.ForEach(func(name []byte, b *bbolt.Bucket) error {
+			log.Lvl3("Checking bucket", string(name))
+			if !bcBucket.Match(name) {
+				return nil
+			}
+
+			log.Lvl3("Found match - searching for bcID")
+			id, err := hex.DecodeString(string(name[8:]))
+			if err != nil {
+				return err
+			}
+			for _, bcID := range ids {
+				if bcID.Equal(id) {
+					return nil
+				}
+			}
+			log.Lvl2("Deleting bucket", string(name))
+			return tx.DeleteBucket(name)
+		})
+	})
+
+	if err != nil {
+		log.Error("couldn't clean up buckets:", err)
+	}
+}
+
 func (s *Service) startChain(genesisID skipchain.SkipBlockID) error {
+	log.Lvlf2("Starting chain %x", genesisID)
 	if !s.hasByzCoinVerification(genesisID) {
 		return nil
 	}
@@ -2816,7 +2858,7 @@ func (s *Service) startChain(genesisID skipchain.SkipBlockID) error {
 	s.heartbeats.start(string(genesisID), interval*s.rotationWindow, s.heartbeatsTimeout)
 
 	// initiate the view-change manager
-	initialDur, err := s.computeInitialDuration(latest.Hash)
+	initialDur, err := s.computeInitialDuration(genesisID)
 	if err != nil {
 		return xerrors.Errorf("getting initial duration: %v", err)
 	}

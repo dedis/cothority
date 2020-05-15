@@ -3,6 +3,8 @@ package byzcoin
 import (
 	"bytes"
 
+	"go.dedis.ch/onet/v3/log"
+
 	"golang.org/x/xerrors"
 
 	"go.dedis.ch/cothority/v3"
@@ -43,7 +45,12 @@ func NewProof(c ReadOnlyStateTrie, s *skipchain.SkipBlockDB, id skipchain.SkipBl
 			link = sb.ForwardLink[height]
 			sbTemp := s.GetByID(link.To)
 			if sbTemp == nil {
-				return nil, xerrors.New("missing block in chain")
+				log.Warnf("Found block %d with invalid forward-link at level"+
+					" %d", sb.Index, height)
+				if height == 0 {
+					return nil, xerrors.New("missing block in chain")
+				}
+				continue
 			}
 			if sbTemp.Index <= sb.Index {
 				return nil, cothority.ErrorOrNil(skipchain.ErrorInconsistentForwardLink, "")

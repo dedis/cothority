@@ -1057,7 +1057,27 @@ func (db *SkipBlockDB) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
 
 	// TODO this can be optimised by using multiple bucket.Get in a single transaction
 	for latest.GetForwardLen() > 0 {
-		next := db.GetByID(latest.GetForward(latest.GetForwardLen() - 1).To)
+		var next *SkipBlock
+		// Searching through the forward-links should _not_ be necessary.
+		// Unfortunately there are still occasions where a split occurs!
+		for height := latest.GetForwardLen() - 1; height >= 0; height-- {
+			fl := latest.GetForward(height)
+			if !fl.IsEmpty() {
+				next = db.GetByID(fl.To)
+				if next != nil {
+					break
+				}
+			}
+
+			log.Warnf("DB has unknown forward-link - removing from scID=%x"+
+				" index=%d height=%d", latest.SkipChainID(), latest.Index,
+				height)
+			latest.ForwardLink = latest.ForwardLink[:height]
+			if err := db.RemoveBlock(latest.Hash); err != nil {
+				return nil, fmt.Errorf("couldn't clean up block: %v", err)
+			}
+			db.Store(latest)
+		}
 		if next == nil {
 			// During a block creation, the level-0 link is created first and then the
 			// new block could still be processing.
