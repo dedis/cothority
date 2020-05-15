@@ -196,7 +196,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	account1 := txAccounts.Instructions[0].DeriveID("")
 
 	for k := range txAccounts.Instructions {
-		log.LLvl1("Created account", txAccounts.Instructions[k].DeriveID("").String())
+		log.Lvl1("Created account", txAccounts.Instructions[k].DeriveID("").String())
 	}
 
 	coins := make([]byte, 8)
@@ -316,7 +316,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 		time.Sleep(blockInterval)
 	}
 
-	log.LLvl1("Check all balances")
+	log.Lvl1("Check all balances")
 	for k, v := range txAccounts.Instructions {
 		account := txAccounts.Instructions[k].DeriveID("").String()
 		ledgerBalance, err := s.ViewBalance(v.DeriveID(""), c)
@@ -326,7 +326,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 
 		txs := balance[account]
 		if int(txs) != int(ledgerBalance) {
-			log.LLvl1(ledgerBalance, int(txs), "account has wrong amount")
+			log.Lvl1(ledgerBalance, int(txs), "account has wrong amount")
 			return xerrors.New("account has wrong amount")
 		}
 		log.Lvlf1("Account %s has %d - total should be: %d", account, ledgerBalance, int(txs))

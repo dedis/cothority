@@ -375,6 +375,13 @@ func (s *Service) prepareTxResponse(req *AddTxRequest, tx *TxResult) (*AddTxResp
 // error value to find out if an error has occured. The caller must also check
 // AddTxResponse.Error even if the error return value is nil.
 func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
+	s.closedMutex.Lock()
+	if s.closed {
+		s.closedMutex.Unlock()
+		return nil, errors.New("node is closed")
+	}
+	s.closedMutex.Unlock()
+
 	if len(req.Transaction.Instructions) == 0 {
 		return nil, xerrors.New("no transactions to add")
 	}
@@ -468,26 +475,21 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		root.NewTx = req
 		err = proto.Start()
 		if err != nil {
-			return nil, xerrors.Errorf("Error starting the protocol: %v", err)
+			return nil, fmt.Errorf("couldn't start protocol: %v", err)
 		}
-
-		select {
-		case err := <-root.DoneChan:
-			if err != nil {
-				log.Print("root failed - need to request a view-change")
-				var err error
-				if req.Flags&1 > 0 {
-					err = s.startViewChange(req.SkipchainID, nil)
-				} else {
-					err = s.startViewChange(req.SkipchainID, &req.Transaction)
-				}
-				if err != nil {
-					return nil, fmt.Errorf(
-						"leader failed and couldn't contact other nodes: %v", err)
-				}
+		if err := <-root.DoneChan; err != nil {
+			log.Lvlf2("root failed with %v - need to request a view-change",
+				err)
+			var err error
+			if req.Flags&1 > 0 {
+				err = s.startViewChange(req.SkipchainID, nil)
+			} else {
+				err = s.startViewChange(req.SkipchainID, &req.Transaction)
 			}
-		case <-time.After(defaultInterval):
-			return nil, errors.New("timeout on adding transaction")
+			if err != nil {
+				return nil, fmt.Errorf(
+					"leader failed and couldn't contact other nodes: %v", err)
+			}
 		}
 	}
 
@@ -1421,16 +1423,28 @@ func (s *Service) catchupAll() error {
 
 		cl := skipchain.NewClient()
 		// Get the latest block known by the Cothority.
-		reply, err := cl.GetUpdateChain(sb.Roster, sb.Hash)
-		if err != nil {
-			return xerrors.Errorf("getting chain: %v", err)
+		var reply *skipchain.GetUpdateChainReply
+		for i, node := range sb.Roster.List {
+			cl.UseNode(i)
+			replyTmp, err := cl.GetUpdateChain(sb.Roster, sb.Hash)
+			if err != nil {
+				log.Warn("couldn't get update from", node)
+			}
+			if reply == nil || len(replyTmp.Update) > len(reply.Update) {
+				reply = replyTmp
+			}
+		}
+		if reply == nil {
+			return errors.New("couldn't get a new latest block")
 		}
 
 		if len(reply.Update) == 0 {
 			return xerrors.New("no block found in chain update")
 		}
 
-		s.catchUp(reply.Update[len(reply.Update)-1])
+		sb = reply.Update[len(reply.Update)-1]
+		log.Lvl2("Catching up with latest block:", sb.Index)
+		s.catchUp(sb)
 	}
 	return nil
 }
@@ -2690,19 +2704,17 @@ func (s *Service) startViewChange(gen skipchain.SkipBlockID,
 			return fmt.Errorf("couldn't encode request: %v", err)
 		}
 		for _, si := range latest.Roster.List[1:] {
-			_, err := cl.Send(si, "AddTxRequest", buf)
-			if err != nil {
-				return fmt.Errorf("couldn't encode request: %v", err)
-			}
-			for _, si := range latest.Roster.List[1:] {
+			go func(si *network.ServerIdentity) {
+				log.Lvl2(s.ServerIdentity(), "sending addTxRequest to", si)
 				_, err := cl.Send(si, "AddTxRequest", buf)
 				if err != nil {
-					return fmt.Errorf("couldn't send transaction: %v", err)
+					log.Error(s.ServerIdentity(), "couldn't send transaction to",
+						si, err)
 				}
-				log.Lvlf2("Starting a view-change by putting our own request"+
-					": %+v", req)
-				s.viewChangeMan.addReq(req)
-			}
+			}(si)
+			log.Lvlf2("Starting a view-change by putting our own request"+
+				": %+v", req)
+			s.viewChangeMan.addReq(req)
 		}
 	}
 	return nil

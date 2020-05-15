@@ -278,7 +278,6 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 		// Try to add a new transaction to the node that failed (but is
 		// now running) and it should work.
 		log.Lvl1("making a last transaction")
-		log.Print("making a last transaction")
 		pr, k, resp, err, err2 := sendTransaction(t, s, len(s.hosts)-1, dummyContract, 10)
 		transactionOK(t, resp, err)
 		require.NoError(t, err2)
@@ -2728,6 +2727,13 @@ func (s *ser) sendTxToAndWait(t *testing.T, ctx ClientTransaction, idx int, wait
 		InclusionWait: wait,
 	})
 	transactionOK(t, resp, err)
+}
+
+func (s *ser) sendDummyTx(t *testing.T, node int, counter uint64, wait int) {
+	tx1, err := createOneClientTxWithCounter(s.darc.GetBaseID(),
+		dummyContract, s.value, s.signer, counter)
+	require.NoError(t, err)
+	s.sendTxToAndWait(t, tx1, node, wait)
 }
 
 // caller gives us a darc, and we try to make an evolution request.
