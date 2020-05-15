@@ -17,7 +17,8 @@ func init() {
 	log.ErrFatal(err)
 }
 
-type getTxsCallback func(*network.ServerIdentity, *onet.Roster, skipchain.SkipBlockID, skipchain.SkipBlockID, int) []ClientTransaction
+type getTxsCallback func(*network.ServerIdentity, *onet.Roster,
+	skipchain.SkipBlockID, skipchain.SkipBlockID, int) []ClientTransaction
 
 const rollupTxProtocol = "RollupTxProtocol"
 const defaultMaxNumTxs = 100
