@@ -25,24 +25,28 @@ import (
 func TestNode(t *testing.T) {
 	nodes := []int{2, 5, 13}
 	for _, nbrNodes := range nodes {
-		local := onet.NewLocalTest(tSuite)
-		_, _, tree := local.GenTree(nbrNodes, true)
-		log.Lvl3(tree.Dump())
+		testNode(t, nbrNodes)
+	}
+}
 
-		pi, err := local.CreateProtocol("Template", tree)
-		require.Nil(t, err)
+func testNode(t *testing.T, nbrNodes int) {
+	local := onet.NewLocalTest(tSuite)
+	defer local.CloseAll()
+	_, _, tree := local.GenTree(nbrNodes, true)
+	log.Lvl3(tree.Dump())
 
-		protocol := pi.(*protocol.TemplateProtocol)
-		require.NoError(t, protocol.Start())
+	pi, err := local.CreateProtocol("Template", tree)
+	require.Nil(t, err)
 
-		timeout := network.WaitRetry * time.Duration(network.MaxRetryConnect*nbrNodes*2) * time.Millisecond
-		select {
-		case children := <-protocol.ChildCount:
-			log.Lvl2("Instance 1 is done")
-			require.Equal(t, children, nbrNodes, "Didn't get a child-cound of", nbrNodes)
-		case <-time.After(timeout):
-			t.Fatal("Didn't finish in time")
-		}
-		local.CloseAll()
+	protocol := pi.(*protocol.TemplateProtocol)
+	require.NoError(t, protocol.Start())
+
+	timeout := network.WaitRetry * time.Duration(network.MaxRetryConnect*nbrNodes*2) * time.Millisecond
+	select {
+	case children := <-protocol.ChildCount:
+		log.Lvl2("Instance 1 is done")
+		require.Equal(t, children, nbrNodes, "Didn't get a child-cound of", nbrNodes)
+	case <-time.After(timeout):
+		t.Fatal("Didn't finish in time")
 	}
 }
