@@ -412,7 +412,6 @@ func (p *txPipeline) processTxs(initialState *txProcessorState) {
 					log.Lvl3("stopping txs processor")
 					return
 				}
-				//log.Print("received new tx from service", len(tx.Instructions), ok)
 
 				txh := tx.Instructions.HashWithSignatures()
 				for _, txHash := range txHashes {
