@@ -17,9 +17,6 @@ func init() {
 	log.ErrFatal(err)
 }
 
-type getTxsCallback func(*network.ServerIdentity, *onet.Roster,
-	skipchain.SkipBlockID, skipchain.SkipBlockID, int) []ClientTransaction
-
 const rollupTxProtocol = "RollupTxProtocol"
 const defaultMaxNumTxs = 100
 
@@ -34,7 +31,6 @@ type RollupTxProtocol struct {
 	LatestID          skipchain.SkipBlockID
 	MaxNumTxs         int
 	DoneChan          chan error
-	getTxs            getTxsCallback
 	Finish            chan bool
 	closing           chan bool
 	version           int
@@ -124,13 +120,4 @@ func (p *RollupTxProtocol) Dispatch() error {
 func (p *RollupTxProtocol) Shutdown() error {
 	close(p.closing)
 	return nil
-}
-
-func (p *RollupTxProtocol) getByzcoinVersion() Version {
-	srv := p.Host().Service(ServiceName)
-	if srv == nil {
-		panic("Byzcoin should always be available as a service for this protocol")
-	}
-
-	return srv.(*Service).GetProtocolVersion()
 }
