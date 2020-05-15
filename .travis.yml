@@ -130,6 +130,7 @@ jobs:
           npm ci &&
           npm version prerelease --preid=p`date +%y%m.%d%H.%M%S` &&
           ./publish.sh --tag dev
+
 notifications:
   email: false
 
