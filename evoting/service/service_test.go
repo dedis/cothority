@@ -78,6 +78,7 @@ func TestService(t *testing.T) {
 
 	idAdminSig := generateSignature(nodeKP.Private, replyLink.ID, idAdmin)
 
+	startTime := time.Now()
 	elec := &lib.Election{
 		Name: map[string]string{
 			"en": "name in english",
@@ -94,7 +95,8 @@ func TestService(t *testing.T) {
 		Creator: idAdmin,
 		Users:   []uint32{idUser1, idUser2, idUser3, idAdmin},
 		Roster:  roster,
-		End:     time.Now().Unix() + 86400,
+		Start:   startTime.Unix(),
+		End:     startTime.Unix() + 86400,
 	}
 
 	// Try to create a new election on server[1], should fail.
@@ -144,12 +146,54 @@ func TestService(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, box.Election.Name["en"], elec.Name["en"])
 
-	// Try to cast a vote on a non-leader, should fail.
-	log.Lvl1("Casting vote on non-leader")
+	k, c := lib.Encrypt(replyOpen.Key, bufCand1)
 	idUser1Sig := generateSignature(nodeKP.Private, replyLink.ID, idUser1)
 
-	k, c := lib.Encrypt(replyOpen.Key, bufCand1)
+	// Try to cast a vote before the election is open, should fail.
+	log.Lvl1("Casting before vote open")
+	lib.CurrentTime = func() time.Time {
+		return startTime.Add(time.Duration(-1) * time.Second)
+	}
 	ballot := &lib.Ballot{
+		User:  idUser1,
+		Alpha: k,
+		Beta:  c,
+	}
+	_, err = s0.Cast(&evoting.Cast{
+		ID:        replyOpen.ID,
+		Ballot:    ballot,
+		User:      idUser1,
+		Signature: idUser1Sig,
+	})
+	// expect a failure
+	require.NotNil(t, err)
+	require.Nil(t, local.WaitDone(time.Second))
+
+	// Try to cast a vote after the election has ended, should fail.
+	log.Lvl1("Casting after vote close")
+	lib.CurrentTime = func() time.Time {
+		return startTime.Add(time.Duration(86401) * time.Second)
+	}
+	ballot = &lib.Ballot{
+		User:  idUser1,
+		Alpha: k,
+		Beta:  c,
+	}
+	_, err = s0.Cast(&evoting.Cast{
+		ID:        replyOpen.ID,
+		Ballot:    ballot,
+		User:      idUser1,
+		Signature: idUser1Sig,
+	})
+	// expect a failure
+	require.NotNil(t, err)
+	require.Nil(t, local.WaitDone(time.Second))
+
+	lib.CurrentTime = time.Now
+
+	// Try to cast a vote on a non-leader, should fail.
+	log.Lvl1("Casting vote on non-leader")
+	ballot = &lib.Ballot{
 		User:  idUser1,
 		Alpha: k,
 		Beta:  c,

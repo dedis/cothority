@@ -25,6 +25,10 @@ func init() {
 	network.RegisterMessage(&Transaction{})
 }
 
+// currentTime is a reference to time.Now. This would be mocked
+// in tests.
+var CurrentTime = time.Now
+
 // TransactionVerifierID identifes the core transaction verification function.
 var TransactionVerifierID = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "evoting"))
 
@@ -190,6 +194,11 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		election, err := GetElection(s, genesis, false, t.User)
 		if err != nil {
 			return err
+		}
+
+		ballotTime := CurrentTime().Unix()
+		if ballotTime < election.Start || ballotTime > election.End {
+			return errors.New("ballot error: election is not open")
 		}
 
 		// t.User is trusted at this point, so make sure that they did not try to sneak
