@@ -468,6 +468,9 @@ func TestService_AddTransaction_Parallel(t *testing.T) {
 
 // Test that a contract have access to the ByzCoin protocol version.
 func TestService_AddTransactionVersion(t *testing.T) {
+	testNoUpgradeBlockVersion = true
+	defer func() { testNoUpgradeBlockVersion = false }()
+
 	s := newSerWithVersion(t, 1, testInterval, 4, disableViewChange, 0)
 	defer s.local.CloseAll()
 
@@ -485,7 +488,9 @@ func TestService_AddTransactionVersion(t *testing.T) {
 	require.NoError(t, err)
 
 	// Upgrade the chain with a special block.
+	testNoUpgradeBlockVersion = false
 	_, err = s.service().createUpgradeVersionBlock(s.genesis.Hash, 1)
+	testNoUpgradeBlockVersion = true
 	require.NoError(t, err)
 
 	// Send another tx this time for the version 1 of the ByzCoin protocol.
@@ -1020,6 +1025,7 @@ func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) (P
 func sendTransactionWithCounter(t *testing.T, s *ser, client int, kind string, wait int, counter uint64) (Proof, []byte, *AddTxResponse, error, error) {
 	tx, err := createOneClientTxWithCounter(s.darc.GetBaseID(), kind, s.value, s.signer, counter)
 	require.NoError(t, err)
+	key := tx.Instructions[0].Hash()
 	ser := s.services[client]
 	var resp *AddTxResponse
 	resp, err = ser.AddTransaction(&AddTxRequest{
@@ -1037,7 +1043,7 @@ func sendTransactionWithCounter(t *testing.T, s *ser, client int, kind string, w
 	rep, err2 := ser.GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      s.genesis.SkipChainID(),
-		Key:     tx.Instructions[0].Hash(),
+		Key:     key,
 	})
 
 	var proof Proof
@@ -1045,7 +1051,7 @@ func sendTransactionWithCounter(t *testing.T, s *ser, client int, kind string, w
 		proof = rep.Proof
 	}
 
-	return proof, tx.Instructions[0].Hash(), resp, err, err2
+	return proof, key, resp, err, err2
 }
 
 func (s *ser) sendInstructions(t *testing.T, wait int,
