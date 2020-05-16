@@ -468,6 +468,9 @@ func TestService_AddTransaction_Parallel(t *testing.T) {
 
 // Test that a contract have access to the ByzCoin protocol version.
 func TestService_AddTransactionVersion(t *testing.T) {
+	testNoUpgradeBlockVersion = true
+	defer func() { testNoUpgradeBlockVersion = false }()
+
 	s := newSerWithVersion(t, 1, testInterval, 4, disableViewChange, 0)
 	defer s.local.CloseAll()
 
@@ -485,7 +488,9 @@ func TestService_AddTransactionVersion(t *testing.T) {
 	require.NoError(t, err)
 
 	// Upgrade the chain with a special block.
+	testNoUpgradeBlockVersion = false
 	_, err = s.service().createUpgradeVersionBlock(s.genesis.Hash, 1)
+	testNoUpgradeBlockVersion = true
 	require.NoError(t, err)
 
 	// Send another tx this time for the version 1 of the ByzCoin protocol.
