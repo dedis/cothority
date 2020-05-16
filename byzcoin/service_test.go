@@ -1025,6 +1025,7 @@ func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) (P
 func sendTransactionWithCounter(t *testing.T, s *ser, client int, kind string, wait int, counter uint64) (Proof, []byte, *AddTxResponse, error, error) {
 	tx, err := createOneClientTxWithCounter(s.darc.GetBaseID(), kind, s.value, s.signer, counter)
 	require.NoError(t, err)
+	key := tx.Instructions[0].Hash()
 	ser := s.services[client]
 	var resp *AddTxResponse
 	resp, err = ser.AddTransaction(&AddTxRequest{
@@ -1042,7 +1043,7 @@ func sendTransactionWithCounter(t *testing.T, s *ser, client int, kind string, w
 	rep, err2 := ser.GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      s.genesis.SkipChainID(),
-		Key:     tx.Instructions[0].Hash(),
+		Key:     key,
 	})
 
 	var proof Proof
@@ -1050,7 +1051,7 @@ func sendTransactionWithCounter(t *testing.T, s *ser, client int, kind string, w
 		proof = rep.Proof
 	}
 
-	return proof, tx.Instructions[0].Hash(), resp, err, err2
+	return proof, key, resp, err, err2
 }
 
 func (s *ser) sendInstructions(t *testing.T, wait int,
