@@ -21,7 +21,6 @@ import (
 // followers. Finally, we bring the failed nodes back up and they should
 // contain the transactions that they missed.
 func TestViewChange_Basic(t *testing.T) {
-	log.SetDebugVisible(2)
 	testViewChange(t, 4, 1, testInterval)
 }
 
