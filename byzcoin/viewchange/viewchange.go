@@ -16,9 +16,10 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"go.dedis.ch/cothority/v3/blscosi/protocol"
 	"math"
 	"time"
+
+	"go.dedis.ch/cothority/v3/blscosi/protocol"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/skipchain"
@@ -157,12 +158,20 @@ func (c *Controller) Start(myID network.ServerIdentityID,
 				log.Lvl4("adding req:", req.View.LeaderIndex,
 					req.SignerID.String())
 				meta.add(req)
-				// Previously the node started to propagate view-changes
-				// already if enough other nodes sent a view-change.
-				// But this means that a node would participate in a view
-				// -change, even if it thinks it's not correct.
-				// So this code has been removed.
-				// But it might be breaking stuff :(
+				// TODO: have a better catch-up mechanism in case different
+				// nodes detect the need for a view-change at different moments.
+				// Only allow this if this node already detected a failed
+				// leader.
+				if meta.highest() > ctr && ctr > 0 {
+					// Another node is waiting for a view-change longer than
+					// us - follow it.
+					stopTimer(timer, c.stopTimerChan, ctr)
+					reqNew := InitReq{
+						View:     req.View,
+						SignerID: myID,
+					}
+					ctr = c.processAnomaly(reqNew, &meta, ctr)
+				}
 			}
 			log.Lvlf2("counter: %d, thr: %d, meta[ctr] (#/state): %d/%d, "+
 				"req: %+v", ctr, threshold, meta.countOf(ctr), meta.stateOf(ctr), req)
