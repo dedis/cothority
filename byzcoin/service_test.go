@@ -1877,8 +1877,10 @@ func TestService_SetConfigRosterReplace(t *testing.T) {
 		ctx, _ := createConfigTxWithCounter(t, testInterval, *goodRoster, defaultMaxBlockSize, s, counter)
 		counter++
 		cl := NewClient(s.genesis.SkipChainID(), *goodRoster)
+		require.NoError(t, cl.UseNode(1))
 		resp, err := cl.AddTransactionAndWait(ctx, 10)
 		transactionOK(t, resp, err)
+		s.waitPropagation(t, -1)
 
 		log.Lvl1("Removing", goodRoster.List[0])
 		goodRoster = onet.NewRoster(goodRoster.List[1:])
@@ -1886,6 +1888,7 @@ func TestService_SetConfigRosterReplace(t *testing.T) {
 		counter++
 		resp, err = cl.AddTransactionAndWait(ctx, 10)
 		transactionOK(t, resp, err)
+		s.waitPropagation(t, -1)
 	}
 }
 
