@@ -287,6 +287,7 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 		// Wait for tasks to finish.
 		time.Sleep(blockInterval)
 	}
+	s.waitPropagation(t, 0)
 }
 
 func TestService_AddTransaction_WrongNode(t *testing.T) {
