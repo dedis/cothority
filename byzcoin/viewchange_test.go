@@ -74,32 +74,20 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	require.NoError(t, err)
 	s.sendTxTo(t, tx0, nFailures)
 
-	// Wait for proof that the new expected leader, s.services[nFailures],
-	// has taken over. First, we sleep for the duration that an honest node
-	// will wait before starting a view-change. Then, we sleep a little
-	// longer for the view-change transaction to be stored in the block.
-	sameRoster := true
-	loops := int(math.Pow(2, float64(nFailures+1)))
-	for i := 0; i < loops; i++ {
-		log.Lvlf1("waiting for new leader: %d/%d", i+1, loops)
-		time.Sleep(s.interval * rw)
-		gucr, err := s.services[nFailures].skService().GetUpdateChain(&skipchain.
-			GetUpdateChain{LatestID: s.genesis.SkipChainID()})
-		require.NoError(t, err)
-		sameRoster, err = gucr.Update[len(gucr.Update)-1].Roster.Equal(s.roster)
-		require.NoError(t, err)
-		if !sameRoster {
-			break
-		}
-	}
-	require.False(t, sameRoster)
-
 	log.Lvl1("Waiting for the propagation to be finished")
-	s.waitPropagation(t, 0)
-	config, err := s.services[nFailures].LoadConfig(s.genesis.SkipChainID())
+	time.Sleep(s.interval * rw * time.Duration(math.Pow(2, float64(nFailures+1))))
+	s.waitPropagation(t, 1)
+	gucr, err := s.services[nFailures].skService().GetUpdateChain(&skipchain.
+	GetUpdateChain{LatestID: s.genesis.SkipChainID()})
 	require.NoError(t, err)
-	log.Lvl2("Verifying roster", config.Roster.List)
-	require.True(t, config.Roster.List[0].Equal(s.services[nFailures].ServerIdentity()))
+
+	newRoster := gucr.Update[len(gucr.Update)-1].Roster
+	log.Lvl2("Verifying roster", newRoster)
+	sameRoster, err := newRoster.Equal(s.roster)
+	require.NoError(t, err)
+	require.False(t, sameRoster)
+	require.True(t, newRoster.List[0].Equal(
+		s.services[nFailures].ServerIdentity()))
 
 	// try to send a transaction to the node on index nFailures+1, which is
 	// a follower (not the new leader)
