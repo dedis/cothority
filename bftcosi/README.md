@@ -36,5 +36,5 @@ a tree-structure which reduces the communication cost to O(n).
 
 - [PBFT](http://pmg.csail.mit.edu/papers/osdi99.pdf) describes the original
 PBFT protocol that is limited to 10-15 nodes
-- [ByzCoin](https://arxiv.org/abs/1602.06997) describes the BFTCoSi protocol
-and uses it to enhance bitcoin consensus
+- [ByzCoin](https://www.usenix.org/system/files/conference/usenixsecurity16/sec16_paper_kokoris-kogias.pdf)
+  describes the BFTCoSi protocol and uses it to enhance bitcoin consensus
