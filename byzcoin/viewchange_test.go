@@ -78,7 +78,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	time.Sleep(s.interval * rw * time.Duration(math.Pow(2, float64(nFailures+1))))
 	s.waitPropagation(t, 1)
 	gucr, err := s.services[nFailures].skService().GetUpdateChain(&skipchain.
-	GetUpdateChain{LatestID: s.genesis.SkipChainID()})
+		GetUpdateChain{LatestID: s.genesis.SkipChainID()})
 	require.NoError(t, err)
 
 	newRoster := gucr.Update[len(gucr.Update)-1].Roster
