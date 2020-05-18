@@ -76,9 +76,11 @@ blscosi check -g $COTHORITY
 This will first contact each server individually and then check a few random collective signing group constellations. If there are connectivity problems, due to firewalls or bad connections, for example, you will see a "Timeout on signing" or similar error message.
 
 ## References
-- OmniLedger: A Secure, Scale-Out, Decentralized Ledger via Sharding: https://eprint.iacr.org/2017/406.pdf part 4 A & B
-- (CoSi) Keeping Authorities "Honest or Bust" with Decentralized Witness Cosigning: https://arxiv.org/abs/1503.08768
-- (ByzCoin) Enhancing Bitcoin Security and Performance with Strong Consistency via Collective Signing: https://arxiv.org/abs/1602.06997
+- OmniLedger: A Secure, Scale-Out, Decentralized Ledger via Sharding: https://eprint.iacr.org/2017/406 part 4 A & B
+- (CoSi) Keeping Authorities "Honest or Bust" with Decentralized Witness Cosigning: https://dedis.cs.yale.edu/dissent/papers/witness-abs/
+- (ByzCoin) Enhancing Bitcoin Security and Performance with Strong Consistency
+  via Collective Signing:
+  https://www.usenix.org/system/files/conference/usenixsecurity16/sec16_paper_kokoris-kogias.pdf
 
 
 ## Further Information

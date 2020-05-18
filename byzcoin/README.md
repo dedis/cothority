@@ -6,7 +6,7 @@ ByzCoin
 # ByzCoin
 
 This implementation of ByzCoin has its goal to implement the protocol
-described in the [OmniLedger Paper](https://eprint.iacr.org/2017/406.pdf).
+described in the [OmniLedger Paper](https://eprint.iacr.org/2017/406).
 As the paper is only describing the network interaction and very few of the
 details of how the transactions themselves are handled, we will include
 them as seem fit.
@@ -74,7 +74,7 @@ The following points are scheduled to be done before end of '18:
 6. inter-shard transactions
 
 Items 5 and 6 are the 'real' ByzCoin improvements as described in the
-[ByzCoin Paper](https://eprint.iacr.org/2017/406.pdf).
+[ByzCoin Paper](https://eprint.iacr.org/2017/406).
 
 ## Transaction collection and View Change
 

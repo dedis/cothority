@@ -57,13 +57,12 @@ the signature is sent back to one of the receiver's channels.
 ## Research Paper
 
 For further background and technical details, please refer to the
-[research paper](http://arxiv.org/pdf/1503.08768.pdf) or one of the following
+[research paper](https://dedis.cs.yale.edu/dissent/papers/witness-abs/) or one of the following
 links:
 
 - [Certificate Cothority - Towards Trustworthy Collective CAs](https://petsymposium.org/2015/papers/syta-cc-hotpets2015.pdf),
 [HotPETS 2015](https://petsymposium.org/2015/hotpets.php)
-- [Enhancing Bitcoin Security and Performance with Strong Consistency via Collective Signing](http://arxiv.org/abs/1602.06997),
-[USENIX Security 2016](https://www.usenix.org/conference/usenixsecurity16) (to appear)
+- [Enhancing Bitcoin Security and Performance with Strong Consistency via Collective Signing](https://www.usenix.org/system/files/conference/usenixsecurity16/sec16_paper_kokoris-kogias.pdf)
 
 ## Links
 

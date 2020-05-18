@@ -19,7 +19,7 @@ It is a fault tolerant version of CoSi, implemented in
 
 It is the basis for the ByzCoinX protocol. For further background and technical
 details, please refer to the
-[research paper](https://eprint.iacr.org/2017/406.pdf).
+[research paper](https://eprint.iacr.org/2017/406).
 
 ## Description
 
