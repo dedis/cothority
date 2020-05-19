@@ -183,7 +183,7 @@ func TestService(t *testing.T) {
 	require.NotNil(t, err)
 	require.Nil(t, local.WaitDone(time.Second))
 
-	// Cast a vote for no users at all: should work.
+	// Cast a vote for no candidates at all: should work.
 	log.Lvl1("Casting empty ballot")
 	k0, c0 := lib.Encrypt(replyOpen.Key, []byte{})
 	ballot = &lib.Ballot{
@@ -200,7 +200,7 @@ func TestService(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, local.WaitDone(time.Second))
 
-	// Cast a vote with empty points
+	// Cast a vote with empty points - will fail
 	log.Lvl1("Casting empty ballot (no points)")
 	ballot = &lib.Ballot{
 		User: idUser1,
@@ -211,7 +211,7 @@ func TestService(t *testing.T) {
 		User:      idUser1,
 		Signature: idUser1Sig,
 	})
-	require.Nil(t, err)
+	require.Error(t, err)
 	require.Nil(t, local.WaitDone(time.Second))
 
 	// Try to modify the election after a vote is cast.
@@ -304,6 +304,132 @@ func TestService(t *testing.T) {
 
 	for _, p := range reconstructReply.Points {
 		log.Lvl2("Point is:", p.String())
+	}
+}
+
+// This is an end-to end test, just like TestService, so it has a lot of copy-paste
+// stuff. It is useful to have this as it's own test because I wanted to investigate
+// the behaviour of decryption of the badly encrypted points.
+func TestBadEncryption(t *testing.T) {
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+
+	nodeKP := key.NewKeyPair(cothority.Suite)
+
+	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
+	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
+	sc0 := local.GetServices(nodes, onet.ServiceFactory.ServiceID(skipchain.ServiceName))[0].(*skipchain.Service)
+	// Set a lower timeout for the tests
+	sc0.SetPropTimeout(defaultTimeout)
+
+	// Creating master skipchain
+	replyLink, err := s0.Link(&evoting.Link{
+		Pin:    s0.pin,
+		Roster: roster,
+		Key:    nodeKP.Public,
+		Admins: []uint32{idAdmin},
+	})
+	require.NoError(t, err)
+
+	idAdminSig := generateSignature(nodeKP.Private, replyLink.ID, idAdmin)
+
+	elec := &lib.Election{
+		Name: map[string]string{
+			"en": "name in english",
+			"fr": "name in french",
+		},
+		Subtitle: map[string]string{
+			"en": "name in english",
+			"fr": "name in french",
+		},
+		MoreInfoLang: map[string]string{
+			"en": "https://epfl.ch/elections",
+			"fr": "httsp://epfl.ch/votations",
+		},
+		Creator: idAdmin,
+		Users:   []uint32{idUser1, idUser2, idUser3, idAdmin},
+		Roster:  roster,
+		Start:   yesterday.Unix(),
+		End:     tomorrow.Unix(),
+	}
+
+	// Create a new election
+	replyOpen, err := s0.Open(&evoting.Open{
+		ID:        replyLink.ID,
+		Election:  elec,
+		User:      idAdmin,
+		Signature: idAdminSig,
+	})
+	require.NoError(t, err)
+	elec.ID = replyOpen.ID
+
+	log.Lvl1("Casting a ballot with incorrect encryption")
+	k0, c0 := lib.Encrypt(replyOpen.Key, bufCand1)
+	// k0, c0 are correctly encrypted right now, let's corrupt them.
+	noise := cothority.Suite.Point().Pick(random.New())
+	k1 := k0.Clone().Add(noise, k0)
+
+	ballot := &lib.Ballot{
+		User:  idUser1,
+		Alpha: k1,
+		Beta:  c0,
+	}
+	_, err = s0.Cast(&evoting.Cast{
+		ID:        replyOpen.ID,
+		Ballot:    ballot,
+		User:      idUser1,
+		Signature: generateSignature(nodeKP.Private, replyLink.ID, idUser1),
+	})
+	require.Nil(t, err)
+	require.Nil(t, local.WaitDone(time.Second))
+
+	// Need two ballots to be able to shuffle; this ballot is correctly encrypted.
+	ballot = &lib.Ballot{
+		User:  idUser2,
+		Alpha: k0,
+		Beta:  c0,
+	}
+	_, err = s0.Cast(&evoting.Cast{
+		ID:        replyOpen.ID,
+		Ballot:    ballot,
+		User:      idUser2,
+		Signature: generateSignature(nodeKP.Private, replyLink.ID, idUser2),
+	})
+	require.Nil(t, err)
+	require.Nil(t, local.WaitDone(time.Second))
+
+	// Shuffle all votes
+	log.Lvl1("Shuffling s0")
+	_, err = s0.Shuffle(&evoting.Shuffle{
+		ID:        replyOpen.ID,
+		User:      idAdmin,
+		Signature: idAdminSig,
+	})
+	require.NoError(t, err)
+
+	// Decrypt all votes
+	_, err = s0.Decrypt(&evoting.Decrypt{
+		ID:        replyOpen.ID,
+		User:      idAdmin,
+		Signature: idAdminSig,
+	})
+	require.NoError(t, err)
+	require.Nil(t, local.WaitDone(time.Second))
+
+	// Reconstruct votes
+	reconstructReply, err := s0.Reconstruct(&evoting.Reconstruct{
+		ID: replyOpen.ID,
+	})
+	require.NoError(t, err)
+
+	for _, p := range reconstructReply.Points {
+		log.Lvl2("Point is:", p.String())
+		a, err := p.Data()
+		if err != nil {
+			t.Log("decode point:", err)
+		} else {
+			log.Lvl2("Data is:", a)
+		}
 	}
 }
 
