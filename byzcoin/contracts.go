@@ -541,6 +541,13 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		if err != nil {
 			return nil, nil, xerrors.Errorf("decoding: %v", err)
 		}
+
+		_, err := rst.(ReadOnlySkipChain).GetBlockByIndex(rst.GetIndex())
+		if err != nil {
+			return nil, nil,
+				fmt.Errorf("couldn't get latest skipblock: %v", err)
+		}
+
 		if rst.GetVersion() < VersionViewchange {
 			// If everything is correctly signed, then we trust it, no need
 			// to do additional verification.
