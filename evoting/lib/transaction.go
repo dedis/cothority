@@ -187,6 +187,20 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		}
 		return nil
 	} else if t.Ballot != nil {
+		zero := cothority.Suite.Point()
+		if t.Ballot.Alpha == nil || t.Ballot.Beta == nil {
+			return errors.New("alpha and beta must be non-nil")
+		}
+		if t.Ballot.Alpha.Equal(zero) || t.Ballot.Beta.Equal(zero) {
+			return errors.New("alpha and beta must be non-zero")
+		}
+
+		// t.User is trusted at this point, so make sure that they did not try to sneak
+		// through a different user-id in the ballot.
+		if t.User != t.Ballot.User {
+			return errors.New("ballot user-id differs from transaction user-id")
+		}
+
 		election, err := GetElection(s, genesis, false, t.User)
 		if err != nil {
 			return err
@@ -200,12 +214,6 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		}
 		if now.After(end) {
 			return errors.New("election is already closed")
-		}
-
-		// t.User is trusted at this point, so make sure that they did not try to sneak
-		// through a different user-id in the ballot.
-		if t.User != t.Ballot.User {
-			return errors.New("ballot user-id differs from transaction user-id")
 		}
 
 		latest, err := s.GetDB().GetLatest(s.GetDB().GetByID(election.ID))
