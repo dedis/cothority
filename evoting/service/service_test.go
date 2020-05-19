@@ -474,7 +474,7 @@ func TestAfterEnd(t *testing.T) {
 		Users:   []uint32{idUser1, idUser2, idUser3, idAdmin},
 		Roster:  roster,
 		Start:   yesterday.Unix(),
-		End:     time.Now().Unix(),
+		End:     time.Now().Unix() + 1, /* second */
 	}
 
 	// Create a new election
@@ -487,9 +487,10 @@ func TestAfterEnd(t *testing.T) {
 	require.NoError(t, err)
 	elec.ID = replyOpen.ID
 
-	// Cast a vote, will fail because time.Now() after end.
-	time.Sleep(200 * time.Millisecond)
-	log.Lvl1("Casting empty ballot")
+	// Cast a vote, will fail because the election is already ended.
+	log.Lvl1("Casting a ballot after election.")
+
+	time.Sleep(3 * time.Second)
 	k0, c0 := lib.Encrypt(replyOpen.Key, []byte{})
 	ballot := &lib.Ballot{
 		User:  idUser1,
