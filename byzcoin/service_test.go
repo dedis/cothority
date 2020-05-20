@@ -1705,11 +1705,14 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 	require.NoError(t, err)
 	s.sendInstructions(t, 10, instr)
 
+	// PeerSetID for valid peers added during the test
+	testPeerSetID := network.NewPeerSetID([]byte{})
+
 	log.Lvl1("Creating blocks to check rotation of the leader")
 	leanClient := onet.NewClient(cothority.Suite, ServiceName)
 	rosterR := s.roster
 	counter := 2
-	for _, newNode := range newRoster.List {
+	for newNodeIndex, newNode := range newRoster.List {
 		var i int
 		for i = 1; i < 10; i++ {
 			time.Sleep(testInterval * time.Duration(i))
@@ -1731,6 +1734,11 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 		ctx, _ := createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, counter)
 		counter++
 		s.sendTxAndWait(t, ctx, 10)
+
+		// Declare the new roster valid for all the current servers.
+		for _, srv := range append(s.hosts, servers[:newNodeIndex]...) {
+			srv.SetValidPeers(testPeerSetID, rosterR.List)
+		}
 
 		log.Lvl2("Verifying the correct roster is in place")
 		latest, err := s.service().db().GetLatestByID(s.genesis.Hash)
@@ -2418,6 +2426,12 @@ func TestService_StateChangeStorageCatchUp(t *testing.T) {
 	ctx, _ := createConfigTxWithCounter(t, testInterval, *newRoster, defaultMaxBlockSize, s, 5)
 	log.Lvl1("Updating config to include new roster")
 	s.sendTxAndWait(t, ctx, 10)
+
+	// Declare the new roster valid for all the current servers.
+	testPeerSetID := network.NewPeerSetID([]byte{})
+	for _, srv := range s.hosts {
+		srv.SetValidPeers(testPeerSetID, newRoster.List)
+	}
 
 	for i := 0; i < 10; i++ {
 		log.Lvl1("Sleeping for 1 second...")

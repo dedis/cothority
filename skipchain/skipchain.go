@@ -13,6 +13,7 @@ package skipchain
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"reflect"
@@ -22,6 +23,7 @@ import (
 	"time"
 
 	"golang.org/x/xerrors"
+	uuid "gopkg.in/satori/go.uuid.v1"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/blscosi/protocol"
@@ -366,6 +368,11 @@ func (s *Service) StoreSkipBlockInternal(psbd *StoreSkipBlock) (*StoreSkipBlockR
 			return nil, errors.New(
 				"Couldn't get forward signature on block: " + err.Error())
 		}
+
+		// Set the server's set of valid peers for this skipchain with the new
+		// roster.
+		SetSkipChainValidPeers(s.ServiceProcessor.Context, scID,
+			prop.Roster.List)
 
 		if !s.disableForwardLink {
 			// Now create all further forward links. Again, after creation of each
@@ -1961,4 +1968,17 @@ func (s *Service) incrementWorking() error {
 	s.closedMutex.Unlock()
 
 	return nil
+}
+
+// SetSkipChainValidPeers is a utility function to assign the set of valid
+// peers for the given skipchain.
+func SetSkipChainValidPeers(ctx *onet.Context, scID SkipBlockID,
+	validPeers []*network.ServerIdentity) {
+	// Compute the PeerSetID as hash(serviceID | skipchainID)
+	h := sha256.New()
+	h.Write(uuid.UUID(ctx.ServiceID()).Bytes())
+	h.Write(scID)
+	peerSetID := network.NewPeerSetID(h.Sum(nil))
+
+	ctx.SetValidPeers(peerSetID, validPeers)
 }

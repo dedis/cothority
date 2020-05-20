@@ -1537,6 +1537,11 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 		latest = updates[len(updates)-1]
 		trieIndex = latest.Index
 	}
+
+	// Set the server's set of valid peers from the roster in the latest block.
+	skipchain.SetSkipChainValidPeers(s.ServiceProcessor.Context,
+		sb.SkipChainID(), latest.Roster.List)
+
 	log.Lvlf2("%v Done catch up %x / %d", s.ServerIdentity(), sb.SkipChainID(), trieIndex)
 }
 
