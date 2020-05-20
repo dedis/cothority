@@ -54,7 +54,7 @@ func dbCatchup(c *cli.Context) error {
 		return xerrors.Errorf("couldn't add URL connection: %+v", err)
 	}
 
-	log.Info("Search for latest block")
+	log.Info("Search for latest block in local db")
 	latestID := *fb.bcID
 	lastIndex := 0
 	for next := fb.db.GetByID(latestID); next != nil && len(next.ForwardLink) > 0; next = fb.db.GetByID(latestID) {
@@ -64,7 +64,7 @@ func dbCatchup(c *cli.Context) error {
 			log.Info("Found block", next.Index)
 		}
 	}
-	log.Info("Last index", lastIndex)
+	log.Info("Last index in local db", lastIndex)
 
 	for {
 		sb, err := fb.gbMulti(latestID)
