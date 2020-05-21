@@ -43,17 +43,22 @@ func dbStatus(c *cli.Context) error {
 
 // dbCatchup uses the live byzcoin chain to update to the latest blocks
 func dbCatchup(c *cli.Context) error {
-	if c.NArg() < 3 {
+	if c.NArg() < 1 {
 		return xerrors.New("please give the following arguments: " +
-			"conode.db byzCoinID url")
+			"conode.db [byzCoinID [url]]")
 	}
 	fb, err := newFetchBlocks(c)
 	if err != nil {
 		return xerrors.Errorf("couldn't create fetchBlock: %+v", err)
 	}
-	err = fb.addURL(c.Args().Get(2))
-	if err != nil {
-		return xerrors.Errorf("couldn't add URL connection: %+v", err)
+
+	askAllNodes := true
+	if c.NArg() == 3 {
+		askAllNodes = false
+		err = fb.addURL(c.Args().Get(2))
+		if err != nil {
+			return xerrors.Errorf("couldn't add URL connection: %+v", err)
+		}
 	}
 
 	log.Info("Search for latest block in local db")
@@ -68,13 +73,32 @@ func dbCatchup(c *cli.Context) error {
 	}
 	log.Info("Last index in local db", lastIndex)
 
+	fb.index = 0
 	for {
 		sb, err := fb.gbMulti(latestID)
 		if err != nil {
 			return xerrors.Errorf("couldn't get blocks from network: %+v", err)
 		}
 		if len(sb.ForwardLink) == 0 {
-			break
+			if askAllNodes {
+				// If no further blocks exist,
+				// and no node is given on the command-line,
+				// ask all other nodes first.
+				fb.roster = sb.Roster
+				fb.index++
+				if fb.index >= len(sb.Roster.List) {
+					break
+				}
+				log.Info("Got possible latest block - getting confirmation"+
+					" from", fb.roster.List[fb.index].URL)
+				fb.cl.UseNode(fb.index)
+				latestID = sb.Hash
+				continue
+			} else {
+				break
+			}
+		} else {
+			fb.index = 0
 		}
 		latestID = sb.ForwardLink[0].To
 	}
@@ -582,6 +606,11 @@ func newFetchBlocks(c *cli.Context) (*fetchBlocks,
 		bi, err = hex.DecodeString(c.Args().Get(1))
 		fb.bcID = &bi
 		fb.genesis = fb.db.GetByID(*fb.bcID)
+	} else {
+		err = fb.getBCID()
+		if err != nil {
+			return nil, fmt.Errorf("couldn't auto-detect skipchain-id: %v", err)
+		}
 	}
 
 	if c.Command.Name != "catchup" {
@@ -595,6 +624,40 @@ func newFetchBlocks(c *cli.Context) (*fetchBlocks,
 	fb.trieDB = trie.NewDiskDB(fb.boltDB, fb.trieBucketName)
 
 	return fb, nil
+}
+
+func (fb *fetchBlocks) getBCID() error {
+	log.Info("Searching for available skipchains")
+	sbs, err := fb.db.GetSkipchains()
+	if err != nil {
+		return fmt.Errorf("couldn't search skipchains: %v", err)
+	}
+	switch len(sbs) {
+	case 0:
+		return errors.New("no skipchain stored - give id and URL")
+	case 1:
+		for sbID, sb := range sbs {
+			bcID := skipchain.SkipBlockID(sbID)
+			fb.bcID = &bcID
+			fb.genesis = sb
+			fb.latest, err = fb.db.GetLatest(sb)
+			if err != nil {
+				return fmt.Errorf("couldn't get latest skipblock: %v", err)
+			}
+			fb.roster = fb.latest.Roster
+		}
+		fb.cl = skipchain.NewClient()
+		log.Infof("Using single skipchain: %x", *fb.bcID)
+	default:
+		if len(sbs) > 0 {
+			log.Info("More than one skipchain found - please chose one:")
+			for sb := range sbs {
+				log.Infof("SkipchainID: %x", []byte(sb))
+			}
+		}
+		return errors.New("more than 1 skipchain present in db")
+	}
+	return nil
 }
 
 func (fb *fetchBlocks) needBcID() error {
@@ -728,7 +791,7 @@ func (fb *fetchBlocks) gbMulti(startID skipchain.SkipBlockID) (
 			url = fb.roster.List[fb.index].Address.String()
 		}
 		log.Infof("Got %d blocks from %s, starting at index %d",
-			len(blocks), fb.roster.List[fb.index].Address, blocks[0].Index)
+			len(blocks), url, blocks[0].Index)
 		return blocks[len(blocks)-1], nil
 	}
 	return fb.gbSingle(startID)
