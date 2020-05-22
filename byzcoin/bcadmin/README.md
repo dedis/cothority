@@ -229,7 +229,7 @@ and return success:
 
 ```bash
 bcadmin db catchup cached.db _bcID_ _url_
-bcadmin db replay cached.db _bcID_ --continue
+bcadmin db replay cached.db _bcID_
 ```
 
 The `_bcID_` has to be replaced by the hexadecimal representation of the 

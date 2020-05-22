@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"flag"
 	"fmt"
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
 	"strconv"
 	"strings"
 	"time"
@@ -90,12 +92,10 @@ func dbReplay(c *cli.Context) error {
 	log.Info("Preparing db")
 	start := *fb.bcID
 	err = fb.boltDB.Update(func(tx *bbolt.Tx) error {
-		if !fb.flagReplayCont {
-			if tx.Bucket(fb.bucketName) != nil {
-				err := tx.DeleteBucket(fb.bucketName)
-				if err != nil {
-					return err
-				}
+		if tx.Bucket(fb.bucketName) != nil {
+			err := tx.DeleteBucket(fb.bucketName)
+			if err != nil {
+				return err
 			}
 		}
 		_, err := tx.CreateBucketIfNotExists(fb.bucketName)
@@ -108,46 +108,51 @@ func dbReplay(c *cli.Context) error {
 		return xerrors.Errorf("couldn't add bucket: %+v", err)
 	}
 
-	if !fb.flagReplayCont {
-		_, err = fb.service.ReplayStateDB(fb.boltDB, fb.bucketName, fb.genesis)
-		if err != nil {
-			return xerrors.Errorf("couldn't create stateDB: %+v", err)
-		}
-	} else {
-		index, err := fb.service.ReplayStateDB(fb.boltDB, fb.bucketName, nil)
-		if err != nil {
-			return xerrors.Errorf("couldn't replay blocks: %+v", err)
-		}
-
-		log.Info("Searching for block with index", index+1)
-		sb := fb.db.GetByID(start)
-		for sb != nil && sb.Index < index+1 {
-			if len(sb.ForwardLink) == 0 {
-				break
-			}
-			sb = fb.db.GetByID(sb.ForwardLink[0].To)
-			start = sb.Hash
-		}
-		if sb.Index <= index {
-			log.Info("No new blocks available")
-			return nil
-		}
-	}
+	log.Lvl2("Copying blocks to skipchain's DB")
+	fb.skipchain.GetDB().DB = fb.db.DB
 
 	log.Info("Replaying blocks")
-	_, err = fb.service.ReplayStateContLog(start,
-		&sumFetcher{summarizeBlocks: c.Int("summarize"), bff: fb.blockFetcher})
+	rso := byzcoin.ReplayStateOptions{
+		MaxBlocks:   c.Int("blocks"),
+		VerifyFLSig: c.Bool("verifyFLSig"),
+	}
+	if c.Bool("continue") {
+		rso.StartingTrie = fb.trieDB
+	}
+	st, err := fb.service.ReplayState(start, newSumFetcher(c), rso)
 	if err != nil {
 		return xerrors.Errorf("couldn't replay blocks: %+v", err)
 	}
 	log.Info("Successfully checked and replayed all blocks.")
+	if c.Bool("write") {
+		log.Info("Writing new stateTrie to DB")
+		err := fb.boltDB.Update(func(tx *bbolt.Tx) error {
+			if tx.Bucket(fb.trieBucketName) != nil {
+				err := tx.DeleteBucket(fb.trieBucketName)
+				if err != nil {
+					return fmt.Errorf("while deleting bucket: %v", err)
+				}
+			}
+			bucket, err := tx.CreateBucket(fb.trieBucketName)
+			if err != nil {
+				return fmt.Errorf("while creating bucket: %v", err)
+			}
+			return st.View(func(b trie.Bucket) error {
+				return b.ForEach(func(k, v []byte) error {
+					return bucket.Put(k, v)
+				})
+			})
+		})
+		if err != nil {
+			return fmt.Errorf("couldn't update bucket: %v", err)
+		}
+	}
 
 	return nil
 }
 
 type sumFetcher struct {
 	summarizeBlocks int
-	bff             byzcoin.BlockFetcherFunc
 	totalTXs        int
 	accepted        int
 	seenBlocks      int
@@ -156,11 +161,12 @@ type sumFetcher struct {
 	maxTPS          float64
 	maxBlockSize    int
 	totalBlockSize  int
+	verifyFLSig     bool
+	maxBlocks       int
 }
 
-func (sf sumFetcher) BlockFetcherFunc(sid skipchain.SkipBlockID) (*skipchain.
-	SkipBlock, error) {
-	return sf.bff(sid)
+func newSumFetcher(c *cli.Context) *sumFetcher {
+	return &sumFetcher{summarizeBlocks: c.Int("summarize")}
 }
 
 func (sf sumFetcher) LogNewBlock(sb *skipchain.SkipBlock) {
@@ -370,6 +376,28 @@ func dbRemove(c *cli.Context) error {
 			return fmt.Errorf("couldn't convert %s to int: %v",
 				c.Args().Get(2), err)
 		}
+		if blocks >= latest.Index {
+			return errors.New("cannot delete up the genesis block or earlier")
+		}
+	}
+
+	// Checking the removal of blocks will not lead to an unrecoverable state
+	// of the node.
+	tr := trie.NewDiskDB(fb.boltDB, fb.trieBucketName)
+	err = tr.View(func(b trie.Bucket) error {
+		buf := b.Get([]byte("trieIndexKey"))
+		if buf == nil {
+			return errors.New("couldn't get index key")
+		}
+		if latest.Index-blocks <= int(binary.LittleEndian.Uint32(buf)) {
+			return errors.New("need to keep blocks up to the trie-state." +
+				"\nUse `bcadmin db replay --write` to replay the db to a" +
+				" previous state.")
+		}
+		return nil
+	})
+	if err != nil {
+		return err
 	}
 
 	for i := 0; i < blocks; i++ {
@@ -509,6 +537,7 @@ func dbCheck(c *cli.Context) error {
 type fetchBlocks struct {
 	cl               *skipchain.Client
 	service          *byzcoin.Service
+	skipchain        *skipchain.Service
 	bcID             *skipchain.SkipBlockID
 	local            *onet.LocalTest
 	roster           *onet.Roster
@@ -520,8 +549,8 @@ type fetchBlocks struct {
 	db               *skipchain.SkipBlockDB
 	bucketName       []byte
 	flagCatchupBatch int
-	flagReplayBlocks int
-	flagReplayCont   bool
+	trieDB           trie.DB
+	trieBucketName   []byte
 }
 
 func newFetchBlocks(c *cli.Context) (*fetchBlocks,
@@ -535,13 +564,12 @@ func newFetchBlocks(c *cli.Context) (*fetchBlocks,
 		local:            onet.NewLocalTest(cothority.Suite),
 		bucketName:       []byte("replayStateBucket"),
 		flagCatchupBatch: c.Int("batch"),
-		flagReplayBlocks: c.Int("blocks"),
-		flagReplayCont:   c.Bool("continue"),
 	}
 
 	var err error
 	servers := fb.local.GenServers(1)
 	fb.service = servers[0].Service(byzcoin.ServiceName).(*byzcoin.Service)
+	fb.skipchain = servers[0].Service(skipchain.ServiceName).(*skipchain.Service)
 
 	log.Info("Opening database", c.Args().First())
 	fb.db, fb.boltDB, err = fb.openDB(c.Args().First())
@@ -562,6 +590,10 @@ func newFetchBlocks(c *cli.Context) (*fetchBlocks,
 			return nil, xerrors.Errorf("couldn't check bcID: %+v", err)
 		}
 	}
+
+	fb.trieBucketName = []byte(fmt.Sprintf("ByzCoin_%x", *fb.bcID))
+	fb.trieDB = trie.NewDiskDB(fb.boltDB, fb.trieBucketName)
+
 	return fb, nil
 }
 
@@ -630,11 +662,6 @@ func (fb *fetchBlocks) addURL(url string) error {
 }
 
 func (fb *fetchBlocks) blockFetcher(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
-	fb.flagReplayBlocks--
-	if fb.flagReplayBlocks == 0 {
-		log.Info("reached end of task")
-		return nil, nil
-	}
 	sb := fb.db.GetByID(sib)
 	if sb == nil {
 		return nil, nil

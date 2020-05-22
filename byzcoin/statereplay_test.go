@@ -1,12 +1,15 @@
 package byzcoin
 
 import (
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
+	"go.etcd.io/bbolt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/protobuf"
-	"golang.org/x/xerrors"
 )
 
 // Test the expected use case
@@ -28,19 +31,27 @@ func TestService_StateReplay(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	cb := func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
-		return s.service().skService().GetSingleBlock(&skipchain.GetSingleBlock{ID: sib})
-	}
-
-	st, err := s.service().ReplayState(s.genesis.Hash, s.roster, cb)
+	_, err := s.service().ReplayState(s.genesis.Hash, stdFetcher{},
+		ReplayStateOptions{})
 	require.NoError(t, err)
-	require.Equal(t, 2, st.GetIndex())
 }
 
-func tryReplay(t *testing.T, s *ser, cb BlockFetcherFunc, msg string) {
-	_, err := s.service().ReplayState(s.genesis.Hash, s.roster, cb)
+func tryReplayBlock(t *testing.T, s *ser, sbID skipchain.SkipBlockID, msg string) {
+	_, err := s.service().ReplayState(sbID, stdFetcher{},
+		ReplayStateOptions{MaxBlocks: 1})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), msg)
+}
+
+func forceStoreBlock(s *ser, sb *skipchain.SkipBlock) error {
+	return s.service().db().Update(func(tx *bbolt.Tx) error {
+		buf, err := network.Marshal(sb)
+		if err != nil {
+			return err
+		}
+		sb.Hash = sb.CalculateHash()
+		return tx.Bucket([]byte("Skipchain_skipblocks")).Put(sb.Hash, buf)
+	})
 }
 
 // Test that it catches failing chains and return meaningful errors
@@ -60,115 +71,89 @@ func TestService_StateReplayFailures(t *testing.T) {
 	require.NoError(t, err)
 
 	// 1. error when fetching the genesis block
-	cb := func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
-		return nil, xerrors.New("")
-	}
-	tryReplay(t, s, cb, "fail to get the first block:")
+	tryReplayBlock(t, s, skipchain.SkipBlockID{},
+		"failed to get the first block")
 
 	// 2. not a genesis block for the first block
-	cb = func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
-		sb := skipchain.NewSkipBlock()
-		sb.Index = 1
-		sb.Roster = s.roster
-		return sb, nil
-	}
-	tryReplay(t, s, cb, "must start from genesis block")
+	genesis := s.service().db().GetByID(s.genesis.Hash)
+	tryReplayBlock(t, s, genesis.ForwardLink[0].To,
+		"must start from genesis block")
 
-	// 3. error when getting the next block
-	cb = func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
-		if !sib.Equal(s.genesis.Hash) {
-			return nil, xerrors.New("")
+	// 3. bad payload
+	sb := skipchain.NewSkipBlock()
+	sb.Roster = s.roster
+	sb.Payload = []byte{1, 1, 1, 1, 1}
+	sb.ForwardLink = []*skipchain.ForwardLink{{}}
+	require.NoError(t, forceStoreBlock(s, sb))
+	tryReplayBlock(t, s, sb.Hash, "Error while decoding field")
+
+	// 4. bad data
+	sb.Payload = genesis.Payload
+	sb.Data = []byte{1, 1, 1, 1, 1}
+	require.NoError(t, forceStoreBlock(s, sb))
+	tryReplayBlock(t, s, sb.Hash, "Error while decoding field")
+
+	// 5. non matching hash
+	sb.Data = []byte{}
+	sb.ForwardLink = []*skipchain.ForwardLink{{}}
+	require.NoError(t, forceStoreBlock(s, sb))
+	tryReplayBlock(t, s, sb.Hash, "client transaction hash does not match")
+
+	// 6. mismatching merkle trie root
+	sb = s.service().db().GetByID(s.genesis.SkipChainID())
+	var dHead DataHeader
+	require.NoError(t, protobuf.Decode(sb.Data, &dHead))
+	dHead.TrieRoot = []byte{1, 2, 3}
+	buf, err := protobuf.Encode(&dHead)
+	require.NoError(t, err)
+	sb.Data = buf
+	require.NoError(t, forceStoreBlock(s, sb))
+	tryReplayBlock(t, s, sb.Hash, "merkle tree root doesn't match with trie root")
+
+	// 7. failing instruction
+	sb = s.service().db().GetByID(s.genesis.SkipChainID())
+	var dBody DataBody
+	require.NoError(t, protobuf.Decode(sb.Payload, &dBody))
+	dBody.TxResults = append(dBody.TxResults, TxResult{
+		Accepted: true,
+		ClientTransaction: ClientTransaction{
+			Instructions: Instructions{Instruction{}},
+		},
+	})
+	buf, err = protobuf.Encode(&dBody)
+	require.NoError(t, err)
+	sb.Payload = buf
+	require.NoError(t, protobuf.Decode(sb.Data, &dHead))
+	dHead.ClientTransactionHash = dBody.TxResults.Hash()
+	buf, err = protobuf.Encode(&dHead)
+	require.NoError(t, err)
+	sb.Data = buf
+	require.NoError(t, forceStoreBlock(s, sb))
+	tryReplayBlock(t, s, sb.Hash, "instruction verification failed")
+}
+
+// stdFetcher is a fetcher method that outputs using the onet.log library.
+type stdFetcher struct {
+}
+
+func (sf stdFetcher) LogNewBlock(sb *skipchain.SkipBlock) {
+	log.Infof("Replaying block at index %d", sb.Index)
+}
+
+func (sf stdFetcher) LogWarn(sb *skipchain.SkipBlock, msg, dump string) {
+	log.Info(msg, dump)
+}
+
+func (sf stdFetcher) LogAppliedBlock(sb *skipchain.SkipBlock,
+	head DataHeader, body DataBody) {
+	txAccepted := 0
+	for _, tx := range body.TxResults {
+		if tx.Accepted {
+			txAccepted++
 		}
-
-		return s.service().skService().GetSingleBlock(&skipchain.GetSingleBlock{ID: sib})
 	}
-	tryReplay(t, s, cb, "replay failed to get the next block")
-
-	// 4. bad payload
-	cb = func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
-		sb := skipchain.NewSkipBlock()
-		sb.Roster = s.roster
-		sb.Payload = []byte{1, 1, 1, 1, 1}
-		sb.ForwardLink = []*skipchain.ForwardLink{{}}
-		return sb, nil
-	}
-	tryReplay(t, s, cb, "Error while decoding field")
-
-	// 5. bad data
-	cb = func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
-		sb := skipchain.NewSkipBlock()
-		sb.Roster = s.roster
-		sb.Payload = []byte{}
-		sb.Data = []byte{1, 1, 1, 1, 1}
-		sb.ForwardLink = []*skipchain.ForwardLink{{}}
-		return sb, nil
-	}
-	tryReplay(t, s, cb, "Error while decoding field")
-
-	// 6. non matching hash
-	cb = func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
-		sb := skipchain.NewSkipBlock()
-		sb.Payload = []byte{}
-		sb.ForwardLink = []*skipchain.ForwardLink{{}}
-		return sb, nil
-	}
-	tryReplay(t, s, cb, "client transaction hash does not match")
-
-	// 7. mismatching merkle trie root
-	cb = func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
-		sb, err := s.service().skService().GetSingleBlock(&skipchain.GetSingleBlock{ID: sib})
-		if err != nil {
-			return nil, err
-		}
-
-		var dHead DataHeader
-		err = protobuf.Decode(sb.Data, &dHead)
-		if err != nil {
-			return nil, err
-		}
-
-		dHead.TrieRoot = []byte{1, 2, 3}
-		buf, err := protobuf.Encode(&dHead)
-		require.NoError(t, err)
-		sb.Data = buf
-		return sb, nil
-	}
-	tryReplay(t, s, cb, "merkle tree root doesn't match with trie root")
-
-	// 8. failing instruction
-	cb = func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
-		sb, err := s.service().skService().GetSingleBlock(&skipchain.GetSingleBlock{ID: sib})
-		if err != nil {
-			return nil, err
-		}
-
-		var dBody DataBody
-		err = protobuf.Decode(sb.Payload, &dBody)
-		if err != nil {
-			return nil, err
-		}
-
-		dBody.TxResults = append(dBody.TxResults, TxResult{
-			Accepted: true,
-			ClientTransaction: ClientTransaction{
-				Instructions: Instructions{Instruction{}},
-			},
-		})
-		buf, err := protobuf.Encode(&dBody)
-		require.NoError(t, err)
-		sb.Payload = buf
-
-		var dHead DataHeader
-		err = protobuf.Decode(sb.Data, &dHead)
-		if err != nil {
-			return nil, err
-		}
-
-		dHead.ClientTransactionHash = dBody.TxResults.Hash()
-		buf, err = protobuf.Encode(&dHead)
-		require.NoError(t, err)
-		sb.Data = buf
-		return sb, nil
-	}
-	tryReplay(t, s, cb, "instruction verification failed")
+	t := time.Unix(head.Timestamp/1e9, 0)
+	log.Infof("Got correct block from %s with %d txs, "+
+		"out of which %d txs got accepted",
+		t.String(), len(body.TxResults), txAccepted)
 }
