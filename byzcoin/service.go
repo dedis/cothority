@@ -500,7 +500,7 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 
 	err = s.propagateTx(req, header)
 	if err != nil {
-		return nil, xerrors.New("could not propagate: %v", err)
+		return nil, xerrors.Errorf("could not propagate: %v", err)
 	}
 
 	// Note to my future self: s.txBuffer.add used to be out here. It used to work
@@ -540,7 +540,7 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 					err = s.propagateTx(newReq, header)
 					if err != nil {
 						s.txBuffer.take(string(req.SkipchainID), counter)
-						return nil, xerrors.New("could not propagate: %v", err)
+						return nil, xerrors.Errorf("could not propagate: %v", err)
 					}
 				}
 			}
