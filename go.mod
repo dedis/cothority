@@ -10,13 +10,13 @@ require (
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/daviddengcn/go-colortext v1.0.0 // indirect
-	github.com/deckarep/golang-set v1.7.1 // indirect
-	github.com/edsrzf/mmap-go v1.0.0 // indirect
+	github.com/dedis/cothority_template v0.0.0-20200225102409-b3334a54a82f
 	github.com/ethereum/go-ethereum v1.8.27
 	github.com/go-asn1-ber/asn1-ber v1.4.1 // indirect
 	github.com/go-ldap/ldap/v3 v3.1.7
 	github.com/golang/protobuf v1.3.5 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/prataprc/goparsec v0.0.0-20180806094145-2600a2a4a410
 	github.com/qantik/qrgo v0.0.0-20160917134849-0c6b902c59f6
