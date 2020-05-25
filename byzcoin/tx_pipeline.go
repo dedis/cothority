@@ -350,10 +350,7 @@ func (p *txPipeline) processTxs(initialState *txProcessorState) {
 				}
 
 				currentVersion = version
-			//TODO : change this name to create block signal
 			case <-createBlockSignal:
-				// update the interval every time because it might've changed
-				createBlockSignal = getInterval()
 
 				if proposing {
 					// Wait for the end of the block creation to prevent too many transactions
@@ -442,6 +439,8 @@ func (p *txPipeline) processTxs(initialState *txProcessorState) {
 				//createBlockSignal = make(chan(time.Time))
 
 			}
+			// Restart the signal interval
+			createBlockSignal = getInterval()
 		}
 	}()
 }
