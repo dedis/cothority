@@ -15,7 +15,7 @@ algorithm.
 
 It is the basis for the ByzCoinX protocol. For further background and technical
 details, please refer to the
-[research paper](https://eprint.iacr.org/2017/406.pdf).
+[research paper](https://eprint.iacr.org/2017/406).
 
 You can read more about BLS signature by refering to
 [the paper](https://crypto.stanford.edu/~dabo/pubs/papers/BLSmultisig.html).

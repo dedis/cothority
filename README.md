@@ -14,7 +14,8 @@ referred to as a _collective authority_ or _cothority_. Individual servers are
 called _cothority servers_ or _conodes_. The code in this repository allows you
 to access the services of a cothority and/or run your own conode. The cothority
 project is developed and maintained by the [DEDIS](http://dedis.epfl.ch) lab at
-[EPFL](https://epfl.ch). To read more about cothorites you can have a look at [the following paper](https://arxiv.org/abs/1503.08768).
+[EPFL](https://epfl.ch). To read more about cothorites you can have a look at
+[the following paper](https://dedis.cs.yale.edu/dissent/papers/witness-abs/).
 
 This is an overview of this README:
 - [Documentation](#documentation) with links to different parts of the cothority

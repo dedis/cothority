@@ -2,32 +2,32 @@ package byzcoin
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
-	"time"
-
-	"go.etcd.io/bbolt"
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
+	"go.dedis.ch/kyber/v3/pairing"
 	"golang.org/x/xerrors"
 
 	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/kyber/v3/pairing"
-
 	"go.dedis.ch/cothority/v3/skipchain"
-	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
 )
 
-// BlockFetcherFunc is a function that takes the roster and the block ID as parameter
-// and returns the block or an error
-type BlockFetcherFunc func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error)
-
-// BlockFetcher is an interface that can be passed to ReplayStateLog so that
+// ReplayStateLog is an interface that can be passed to ReplayState so that
 // the output of the replay can be adapted to what the user wants.
-type BlockFetcher interface {
-	BlockFetcherFunc(sid skipchain.SkipBlockID) (*skipchain.SkipBlock, error)
+type ReplayStateLog interface {
 	LogNewBlock(sb *skipchain.SkipBlock)
 	LogAppliedBlock(sb *skipchain.SkipBlock, head DataHeader, body DataBody)
 	LogWarn(sb *skipchain.SkipBlock, msg, dump string)
+}
+
+// ReplayStateOptions is a placeholder for all future options.
+// If you add a new option, be sure to keep the empty value as default.
+type ReplayStateOptions struct {
+	MaxBlocks    int
+	VerifyFLSig  bool
+	StartingTrie trie.DB
 }
 
 func replayError(sb *skipchain.SkipBlock, err error) error {
@@ -38,76 +38,67 @@ func replayError(sb *skipchain.SkipBlock, err error) error {
 // the callback returns nil or a block without forward links.
 // If a client wants to replay the states until the block at index x, the callback function
 // must be implemented to return nil when the next block has the index x.
-func (s *Service) ReplayState(id skipchain.SkipBlockID, ro *onet.Roster, cb BlockFetcherFunc) (ReadOnlyStateTrie, error) {
-	return s.ReplayStateCont(id, cb)
-}
-
-var replayTrie = "replayTrie"
-
-// ReplayStateDB creates a stateTrie tied to the boltdb and the bucket. Every
-// change to the statetrie will be reflected in the db, allowing for saving
-// and resuming replays.
-func (s *Service) ReplayStateDB(db *bbolt.DB, bucket []byte,
-	genesis *skipchain.SkipBlock) (int, error) {
-	if len(s.stateTries) == 0 {
-		s.stateTries = make(map[string]*stateTrie)
+func (s *Service) ReplayState(id skipchain.SkipBlockID,
+	rlog ReplayStateLog, opt ReplayStateOptions) (trie.DB, error) {
+	sb := s.db().GetByID(id)
+	if sb == nil {
+		return nil, fmt.Errorf("failed to get the first block")
 	}
-	var st *stateTrie
-	if genesis == nil {
-		var err error
-		st, err = loadStateTrie(db, bucket)
-		if err != nil {
-			return 0, xerrors.Errorf("couldn't load state trie: %+v", err)
-		}
-	} else {
-		var dBody DataBody
-		err := protobuf.Decode(genesis.Payload, &dBody)
-		if err != nil {
-			return 0, xerrors.Errorf("couldn't decode payload: %+v", err)
-		}
-		nonce, err := loadNonceFromTxs(dBody.TxResults)
-		if err != nil {
-			return 0, xerrors.Errorf("couldn't get nonce: %+v", err)
-		}
-		st, err = newStateTrie(db, bucket, nonce)
-		if err != nil {
-			return 0, xerrors.Errorf("couldn't get new state trie: %+v", err)
-		}
+	if sb.Index > 0 {
+		return nil, errors.New("must start from genesis block")
 	}
-	s.stateTries[replayTrie] = st
-	return st.GetIndex(), nil
-}
 
-// ReplayStateContLog builds the state changes from the genesis of the given
-// skipchain ID until the callback returns nil or a block without forward
-// links.
-// If a client wants to replay the states until the block at index x, the
-// callback function must be implemented to return nil when the next block has
-// the index x.
-func (s *Service) ReplayStateContLog(id skipchain.SkipBlockID,
-	bf BlockFetcher) (ReadOnlyStateTrie, error) {
-	sb, err := bf.BlockFetcherFunc(id)
+	// Create a memory state trie that can be thrown away, but which is much
+	// faster than the disk state trie.
+	var dBody DataBody
+	err := protobuf.Decode(sb.Payload, &dBody)
 	if err != nil {
-		return nil, xerrors.Errorf("fail to get the first block: %v", err)
+		return nil, replayError(sb, err)
+	}
+	nonce, err := loadNonceFromTxs(dBody.TxResults)
+	if err != nil {
+		return nil, replayError(sb, err)
+	}
+	st, err := newMemStateTrie(nonce)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create memory stateTrie: %v", err)
 	}
 
-	var st *stateTrie
-	if len(s.stateTries) > 0 {
-		st = s.stateTries[replayTrie]
-	}
-	if st == nil {
-		if sb.Index != 0 {
-			// It could be possible to start from a non-genesis block but you need to download
-			// the state trie first from a conode in addition to the block
-			return nil, xerrors.Errorf("must start from genesis block but found index %d", sb.Index)
+	if opt.StartingTrie != nil {
+		err := st.Trie.DB().Update(func(mem trie.Bucket) error {
+			return opt.StartingTrie.View(func(db trie.Bucket) error {
+				return db.ForEach(func(k, v []byte) error {
+					return mem.Put(k, v)
+				})
+			})
+		})
+		if err != nil {
+			return nil, fmt.Errorf("couldn't copy db-trie to mem-trie: %v", err)
 		}
-	} else if st.GetIndex()+1 != sb.Index {
-		return nil, xerrors.Errorf("got a skipblock with index %d for trie with"+
-			" index %d", sb.Index, st.GetIndex()+1)
+		log.LLvl2("Getting latest block:", st.GetIndex()+1)
+		rep, err := s.skService().GetSingleBlockByIndex(&skipchain.
+			GetSingleBlockByIndex{
+			Genesis: sb.SkipChainID(),
+			Index:   st.GetIndex() + 1,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("couldn't get latest block from trie: %v",
+				err)
+		}
+		sb = rep.SkipBlock
 	}
 
-	for sb != nil {
-		bf.LogNewBlock(sb)
+	if opt.MaxBlocks < 0 {
+		latest, err := s.db().GetLatest(sb)
+		if err != nil {
+			return nil, fmt.Errorf("couldn't fetch latest block: %v", err)
+		}
+		opt.MaxBlocks = latest.Index + 1
+	}
+
+	// Start processing the blocks
+	for block := 0; block < opt.MaxBlocks; block++ {
+		rlog.LogNewBlock(sb)
 
 		if sb.Payload != nil {
 			var dBody DataBody
@@ -125,17 +116,6 @@ func (s *Service) ReplayStateContLog(id skipchain.SkipBlockID,
 
 			if !bytes.Equal(dHead.ClientTransactionHash, dBody.TxResults.Hash()) {
 				return nil, replayError(sb, xerrors.New("client transaction hash does not match"))
-			}
-
-			if sb.Index == 0 && st == nil {
-				nonce, err := loadNonceFromTxs(dBody.TxResults)
-				if err != nil {
-					return nil, replayError(sb, err)
-				}
-				st, err = newMemStateTrie(nonce)
-				if err != nil {
-					return nil, replayError(sb, err)
-				}
 			}
 
 			sst := st.MakeStagingStateTrie()
@@ -181,19 +161,31 @@ func (s *Service) ReplayStateContLog(id skipchain.SkipBlockID,
 			}
 
 			log.Lvl2("Checking links for block", sb.Index)
-			pubs := sb.Roster.ServicePublics(skipchain.ServiceName)
 			for j, fl := range sb.ForwardLink {
+				var errStr string
 				if fl.From == nil || fl.To == nil ||
 					len(fl.From) == 0 || len(fl.To) == 0 {
-					bf.LogWarn(sb,
-						fmt.Sprintf("Forward-link %d looks broken", j),
-						fmt.Sprintf("%+v", fl))
+					errStr = "is missing"
+					continue
+				} else if !fl.From.Equal(sb.Hash) {
+					errStr = "from-field doesn't match block-hash"
+				} else if sbTmp := s.db().GetByID(fl.To); sbTmp == nil {
+					errStr = "to-field points to non-existing block"
+				}
+				if errStr != "" {
+					rlog.LogWarn(sb, fmt.Sprintf(
+						"bad forward-link %d/%d: %s", j, len(sb.ForwardLink),
+						errStr), fmt.Sprintf("%+v", fl))
 					continue
 				}
-				err = fl.VerifyWithScheme(pairing.NewSuiteBn256(), pubs, sb.SignatureScheme)
-				if err != nil {
-					log.Errorf("Found error in forward-link: '%s' - #%d: %+v", err, j, fl)
-					return nil, xerrors.Errorf("invalid forward-link: %v", err)
+
+				if opt.VerifyFLSig {
+					pubs := sb.Roster.ServicePublics(skipchain.ServiceName)
+					err = fl.VerifyWithScheme(pairing.NewSuiteBn256(), pubs, sb.SignatureScheme)
+					if err != nil {
+						log.Errorf("Found error in forward-link: '%s' - #%d: %+v", err, j, fl)
+						return nil, xerrors.Errorf("invalid forward-link: %v", err)
+					}
 				}
 			}
 
@@ -201,59 +193,20 @@ func (s *Service) ReplayStateContLog(id skipchain.SkipBlockID,
 			if err != nil {
 				return nil, replayError(sb, err)
 			}
-			bf.LogAppliedBlock(sb, dHead, dBody)
+			rlog.LogAppliedBlock(sb, dHead, dBody)
 		}
 
-		if len(sb.ForwardLink) > 0 {
+		if len(sb.ForwardLink) == 0 {
+			break
+		} else {
 			// The level 0 forward link must be used as we need to rebuild the global
 			// states for each block.
-			sb, err = bf.BlockFetcherFunc(sb.ForwardLink[0].To)
-			if err != nil {
-				return nil, xerrors.Errorf("replay failed to get the next block: %v", err)
+			sb = s.db().GetByID(sb.ForwardLink[0].To)
+			if sb == nil {
+				return nil, errors.New("replay failed to get the next block")
 			}
-		} else {
-			sb = nil
 		}
 	}
 
-	return st, nil
-}
-
-// ReplayStateCont is a wrapper over ReplayStateContLog and outputs every
-// block to the std-output.
-func (s *Service) ReplayStateCont(id skipchain.SkipBlockID,
-	cb BlockFetcherFunc) (ReadOnlyStateTrie, error) {
-	return s.ReplayStateContLog(id, stdFetcher{cb})
-}
-
-// stdFetcher is a fetcher method that outputs using the onet.log library.
-type stdFetcher struct {
-	cb BlockFetcherFunc
-}
-
-func (sf stdFetcher) BlockFetcherFunc(sib skipchain.SkipBlockID) (*skipchain.
-	SkipBlock, error) {
-	return sf.cb(sib)
-}
-
-func (sf stdFetcher) LogNewBlock(sb *skipchain.SkipBlock) {
-	log.Infof("Replaying block at index %d", sb.Index)
-}
-
-func (sf stdFetcher) LogWarn(sb *skipchain.SkipBlock, msg, dump string) {
-	log.Infof(msg, dump)
-}
-
-func (sf stdFetcher) LogAppliedBlock(sb *skipchain.SkipBlock,
-	head DataHeader, body DataBody) {
-	txAccepted := 0
-	for _, tx := range body.TxResults {
-		if tx.Accepted {
-			txAccepted++
-		}
-	}
-	t := time.Unix(head.Timestamp/1e9, 0)
-	log.Infof("Got correct block from %s with %d txs, "+
-		"out of which %d txs got accepted",
-		t.String(), len(body.TxResults), txAccepted)
+	return st.DB(), nil
 }

@@ -76,9 +76,9 @@ A number of papers have been written that are implemented partially or fully
 in the cothority:
 
 - SCARAB (Onchain-Secrets): Hidden in plain sight
-https://eprint.iacr.org/2018/209.pdf
+https://eprint.iacr.org/2018/209
 - OmniLedger: A Secure, Scale-Out, Decentralized Ledger via Sharding.
-https://eprint.iacr.org/2017/406.pdf
+https://eprint.iacr.org/2017/406
 - MedCo: Enabling Privacy-Conscious Exploration of Distributed Clinical and Genomic Data. https://infoscience.epfl.ch/record/232605/files/GenoPri17_paper_6_CAMERA_READY.pdf?version=1
 - Scalable Bias-Resistant Distributed Randomness. https://infoscience.epfl.ch/record/230355/files
 - CHAINIAC: Proactive Software-Update Transparency via Collectively Signed Skipchains and Verified Builds. https://infoscience.epfl.ch/record/229405/files/usenixsec17-final.pdf?version=1

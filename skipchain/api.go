@@ -259,23 +259,39 @@ func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply 
 // GetUpdateChainLevel will return the chain of SkipBlocks going from the 'latest' to
 // the most current SkipBlock of the chain. It takes a roster that knows the
 // 'latest' skipblock and the id (=hash) of the latest known skipblock.
-//   - roster: which nodes to contact to get updates
+//   - initRoster: which nodes to contact to get updates
 //   - latest: the latest known block
 //   - maxLevel: what maximum height to use. -1 means the highest height available.
 //     0 means only direct forward links, n means level-n forwardlinks.
 //   - maxBlocks: how many blocks to return at maximum.
-func (c *Client) GetUpdateChainLevel(roster *onet.Roster, latest SkipBlockID,
-	maxLevel int, maxBlocks int) (update []*SkipBlock, err error) {
+func (c *Client) GetUpdateChainLevel(initRoster *onet.Roster,
+	latest SkipBlockID, maxLevel int,
+	maxBlocks int) (update []*SkipBlock, err error) {
+	roster := initRoster
 	for {
 		r2 := &GetUpdateChainReply{}
 
+		mb := 0
+		if maxBlocks > 0 {
+			mb = maxBlocks - len(update)
+			if mb == 0 {
+				return update, nil
+			}
+		}
 		node, err := c.SendProtobufParallel(roster.List, &GetUpdateChain{
 			LatestID:  latest,
 			MaxHeight: maxLevel,
-			MaxBlocks: maxBlocks - len(update),
+			MaxBlocks: mb,
 		}, r2, c.options)
 		if err != nil {
-			return nil, fmt.Errorf("couldn't get update chain; last error: %v", err)
+			same, err := roster.Equal(initRoster)
+			if same || err != nil {
+				return nil, fmt.Errorf("couldn't get update chain; last error: %v", err)
+			}
+			log.Warn("None of the nodes in", roster.List, "answered, "+
+				"trying with initial roster")
+			roster = initRoster
+			continue
 		}
 
 		log.Lvlf3("Got %d blocks from node %s", len(r2.Update), node)
@@ -342,7 +358,7 @@ func (c *Client) GetUpdateChainLevel(roster *onet.Roster, latest SkipBlockID,
 		if i, _ := last.Roster.Search(node.ID); i < 0 {
 			// Node is not part of the roster of the last block it sent back
 			// -> re-fetch block using new roster.
-			log.Warn("Got a wrong block from node", node)
+			log.Warn("Got a possibly outdated block from node", node)
 			latest = last.Hash
 			roster = last.Roster
 			// Remove latest block, as the new roster will give a new node

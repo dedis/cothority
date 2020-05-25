@@ -2252,7 +2252,7 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 		if err != nil {
 			tx.Accepted = false
 			txOut = append(txOut, tx)
-			log.Error(s.ServerIdentity(), err)
+			log.Warn(s.ServerIdentity(), err)
 		} else {
 			// We would like to be able to check if this txn is so big it could never fit into a block,
 			// and if so, drop it. But we can't with the current API of createStateChanges.

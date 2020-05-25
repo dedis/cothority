@@ -5,7 +5,7 @@
 # Options:
 #   -b   re-builds bcadmin package
 
-DBG_TEST=2
+DBG_TEST=1
 DBG_SRV=1
 DBG_BCADMIN=2
 
@@ -84,15 +84,15 @@ testDbReplay(){
   testOK runBA db catchup conode.db $bcID http://localhost:2003
   testGrep "Replaying block at index 0" runBA db replay conode.db $bcID
 
-  testOK runBA mint $bc $key $keyPub 1000
-  testOK runBA mint $bc $key $keyPub 1000
-
   # replay with more than 1 block
+  testOK runBA mint $bc $key $keyPub 1000
+  testOK runBA mint $bc $key $keyPub 1000
   runBA db catchup conode.db $bcID http://localhost:2003
-  testNGrep "Replaying block at index 0" runBA db replay conode.db $bcID --cont
-  testReGrep "Replaying block at index 1"
   testGrep "Replaying block at index 0" runBA db replay conode.db $bcID
-  testOK runBA db replay conode.db $bcID --cont
+  testGrep "index 0" runBA db catchup conode.db $bcID --write --blocks 1
+  testReNGrep "index 1"
+  testNGrep "index 0" runBA db catchup conode.db $bcID --write --continue
+  testReGrep "index 1"
 }
 
 testDbMerge(){
@@ -322,7 +322,7 @@ testAddDarc(){
   testGrep "${ID:5:${#ID}-0}" runBA darc show --darc "$ID"
 
   # checks the --shortPrint option
-  OUTRES=$(runBA darc add --shortPrint)
+  OUTRES=$(runBA0 darc add --shortPrint)
   matchOK "$OUTRES" "darc:[0-9a-f]{64}
 \[ed25519:[0-9a-f]{64}\]" 
 }
@@ -478,7 +478,7 @@ runBA(){
 }
 
 runBA0(){
-  dbgRun ./bcadmin -c config/ --debug 0 "$@"
+  ./bcadmin -c config/ --debug 0 "$@"
 }
 
 testQR() {

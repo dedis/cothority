@@ -656,18 +656,28 @@ var cmds = cli.Commands{
 				Usage:  "Replay a chain and check the global state is consistent",
 				Action: dbReplay,
 				Flags: []cli.Flag{
-					cli.BoolFlag{
-						Name:  "continue, cont",
-						Usage: "continue an aborted replay",
-					},
 					cli.IntFlag{
 						Name:  "blocks",
 						Usage: "how many blocks to apply",
+						Value: -1,
 					},
 					cli.IntFlag{
 						Name:  "summarize, sum",
 						Usage: "summarize this many blocks in output",
 						Value: 1,
+					},
+					cli.BoolFlag{
+						Name:  "verifyFLSig",
+						Usage: "turns on forward-link signature verification",
+					},
+					cli.BoolFlag{
+						Name: "continue",
+						Usage: "take the existing trie and replay from the" +
+							" latest block",
+					},
+					cli.BoolFlag{
+						Name:  "write",
+						Usage: "write the new trie to the db",
 					},
 				},
 			},
