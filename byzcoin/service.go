@@ -373,6 +373,8 @@ func (s *Service) prepareTxResponse(req *AddTxRequest, tx *TxResult) (*AddTxResp
 	return resp, nil
 }
 
+// propagateTx is used by AddTransaction to handle the protocol creation and
+// the protocol start.
 func (s *Service) propagateTx(req *AddTxRequest, header *DataHeader) error {
 	leader, err := s.getLeader(req.SkipchainID)
 	if err != nil {
