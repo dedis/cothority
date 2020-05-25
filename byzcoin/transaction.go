@@ -715,4 +715,3 @@ func (sc StateAction) String() string {
 }
 
 const defaultMaxBufferSize = 1000
-

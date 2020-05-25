@@ -401,14 +401,14 @@ func (p *txPipeline) processTxs(initialState *txProcessorState) {
 			case tx, ok := <-p.ctxChan:
 
 				/*
-				select {
-				// This case has a higher priority so we force the select to go through it
-				// first.
-				case <-createBlockSignal:
-					createBlockSignal = time.After(0)
-					break
-				default:
-				}
+					select {
+					// This case has a higher priority so we force the select to go through it
+					// first.
+					case <-createBlockSignal:
+						createBlockSignal = time.After(0)
+						break
+					default:
+					}
 				*/
 
 				if !ok {
@@ -440,7 +440,6 @@ func (p *txPipeline) processTxs(initialState *txProcessorState) {
 				}
 
 				//createBlockSignal = make(chan(time.Time))
-
 
 			}
 		}
