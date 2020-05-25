@@ -373,68 +373,6 @@ func (s *Service) prepareTxResponse(req *AddTxRequest, tx *TxResult) (*AddTxResp
 	return resp, nil
 }
 
-// propagateTx is used by AddTransaction to handle the protocol creation and
-// the protocol start.
-func (s *Service) propagateTx(req *AddTxRequest, header *DataHeader) error {
-	leader, err := s.getLeader(req.SkipchainID)
-	if err != nil {
-		return xerrors.Errorf("Error getting the leader: %v", err)
-	}
-
-	if s.ServerIdentity().Equal(leader) {
-		s.txPipeline.ctxChan <- req.Transaction
-		if header.Version < req.Version {
-			s.txPipeline.needUpgrade <- req.Version
-		}
-	} else {
-		latest, err := s.db().GetLatestByID(req.SkipchainID)
-		if err != nil {
-			log.Errorf("Error while searching for %x", req.SkipchainID[:])
-			log.Error("DB is in bad state and cannot find skipchain anymore."+
-				" This function should never be called on a skipchain that does not exist.", err)
-			return xerrors.Errorf("reading latest: %v", err)
-		}
-
-		//create new roster with self and leader
-		list := []*network.ServerIdentity{s.ServerIdentity(), leader}
-		newRost := onet.NewRoster(list)
-		tree := newRost.GenerateNaryTree(len(newRost.List))
-
-		proto, err := s.CreateProtocol(rollupTxProtocol, tree)
-		if err != nil {
-			log.Error(s.ServerIdentity(), "Protocol creation failed with error."+
-				" This panic indicates that there is most likely a programmer error,"+
-				" e.g., the protocol does not exist."+
-				" Hence, we cannot recover from this failure without putting"+
-				" the server in a strange state, so we panic.", err)
-			return xerrors.Errorf("creating protocol: %v", err)
-		}
-
-		root := proto.(*RollupTxProtocol)
-		root.SkipchainID = req.SkipchainID
-		root.LatestID = latest.Hash
-		root.NewTx = req
-		err = proto.Start()
-		if err != nil {
-			return fmt.Errorf("couldn't start protocol: %v", err)
-		}
-		if err := <-root.DoneChan; err != nil {
-			log.Lvlf2("root failed with %v - need to request a view-change",
-				err)
-			var err error
-			if req.Flags&1 > 0 {
-				err = s.startViewChange(req.SkipchainID, nil)
-			} else {
-				err = s.startViewChange(req.SkipchainID, &req.Transaction)
-			}
-			if err != nil {
-				return fmt.Errorf("leader failed and couldn't contact other nodes: %v", err)
-			}
-		}
-	}
-	return nil
-}
-
 // AddTransaction requests to apply a new transaction to the ledger. Note
 // that unlike other service APIs, it is *not* enough to only check for the
 // error value to find out if an error has occured. The caller must also check
@@ -498,11 +436,64 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 	//Either send the transaction to the leader, or, if this node is the leader, directly send it to ctxChan.
 	//For every new tx create a new protocol, like in skipchain
 
+	leader, err := s.getLeader(req.SkipchainID)
+	if err != nil {
+		return nil, xerrors.Errorf("Error getting the leader: %v", err)
+	}
+
 	ctxHash := req.Transaction.Instructions.Hash()
 
-	err = s.propagateTx(req, header)
-	if err != nil {
-		return nil, xerrors.Errorf("could not propagate: %v", err)
+	if s.ServerIdentity().Equal(leader) {
+		s.txPipeline.ctxChan <- req.Transaction
+		if header.Version < req.Version {
+			s.txPipeline.needUpgrade <- req.Version
+		}
+	} else {
+		latest, err := s.db().GetLatestByID(req.SkipchainID)
+		if err != nil {
+			log.Errorf("Error while searching for %x", req.SkipchainID[:])
+			log.Error("DB is in bad state and cannot find skipchain anymore."+
+				" This function should never be called on a skipchain that does not exist.", err)
+			return nil, xerrors.Errorf("reading latest: %v", err)
+		}
+
+		//create new roster with self and leader
+		list := []*network.ServerIdentity{s.ServerIdentity(), leader}
+		newRost := onet.NewRoster(list)
+		tree := newRost.GenerateNaryTree(len(newRost.List))
+
+		proto, err := s.CreateProtocol(rollupTxProtocol, tree)
+		if err != nil {
+			log.Error(s.ServerIdentity(), "Protocol creation failed with error."+
+				" This panic indicates that there is most likely a programmer error,"+
+				" e.g., the protocol does not exist."+
+				" Hence, we cannot recover from this failure without putting"+
+				" the server in a strange state, so we panic.", err)
+			return nil, xerrors.Errorf("creating protocol: %v", err)
+		}
+
+		root := proto.(*RollupTxProtocol)
+		root.SkipchainID = req.SkipchainID
+		root.LatestID = latest.Hash
+		root.NewTx = req
+		err = proto.Start()
+		if err != nil {
+			return nil, fmt.Errorf("couldn't start protocol: %v", err)
+		}
+		if err := <-root.DoneChan; err != nil {
+			log.Lvlf2("root failed with %v - need to request a view-change",
+				err)
+			var err error
+			if req.Flags&1 > 0 {
+				err = s.startViewChange(req.SkipchainID, nil)
+			} else {
+				err = s.startViewChange(req.SkipchainID, &req.Transaction)
+			}
+			if err != nil {
+				return nil, fmt.Errorf(
+					"leader failed and couldn't contact other nodes: %v", err)
+			}
+		}
 	}
 
 	// Note to my future self: s.txBuffer.add used to be out here. It used to work
@@ -526,28 +517,6 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		defer s.notifications.unregisterForBlocks(ch)
 
 		s.txBuffer.add(string(req.SkipchainID), req.Transaction)
-		counter := 0
-		if len(s.txBuffer.txsMap) != 0 {
-			for _, v := range s.txBuffer.txsMap {
-				for _, ctx := range v {
-					counter++
-					newReq := &AddTxRequest{
-						Version:       req.Version,
-						SkipchainID:   req.SkipchainID,
-						Transaction:   ctx,
-						InclusionWait: req.InclusionWait,
-						ProofFrom:     req.ProofFrom,
-						Flags:         req.Flags,
-					}
-					err = s.propagateTx(newReq, header)
-					if err != nil {
-						s.txBuffer.take(string(req.SkipchainID), counter)
-						return nil, xerrors.Errorf("could not propagate: %v", err)
-					}
-				}
-			}
-		}
-		s.txBuffer.take(string(req.SkipchainID), counter)
 
 		// In case we don't have any blocks, because there are no transactions,
 		// have a hard timeout in twice the minimal expected time to create the
