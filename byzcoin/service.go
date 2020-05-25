@@ -127,12 +127,6 @@ type Service struct {
 	pollChanMut sync.Mutex
 	pollChanWG  sync.WaitGroup
 
-	// NOTE: If we have a lot of skipchains, then using mutex most likely
-	// will slow down our service, an improvement is to go-routines to
-	// store transactions. But there is more management overhead, e.g.,
-	// restarting after shutdown, answer getTxs requests and so on.
-	txBuffer txBuffer
-
 	txPipeline *txPipeline
 
 	// contracts map kinds to kind specific verification functions
@@ -516,7 +510,7 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		ch := s.notifications.registerForBlocks()
 		defer s.notifications.unregisterForBlocks(ch)
 
-		s.txBuffer.add(string(req.SkipchainID), req.Transaction)
+		//s.txBuffer.add(string(req.SkipchainID), req.Transaction)
 
 		// In case we don't have any blocks, because there are no transactions,
 		// have a hard timeout in twice the minimal expected time to create the
@@ -3049,7 +3043,6 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor:   onet.NewServiceProcessor(c),
 		contracts:          globalContractRegistry.clone(),
-		txBuffer:           newTxBuffer(),
 		storage:            &bcStorage{},
 		darcToSc:           make(map[string]skipchain.SkipBlockID),
 		stateChangeCache:   newStateChangeCache(),

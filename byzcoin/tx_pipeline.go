@@ -321,7 +321,7 @@ func (p *txPipeline) processTxs(initialState *txProcessorState) {
 	p.wg.Add(1)
 	go func() {
 		defer p.wg.Done()
-		intervalChan := getInterval()
+		createBlockSignal := getInterval()
 		var txHashes [][]byte
 	leaderLoop:
 		for {
@@ -351,9 +351,9 @@ func (p *txPipeline) processTxs(initialState *txProcessorState) {
 
 				currentVersion = version
 			//TODO : change this name to create block signal
-			case <-intervalChan:
+			case <-createBlockSignal:
 				// update the interval every time because it might've changed
-				intervalChan = getInterval()
+				createBlockSignal = getInterval()
 
 				if proposing {
 					// Wait for the end of the block creation to prevent too many transactions
@@ -399,14 +399,17 @@ func (p *txPipeline) processTxs(initialState *txProcessorState) {
 				}(inState)
 
 			case tx, ok := <-p.ctxChan:
+
+				/*
 				select {
 				// This case has a higher priority so we force the select to go through it
 				// first.
-				case <-intervalChan:
-					intervalChan = time.After(0)
+				case <-createBlockSignal:
+					createBlockSignal = time.After(0)
 					break
 				default:
 				}
+				*/
 
 				if !ok {
 					log.Lvl3("stopping txs processor")
@@ -435,6 +438,9 @@ func (p *txPipeline) processTxs(initialState *txProcessorState) {
 					// it might be getting updated and then append newStates.
 					currentState = append(currentState[:len(currentState)-1], newStates...)
 				}
+
+				//createBlockSignal = make(chan(time.Time))
+
 
 			}
 		}

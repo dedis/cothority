@@ -76,55 +76,6 @@ func TestTransaction_Signing(t *testing.T) {
 	require.NoError(t, ctx.Instructions[0].Verify(sst, ctxHash))
 }
 
-func TestTransactionBuffer_Add(t *testing.T) {
-	b := newTxBuffer()
-	key := "abc"
-	key2 := "abcd"
-
-	for i := 0; i < defaultMaxBufferSize*2; i++ {
-		b.add(key, ClientTransaction{})
-		b.add(key2, ClientTransaction{})
-	}
-
-	require.Equal(t, defaultMaxBufferSize, len(b.txsMap[key]))
-	require.Equal(t, defaultMaxBufferSize, len(b.txsMap[key2]))
-}
-
-func TestTransactionBuffer_Take(t *testing.T) {
-	b := newTxBuffer()
-	key := "abc"
-
-	for i := 0; i < 100; i++ {
-		b.add(key, ClientTransaction{})
-	}
-
-	txs := b.take(key, 12)
-	require.Equal(t, 12, len(txs))
-	require.Equal(t, 88, len(b.txsMap[key]))
-
-	txs = b.take(key, 100)
-	require.Equal(t, 88, len(txs))
-	_, ok := b.txsMap[key]
-	require.False(t, ok)
-
-	txs = b.take(key, 100)
-	require.Equal(t, 0, len(txs))
-}
-
-func TestTransactionBuffer_TakeDisabled(t *testing.T) {
-	b := newTxBuffer()
-	key := "abc"
-
-	for i := 0; i < 10; i++ {
-		b.add(key, ClientTransaction{})
-	}
-
-	txs := b.take(key, -1)
-	require.Equal(t, 10, len(txs))
-	_, ok := b.txsMap[key]
-	require.False(t, ok)
-}
-
 func TestInstruction_DeriveIDArg(t *testing.T) {
 	inst := Instruction{
 		InstanceID: NewInstanceID([]byte("new instance")),
