@@ -187,12 +187,12 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		}
 		return nil
 	} else if t.Ballot != nil {
-		zero := cothority.Suite.Point()
+		null := cothority.Suite.Point().Null()
 		if t.Ballot.Alpha == nil || t.Ballot.Beta == nil {
 			return errors.New("alpha and beta must be non-nil")
 		}
-		if t.Ballot.Alpha.Equal(zero) || t.Ballot.Beta.Equal(zero) {
-			return errors.New("alpha and beta must be non-zero")
+		if t.Ballot.Alpha.Equal(null) || t.Ballot.Beta.Equal(null) {
+			return errors.New("alpha and beta must be null points")
 		}
 
 		// t.User is trusted at this point, so make sure that they did not try to sneak
@@ -203,7 +203,7 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 
 		election, err := GetElection(s, genesis, false, t.User)
 		if err != nil {
-			return err
+			return fmt.Errorf("could not get election: %v", err)
 		}
 
 		now := time.Now()

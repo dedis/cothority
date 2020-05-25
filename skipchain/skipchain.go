@@ -1255,7 +1255,7 @@ func (s *Service) bftForwardLinkLevel0(msg, data []byte) bool {
 			g := func(to []byte, newest *SkipBlock) (out bool) {
 				defer func() {
 					if re := recover(); re != nil {
-						log.Error(fmt.Sprintf("Verification function panic: %v", re))
+						log.Errorf("Verification function panic: %v", re)
 						out = false
 					}
 				}()
