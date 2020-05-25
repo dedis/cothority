@@ -91,7 +91,7 @@ func TestService(t *testing.T) {
 		},
 		MoreInfoLang: map[string]string{
 			"en": "https://epfl.ch/elections",
-			"fr": "httsp://epfl.ch/votations",
+			"fr": "https://epfl.ch/votations",
 		},
 		Creator: idAdmin,
 		Users:   []uint32{idUser1, idUser2, idUser3, idAdmin},
@@ -344,7 +344,7 @@ func TestBadEncryption(t *testing.T) {
 		},
 		MoreInfoLang: map[string]string{
 			"en": "https://epfl.ch/elections",
-			"fr": "httsp://epfl.ch/votations",
+			"fr": "https://epfl.ch/votations",
 		},
 		Creator: idAdmin,
 		Users:   []uint32{idUser1, idUser2, idUser3, idAdmin},
@@ -468,7 +468,7 @@ func TestAfterEnd(t *testing.T) {
 		},
 		MoreInfoLang: map[string]string{
 			"en": "https://epfl.ch/elections",
-			"fr": "httsp://epfl.ch/votations",
+			"fr": "https://epfl.ch/votations",
 		},
 		Creator: idAdmin,
 		Users:   []uint32{idUser1, idUser2, idUser3, idAdmin},
@@ -541,7 +541,7 @@ func TestBeforeStart(t *testing.T) {
 		},
 		MoreInfoLang: map[string]string{
 			"en": "https://epfl.ch/elections",
-			"fr": "httsp://epfl.ch/votations",
+			"fr": "https://epfl.ch/votations",
 		},
 		Creator: idAdmin,
 		Users:   []uint32{idUser1, idUser2, idUser3, idAdmin},
