@@ -10,6 +10,7 @@ require (
 	github.com/btcsuite/btcd v0.20.1-beta // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
+	github.com/daviddengcn/go-colortext v1.0.0 // indirect
 	github.com/deckarep/golang-set v1.7.1 // indirect
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/ethereum/go-ethereum v1.8.27
@@ -28,13 +29,13 @@ require (
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/urfave/cli v1.22.3
 	go.dedis.ch/kyber/v3 v3.0.12
-	go.dedis.ch/onet/v3 v3.2.1
+	go.dedis.ch/onet/v3 v3.2.2
 	go.dedis.ch/protobuf v1.0.11
 	go.etcd.io/bbolt v1.3.4
-	golang.org/x/crypto v0.0.0-20200317142112-1b76d66859c6 // indirect
+	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37 // indirect
 	golang.org/x/net v0.0.0-20200319234117-63522dbf7eec // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/sys v0.0.0-20200317113312-5766fd39f98d
+	golang.org/x/sys v0.0.0-20200523222454-059865788121
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 	gopkg.in/satori/go.uuid.v1 v1.2.0
