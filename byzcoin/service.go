@@ -373,8 +373,7 @@ func (s *Service) prepareTxResponse(req *AddTxRequest, tx *TxResult) (*AddTxResp
 	return resp, nil
 }
 
-
-func (s *Service) PropagateTx(req *AddTxRequest, header *DataHeader)(error) {
+func (s *Service) propagateTx(req *AddTxRequest, header *DataHeader) error {
 	leader, err := s.getLeader(req.SkipchainID)
 	if err != nil {
 		return xerrors.Errorf("Error getting the leader: %v", err)
@@ -499,7 +498,7 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 
 	ctxHash := req.Transaction.Instructions.Hash()
 
-	err = s.PropagateTx(req, header)
+	err = s.propagateTx(req, header)
 	if err != nil {
 		return nil, xerrors.New("could not propagate: %v", err)
 	}
@@ -527,7 +526,7 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		s.txBuffer.add(string(req.SkipchainID), req.Transaction)
 		counter := 0
 		if len(s.txBuffer.txsMap) != 0 {
-			for _,v := range s.txBuffer.txsMap{
+			for _, v := range s.txBuffer.txsMap {
 				for _, ctx := range v {
 					counter++
 					newReq := &AddTxRequest{
@@ -538,7 +537,7 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 						ProofFrom:     req.ProofFrom,
 						Flags:         req.Flags,
 					}
-					err = s.PropagateTx(newReq, header)
+					err = s.propagateTx(newReq, header)
 					if err != nil {
 						s.txBuffer.take(string(req.SkipchainID), counter)
 						return nil, xerrors.New("could not propagate: %v", err)
