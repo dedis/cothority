@@ -7,9 +7,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -213,6 +215,10 @@ func transfer(c *cli.Context) error {
 			return err
 		}
 		balance = coin.Value
+		cfg.BCConfig.Roster = *resp.Proof.Latest.Roster
+		if err := cfg.save(); err != nil {
+			return fmt.Errorf("couldn't save new roster: %v", err)
+		}
 	}
 	if amount > balance {
 		return xerrors.New("your account doesn't have enough coins in it")
@@ -225,9 +231,18 @@ func transfer(c *cli.Context) error {
 		log.Warn("Only allowing 200 transactions at a time")
 		multi = 200
 	}
-	err = cl.UseNode(0)
-	if err != nil {
-		return err
+	if multi > 0 {
+		// For correct ordering of multiple transactions,
+		// it is important that all transactions are sent to the same node.
+		// Else they could be out-of-order and thus not match the correct
+		// counters.
+		node := rand.New(rand.NewSource(time.Now().UnixNano())).
+			Intn(len(cfg.BCConfig.Roster.List))
+		if err := cl.UseNode(node); err != nil {
+			return fmt.Errorf("couldn't set fixed node")
+		}
+		log.Info("Sending all transactions to node",
+			cfg.BCConfig.Roster.List[node], node)
 	}
 	for tx := 0; tx < multi; tx++ {
 		counters.Counters[0]++
