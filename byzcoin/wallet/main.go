@@ -219,6 +219,7 @@ func transfer(c *cli.Context) error {
 		if err := cfg.save(); err != nil {
 			return fmt.Errorf("couldn't save new roster: %v", err)
 		}
+		cl.Roster = cfg.BCConfig.Roster
 	}
 	if amount > balance {
 		return xerrors.New("your account doesn't have enough coins in it")
@@ -231,7 +232,7 @@ func transfer(c *cli.Context) error {
 		log.Warn("Only allowing 200 transactions at a time")
 		multi = 200
 	}
-	if multi > 0 {
+	if multi > 1 {
 		// For correct ordering of multiple transactions,
 		// it is important that all transactions are sent to the same node.
 		// Else they could be out-of-order and thus not match the correct
@@ -239,10 +240,10 @@ func transfer(c *cli.Context) error {
 		node := rand.New(rand.NewSource(time.Now().UnixNano())).
 			Intn(len(cfg.BCConfig.Roster.List))
 		if err := cl.UseNode(node); err != nil {
-			return fmt.Errorf("couldn't set fixed node")
+			return fmt.Errorf("couldn't set fixed node: %v", err)
 		}
 		log.Info("Sending all transactions to node",
-			cfg.BCConfig.Roster.List[node], node)
+			cfg.BCConfig.Roster.List[node])
 	}
 	for tx := 0; tx < multi; tx++ {
 		counters.Counters[0]++
