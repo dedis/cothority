@@ -1538,10 +1538,6 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 		trieIndex = latest.Index
 	}
 
-	// Set the server's set of valid peers from the roster in the latest block.
-	skipchain.SetSkipChainValidPeers(s.ServiceProcessor.Context,
-		sb.SkipChainID(), latest.Roster.List)
-
 	log.Lvlf2("%v Done catch up %x / %d", s.ServerIdentity(), sb.SkipChainID(), trieIndex)
 }
 
@@ -1752,6 +1748,10 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		log.Lvlf2("%s not in roster, but viewChangeMonitor started - stopping now for %x", s.ServerIdentity(), sb.SkipChainID())
 		s.viewChangeMan.stop(sb.SkipChainID())
 	}
+
+	// Set the server's set of valid peers from the roster in the latest block.
+	ctx := s.ServiceProcessor.Context
+	ctx.SetValidPeers(ctx.NewPeerSetID(sb.SkipChainID()), sb.Roster.List)
 
 	// Notify all waiting channels for processed ClientTransactions.
 	s.notifications.informBlock(sb, body.TxResults)
@@ -2886,6 +2886,10 @@ func (s *Service) startChain(genesisID skipchain.SkipBlockID) error {
 		string(genesisID))
 	s.viewChangeMan.start(s.ServerIdentity().ID, genesisID, initialDur,
 		s.getSignatureThreshold(latest.Hash))
+
+	// Set the server's set of valid peers from the roster in the latest block.
+	ctx := s.ServiceProcessor.Context
+	ctx.SetValidPeers(ctx.NewPeerSetID(genesisID), latest.Roster.List)
 
 	return nil
 }
