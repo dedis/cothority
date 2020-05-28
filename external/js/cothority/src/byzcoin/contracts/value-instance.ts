@@ -1,5 +1,5 @@
 import Signer from "../../darc/signer";
-import ByzCoinRPC from "../byzcoin-rpc";
+import ByzCoinRPC, { versionPreID } from "../byzcoin-rpc";
 import ClientTransaction, { Argument, Instruction } from "../client-transaction";
 import Instance, { InstanceID } from "../instance";
 
@@ -15,6 +15,7 @@ export default class ValueInstance extends Instance {
      * @param darcID    The darc instance ID
      * @param signers   The list of signers for the transaction
      * @param value     The value to be put in the value instance
+     * @param preID     Can be used to set the InstanceID of the value
      * @returns a promise that resolves with the new instance
      */
     static async spawn(
@@ -22,12 +23,16 @@ export default class ValueInstance extends Instance {
         darcID: InstanceID,
         signers: Signer[],
         value: Buffer,
+        preID?: Buffer,
     ): Promise<ValueInstance> {
         const inst = Instruction.createSpawn(
             darcID,
             ValueInstance.contractID,
             [new Argument({name: ValueInstance.argumentValue, value})],
         );
+        if (preID && bc.getProtocolVersion() >= versionPreID) {
+            inst.spawn.args.push(new Argument({name: "preID", value: preID}));
+        }
         await inst.updateCounters(bc, signers);
 
         const ctx = ClientTransaction.make(bc.getProtocolVersion(), inst);

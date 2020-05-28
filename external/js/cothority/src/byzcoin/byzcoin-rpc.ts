@@ -32,7 +32,10 @@ import {
 } from "./proto/requests";
 import { StreamingRequest, StreamingResponse } from "./proto/stream";
 
-export const currentVersion = 2;
+export const currentVersion = 5;
+
+export const versionViewchange = 4;
+export const versionPreID = 5;
 
 export const CONFIG_INSTANCE_ID = Buffer.alloc(32, 0);
 

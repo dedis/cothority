@@ -117,8 +117,15 @@ func (c ContractPopParty) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 		return nil, nil, errors.New("couldn't marshal PopPartyStruct: " + err.Error())
 	}
 
+	var ca byzcoin.InstanceID
+	if rst.GetVersion() >= byzcoin.VersionPreID {
+		ca, err = inst.DeriveIDArg("", "preID")
+	} else {
+		ca = inst.DeriveID("")
+	}
 	scs = byzcoin.StateChanges{
-		byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""), ContractPopPartyID, ppiBuf, darcID),
+		byzcoin.NewStateChange(byzcoin.Create, ca, ContractPopPartyID, ppiBuf,
+			darcID),
 	}
 	return
 }

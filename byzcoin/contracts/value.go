@@ -1,6 +1,7 @@
 package contracts
 
 import (
+	"fmt"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
 	"golang.org/x/xerrors"
@@ -38,8 +39,18 @@ func (c ContractValue) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 		return
 	}
 
+	var ca byzcoin.InstanceID
+	if rst.GetVersion() >= byzcoin.VersionPreID {
+		ca, err = inst.DeriveIDArg("", "preID")
+		if err != nil {
+			return nil, nil, fmt.Errorf("couldn't get deriveID: %v", err)
+		}
+	} else {
+		ca = inst.DeriveID("")
+	}
+
 	sc = []byzcoin.StateChange{
-		byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""),
+		byzcoin.NewStateChange(byzcoin.Create, ca,
 			ContractValueID, inst.Spawn.Args.Search("value"), darcID),
 	}
 	return

@@ -76,8 +76,18 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 		return
 	}
 
-	// Spawn creates a new coin account as a separate instance.
-	ca := inst.DeriveID("")
+	var ca byzcoin.InstanceID
+	usePreID := rst.GetVersion() >= byzcoin.VersionPreID &&
+		inst.Spawn.Args.Search("preID") != nil
+	if usePreID {
+		ca, err = inst.DeriveIDArg("", "preID")
+		if err != nil {
+			return nil, nil, fmt.Errorf("couldn't get preID: %v", err)
+		}
+	} else {
+		ca = inst.DeriveID("")
+	}
+
 	var instBuf []byte
 	cID := inst.Spawn.ContractID
 	switch cID {
@@ -136,6 +146,9 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 		}
 		ca = byzcoin.NewInstanceID(d.GetBaseID())
 		darcID = d.GetBaseID()
+		if usePreID {
+			log.Warn("found 'preID' argument, but ignoring it for darcs")
+		}
 
 	case contracts.ContractCoinID:
 		if err = c.getCoins(cout, c.CostCoin); err != nil {
@@ -178,14 +191,16 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 			}
 		}
 		darcID = inst.Spawn.Args.Search("darcID")
-		coinID := inst.Spawn.Args.Search("coinID")
-		if coinID == nil {
-			coinID = darcID
+		if !usePreID {
+			coinID := inst.Spawn.Args.Search("coinID")
+			if coinID == nil {
+				coinID = darcID
+			}
+			h := sha256.New()
+			h.Write([]byte(contracts.ContractCoinID))
+			h.Write(coinID)
+			ca = byzcoin.NewInstanceID(h.Sum(nil))
 		}
-		h := sha256.New()
-		h.Write([]byte(contracts.ContractCoinID))
-		h.Write(coinID)
-		ca = byzcoin.NewInstanceID(h.Sum(nil))
 		instBuf, err = protobuf.Encode(coin)
 		if err != nil {
 			return nil, nil, err
@@ -202,14 +217,16 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 			return nil, nil, err
 		}
 		darcID = inst.Spawn.Args.Search("darcID")
-		var credID []byte
-		if credID = inst.Spawn.Args.Search("credID"); credID == nil {
-			credID = darcID
+		if !usePreID {
+			var credID []byte
+			if credID = inst.Spawn.Args.Search("credID"); credID == nil {
+				credID = darcID
+			}
+			h := sha256.New()
+			h.Write([]byte("credential"))
+			h.Write(credID)
+			ca = byzcoin.NewInstanceID(h.Sum(nil))
 		}
-		h := sha256.New()
-		h.Write([]byte("credential"))
-		h.Write(credID)
-		ca = byzcoin.NewInstanceID(h.Sum(nil))
 
 	case calypso.ContractWriteID:
 		w := inst.Spawn.Args.Search("write")

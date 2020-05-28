@@ -24,7 +24,10 @@ func init() {
 type Version int
 
 // CurrentVersion is what we're running now
-const CurrentVersion Version = 4
+const CurrentVersion Version = VersionPreID
 
 // VersionViewchange removed the BLS-signature on the view-change requests
 const VersionViewchange = 4
+
+// VersionPreID adds preID to most of the contracts
+const VersionPreID = 5

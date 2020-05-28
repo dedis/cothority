@@ -1,7 +1,7 @@
 import { Point } from "@dedis/kyber";
 import { createHash, randomBytes } from "crypto-browserify";
 import { Message, Properties } from "protobufjs/light";
-import ByzCoinRPC from "../byzcoin/byzcoin-rpc";
+import ByzCoinRPC, { versionPreID } from "../byzcoin/byzcoin-rpc";
 import ClientTransaction, { Argument, Instruction } from "../byzcoin/client-transaction";
 import Instance, { InstanceID } from "../byzcoin/instance";
 import Signer from "../darc/signer";
@@ -36,6 +36,7 @@ export default class CredentialsInstance extends Instance {
      * @param cred      The credential to store
      * @param credID    the instanceID will be sha256("credential" | pub)
      * @param credDarcID replaces the darc stored in the new credential with credDarcID
+     * @param preID     replaces credID for byzcoin-versions >= VersionPreID
      * @returns a promise that resolves with the new instance
      */
     static async spawn(
@@ -45,6 +46,7 @@ export default class CredentialsInstance extends Instance {
         cred: CredentialStruct,
         credID?: Buffer,
         credDarcID?: InstanceID,
+        preID?: Buffer,
     ): Promise<CredentialsInstance> {
         const args = [new Argument({name: CredentialsInstance.argumentCredential, value: cred.toBytes()})];
         if (credID !== undefined) {
@@ -52,6 +54,9 @@ export default class CredentialsInstance extends Instance {
         }
         if (credDarcID !== undefined) {
             args.push(new Argument({name: CredentialsInstance.argumentDarcID, value: credDarcID}));
+        }
+        if (preID && bc.getProtocolVersion() >= versionPreID) {
+            args.push(new Argument({name: "preID", value: preID}));
         }
         const inst = Instruction.createSpawn(
             darcID,
