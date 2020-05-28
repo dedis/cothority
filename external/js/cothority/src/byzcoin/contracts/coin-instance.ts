@@ -3,7 +3,7 @@ import Long from "long";
 import { Message, Properties } from "protobufjs/light";
 import Signer from "../../darc/signer";
 import { EMPTY_BUFFER, registerMessage } from "../../protobuf";
-import ByzCoinRPC from "../byzcoin-rpc";
+import ByzCoinRPC, { versionPreID } from "../byzcoin-rpc";
 import ClientTransaction, { Argument, Instruction } from "../client-transaction";
 import Instance, { InstanceID } from "../instance";
 
@@ -39,6 +39,7 @@ export default class CoinInstance extends Instance {
      * @param darcID    The darc instance ID
      * @param signers   The list of signers for the transaction
      * @param type      The coin instance type
+     * @param preID     If given, the InstanceID of the coin will be sha256("coin" | preID)
      * @returns a promise that resolves with the new instance
      */
     static async spawn(
@@ -46,12 +47,16 @@ export default class CoinInstance extends Instance {
         darcID: InstanceID,
         signers: Signer[],
         type: Buffer,
+        preID?: Buffer,
     ): Promise<CoinInstance> {
         const inst = Instruction.createSpawn(
             darcID,
             CoinInstance.contractID,
             [new Argument({name: CoinInstance.argumentType, value: type})],
         );
+        if (preID && bc.getProtocolVersion() >= versionPreID) {
+            inst.spawn.args.push(new Argument({name: "preID", value: preID}));
+        }
         await inst.updateCounters(bc, signers);
 
         const ctx = ClientTransaction.make(bc.getProtocolVersion(), inst);
@@ -59,7 +64,7 @@ export default class CoinInstance extends Instance {
 
         await bc.sendTransactionAndWait(ctx, 10);
 
-        return CoinInstance.fromByzcoin(bc, ctx.instructions[0].deriveId(), 1);
+        return CoinInstance.fromByzcoin(bc, ctx.instructions[0].deriveIdArg(), 1);
     }
 
     /**

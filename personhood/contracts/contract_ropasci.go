@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"errors"
+	"fmt"
 
 	"go.dedis.ch/kyber/v3"
 
@@ -96,7 +97,16 @@ func (c ContractRoPaSci) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instr
 	}
 
 	// Spawn creates a new ropasci as a separate instance.
-	ca := inst.DeriveID("")
+	var ca byzcoin.InstanceID
+	if rst.GetVersion() >= byzcoin.VersionPreID {
+		ca, err = inst.DeriveIDArg("", "preID")
+		if err != nil {
+			return nil, nil, fmt.Errorf("couldn't get deriveID: %v", err)
+		}
+	} else {
+		ca = inst.DeriveID("")
+	}
+
 	log.Lvlf3("Spawning RoPaSci to %x", ca.Slice())
 	var rpsBuf []byte
 	if rpsBuf = inst.Spawn.Args.Search("struct"); rpsBuf == nil {

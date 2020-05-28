@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "crypto-browserify";
 import Long from "long";
 import { Message, Properties } from "protobufjs/light";
-import ByzCoinRPC from "../byzcoin/byzcoin-rpc";
+import ByzCoinRPC, { versionPreID } from "../byzcoin/byzcoin-rpc";
 import ClientTransaction, { Argument, Instruction } from "../byzcoin/client-transaction";
 import CoinInstance, { Coin } from "../byzcoin/contracts/coin-instance";
 import DarcInstance from "../byzcoin/contracts/darc-instance";
@@ -50,10 +50,11 @@ export default class SpawnerInstance extends Instance {
      * @param signers The list of signers
      * @param costs The different cost for new instances
      * @param beneficiary The beneficiary of the costs
+     * @param preID Can be used to define the InstanceID of the credential
      */
     static async spawn(params: ICreateSpawner | ByzCoinRPC, darcID?: InstanceID, signers?: Signer[],
-                       costs?: ICreateCost,
-                       beneficiary?: InstanceID): Promise<SpawnerInstance> {
+                       costs?: ICreateCost, beneficiary?: InstanceID,
+                       preID?: Buffer): Promise<SpawnerInstance> {
         let bc: ByzCoinRPC;
         if (params instanceof ByzCoinRPC) {
             bc = params as ByzCoinRPC;
@@ -68,13 +69,16 @@ export default class SpawnerInstance extends Instance {
             }),
             new Argument({name: "beneficiary", value: beneficiary}),
         ];
+        if (preID && bc.getProtocolVersion() >= versionPreID) {
+            args.push(new Argument({name: "preID", value: preID}));
+        }
 
         const inst = Instruction.createSpawn(darcID, this.contractID, args);
         const ctx = ClientTransaction.make(bc.getProtocolVersion(), inst);
         await ctx.updateCountersAndSign(bc, [signers]);
         await bc.sendTransactionAndWait(ctx);
 
-        return this.fromByzcoin(bc, ctx.instructions[0].deriveId(), 1);
+        return this.fromByzcoin(bc, ctx.instructions[0].deriveIdArg(), 1);
     }
 
     /**
