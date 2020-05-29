@@ -118,6 +118,10 @@ var cmds = cli.Commands{
 								Usage:  "the ByzCoin config to use (required)",
 							},
 							cli.StringFlag{
+								Name:  "roster",
+								Usage: "change the roster for the calypso",
+							},
+							cli.StringFlag{
 								Name:  "darc",
 								Usage: "DARC with the right to create an LTS (default is the admin DARC)",
 							},
