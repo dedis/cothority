@@ -3,6 +3,7 @@ package clicontracts
 import (
 	"bytes"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"os"
 
@@ -60,6 +61,14 @@ func LTSSpawn(c *cli.Context) error {
 
 	// Make the transaction and get its proof
 	ltsInstanceInfo := calypso.LtsInstanceInfo{Roster: cfg.Roster}
+	if rFile := c.String("roster"); rFile != "" {
+		r, err := lib.ReadRoster(rFile)
+		if err != nil {
+			return fmt.Errorf("couldn't load roster: %v", err)
+		}
+		log.Info("Setting roster to:", r.List)
+		ltsInstanceInfo.Roster = *r
+	}
 	buf, err := protobuf.Encode(&ltsInstanceInfo)
 	if err != nil {
 		return xerrors.Errorf("failed to encode instance info: %v", err)
