@@ -1858,6 +1858,70 @@ func TestService_SetConfigRosterReplace(t *testing.T) {
 	}
 }
 
+// Check consistency of the set of valid peers while replacing roster
+func TestService_CheckValidPeers(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	newServers, newRoster, _ := s.local.MakeSRS(cothority.Suite, 4, ByzCoinID)
+
+	// Compute the peerSetID for this skipchain
+	onetCtx := s.service().ServiceProcessor.Context
+	peerSetID := onetCtx.NewPeerSetID(s.genesis.SkipChainID())
+
+	// List of all servers involved in the test
+	allServers := append(s.hosts, newServers...)
+
+	log.Lvl1("Replace with new roster", newRoster.List)
+	goodRoster := onet.NewRoster(s.roster.List)
+	counter := 1
+
+	// Expected valid peers during the test, initialized to the starting roster.
+	expectedValidPeers := []network.ServerIdentityID{}
+	for _, srv := range goodRoster.List {
+		expectedValidPeers = append(expectedValidPeers, srv.ID)
+	}
+
+	for index, si := range newRoster.List {
+		log.Lvl1("Adding", si)
+		goodRoster = onet.NewRoster(append(goodRoster.List, si))
+		expectedValidPeers = append(expectedValidPeers, si.ID)
+
+		ctx, _ := createConfigTxWithCounter(t, testInterval, *goodRoster, defaultMaxBlockSize, s, counter)
+		counter++
+		cl := NewClient(s.genesis.SkipChainID(), *goodRoster)
+		resp, err := cl.AddTransactionAndWait(ctx, 10)
+		transactionOK(t, resp, err)
+
+		// Wait until all servers have included the block
+		time.Sleep(testInterval * 2)
+
+		// Check valid peers in all current servers
+		for _, srv := range allServers[index : index+5] {
+			require.ElementsMatch(t,
+				srv.GetValidPeers(peerSetID), expectedValidPeers)
+		}
+
+		log.Lvl1("Removing", goodRoster.List[0])
+		goodRoster = onet.NewRoster(goodRoster.List[1:])
+		expectedValidPeers = expectedValidPeers[1:]
+
+		ctx, _ = createConfigTxWithCounter(t, testInterval, *goodRoster, defaultMaxBlockSize, s, counter)
+		counter++
+		resp, err = cl.AddTransactionAndWait(ctx, 10)
+		transactionOK(t, resp, err)
+
+		// Wait until all servers have included the block
+		time.Sleep(testInterval * 2)
+
+		// Check valid peers in all current servers
+		for _, srv := range allServers[index+1 : index+5] {
+			require.ElementsMatch(t,
+				srv.GetValidPeers(peerSetID), expectedValidPeers)
+		}
+	}
+}
+
 func addDummyTxs(t *testing.T, s *ser, nbr int, perCTx int, count int) int {
 	return addDummyTxsTo(t, s, nbr, perCTx, count, 0)
 }
