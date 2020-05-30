@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -133,9 +134,23 @@ func dkgStart(c *cli.Context) error {
 		return xerrors.New("proof for the given \"--instid\" not found")
 	}
 
+	var ltsInfo calypso.LtsInstanceInfo
+	_, ltsBuf, cid, _, err := resp.Proof.KeyValue()
+	if err != nil {
+		return fmt.Errorf("couldn't get value of Lts-instance: %v", err)
+	}
+	if cid != calypso.ContractLongTermSecretID {
+		return errors.New("not an Lts-contract")
+	}
+	err = protobuf.Decode(ltsBuf, &ltsInfo)
+	if err != nil {
+		return fmt.Errorf("couldn't decode the Lts-instance: %v", err)
+	}
+
 	reply := &calypso.CreateLTSReply{}
 	oc := onet.NewClient(cothority.Suite, calypso.ServiceName)
-	err = oc.SendProtobuf(cl.Roster.List[0], &calypso.CreateLTS{
+	log.Info("Sending CreateLTS to", ltsInfo.Roster.List[0].URL)
+	err = oc.SendProtobuf(ltsInfo.Roster.List[0], &calypso.CreateLTS{
 		Proof: resp.Proof,
 	}, reply)
 	if err != nil {
@@ -148,11 +163,6 @@ func dkgStart(c *cli.Context) error {
 		return xerrors.Errorf("failed to marshal X: %v", err)
 	}
 	keyStr := hex.EncodeToString(keyBuf)
-
-	err = lib.WaitPropagation(c, cl)
-	if err != nil {
-		return xerrors.Errorf("waiting for blocks to be propagated: %v", err)
-	}
 
 	if c.Bool("export") {
 		reader := bytes.NewReader([]byte(keyStr))

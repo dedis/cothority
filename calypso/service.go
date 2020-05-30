@@ -442,7 +442,7 @@ func (s *Service) verifyProof(proof *byzcoin.Proof) error {
 		return xerrors.New("this ByzCoin ID is not authorised")
 	}
 
-	sb, err := s.fetchGenesisBlock(scID, proof.Links[0].NewRoster)
+	sb, err := s.fetchGenesisBlock(scID, proof.Latest.Roster)
 	if err != nil {
 		return xerrors.Errorf("fetching genesis block: %v", err)
 	}
