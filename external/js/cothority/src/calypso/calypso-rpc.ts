@@ -90,6 +90,22 @@ export class OnChainSecretRPC {
 export class LongTermSecret extends OnChainSecretRPC {
 
     /**
+     * fromService returns a new LongTermSecret given a ByzCoinRPC and an LTSID
+     * @param bc pointing to the ByzCoin holding the LTS definition
+     * @param ltsid which LTSID to look up
+     * @param roster can be set if known, else the byzcoin-instance will be looked up.
+     */
+    static async fromService(bc: ByzCoinRPC, ltsid: InstanceID, roster?: Roster): Promise<LongTermSecret> {
+        if (!roster) {
+            const instBS = await bc.instanceObservable(ltsid);
+            roster = LtsInstanceInfo.decode(instBS.getValue().value).roster;
+        }
+        const conn = new RosterWSConnection(roster, OnChainSecretRPC.serviceID);
+        const reply = await conn.send<CreateLTSReply>(new GetLTSReply({ltsid}), CreateLTSReply);
+        return new LongTermSecret(bc, ltsid, reply.X, roster);
+    }
+
+    /**
      * spawn creates a new longtermsecret by spawning a longTermSecret instance, and then performing
      * a DKG using the full roster of bc.
      *
@@ -260,6 +276,22 @@ export class LtsInstanceInfo extends Message<LtsInstanceInfo> {
     }
 }
 
+/**
+ * GetLTSReply will return a stored LTS entry.
+ */
+export class GetLTSReply extends Message<GetLTSReply> {
+
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("GetLTSReply", GetLTSReply);
+    }
+
+    readonly ltsid: InstanceID;
+}
+
+GetLTSReply.register();
 Authorize.register();
 AuthorizeReply.register();
 CreateLTS.register();
