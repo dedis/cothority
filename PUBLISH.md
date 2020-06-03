@@ -21,7 +21,9 @@ Note: requires a linux environment to call the make functions. You can run those
 docker run -it -v /path/to/cothority:/home golang:1.14 make bindist tooldist
 ```
 
-use GitHub web interface to convert tag v3.4.6 into a release, and add the conode-v3.0.4.tar.gz file onto it (click on the tag and then click on “Edit Tag”)
+use GitHub web interface to convert tag v3.4.6 into a release, and add the conode-v3.0.4.tar.gz file onto it (click on the tag and then click on “Edit Tag”). To help you write the release notes, use `git log --reverse v3.4.5..v3.4.6`.
+
+To make the Docker image:
 ```
 docker login --username=${DOCKERHUB_USERNAME}
 make docker_push BUILD_TAG=v3.4.6
