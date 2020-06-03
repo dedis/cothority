@@ -118,8 +118,9 @@ var cmds = cli.Commands{
 								Usage:  "the ByzCoin config to use (required)",
 							},
 							cli.StringFlag{
-								Name:  "roster",
-								Usage: "change the roster for the calypso",
+								Name: "roster",
+								Usage: "the path of a roster file to be used as argument for the spawn. " +
+									"If not provided the config roster is used (optional)",
 							},
 							cli.StringFlag{
 								Name:  "darc",

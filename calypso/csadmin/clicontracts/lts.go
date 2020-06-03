@@ -59,6 +59,8 @@ func LTSSpawn(c *cli.Context) error {
 		return xerrors.Errorf("failed to get the signer counters: %v", err)
 	}
 
+	export := c.Bool("export")
+
 	// Make the transaction and get its proof
 	ltsInstanceInfo := calypso.LtsInstanceInfo{Roster: cfg.Roster}
 	if rFile := c.String("roster"); rFile != "" {
@@ -66,7 +68,9 @@ func LTSSpawn(c *cli.Context) error {
 		if err != nil {
 			return fmt.Errorf("couldn't load roster: %v", err)
 		}
-		log.Info("Setting roster to:", r.List)
+		if !export {
+			log.Info("Setting roster to:", r.List)
+		}
 		ltsInstanceInfo.Roster = *r
 	}
 	buf, err := protobuf.Encode(&ltsInstanceInfo)
@@ -108,7 +112,7 @@ func LTSSpawn(c *cli.Context) error {
 	}
 
 	iidStr := hex.EncodeToString(newInstID)
-	if c.Bool("export") {
+	if export {
 		reader := bytes.NewReader([]byte(iidStr))
 		_, err = io.Copy(os.Stdout, reader)
 		if err != nil {
@@ -119,6 +123,5 @@ func LTSSpawn(c *cli.Context) error {
 
 	log.Infof("Spawned a new LTS contract. Its instance id is:\n"+
 		"%s", iidStr)
-
 	return nil
 }
