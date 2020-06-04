@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "@dedis/cothority",
-  "version": "3.4.5",
+  "version": "3.4.6",
   "description": "A typescript implementation of the cothority",
   "main": "index.js",
   "browser": "bundle.min.js",
@@ -32,7 +32,7 @@
   "license": "LGPL-3.0-or-later",
   "dependencies": {
     "@babel/polyfill": "^7.2.5",
-    "@dedis/kyber": "^3.4.2",
+    "@dedis/kyber": "^3.4.3",
     "@stablelib/blake2xs": "^0.10.4",
     "buffer": "^5.2.1",
     "crypto-browserify": "^3.12.0",
@@ -79,7 +79,7 @@
     "typedoc": "^0.15.0",
     "typescript": "^3.6.4",
     "webpack": "^4.29.1",
-    "webpack-cli": "^3.2.3"
+    "webpack-cli": "^3.3.11"
   },
   "nyc": {
     "all": true,
