@@ -91,11 +91,12 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * @param interval how long to wait between two attempts in waitMatch.
      * @param latest if given, use this to prove the current state of the blockchain. Needs to be trusted!
      * @param storage to be used to store instance caches
+     * @param verify will skip checking of links if false
      * @returns a promise that resolves with the initialized ByzCoin instance
      */
     static async fromByzcoin(nodes: Roster | IConnection, skipchainID: Buffer, waitMatch: number = 0,
                              interval: number = 1000, latest?: SkipBlock,
-                             storage?: IStorage):
+                             storage?: IStorage, verify = true):
         Promise<ByzCoinRPC> {
         const rpc = new ByzCoinRPC();
         if (nodes instanceof Roster) {
@@ -108,7 +109,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
         rpc.genesis = await skipchain.getSkipBlock(skipchainID);
         rpc._latest = latest !== undefined ? latest : rpc.genesis;
 
-        const ccProof = await rpc.getProofFromLatest(CONFIG_INSTANCE_ID, waitMatch, interval);
+        const ccProof = await rpc.getProofFromLatest(CONFIG_INSTANCE_ID, waitMatch, interval, verify);
         rpc.config = ChainConfig.fromProof(ccProof);
         const di = await DarcInstance.fromByzcoin(rpc, ccProof.stateChangeBody.darcID, waitMatch, interval);
 
@@ -322,14 +323,15 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * @param id the instance key
      * @param waitMatch number of milliseconds to wait if the proof is false
      * @param interval how long to wait before checking for a match again
+     * @param verify will skip checking of links if false
      * @return a promise that resolves with the proof, rejecting otherwise
      */
-    async getProof(id: Buffer, waitMatch: number = 0, interval: number = 1000): Promise<Proof> {
+    async getProof(id: Buffer, waitMatch: number = 0, interval: number = 1000, verify = true): Promise<Proof> {
         if (!this.genesis) {
             throw new Error("RPC not initialized with the genesis block");
         }
 
-        return this.getProofFrom(this.genesis, id, waitMatch, interval);
+        return this.getProofFrom(this.genesis, id, waitMatch, interval, verify);
     }
 
     /**
@@ -342,9 +344,11 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * @param id the instance key
      * @param waitMatch number of milliseconds to wait if the proof is false
      * @param interval how long to wait before checking for a match again
+     * @param verify will skip checking of links if false
      * @return a promise that resolves with the proof, rejecting otherwise
      */
-    async getProofFromLatest(id: Buffer, waitMatch: number = 0, interval: number = 1000): Promise<Proof> {
+    async getProofFromLatest(id: Buffer, waitMatch: number = 0, interval: number = 1000, verify = true):
+        Promise<Proof> {
         if (this._latest === undefined) {
             throw new Error("no latest block found");
         }
@@ -363,9 +367,11 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * @param id the instance key
      * @param waitMatch number of milliseconds to wait if the proof is false
      * @param interval how long to wait before checking for a match again
+     * @param verify will skip checking of links if false
      * @return a promise that resolves with the proof, rejecting otherwise
      */
-    async getProofFrom(from: SkipBlock, id: Buffer, waitMatch: number = 0, interval: number = 1000): Promise<Proof> {
+    async getProofFrom(from: SkipBlock, id: Buffer, waitMatch: number = 0, interval: number = 1000, verify = true):
+        Promise<Proof> {
         const req = new GetProof({
             id: from.hash,
             key: id,
@@ -381,9 +387,11 @@ export default class ByzCoinRPC implements ICounterUpdater {
             });
         }
 
-        const err = reply.proof.verifyFrom(from);
-        if (err) {
-            throw err;
+        if (verify) {
+            const err = reply.proof.verifyFrom(from);
+            if (err) {
+                throw err;
+            }
         }
 
         this._latest = reply.proof.latest;
@@ -583,7 +591,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
             this.subscriberNewBlocks.unsubscribe();
         }
 
-        Log.lvl2("Starting new subscription for newBlocks");
+        Log.lvl3("Starting new subscription for newBlocks");
         this.subscriberNewBlocks = this.conn.sendStream<StreamingResponse>(msgBlock, StreamingResponse).pipe(
             map(([sr, ws]) => {
                 this.newBlockWS = ws;
