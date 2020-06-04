@@ -2089,19 +2089,34 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 			log.Error("Didn't accept the new roster:", err)
 			return false
 		}
+		previous := s.db().GetByID(newSB.BackLinkIDs[0])
+		if previous != nil {
+			var prevHeader DataHeader
+			err := protobuf.Decode(previous.Data, &prevHeader)
+			if err != nil {
+				log.Errorf("couldn't decode previous header: %v", err)
+				return false
+			}
+
+			if header.Timestamp <= prevHeader.Timestamp {
+				log.Errorf("cannot create block with earlier timestamp"+
+					" than previous block: %v < %v",
+					time.Unix(0, header.Timestamp),
+					time.Unix(0, prevHeader.Timestamp))
+				return false
+			}
+		}
 	}
 
 	window := 4 * config.BlockInterval
 	if window < minTimestampWindow {
 		window = minTimestampWindow
 	}
-
-	now := time.Now()
-	t1 := now.Add(-window)
-	t2 := now.Add(window)
+	t1 := time.Now().Add(window)
 	ts := time.Unix(0, header.Timestamp)
-	if ts.Before(t1) || ts.After(t2) {
-		log.Errorf("timestamp %v is outside the acceptable range %v to %v", ts, t1, t2)
+	if ts.After(t1) {
+		log.Errorf("timestamp for new block is later than time.Now + 4*config."+
+			"BlockInterval: %v > %v", ts, t1)
 		return false
 	}
 

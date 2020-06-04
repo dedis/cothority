@@ -755,38 +755,6 @@ func TestService_Depending(t *testing.T) {
 	time.Sleep(time.Second)
 }
 
-func TestService_LateBlock(t *testing.T) {
-	s := newSer(t, 1, testInterval)
-	defer s.local.CloseAll()
-	oldmtw := minTimestampWindow
-	defer func() {
-		minTimestampWindow = oldmtw
-	}()
-	minTimestampWindow = time.Second
-
-	// Hook the verifier in order delay the arrival and test timestamp checking.
-	ser := s.services[0]
-	c := ser.Context
-	err := skipchain.RegisterVerification(c, Verify, func(newID []byte, newSB *skipchain.SkipBlock) bool {
-		// Make this block arrive late compared to it's timestamp. The
-		// window will be 1000ms, so sleep 1200 more, just to be sure.
-		time.Sleep(2200 * time.Millisecond)
-		return ser.verifySkipBlock(newID, newSB)
-	})
-	require.NoError(t, err)
-
-	tx, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
-	require.NoError(t, err)
-	_, err = ser.AddTransaction(&AddTxRequest{
-		Version:       CurrentVersion,
-		SkipchainID:   s.genesis.SkipChainID(),
-		Transaction:   tx,
-		InclusionWait: 5,
-	})
-	require.Error(t, err)
-	log.Lvl1("Last test OK")
-}
-
 func TestService_BadDataHeader(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
