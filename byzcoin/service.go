@@ -1351,7 +1351,11 @@ func (s *Service) catchupAll() error {
 		// Get the latest block known by the Cothority.
 		reply, err := cl.GetUpdateChain(sb.Roster, sb.Hash)
 		if err != nil {
-			return xerrors.Errorf("getting chain: %v", err)
+			// Might be that the other nodes are not yet up,
+			// so just continue with the other chains.
+			// Call to s.catchup will probably also fail, so skip it.
+			log.Errorf("couldn't get update chain: %+v", err)
+			continue
 		}
 
 		if len(reply.Update) == 0 {
