@@ -34,6 +34,7 @@
     "@babel/polyfill": "^7.2.5",
     "@dedis/kyber": "^3.4.3",
     "@stablelib/blake2xs": "^0.10.4",
+    "bn.js": "^5.1.2",
     "buffer": "^5.2.1",
     "crypto-browserify": "^3.12.0",
     "isomorphic-ws": "^4.0.1",
