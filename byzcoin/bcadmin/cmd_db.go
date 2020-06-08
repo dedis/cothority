@@ -606,6 +606,13 @@ func newFetchBlocks(c *cli.Context) (*fetchBlocks,
 		bi, err = hex.DecodeString(c.Args().Get(1))
 		fb.bcID = &bi
 		fb.genesis = fb.db.GetByID(*fb.bcID)
+		if fb.genesis != nil {
+			latest, err := fb.db.GetLatestByID(fb.genesis.SkipChainID())
+			if err != nil {
+				return nil, fmt.Errorf("couldn't get latest block: %v", err)
+			}
+			fb.roster = latest.Roster
+		}
 	} else {
 		err = fb.getBCID()
 		if err != nil {
@@ -622,6 +629,7 @@ func newFetchBlocks(c *cli.Context) (*fetchBlocks,
 
 	fb.trieBucketName = []byte(fmt.Sprintf("ByzCoin_%x", *fb.bcID))
 	fb.trieDB = trie.NewDiskDB(fb.boltDB, fb.trieBucketName)
+	fb.cl = skipchain.NewClient()
 
 	return fb, nil
 }
@@ -646,14 +654,11 @@ func (fb *fetchBlocks) getBCID() error {
 			}
 			fb.roster = fb.latest.Roster
 		}
-		fb.cl = skipchain.NewClient()
 		log.Infof("Using single skipchain: %x", *fb.bcID)
 	default:
-		if len(sbs) > 0 {
-			log.Info("More than one skipchain found - please chose one:")
-			for sb := range sbs {
-				log.Infof("SkipchainID: %x", []byte(sb))
-			}
+		log.Info("More than one skipchain found - please chose one:")
+		for sb := range sbs {
+			log.Infof("SkipchainID: %x", []byte(sb))
 		}
 		return errors.New("more than 1 skipchain present in db")
 	}

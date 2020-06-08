@@ -82,16 +82,16 @@ testDbReplay(){
 
   testFail runBA db replay conode.db $bcID
   testOK runBA db catchup conode.db $bcID http://localhost:2003
-  testGrep "Replaying block at index 0" runBA db replay conode.db $bcID
+  testGrep "Replaying block at index 0" runBA0 db replay conode.db $bcID
 
   # replay with more than 1 block
   testOK runBA mint $bc $key $keyPub 1000
   testOK runBA mint $bc $key $keyPub 1000
   runBA db catchup conode.db $bcID http://localhost:2003
-  testGrep "Replaying block at index 0" runBA db replay conode.db $bcID
-  testGrep "index 0" runBA db catchup conode.db $bcID --write --blocks 1
+  testGrep "Replaying block at index 0" runBA0 db replay conode.db $bcID
+  testGrep "index 0" runBA0 db replay conode.db $bcID --write --blocks 1
   testReNGrep "index 1"
-  testNGrep "index 0" runBA db catchup conode.db $bcID --write --continue
+  testNGrep "index 0" runBA0 db replay conode.db $bcID --write --continue
   testReGrep "index 1"
 }
 
@@ -108,14 +108,14 @@ testDbMerge(){
   pkill conode 2> /dev/null
 
   testOK runBA db merge conode.db $bcID $db
-  testGrep "Last block is: 0" runBA db status conode.db $bcID
+  testGrep "Last block is: 0" runBA0 db status conode.db $bcID
 
   runCoBG 1 2 3
   testOK runBA mint $bc $key $keyPub 1000
 
   pkill conode 2> /dev/null
   testOK runBA db merge conode.db $bcID $db
-  testGrep "Last block is: 3" runBA db status conode.db $bcID
+  testGrep "Last block is: 3" runBA0 db status conode.db $bcID
 }
 
 testDbCatchup(){
@@ -128,10 +128,10 @@ testDbCatchup(){
   keyPub=$( echo $key | sed -e "s/.*:\(.*\).cfg/\1/" )
 
   testOK runBA db catchup conode.db $bcID http://localhost:2003
-  testGrep "Last block is: 0" runBA db status conode.db $bcID
+  testGrep "Last block is: 0" runBA0 db status conode.db $bcID
   testOK runBA mint $bc $key $keyPub 1000
   testOK runBA db catchup conode.db $bcID http://localhost:2003
-  testGrep "Last block is: 3" runBA db status conode.db $bcID
+  testGrep "Last block is: 3" runBA0 db status conode.db $bcID
 }
 
 testDebugBlock(){
@@ -144,13 +144,13 @@ testDebugBlock(){
   keyPub=$( echo $key | sed -e "s/.*:\(.*\).cfg/\1/" )
 
   testOK runBA debug block --bcCfg $bc --blockIndex 0
-  testGrep "no block with index" runBA debug block --bcCfg $bc --blockIndex 1
+  testGrep "no block with index" runBA0 debug block --bcCfg $bc --blockIndex 1
   runBA config --blockSize 1000000 $bc $key
-  testNGrep "no block with index" runBA debug block --bcCfg $bc --blockIndex 1
-  testNGrep "no block with index" runBA debug block \
+  testNGrep "no block with index" runBA0 debug block --bcCfg $bc --blockIndex 1
+  testNGrep "no block with index" runBA0 debug block \
     --url http://localhost:2003 --bcID $bcID --blockIndex 1
-  testGrep "Command: update_config" runBA debug block --bcCfg $bc --blockIndex 1 \
-    --txDetails
+  testGrep "Command: update_config" runBA0 debug block --bcCfg $bc \
+    --blockIndex 1 --txDetails
 }
 
 testLink(){
@@ -164,9 +164,9 @@ testLink(){
 
   rm -rf linkDir
   bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
-  testGrep $bcID runBA -c linkDir link public.toml
+  testGrep $bcID runBA0 -c linkDir link public.toml
   bcIDWrong=$( printf "%032d" 1234 )
-  testNGrep $bcIDWrong runBA -c linkDir link public.toml
+  testNGrep $bcIDWrong runBA0 -c linkDir link public.toml
   testFail runBA -c linkDir link public.toml $bcIDWrong
   testOK runBA -c linkDir link --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
   # should fail since it would overwrite the file
@@ -248,14 +248,14 @@ testRoster(){
   testOK runBA roster add $bc $key co4/public.toml
   runBA debug counters $bc $key
   testOK runBA config --blockSize 1000000 $bc $key
-  testGrep 2008 runBA latest $bc
+  testGrep 2008 runBA0 latest $bc
 
   testFail runBA roster add $bc $key co4/public.toml
   # Deleting the leader raises an error...
   testFail runBA roster del $bc $key co1/public.toml
   # ... but deleting someone else works
   testOK runBA roster del $bc $key co2/public.toml
-  testNGrep "Roster:.*tls://localhost:2004" runBA latest $bc
+  testNGrep "Roster:.*tls://localhost:2004" runBA0 latest $bc
 
   # Need at least 3 nodes to have a majority
   testFail runBA roster del $bc $key co3/public.toml
@@ -264,7 +264,7 @@ testRoster(){
   # Setting a conode that is a leader as a leader raises an error
   testFail runBA roster leader $bc $key co1/public.toml
   testOK runBA roster leader $bc $key co3/public.toml
-  testGrep "Roster: tls://localhost:2006" runBA latest -server 2 $bc
+  testGrep "Roster: tls://localhost:2006" runBA0 latest -server 2 $bc
 }
 
 
@@ -306,7 +306,7 @@ testCreateStoreRead(){
   eval $SED
   [ -z "$BC" ] && exit 1
   bcid=`echo $BC | awk -F- '{print $2}'| sed 's/.cfg$//'`
-  testGrep "ByzCoinID: $bcid" runBA latest
+  testGrep "ByzCoinID: $bcid" runBA0 latest
 }
 
 testAddDarc(){
@@ -319,7 +319,7 @@ testAddDarc(){
   testOK runBA darc add -out_id ./darc_id.txt
   testOK runBA darc add
   ID=`cat ./darc_id.txt`
-  testGrep "${ID:5:${#ID}-0}" runBA darc show --darc "$ID"
+  testGrep "${ID:5:${#ID}-0}" runBA0 darc show --darc "$ID"
 
   # checks the --shortPrint option
   OUTRES=$(runBA0 darc add --shortPrint)
@@ -338,29 +338,29 @@ testDarcAddDeferred() {
   testOK runBA darc add -deferred -out_id ./darc_id.txt
   testOK runBA darc add -deferred
   ID=`cat ./darc_id.txt`
-  testGrep "${ID:5:${#ID}-0}" runBA darc show --darc "$ID"
-  testGrep "spawn:deferred" runBA darc show --darc "$ID"
-  testGrep "invoke:deferred.addProof" runBA darc show --darc "$ID"
-  testGrep "invoke:deferred.execProposedTx" runBA darc show --darc "$ID"
+  darc show --darc "$ID"
+  testGrep "spawn:deferred" runBA0 darc show --darc "$ID"
+  testGrep "invoke:deferred.addProof" runBA0 darc show --darc "$ID"
+  testGrep "invoke:deferred.execProposedTx" runBA0 darc show --darc "$ID"
 
   # with minimum
   testOK runBA darc add -deferred -id darc:A -id ed25519:B -id darc:C -id darc:D -out_id ./darc_id.txt
   ID=`cat ./darc_id.txt`
-  testFGrep "spawn:deferred - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
-  testFGrep "invoke:deferred.addProof - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
-  testFGrep "invoke:deferred.execProposedTx - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
-  testFGrep "_sign - \"darc:A & ed25519:B & darc:C & darc:D\"" runBA darc show --darc "$ID"
-  testFGrep "invoke:darc.evolve - \"darc:A & ed25519:B & darc:C & darc:D\"" runBA darc show --darc "$ID"
+  testFGrep "spawn:deferred - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA0 darc show --darc "$ID"
+  testFGrep "invoke:deferred.addProof - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA0 darc show --darc "$ID"
+  testFGrep "invoke:deferred.execProposedTx - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA0 darc show --darc "$ID"
+  testFGrep "_sign - \"darc:A & ed25519:B & darc:C & darc:D\"" runBA0 darc show --darc "$ID"
+  testFGrep "invoke:darc.evolve - \"darc:A & ed25519:B & darc:C & darc:D\"" runBA0 darc show --darc "$ID"
 
   # with minimum, with unrestricted
   testOK runBA darc add -deferred -id darc:A -id ed25519:B -id darc:C -id darc:D -out_id ./darc_id.txt -unrestricted
   ID=`cat ./darc_id.txt`
-  testFGrep "spawn:deferred - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
-  testFGrep "invoke:deferred.addProof - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
-  testFGrep "invoke:deferred.execProposedTx - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
-  testFGrep "_sign - \"darc:A & ed25519:B & darc:C & darc:D\"" runBA darc show --darc "$ID"
-  testFGrep "invoke:darc.evolve - \"darc:A & ed25519:B & darc:C & darc:D\"" runBA darc show --darc "$ID"
-  testFGrep "invoke:darc.evolve_unrestricted - \"darc:A & ed25519:B & darc:C & darc:D\"" runBA darc show --darc "$ID"
+  testFGrep "spawn:deferred - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA0 darc show --darc "$ID"
+  testFGrep "invoke:deferred.addProof - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA0 darc show --darc "$ID"
+  testFGrep "invoke:deferred.execProposedTx - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA0 darc show --darc "$ID"
+  testFGrep "_sign - \"darc:A & ed25519:B & darc:C & darc:D\"" runBA0 darc show --darc "$ID"
+  testFGrep "invoke:darc.evolve - \"darc:A & ed25519:B & darc:C & darc:D\"" runBA0 darc show --darc "$ID"
+  testFGrep "invoke:darc.evolve_unrestricted - \"darc:A & ed25519:B & darc:C & darc:D\"" runBA0 darc show --darc "$ID"
 }
 
 testDarcAddRuleMinimum(){
@@ -374,15 +374,15 @@ testDarcAddRuleMinimum(){
   ID=`cat ./darc_id.txt`
   KEY=`cat ./darc_key.txt`
   testOK runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id darc:A -id darc:B -id darc:C -id darc:D --minimum 1
-  testFGrep "test:contract - \"((darc:A)) | ((darc:B)) | ((darc:C)) | ((darc:D))\"" runBA darc show --darc "$ID"
+  testFGrep "test:contract - \"((darc:A)) | ((darc:B)) | ((darc:C)) | ((darc:D))\"" runBA0 darc show --darc "$ID"
   
   # with a minimum
   testOK runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id darc:A -id darc:B -id darc:C -id darc:D --minimum 2 -replace
-  testFGrep "test:contract - \"((darc:A) & (darc:B)) | ((darc:A) & (darc:C)) | ((darc:A) & (darc:D)) | ((darc:B) & (darc:C)) | ((darc:B) & (darc:D)) | ((darc:C) & (darc:D))\"" runBA darc show --darc "$ID"
+  testFGrep "test:contract - \"((darc:A) & (darc:B)) | ((darc:A) & (darc:C)) | ((darc:A) & (darc:D)) | ((darc:B) & (darc:C)) | ((darc:B) & (darc:D)) | ((darc:C) & (darc:D))\"" runBA0 darc show --darc "$ID"
 
   # with a minimum and a special id composed of an AND
   testOK runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id 'darc:A & ed25519:aef' -id darc:B -id darc:C -id darc:D --minimum 2 -replace
-  testFGrep "test:contract - \"((darc:A & ed25519:aef) & (darc:B)) | ((darc:A & ed25519:aef) & (darc:C)) | ((darc:A & ed25519:aef) & (darc:D)) | ((darc:B) & (darc:C)) | ((darc:B) & (darc:D)) | ((darc:C) & (darc:D))\"" runBA darc show --darc "$ID"
+  testFGrep "test:contract - \"((darc:A & ed25519:aef) & (darc:B)) | ((darc:A & ed25519:aef) & (darc:C)) | ((darc:A & ed25519:aef) & (darc:D)) | ((darc:B) & (darc:C)) | ((darc:B) & (darc:D)) | ((darc:C) & (darc:D))\"" runBA0 darc show --darc "$ID"
 
   # with some wrong identities
   testFail runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id 'xdarc:A & ed25519:aef' -id darc:B --minimum 2 -replace
@@ -401,13 +401,13 @@ testRuleDarc(){
   testOK runBA darc add -out_id ./darc_id.txt -out_key ./darc_key.txt -desc testing -unrestricted
   ID=`cat ./darc_id.txt`
   KEY=`cat ./darc_key.txt`
-  testGrep "Description: \"testing\"" runBA darc show -darc $ID
+  testGrep "Description: \"testing\"" runBA0 darc show -darc $ID
   testOK runBA darc rule -rule spawn:xxx -identity ed25519:abc -darc "$ID" -sign "$KEY"
-  testGrep "spawn:xxx - \"ed25519:abc\"" runBA darc show -darc "$ID"
+  testGrep "spawn:xxx - \"ed25519:abc\"" runBA0 darc show -darc "$ID"
   testOK runBA darc rule -replace -rule spawn:xxx -identity "ed25519:abc | ed25519:aef" -darc "$ID" -sign "$KEY"
-  testGrep "spawn:xxx - \"ed25519:abc | ed25519:aef\"" runBA darc show -darc "$ID"
+  testGrep "spawn:xxx - \"ed25519:abc | ed25519:aef\"" runBA0 darc show -darc "$ID"
   testOK runBA darc rule -delete -rule spawn:xxx -darc "$ID" -sign "$KEY"
-  testNGrep "spawn:xxx" runBA darc show -darc "$ID"
+  testNGrep "spawn:xxx" runBA0 darc show -darc "$ID"
 
   # re-add the rule to check the restricted mode
   testOK runBA darc rule -rule spawn:xxx -identity ed25519:abc -darc "$ID" -sign "$KEY"
@@ -448,7 +448,7 @@ testAddDarcWithOwner(){
   KEY=`cat ./key.txt`
   testOK runBA darc add -id "$KEY" -out_id "darc_id.txt"
   ID=`cat ./darc_id.txt`
-  testGrep "$KEY" runBA darc show -darc "$ID"
+  testGrep "$KEY" runBA0 darc show -darc "$ID"
 }
 
 testExpression(){
@@ -499,14 +499,14 @@ testUpdateDarcDesc() {
   [ -z "$BC" ] && exit 1
 
   testOK runBA darc cdesc --desc "New description"
-  testGrep "New description" runBA darc show
+  testGrep "New description" runBA0 darc show
 
   # Same test, but with a restricted darc
   testOK runBA darc add -out_id ./darc_id.txt -out_key ./darc_key.txt -desc testing
   ID=`cat ./darc_id.txt`
   KEY=`cat ./darc_key.txt`
   testOK runBA darc cdesc --desc "New description" --darc "$ID" --sign "$KEY"
-  testGrep "New description" runBA darc show --darc "$ID"
+  testGrep "New description" runBA0 darc show --darc "$ID"
 }
 
 # Rely on:
