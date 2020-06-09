@@ -144,7 +144,7 @@ testGrep(){
   runOutFile "$@"
   doGrep "$S"
   if [ ! "$EGREP" ]; then
-    fail "Didn't find '$S' in output of '$@': $GREP"
+    fail "Didn't find '$S' in output of '$@': $(cat $RUNOUT)"
   fi
 }
 
@@ -161,7 +161,7 @@ testFGrep(){
   runOutFile "$@"
   doFGrep "$S"
   if [ ! "$EGREP" ]; then
-    fail "Didn't find '$S' in output of '$@': $GREP"
+    fail "Didn't find '$S' in output of '$@': $(cat $RUNOUT)"
   fi
 }
 
