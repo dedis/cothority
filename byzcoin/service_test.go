@@ -1894,7 +1894,7 @@ func TestService_CheckValidPeers(t *testing.T) {
 		transactionOK(t, resp, err)
 
 		// Wait until all servers have included the block
-		time.Sleep(testInterval * 2)
+		cl.WaitPropagation(-1)
 
 		// Check valid peers in all current servers
 		for _, srv := range allServers[index : index+5] {
@@ -1912,7 +1912,7 @@ func TestService_CheckValidPeers(t *testing.T) {
 		transactionOK(t, resp, err)
 
 		// Wait until all servers have included the block
-		time.Sleep(testInterval * 2)
+		cl.WaitPropagation(-1)
 
 		// Check valid peers in all current servers
 		for _, srv := range allServers[index+1 : index+5] {
