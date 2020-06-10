@@ -586,16 +586,9 @@ func (account EvmAccount) signAndMarshalTx(tx *types.Transaction) (
 func getEvmDb(bcClient *byzcoin.Client, instID byzcoin.InstanceID) (
 	*state.StateDB, error) {
 	// Retrieve the proof of the Byzcoin instance
-	proofResponse, err := bcClient.GetProof(instID[:])
+	proofResponse, err := bcClient.GetProofFromLatest(instID[:])
 	if err != nil {
 		return nil, xerrors.Errorf("failed to retrieve BEvm instance: %v", err)
-	}
-
-	// Validate the proof
-	err = proofResponse.Proof.Verify(bcClient.ID)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to verify BEvm instance "+
-			"proof: %v", err)
 	}
 
 	// Extract the value from the proof

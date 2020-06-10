@@ -139,17 +139,10 @@ func (db *ClientByzDatabase) getBEvmValue(key []byte) ([]byte, error) {
 	instID := db.getValueInstanceID(key)
 
 	// Retrieve the proof of the BEvmValue instance
-	proofResponse, err := db.client.GetProof(instID[:])
+	proofResponse, err := db.client.GetProofFromLatest(instID[:])
 	if err != nil {
 		return nil, xerrors.Errorf("failed to retrieve BEvmValue "+
 			"instance for EVM state DB: %v", err)
-	}
-
-	// Validate the proof
-	err = proofResponse.Proof.Verify(db.client.ID)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to verify BEvmValue "+
-			"instance proof: %v", err)
 	}
 
 	// Extract the value from the proof
