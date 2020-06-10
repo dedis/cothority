@@ -26,6 +26,16 @@ type Version int
 // CurrentVersion is what we're running now
 const CurrentVersion Version = VersionPreID
 
+// VersionInstructionHash is the first version and indicates that a new,
+// correct, hash is used for the instructions.
+const VersionInstructionHash = 1
+
+// VersionPersonhood is when the personhood contract has been repaired
+const VersionPersonhood = 2
+
+// VersionPopParty indicates when the pop-parties started using a correct darc.
+const VersionPopParty = 3
+
 // VersionViewchange removed the BLS-signature on the view-change requests
 const VersionViewchange = 4
 

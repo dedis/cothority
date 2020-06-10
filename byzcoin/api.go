@@ -171,9 +171,9 @@ func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxRe
 	}
 
 	for _, inst := range tx.Instructions {
-		if inst.version != CurrentVersion {
+		if inst.version < VersionInstructionHash {
 			return nil, xerrors.New(
-				"got instruction with wrong version - please use byzcoin." +
+				"got instruction with pre-hash version - please use byzcoin." +
 					"NewClientTransaction")
 		}
 	}

@@ -333,8 +333,8 @@ func (instr *Instruction) SignWith(msg []byte, signers ...darc.Signer) error {
 	if len(signers) != len(instr.SignerCounter) {
 		return xerrors.New("the number of signers does not match the number of counters")
 	}
-	if instr.version != CurrentVersion {
-		return xerrors.New("cannot sign previous versions - please use" +
+	if instr.version < VersionInstructionHash {
+		return xerrors.New("cannot sign old instruction hashes - please use" +
 			" byzcoin.NewClientTransaction")
 	}
 	instr.Signatures = make([][]byte, len(signers))
