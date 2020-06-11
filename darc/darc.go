@@ -742,6 +742,56 @@ func EvalExprAttr(expr expression.Expr, getDarc GetDarc, attrFuncs AttrInterpret
 	return evalExprDarc(make(map[string]bool), expr, getDarc, attrFuncs, false, ids...)
 }
 
+// VisitExpr traverses an expression, calling visitor
+// for each possible terminal (i.e. non-DARC) identity that could satisfy
+// the expression.
+func VisitExpr(expr expression.Expr, getDarc GetDarc, visitor func(string)) error {
+	return visitExpr(make(map[string]bool), expr, getDarc, visitor)
+}
+
+func visitExpr(visited map[string]bool, expr expression.Expr, getDarc GetDarc, visitor func(string)) error {
+	var issue error
+	Y := expression.InitParser(func(s string) bool {
+		if strings.HasPrefix(s, "darc") {
+			// prevent cycles by checking the visited map
+			if _, ok := visited[s]; ok {
+				issue = errors.New("cycle detected")
+				return false
+			}
+			// we make a copy so that diamond delegation will work,
+			// seeTestDarc_DelegationDiamond
+			newVisited := make(map[string]bool)
+			for k, v := range visited {
+				newVisited[k] = v
+			}
+			newVisited[s] = true
+
+			// getDarc is responsible for returning the latest Darc
+			d := getDarc(s, true)
+			if d == nil {
+				issue = fmt.Errorf("unable to get the darc %s", s)
+				return false
+			}
+			signExpr := d.Rules.GetSignExpr()
+			// Recursively evaluate the sign expression until we
+			// find the final signer.
+			if err := visitExpr(newVisited, signExpr, getDarc, visitor); err != nil {
+				issue = err
+				return false
+			}
+			return true
+		} else {
+			visitor(s)
+		}
+		return true
+	})
+	_, err := expression.Evaluate(Y, expr)
+	if err != nil {
+		return err
+	}
+	return issue
+}
+
 // Type returns an integer representing the type of key held in the signer. It
 // is compatible with Identity.Type. For an empty signer, -1 is returned.
 func (s Signer) Type() int {

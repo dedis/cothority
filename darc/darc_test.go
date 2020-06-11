@@ -385,6 +385,16 @@ func TestDarc_DelegationChain(t *testing.T) {
 	// expression, should evaluate to true.
 	require.Nil(t, localEvolution(td.darc, darcs[0], owners[n-1]))
 	require.Nil(t, td.darc.VerifyWithCB(getDarc, true))
+
+	visited := []string{}
+	err := VisitExpr([]byte(darcs[0].Rules.GetEvolutionExpr()), getDarc, func(x string) {
+		visited = append(visited, x)
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, len(visited))
+	v, err := ParseIdentity(visited[0])
+	require.NoError(t, err)
+	require.True(t, owners[n-1].Identity().Equal(&v))
 }
 
 // TestDarc_DelegationCycle creates n darcs and a circular delegation

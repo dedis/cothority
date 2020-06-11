@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -895,7 +896,30 @@ func darcShow(c *cli.Context) error {
 		return err
 	}
 
-	log.Info(d.String())
+	action := c.String("action")
+	if action == "" {
+		// Just dump the entire darc.
+		log.Info(d.String())
+		return nil
+	}
+
+	// When -action is provided, then do a recursive search for terminals.
+	expr := d.Rules.Get(darc.Action(action))
+	if string(expr) == "" {
+		return errors.New("no expression found for action")
+	}
+	gd := func(s string, latest bool) *darc.Darc {
+		d, err := lib.GetDarcByString(cl, s)
+		if err != nil {
+			log.Warnf("Could not find darc %v: %v", s, err)
+			return nil
+		}
+		return d
+	}
+	err = darc.VisitExpr(expr, gd, func(x string) {
+		log.Info("terminal:", x)
+	})
+
 	return err
 }
 

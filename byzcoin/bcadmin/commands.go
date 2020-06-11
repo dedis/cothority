@@ -490,6 +490,10 @@ var cmds = cli.Commands{
 						Name:  "darc",
 						Usage: "the darc to show (admin darc by default)",
 					},
+					cli.StringFlag{
+						Name:  "action",
+						Usage: "show all terminal expressions that could satisfy the given action (recurses into other darcs)",
+					},
 				},
 			},
 			{
