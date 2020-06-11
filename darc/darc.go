@@ -674,24 +674,28 @@ func evalExprDarc(visited map[string]bool, expr expression.Expr, getDarc GetDarc
 			if acceptDarc && found {
 				return true
 			}
+
 			// prevent cycles by checking the visited map
 			if _, ok := visited[s]; ok {
 				issue = errors.New("cycle detected")
 				return false
 			}
+
 			// we make a copy so that diamond delegation will work,
-			// seeTestDarc_DelegationDiamond
+			// see TestDarc_DelegationDiamond
 			newVisited := make(map[string]bool)
 			for k, v := range visited {
 				newVisited[k] = v
 			}
 			newVisited[s] = true
+
 			// getDarc is responsible for returning the latest Darc
 			d := getDarc(s, true)
 			if d == nil {
 				issue = fmt.Errorf("unable to get the darc %s", s)
 				return false
 			}
+
 			// Evaluate the "sign" action only in the latest darc
 			// because it may have revoked some rules in earlier
 			// darcs. We do this recursively because there may be
@@ -701,6 +705,7 @@ func evalExprDarc(visited map[string]bool, expr expression.Expr, getDarc GetDarc
 				return false
 			}
 			signExpr := d.Rules.GetSignExpr()
+
 			// Recursively evaluate the sign expression until we
 			// find the final signer.
 			if err := evalExprDarc(newVisited, signExpr, getDarc, attrFuncs, acceptDarc, ids...); err != nil {
@@ -714,16 +719,19 @@ func evalExprDarc(visited map[string]bool, expr expression.Expr, getDarc GetDarc
 		}
 		return found
 	})
+
 	res, err := expression.Evaluate(Y, expr)
 	if err != nil {
 		return err
 	}
-	if res != true {
+
+	if !res {
 		if issue == nil {
 			return errors.New("issue is nil - file a bug if you see this error")
 		}
 		return issue
 	}
+
 	return nil
 }
 
