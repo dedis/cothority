@@ -41,7 +41,6 @@ jobs:
       script: make test_proto
     - <<: *language_go_1_13
       script:
-        - go mod tidy && [ -z "$(git status --porcelain)" ]
         - make -C conode verify
         - GO111MODULE=on make test_{fmt,lint}
     - <<: *language_go_1_14
