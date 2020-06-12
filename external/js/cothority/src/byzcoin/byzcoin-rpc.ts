@@ -353,7 +353,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
             throw new Error("no latest block found");
         }
 
-        return this.getProofFrom(this._latest, id, waitMatch, interval);
+        return this.getProofFrom(this._latest, id, waitMatch, interval, verify);
     }
 
     /**
