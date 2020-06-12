@@ -1690,11 +1690,11 @@ func TestService_SetConfigRosterNewLeader(t *testing.T) {
 func TestService_SetConfigRosterNewNodes(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
+
 	nbrNewNodes := 10
 	if testing.Short() {
 		nbrNewNodes = 2
 	}
-
 	servers, newRoster, _ := s.local.MakeSRS(cothority.Suite, nbrNewNodes, ByzCoinID)
 
 	ids := []darc.Identity{s.signer.Identity()}
@@ -1796,7 +1796,11 @@ func TestService_SetConfigRosterSwitchNodes(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
-	_, newRoster, _ := s.local.MakeSRS(cothority.Suite, 4, ByzCoinID)
+	newNodes := len(s.roster.List)
+	if testing.Short() {
+		newNodes = 1
+	}
+	_, newRoster, _ := s.local.MakeSRS(cothority.Suite, newNodes, ByzCoinID)
 
 	log.Lvl1("Don't allow new nodes as new leader")
 	wrongRoster := onet.NewRoster(append(newRoster.List, s.roster.List...))
@@ -1827,7 +1831,11 @@ func TestService_SetConfigRosterReplace(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
-	_, newRoster, _ := s.local.MakeSRS(cothority.Suite, 4, ByzCoinID)
+	newNodes := len(s.roster.List)
+	if testing.Short() {
+		newNodes = 1
+	}
+	_, newRoster, _ := s.local.MakeSRS(cothority.Suite, newNodes, ByzCoinID)
 
 	log.Lvl1("Replace with new roster", newRoster.List)
 	goodRoster := onet.NewRoster(s.roster.List)
