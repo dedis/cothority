@@ -143,7 +143,8 @@ func (p *CollectTxProtocol) Dispatch() error {
 		Txs:            p.getTxs(req.ServerIdentity, p.Roster(), req.SkipchainID, req.LatestID, maxOut),
 		ByzcoinVersion: p.getByzcoinVersion(),
 	}
-	log.Lvl3(p.ServerIdentity(), "sends back", len(resp.Txs), "transactions")
+	log.Lvlf3("%s sends back %d transactions and version %d",
+		p.ServerIdentity(), len(resp.Txs), p.getByzcoinVersion())
 	if p.IsRoot() {
 		if err := p.SendTo(p.TreeNode(), resp); err != nil {
 			return xerrors.Errorf("sending msg: %v", err)
@@ -227,6 +228,8 @@ func (vb versionBuffer) add(si *network.ServerIdentity, v Version) {
 	vb.versions[v]++
 }
 
+// sums up all possible version >= the argument.
+// If it returns true, the version given in the argument is safe to use.
 func (vb versionBuffer) hasThresholdFor(version Version) bool {
 	sum := 0
 	for k, v := range vb.versions {

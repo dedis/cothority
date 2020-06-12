@@ -282,7 +282,8 @@ func (p *GetBlocks) HandleGetBlocks(msg ProtoStructGetBlocks) error {
 		}
 		next = s.ForwardLink[linkNum].To
 	}
-	log.Lvlf2("%v: GetBlocks reply: %v blocks, last index %v", p.ServerIdentity(), len(result), lastIdx)
+	log.Lvlf2("%v: GetBlocks replies to %s: %v blocks, last index %v",
+		p.ServerIdentity(), msg.ServerIdentity, len(result), lastIdx)
 	return p.SendToParent(&ProtoGetBlocksReply{SkipBlocks: result})
 }
 
