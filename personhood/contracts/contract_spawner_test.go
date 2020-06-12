@@ -45,6 +45,30 @@ func TestContractSpawner(t *testing.T) {
 	require.Equal(t, uint64(200), cs.CostCRead.Value)
 	require.Equal(t, uint64(100), cs.CostCWrite.Value)
 	require.Equal(t, uint64(200), cs.CostValue.Value)
+
+	cs.CostValue = nil
+	scs[0].Value, err = protobuf.Encode(cs)
+	require.NoError(t, err)
+	_, err = s.StoreAllToReplica(scs)
+	require.NoError(t, err)
+	cost = byzcoin.Coin{Name: iid, Value: 300}
+	costBuf, err = protobuf.Encode(&cost)
+	require.NoError(t, err)
+	inst = byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(scs[0].InstanceID),
+		Invoke: &byzcoin.Invoke{
+			ContractID: ContractSpawnerID,
+			Command:    "update",
+			Args: byzcoin.Arguments{
+				{Name: "costValue", Value: costBuf},
+			},
+		},
+	}
+	scs, _, err = cs.Invoke(s, inst, nil)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(scs))
+	require.NoError(t, protobuf.Decode(scs[0].Value, cs))
+	require.Equal(t, uint64(300), cs.CostValue.Value)
 }
 
 func TestContractSpawnerCoin(t *testing.T) {

@@ -88,6 +88,8 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 		ca = inst.DeriveID("")
 	}
 
+	c.defaultCosts()
+
 	var instBuf []byte
 	cID := inst.Spawn.ContractID
 	switch cID {
@@ -95,7 +97,7 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 		c.CostCWrite = &byzcoin.Coin{}
 		c.CostCRead = &byzcoin.Coin{}
 		c.CostValue = &byzcoin.Coin{}
-		err = c.parseArgs(inst.Spawn.Args, rst.GetVersion())
+		err = c.parseArgs(inst.Spawn.Args, rst.GetVersion(), true)
 		if err != nil {
 			return nil, nil, errors.New("couldn't parse args: " + err.Error())
 		}
@@ -305,7 +307,8 @@ func (c *ContractSpawner) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Ins
 	switch inst.Invoke.Command {
 	case "update":
 		// updates the values of the contract
-		err = c.SpawnerStruct.parseArgs(inst.Invoke.Args, rst.GetVersion())
+		err = c.SpawnerStruct.parseArgs(inst.Invoke.Args, rst.GetVersion(),
+			false)
 		if err != nil {
 			return
 		}
@@ -338,7 +341,11 @@ func (c *ContractSpawner) Delete(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Ins
 	return
 }
 
-func (ss *SpawnerStruct) parseArgs(args byzcoin.Arguments, v byzcoin.Version) error {
+func (ss *SpawnerStruct) parseArgs(args byzcoin.Arguments, v byzcoin.Version,
+	def bool) error {
+	if v >= byzcoin.VersionSpawnerCoins {
+		ss.defaultCosts()
+	}
 	for _, cost := range []struct {
 		name string
 		coin *byzcoin.Coin
@@ -358,21 +365,35 @@ func (ss *SpawnerStruct) parseArgs(args byzcoin.Arguments, v byzcoin.Version) er
 				return fmt.Errorf("couldn't decode coin %s: %s", cost.name, err)
 			}
 		} else {
-			if v > 1 {
+			if def && v >= byzcoin.VersionPersonhood {
 				cost.coin.Name = contracts.CoinName
 				cost.coin.Value = 100
 			}
 		}
 		log.Lvl2("Setting cost of", cost.name, "to", cost.coin.Value)
 	}
-	// This is a check to make sure that older spawn-instructions don't get
-	// a wrong data.
-	if args.Search("costRoPaSci") == nil {
-		ss.CostCWrite = nil
-		ss.CostCRead = nil
-	}
-	if args.Search("costValue") == nil {
-		ss.CostValue = nil
+	if v < byzcoin.VersionSpawnerCoins {
+		// This is a check to make sure that older spawn-instructions don't get
+		// a wrong data.
+		if args.Search("costRoPaSci") == nil {
+			ss.CostCWrite = nil
+			ss.CostCRead = nil
+		}
+		if args.Search("costValue") == nil {
+			ss.CostValue = nil
+		}
 	}
 	return nil
+}
+
+func (ss *SpawnerStruct) defaultCosts() {
+	if ss.CostCWrite == nil {
+		ss.CostCWrite = &ss.CostCredential
+	}
+	if ss.CostCRead == nil {
+		ss.CostCRead = ss.CostCWrite
+	}
+	if ss.CostValue == nil {
+		ss.CostValue = &ss.CostCoin
+	}
 }

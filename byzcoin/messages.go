@@ -24,20 +24,21 @@ func init() {
 type Version int
 
 // CurrentVersion is what we're running now
-const CurrentVersion Version = VersionPreID
+const CurrentVersion Version = VersionSpawnerCoins
 
-// VersionInstructionHash is the first version and indicates that a new,
-// correct, hash is used for the instructions.
-const VersionInstructionHash = 1
-
-// VersionPersonhood is when the personhood contract has been repaired
-const VersionPersonhood = 2
-
-// VersionPopParty indicates when the pop-parties started using a correct darc.
-const VersionPopParty = 3
-
-// VersionViewchange removed the BLS-signature on the view-change requests
-const VersionViewchange = 4
-
-// VersionPreID adds preID to most of the contracts
-const VersionPreID = 5
+const (
+	// VersionInstructionHash is the first version and indicates that a new,
+	// correct, hash is used for the instructions.
+	VersionInstructionHash Version = iota + 1
+	// VersionPersonhood is when the personhood contract has been repaired
+	VersionPersonhood = 2
+	// VersionPopParty indicates when the pop-parties started using a correct darc.
+	VersionPopParty = 3
+	// VersionViewchange removed the BLS-signature on the view-change requests
+	VersionViewchange = 4
+	// VersionPreID adds preID to most of the contracts
+	VersionPreID = 5
+	// VersionSpawnerCoins indicates a fixed spawner contract that will treat
+	// the coins correctly
+	VersionSpawnerCoins = 6
+)
