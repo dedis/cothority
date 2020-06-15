@@ -4,7 +4,9 @@ import { ByzCoinRPC } from "../../src/byzcoin";
 import { LocalCache } from "../../src/byzcoin/byzcoin-rpc";
 import DarcInstance from "../../src/byzcoin/contracts/darc-instance";
 import Instance from "../../src/byzcoin/instance";
+import { IDVersion } from "../../src/byzcoin/proto/requests";
 import { Darc } from "../../src/darc";
+import { SkipchainRPC } from "../../src/skipchain";
 import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/conondes";
 
 describe("ByzCoinRPC Tests", () => {
@@ -68,7 +70,7 @@ describe("ByzCoinRPC Tests", () => {
             history.push(`${d.version}-${d.description.toString()}`);
         });
         expect(history[0]).toBe("0-initial");
-// Evolving the Darc we observe, we expect the history to be updated
+        // Evolving the Darc we observe, we expect the history to be updated
         const di = await DarcInstance.fromByzcoin(rpc, darc.getBaseID());
         const newDI = new Darc({
             ...darc.evolve(),
@@ -84,7 +86,7 @@ describe("ByzCoinRPC Tests", () => {
         }
         expect(history.length).toBe(2);
         expect(history[1]).toBe("1-new");
-// Creating a new Darc, this should not update the history
+        // Creating a new Darc, this should not update the history
         const newDarc = Darc.createBasic([SIGNER], [SIGNER],
             Buffer.from("darc 2"));
         await di.spawnDarcAndWait(newDarc, [SIGNER], 2);
@@ -92,10 +94,23 @@ describe("ByzCoinRPC Tests", () => {
             expect(history.length).toBe(2);
             await wait100ms();
         }
-// Getting a new proofObservable on the previously updated Darc should return the latest version of the Darc
+        // Getting a new proofObservable on the previously updated Darc should return the latest version of the Darc
         const latestProof = (await rpc.instanceObservable(darc.getBaseID())).getValue();
         expect(latestProof.stateChangeBody.version.equals(Long.fromNumber(1)))
             .toBeTruthy();
+
+        // Make sure getUpdates also works when it needs to fetch a new block-#.
+        // The test cheats ByzCoinRPC into thinking it didn't update yet to the latest block, then asks it to request
+        // an update of an ID, which will fail.
+        // ByzCoinRPC.getUpdate will wait for a new block, which is created by evolving the newDI darc, which
+        // triggers the update of the instance in getUpdate.
+        const latest = rpc.latest;
+        rpc.latest = await new SkipchainRPC(roster).getSkipBlock(latest.backlinks[0]);
+        const proofsPromise = rpc.getUpdates(
+            [new IDVersion({id: newDarc.getBaseID(), version: Long.fromNumber(0)})]);
+        await di.evolveDarcAndWait(newDI.evolve(), [SIGNER], 10);
+        await proofsPromise;
+        expect(rpc.latest.index).toBe(latest.index + 1);
 
         rpc.closeNewBlocks();
     });

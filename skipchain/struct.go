@@ -1190,7 +1190,7 @@ func (db *SkipBlockDB) GetProof(sid SkipBlockID) (sbs []*SkipBlock, err error) {
 }
 
 // GetProofForID returns the shortest chain known from the genesis to the given
-// block using the heighest forward-links available in the local db.
+// block using the highest forward-links available in the local db.
 func (db *SkipBlockDB) GetProofForID(bid SkipBlockID) (sbs Proof, err error) {
 	err = db.View(func(tx *bbolt.Tx) error {
 		target, err := db.getFromTx(tx, bid)
