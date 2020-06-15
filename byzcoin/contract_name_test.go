@@ -36,6 +36,7 @@ func TestService_Naming(t *testing.T) {
 		},
 		SignerCounter: []uint64{1},
 	})
+	require.NoError(t, err)
 	require.NoError(t, spawnNamingTx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(spawnNamingTx, 10)
 	require.NoError(t, err)
