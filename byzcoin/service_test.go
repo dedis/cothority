@@ -1863,7 +1863,14 @@ func TestService_CheckValidPeers(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
-	newServers, newRoster, _ := s.local.MakeSRS(cothority.Suite, 4, ByzCoinID)
+	var nbNewServers int
+	if testing.Short() {
+		nbNewServers = 2
+	} else {
+		nbNewServers = 4
+	}
+	newServers, newRoster, _ := s.local.MakeSRS(cothority.Suite, nbNewServers,
+		ByzCoinID)
 
 	// Compute the peerSetID for this skipchain
 	onetCtx := s.service().ServiceProcessor.Context
