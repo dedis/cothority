@@ -1130,12 +1130,6 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		return nil, xerrors.Errorf("storing block: %v", err)
 	}
 
-	// State changes are cached only when the block is confirmed
-	err = s.stateChangeStorage.append(scs, ssbReply.Latest)
-	if err != nil {
-		log.Error(err)
-	}
-
 	return ssbReply.Latest, nil
 }
 
@@ -3151,8 +3145,12 @@ func newService(c *onet.Context) (onet.Service, error) {
 		return nil, xerrors.Errorf("unknown db version number %v", ver)
 	}
 
-	// initialize the stats of the storage
-	s.stateChangeStorage.calculateSize()
+	go func() {
+		// initialize the stats of the storage
+		if err := s.stateChangeStorage.calculateSize(); err != nil {
+			log.Errorf("couldn't calculate size: %v", err)
+		}
+	}()
 
 	if err := s.startAllChains(); err != nil {
 		return nil, xerrors.Errorf("starting chains: %v", err)

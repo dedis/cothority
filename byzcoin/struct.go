@@ -125,12 +125,8 @@ func (s *stateChangeStorage) setMaxNbrBlock(nbr int) {
 // calculateSize reads the entries in the database and sums up their
 // sizes
 func (s *stateChangeStorage) calculateSize() error {
-	s.Lock()
-	defer s.Unlock()
-
-	s.size = 0
-
-	return s.db.View(func(tx *bbolt.Tx) error {
+	dSize := 0
+	err := s.db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(s.bucket)
 		if b == nil {
 			return xerrors.New("Missing bucket")
@@ -143,11 +139,20 @@ func (s *stateChangeStorage) calculateSize() error {
 			}
 
 			return scb.ForEach(func(k, v []byte) error {
-				s.size += len(v)
+				dSize += len(v)
 				return nil
 			})
 		})
 	})
+	if err != nil {
+		return fmt.Errorf("couldn't calculate size: %v", err)
+	}
+
+	s.Lock()
+	s.size += dSize
+	s.Unlock()
+
+	return nil
 }
 
 // This will clean the oldest state changes when the total size
@@ -359,6 +364,10 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 			if err != nil {
 				return xerrors.Errorf("key: %v", err)
 			}
+			if b.Get(key) != nil {
+				return fmt.Errorf("already existing scs: %x - %d / %d",
+					sc.InstanceID, sc.Version, sb.Index)
+			}
 
 			now := time.Now()
 			buf, err := protobuf.Encode(&StateChangeEntry{
@@ -371,16 +380,12 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 				return xerrors.Errorf("encoding: %v", err)
 			}
 
-			// get the previous value to recalculate the size
-			v := b.Get(key)
-
 			err = b.Put(key, buf)
 			if err != nil {
 				return xerrors.Errorf("writing item: %v", err)
 			}
 
-			// optimization for cleaning to avoir recomputing the size
-			size += len(buf) - len(v)
+			size += len(buf)
 		}
 
 		return nil

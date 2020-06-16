@@ -85,10 +85,10 @@ func TestStateChangeStorage_SimpleCase(t *testing.T) {
 	err := scs.append(ss, sb)
 	require.NoError(t, err)
 
-	// check the size remains the same with already seen state changes
+	// check that the same scs cannot be appended twice
 	size := scs.size
 	err = scs.append(ss, sb)
-	require.NoError(t, err)
+	require.Error(t, err)
 	require.Equal(t, size, scs.size)
 
 	entries, err := scs.getAll(ss[0].InstanceID, sb.SkipChainID())
