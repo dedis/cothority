@@ -330,6 +330,21 @@ func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 		return nil, xerrors.Errorf("verifying proof: %v", err)
 	}
 
+	// Iterate through the new roster and update the set of valid peers
+	cl := onet.NewClient(cothority.Suite, ServiceName)
+	var reply updateValidPeersReply
+	for _, srv := range roster.List {
+		err := cl.SendProtobuf(srv,
+			&updateValidPeers{
+				NewRoster: roster,
+				ByzcoinID: id,
+			}, &reply)
+		if err != nil {
+			return nil, xerrors.Errorf("updating valid peers on %v: %v",
+				srv, err)
+		}
+	}
+
 	// Initialise the protocol
 	setupDKG, err := func() (*dkgprotocol.Setup, error) {
 		s.storage.Lock()
@@ -432,6 +447,24 @@ func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 	log.Lvl2(s.ServerIdentity(), "resharing protocol finished")
 	log.Lvlf2("%v Reshared LTS with ID: %v, pk %v", s.ServerIdentity(), id, pk)
 	return &ReshareLTSReply{}, nil
+}
+
+// Private service endpoint that extends the set of valid peers with the ones
+// in the provided roster.
+func (s *Service) updateValidPeers(req *updateValidPeers) (
+	*updateValidPeersReply, error) {
+	currentRoster := s.storage.Rosters[req.ByzcoinID]
+
+	// Build the new set as the union of the current and new rosters
+	newPeerSet := []*network.ServerIdentity{}
+	if currentRoster != nil {
+		newPeerSet = append(newPeerSet, currentRoster.List...)
+	}
+	newPeerSet = append(newPeerSet, req.NewRoster.List...)
+
+	s.SetValidPeers(s.NewPeerSetID(req.ByzcoinID[:]), newPeerSet)
+
+	return &updateValidPeersReply{}, nil
 }
 
 func (s *Service) verifyProof(proof *byzcoin.Proof) error {
@@ -821,7 +854,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		genesisBlocks:    make(map[string]*skipchain.SkipBlock),
 	}
 	if err := s.RegisterHandlers(s.CreateLTS, s.ReshareLTS, s.DecryptKey,
-		s.GetLTSReply, s.Authorise, s.Authorize); err != nil {
+		s.GetLTSReply, s.Authorise, s.Authorize, s.updateValidPeers); err != nil {
 		return nil, xerrors.New("couldn't register messages")
 	}
 	if err := s.tryLoad(); err != nil {

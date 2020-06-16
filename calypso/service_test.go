@@ -16,7 +16,6 @@ import (
 	"go.dedis.ch/kyber/v3/util/key"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
-	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 )
 
@@ -163,12 +162,6 @@ func TestService_ReshareLTS_OneMore(t *testing.T) {
 			s.ltsRoster = onet.NewRoster(s.allRoster.List[:nodes+1])
 			ltsInstInfoBuf, err := protobuf.Encode(&LtsInstanceInfo{*s.ltsRoster})
 			require.NoError(t, err)
-
-			// Declare the new roster valid for all servers
-			testPeerSetID := network.NewPeerSetID([]byte{})
-			for _, srv := range s.servers {
-				srv.SetValidPeers(testPeerSetID, s.ltsRoster.List)
-			}
 
 			ctx, err := s.cl.CreateTransaction(byzcoin.Instruction{
 				InstanceID: s.ltsReply.InstanceID,
