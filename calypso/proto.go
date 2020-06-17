@@ -114,8 +114,7 @@ type ReshareLTSReply struct {
 
 // Message used to update the set of valid peers.
 type updateValidPeers struct {
-	NewRoster *onet.Roster
-	ByzcoinID byzcoin.InstanceID
+	Proof byzcoin.Proof
 }
 
 // Messaged returned after the succesful update of the set of valid peers.
