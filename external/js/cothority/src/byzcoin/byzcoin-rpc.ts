@@ -1,7 +1,6 @@
 import Long from "long";
 import { BehaviorSubject, fromEvent, Subscription } from "rxjs";
-import { tap } from "rxjs/internal/operators/tap";
-import { map, throttleTime } from "rxjs/operators";
+import { distinct, distinctUntilChanged, elementAt, map, startWith, take, tap } from "rxjs/operators";
 import { Rule } from "../darc";
 import Darc from "../darc/darc";
 import IdentityEd25519 from "../darc/identity-ed25519";
@@ -55,6 +54,15 @@ export default class ByzCoinRPC implements ICounterUpdater {
 
     get latest(): SkipBlock {
         return new SkipBlock(this._latest);
+    }
+
+    set latest(sb: SkipBlock) {
+        // @ts-ignore
+        if (!global.jasmine) {
+            Log.warn("This should only be used in tests");
+        }
+        this._latest = sb;
+        this.updateInstances.next(sb.index);
     }
 
     static readonly serviceName = "ByzCoin";
@@ -150,7 +158,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
     private conn: IConnection;
     private db: IStorage;
     private cache = new Map<string, BehaviorSubject<Proof>>();
-    private updateInstances: BehaviorSubject<SkipBlock>;
+    private updateInstances: BehaviorSubject<number>;
     private subscriberListenOnline: Subscription;
     private subscriberNewBlocks: Subscription;
 
@@ -212,6 +220,9 @@ export default class ByzCoinRPC implements ICounterUpdater {
             return bs;
         }
 
+        // Need to initialize it anyway, even if the instance is not in the cache.
+        const updateInst = await this.getUpdateInstances();
+
         // Check if the db already has a version, which might be outdated,
         // but still better than to wait for the network.
         // This makes it possible to have a quick display of a value that
@@ -243,11 +254,11 @@ export default class ByzCoinRPC implements ICounterUpdater {
         const bsNew = new BehaviorSubject(new Proof({inclusionproof: dbIP, links: [], latest: this.latest}));
         this.cache.set(idStr, bsNew);
 
-        // Need to initialize it anyway, even if the instance is not in the cache.
-        const updateInst = await this.getUpdateInstances();
         if (ipBuf !== undefined) {
             // If the instance came from the cache, schedule update of all instances by simulating a new block.
-            updateInst.next(this.latest);
+            // Adding a 0.5 to the block index here makes sure that this only happens once between two blocks.
+            // If there are more queries for instances, only cached values will be shown until the next new block.
+            updateInst.next(this.latest.index + 0.5);
         }
 
         // Return the BehaviorSubject. The subscription on the getNewBlocks will take care
@@ -405,15 +416,24 @@ export default class ByzCoinRPC implements ICounterUpdater {
      *
      * Instead of returning full proofs, it only returns the InclusionProofs.
      *
-     * @param instances
-     * @param flags
+     * If the call to the node fails with an error "can only give proofs for latest block", it retries
+     * up to 5 times.
+     *
+     * @param instances that will be queried for changes
+     * @param flags are ORed to indicate the following behaviors:
+     *    - GUFSendVersion0 (=1) will make GetUpdates to send all instances with
+     *     version 0, even those that are note updated.
+     *    - GUFSendMissingProofs (=2) will make GetUpdates send proofs for missing
+     *     instances. If not present, missing instances are ignored.
+     * @param rec used to avoid infinite recursions when the call fails.
      */
-    async getUpdates(instances: IDVersion[], flags = Long.fromNumber(0)): Promise<InclusionProof[]> {
+    async getUpdates(instances: IDVersion[], flags = Long.fromNumber(0), rec = 0): Promise<InclusionProof[]> {
         const req = new GetUpdatesRequest({
             flags,
             instances,
             latestblockid: this.latest.hash,
         });
+        const latestIndex = this.latest.index;
 
         const header = DataHeader.decode(this.latest.data);
         try {
@@ -422,7 +442,24 @@ export default class ByzCoinRPC implements ICounterUpdater {
                 .filter((pr) => instances.find((inst) => inst.id.equals(pr.key)))
                 .filter((pr) => pr.exists(pr.key));
         } catch (e) {
-            return Log.rcatch(e);
+            if (e.toString().match("latest block") === null || rec > 5) {
+                return Log.rcatch(e, "couldn't get a suiting block...");
+            }
+            Log.warn("error while updating instance - waiting for new block");
+            return new Promise(async (resolve, reject) => {
+                // Start with the index used in the query, and add all new arriving blocks.
+                // Using `distinct` and `elementAt` to fetch only a new block-number different from
+                // the one used in the previous query.
+                const ui = await this.getUpdateInstances();
+                ui.pipe(startWith(latestIndex), distinct(), elementAt(1)).subscribe(async () => {
+                    try {
+                        const ips = await this.getUpdates(instances, flags, rec + 1);
+                        resolve(ips);
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            });
         }
     }
 
@@ -535,13 +572,13 @@ export default class ByzCoinRPC implements ICounterUpdater {
         }
     }
 
-    private async getUpdateInstances(): Promise<BehaviorSubject<SkipBlock>> {
+    private async getUpdateInstances(): Promise<BehaviorSubject<number>> {
         if (this.updateInstances === undefined) {
             // For every new block, send the latest known version of all instances, and then
             // call `next` for all received updates.
-            this.updateInstances = new BehaviorSubject(this.latest);
-            (await this.getNewBlocks()).subscribe(this.updateInstances);
-            this.updateInstances.pipe(throttleTime(1000))
+            this.updateInstances = new BehaviorSubject(this.latest.index);
+            (await this.getNewBlocks()).subscribe((block) => this.updateInstances.next(block.index));
+            this.updateInstances.pipe(distinctUntilChanged((a, b) => a === b))
                 .subscribe({
                     next: async () => {
                         const idvs = [...this.cache.values()].map((pr) =>
@@ -579,7 +616,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
                     this.subscriberListenOnline = fromEvent(window, "online").subscribe(() => {
                         Log.warn("Got online on", new Date());
                         this.listenNewBlocks();
-                        this.updateInstances.next(this.latest);
+                        this.updateInstances.next(this.latest.index);
                     });
                 } catch (e) {
                     Log.error(e);
