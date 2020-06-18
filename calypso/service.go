@@ -450,8 +450,8 @@ func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 	return &ReshareLTSReply{}, nil
 }
 
-// Private service endpoint that extends the set of valid peers with the ones
-// in the provided roster.
+// Private service endpoint that sets the valid peers according to the roster
+// in the provided proof.
 func (s *Service) updateValidPeers(req *updateValidPeers) (
 	*updateValidPeersReply, error) {
 	err := s.verifyProof(&req.Proof)
@@ -464,18 +464,7 @@ func (s *Service) updateValidPeers(req *updateValidPeers) (
 		return nil, xerrors.Errorf("retrieving roster: %v", err)
 	}
 
-	s.storage.Lock()
-	currentRoster := s.storage.Rosters[ltsID]
-	s.storage.Unlock()
-
-	// Build the new set as the union of the current and new rosters
-	newPeerSet := []*network.ServerIdentity{}
-	if currentRoster != nil {
-		newPeerSet = append(newPeerSet, currentRoster.List...)
-	}
-	newPeerSet = append(newPeerSet, newRoster.List...)
-
-	s.SetValidPeers(s.NewPeerSetID(ltsID[:]), newPeerSet)
+	s.SetValidPeers(s.NewPeerSetID(ltsID[:]), newRoster.List)
 
 	return &updateValidPeersReply{}, nil
 }
@@ -796,7 +785,6 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 			s.storage.Shared[id] = shared
 			s.storage.DKS[id] = dks
 			s.storage.Rosters[id] = roster
-			setValidPeers(roster)
 			s.storage.Unlock()
 			err = s.save()
 			if err != nil {
