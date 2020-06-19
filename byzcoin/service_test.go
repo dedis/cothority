@@ -1900,8 +1900,14 @@ func TestService_CheckValidPeers(t *testing.T) {
 		resp, err := cl.AddTransactionAndWait(ctx, 10)
 		transactionOK(t, resp, err)
 
+		s.services = append(s.services,
+			newServers[index].Service(ServiceName).(*Service))
+
+		// Add dummy transaction to ensure new node is updated
+		counter = addDummyTxs(t, s, 1, 1, counter)
+
 		// Wait until all servers have included the block
-		cl.WaitPropagation(-1)
+		require.NoError(t, cl.WaitPropagation(-1))
 
 		// Check valid peers in all current servers
 		for _, srv := range allServers[index : index+5] {
@@ -1918,8 +1924,10 @@ func TestService_CheckValidPeers(t *testing.T) {
 		resp, err = cl.AddTransactionAndWait(ctx, 10)
 		transactionOK(t, resp, err)
 
+		s.services = s.services[1:]
+
 		// Wait until all servers have included the block
-		cl.WaitPropagation(-1)
+		require.NoError(t, cl.WaitPropagation(-1))
 
 		// Check valid peers in all current servers
 		for _, srv := range allServers[index+1 : index+5] {
@@ -1929,10 +1937,10 @@ func TestService_CheckValidPeers(t *testing.T) {
 	}
 }
 
-func addDummyTxs(t *testing.T, s *ser, nbr int, perCTx int, count int) int {
-	return addDummyTxsTo(t, s, nbr, perCTx, count, 0)
+func addDummyTxs(t *testing.T, s *ser, nbr int, perCTx int, counter int) int {
+	return addDummyTxsTo(t, s, nbr, perCTx, counter, 0)
 }
-func addDummyTxsTo(t *testing.T, s *ser, nbr int, perCTx int, count int, idx int) int {
+func addDummyTxsTo(t *testing.T, s *ser, nbr int, perCTx int, counter int, idx int) int {
 	ids := []darc.Identity{s.signer.Identity()}
 	for i := 0; i < nbr; i++ {
 		var instrs Instructions
@@ -1943,18 +1951,14 @@ func addDummyTxsTo(t *testing.T, s *ser, nbr int, perCTx int, count int, idx int
 			require.NoError(t, err)
 			instr := createSpawnInstr(s.darc.GetBaseID(), ContractDarcID,
 				"darc", dummyDarcBuf)
-			instr.SignerCounter[0] = uint64(count)
-			count++
+			instr.SignerCounter[0] = uint64(counter)
+			counter++
 			instrs = append(instrs, instr)
 		}
-		ctx, err := combineInstrsAndSign(s.signer, instrs...)
-		require.NoError(t, err)
-
-		s.sendTxToAndWait(t, ctx, idx, 10)
 		s.sendInstructions(t, 10, instrs...)
 		s.local.WaitDone(time.Second)
 	}
-	return count
+	return counter
 }
 
 func TestService_SetConfigRosterDownload(t *testing.T) {
