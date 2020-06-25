@@ -330,6 +330,17 @@ func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 		return nil, xerrors.Errorf("verifying proof: %v", err)
 	}
 
+	// Iterate through the new roster and update the set of valid peers
+	cl := onet.NewClient(cothority.Suite, ServiceName)
+	var reply updateValidPeersReply
+	for _, srv := range roster.List {
+		err := cl.SendProtobuf(srv, &updateValidPeers{Proof: req.Proof}, &reply)
+		if err != nil {
+			return nil, xerrors.Errorf("updating valid peers on %v: %v",
+				srv, err)
+		}
+	}
+
 	// Initialise the protocol
 	setupDKG, err := func() (*dkgprotocol.Setup, error) {
 		s.storage.Lock()
@@ -342,6 +353,11 @@ func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 
 		// NOTE: the roster stored in ByzCoin must have myself.
 		tree := roster.GenerateNaryTreeWithRoot(len(roster.List), s.ServerIdentity())
+		if tree == nil {
+			return nil, xerrors.New("failed to generate tree " +
+				"-- root not in roster")
+		}
+
 		cfg := reshareLtsConfig{
 			Proof: req.Proof,
 			// We pass the public coefficients out with the protocol,
@@ -432,6 +448,25 @@ func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 	log.Lvl2(s.ServerIdentity(), "resharing protocol finished")
 	log.Lvlf2("%v Reshared LTS with ID: %v, pk %v", s.ServerIdentity(), id, pk)
 	return &ReshareLTSReply{}, nil
+}
+
+// Private service endpoint that sets the valid peers according to the roster
+// in the provided proof.
+func (s *Service) updateValidPeers(req *updateValidPeers) (
+	*updateValidPeersReply, error) {
+	err := s.verifyProof(&req.Proof)
+	if err != nil {
+		return nil, xerrors.Errorf("verifying proof: %v", err)
+	}
+
+	newRoster, ltsID, err := s.getLtsRoster(&req.Proof)
+	if err != nil {
+		return nil, xerrors.Errorf("retrieving roster: %v", err)
+	}
+
+	s.SetValidPeers(s.NewPeerSetID(ltsID[:]), newRoster.List)
+
+	return &updateValidPeersReply{}, nil
 }
 
 func (s *Service) verifyProof(proof *byzcoin.Proof) error {
@@ -672,7 +707,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 			return nil, xerrors.Errorf("verifying proof: %v", err)
 		}
 
-		_, id, err := s.getLtsRoster(&cfg.Proof)
+		roster, id, err := s.getLtsRoster(&cfg.Proof)
 
 		// Set up the protocol
 		pi, err := dkgprotocol.NewSetup(tn)
@@ -711,18 +746,29 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 
 		// Wait for DKG in reshare mode to end
 		go func(id byzcoin.InstanceID) {
+			// TODO: properly propagate errors during execution of DKG protocol
+			// (see dedis/cothority#2320)
 			<-setupDKG.Finished
+
+			setValidPeers := func(r *onet.Roster) {
+				s.SetValidPeers(s.NewPeerSetID(id[:]), r.List)
+			}
+
+			s.storage.Lock()
+
 			shared, dks, err := setupDKG.SharedSecret()
 			if err != nil {
+				setValidPeers(s.storage.Rosters[id])
+				s.storage.Unlock()
 				log.Error(err)
 				return
 			}
 
-			s.storage.Lock()
 			// If we had an old share, check the new share before saving it.
 			if s.storage.Shared[id] != nil {
 				// Check the secret shares are different
 				if shared.V.Equal(s.storage.Shared[id].V) {
+					setValidPeers(s.storage.Rosters[id])
 					s.storage.Unlock()
 					log.Error("the reshared secret is the same")
 					return
@@ -730,6 +776,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 
 				// Check the public key remains the same
 				if !shared.X.Equal(s.storage.Shared[id].X) {
+					setValidPeers(s.storage.Rosters[id])
 					s.storage.Unlock()
 					log.Error("the reshared public point is different")
 					return
@@ -737,10 +784,11 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 			}
 			s.storage.Shared[id] = shared
 			s.storage.DKS[id] = dks
+			s.storage.Rosters[id] = roster
 			s.storage.Unlock()
 			err = s.save()
 			if err != nil {
-				log.Error(err)
+				log.Fatal(err)
 			}
 			if s.afterReshare != nil {
 				s.afterReshare()
@@ -821,12 +869,18 @@ func newService(c *onet.Context) (onet.Service, error) {
 		genesisBlocks:    make(map[string]*skipchain.SkipBlock),
 	}
 	if err := s.RegisterHandlers(s.CreateLTS, s.ReshareLTS, s.DecryptKey,
-		s.GetLTSReply, s.Authorise, s.Authorize); err != nil {
+		s.GetLTSReply, s.Authorise, s.Authorize, s.updateValidPeers); err != nil {
 		return nil, xerrors.New("couldn't register messages")
 	}
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
 		return nil, xerrors.Errorf("loading configuration: %v", err)
 	}
+
+	// Initialize the sets of valid peers for all existing LTS
+	for ltsID, roster := range s.storage.Rosters {
+		s.SetValidPeers(s.NewPeerSetID(ltsID[:]), roster.List)
+	}
+
 	return s, nil
 }

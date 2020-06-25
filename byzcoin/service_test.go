@@ -1858,10 +1858,89 @@ func TestService_SetConfigRosterReplace(t *testing.T) {
 	}
 }
 
-func addDummyTxs(t *testing.T, s *ser, nbr int, perCTx int, count int) int {
-	return addDummyTxsTo(t, s, nbr, perCTx, count, 0)
+// Check consistency of the set of valid peers while replacing roster
+func TestService_CheckValidPeers(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	var nbNewServers int
+	if testing.Short() {
+		nbNewServers = 2
+	} else {
+		nbNewServers = 4
+	}
+	newServers, newRoster, _ := s.local.MakeSRS(cothority.Suite, nbNewServers,
+		ByzCoinID)
+
+	// Compute the peerSetID for this skipchain
+	onetCtx := s.service().ServiceProcessor.Context
+	peerSetID := onetCtx.NewPeerSetID(s.genesis.SkipChainID())
+
+	// List of all servers involved in the test
+	allServers := append(s.hosts, newServers...)
+
+	log.Lvl1("Replace with new roster", newRoster.List)
+	goodRoster := onet.NewRoster(s.roster.List)
+	counter := 1
+
+	// Expected valid peers during the test, initialized to the starting roster.
+	expectedValidPeers := []network.ServerIdentityID{}
+	for _, srv := range goodRoster.List {
+		expectedValidPeers = append(expectedValidPeers, srv.ID)
+	}
+
+	for index, si := range newRoster.List {
+		log.Lvl1("Adding", si)
+		goodRoster = onet.NewRoster(append(goodRoster.List, si))
+		expectedValidPeers = append(expectedValidPeers, si.ID)
+
+		ctx, _ := createConfigTxWithCounter(t, testInterval, *goodRoster, defaultMaxBlockSize, s, counter)
+		counter++
+		cl := NewClient(s.genesis.SkipChainID(), *goodRoster)
+		resp, err := cl.AddTransactionAndWait(ctx, 10)
+		transactionOK(t, resp, err)
+
+		s.services = append(s.services,
+			newServers[index].Service(ServiceName).(*Service))
+
+		// Add dummy transaction to ensure new node is updated
+		counter = addDummyTxs(t, s, 1, 1, counter)
+
+		// Wait until all servers have included the block
+		require.NoError(t, cl.WaitPropagation(-1))
+
+		// Check valid peers in all current servers
+		for _, srv := range allServers[index : index+5] {
+			require.ElementsMatch(t,
+				srv.GetValidPeers(peerSetID), expectedValidPeers)
+		}
+
+		log.Lvl1("Removing", goodRoster.List[0])
+		goodRoster = onet.NewRoster(goodRoster.List[1:])
+		expectedValidPeers = expectedValidPeers[1:]
+
+		ctx, _ = createConfigTxWithCounter(t, testInterval, *goodRoster, defaultMaxBlockSize, s, counter)
+		counter++
+		resp, err = cl.AddTransactionAndWait(ctx, 10)
+		transactionOK(t, resp, err)
+
+		s.services = s.services[1:]
+
+		// Wait until all servers have included the block
+		require.NoError(t, cl.WaitPropagation(-1))
+
+		// Check valid peers in all current servers
+		for _, srv := range allServers[index+1 : index+5] {
+			require.ElementsMatch(t,
+				srv.GetValidPeers(peerSetID), expectedValidPeers)
+		}
+	}
 }
-func addDummyTxsTo(t *testing.T, s *ser, nbr int, perCTx int, count int, idx int) int {
+
+func addDummyTxs(t *testing.T, s *ser, nbr int, perCTx int, counter int) int {
+	return addDummyTxsTo(t, s, nbr, perCTx, counter, 0)
+}
+func addDummyTxsTo(t *testing.T, s *ser, nbr int, perCTx int, counter int, idx int) int {
 	ids := []darc.Identity{s.signer.Identity()}
 	for i := 0; i < nbr; i++ {
 		var instrs Instructions
@@ -1872,18 +1951,14 @@ func addDummyTxsTo(t *testing.T, s *ser, nbr int, perCTx int, count int, idx int
 			require.NoError(t, err)
 			instr := createSpawnInstr(s.darc.GetBaseID(), ContractDarcID,
 				"darc", dummyDarcBuf)
-			instr.SignerCounter[0] = uint64(count)
-			count++
+			instr.SignerCounter[0] = uint64(counter)
+			counter++
 			instrs = append(instrs, instr)
 		}
-		ctx, err := combineInstrsAndSign(s.signer, instrs...)
-		require.NoError(t, err)
-
-		s.sendTxToAndWait(t, ctx, idx, 10)
 		s.sendInstructions(t, 10, instrs...)
 		s.local.WaitDone(time.Second)
 	}
-	return count
+	return counter
 }
 
 func TestService_SetConfigRosterDownload(t *testing.T) {

@@ -112,6 +112,15 @@ type ReshareLTS struct {
 type ReshareLTSReply struct {
 }
 
+// Message used to update the set of valid peers.
+type updateValidPeers struct {
+	Proof byzcoin.Proof
+}
+
+// Messaged returned after the succesful update of the set of valid peers.
+type updateValidPeersReply struct {
+}
+
 // DecryptKey is sent by a reader after he successfully stored a 'Read' request
 // in byzcoin Client.
 type DecryptKey struct {
