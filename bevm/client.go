@@ -15,9 +15,13 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
+	"go.dedis.ch/cothority/v3"
+	proto "go.dedis.ch/cothority/v3/bevm/proto"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 	"golang.org/x/xerrors"
 )
@@ -208,6 +212,7 @@ func (account EvmAccount) String() string {
 
 // Client is the abstraction for the ByzCoin EVM client
 type Client struct {
+	onetClient *onet.Client
 	bcClient   *byzcoin.Client
 	signer     darc.Signer
 	instanceID byzcoin.InstanceID
@@ -238,6 +243,7 @@ func NewBEvm(bcClient *byzcoin.Client, signer darc.Signer, gDarc *darc.Darc) (
 func NewClient(bcClient *byzcoin.Client, signer darc.Signer,
 	instanceID byzcoin.InstanceID) (*Client, error) {
 	return &Client{
+		onetClient: onet.NewClient(cothority.Suite, ServiceName),
 		bcClient:   bcClient,
 		signer:     signer,
 		instanceID: instanceID,
@@ -412,6 +418,106 @@ func (client *Client) GetAccountBalance(address common.Address) (
 	log.Lvlf2("Balance of '%x' is %d wei", address, balance)
 
 	return balance, nil
+}
+
+// ---------------------------------------------------------------------------
+// Service methods
+
+// PrepareDeployTx sends a request to deploy an EVM contract. Returns an EVM
+// transaction and its hash to be signed by the caller.
+func (client *Client) PrepareDeployTx(dst *network.ServerIdentity,
+	gasLimit uint64, gasPrice uint64, amount uint64, nonce uint64,
+	bytecode []byte, abi string,
+	args ...string) (*proto.TransactionHashResponse, error) {
+	request := &proto.DeployRequest{
+		GasLimit: gasLimit,
+		GasPrice: gasPrice,
+		Amount:   amount,
+		Nonce:    nonce,
+		Bytecode: bytecode,
+		Abi:      abi,
+		Args:     args,
+	}
+	response := &proto.TransactionHashResponse{}
+
+	err := client.onetClient.SendProtobuf(dst, request, response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, err
+}
+
+// PrepareTransactionTx sends a request to execute a Transaction (R/W method)
+// on a previously deployed EVM contract instance. Returns an EVM transaction
+// and its hash to be signed by the caller.
+func (client *Client) PrepareTransactionTx(dst *network.ServerIdentity,
+	gasLimit uint64, gasPrice uint64, amount uint64,
+	contractAddress []byte, nonce uint64, abi string,
+	method string, args ...string) (*proto.TransactionHashResponse, error) {
+	request := &proto.TransactionRequest{
+		GasLimit:        gasLimit,
+		GasPrice:        gasPrice,
+		Amount:          amount,
+		ContractAddress: contractAddress,
+		Nonce:           nonce,
+		Abi:             abi,
+		Method:          method,
+		Args:            args,
+	}
+	response := &proto.TransactionHashResponse{}
+
+	err := client.onetClient.SendProtobuf(dst, request, response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, err
+}
+
+// FinalizeTx sends a request to finalize a previously initiated transaction
+// (deployment of contract or execution of transaction). Returns a signed EVM
+// transaction, ready to be sent to ByzCoin.
+func (client *Client) FinalizeTx(dst *network.ServerIdentity,
+	tx []byte, signature []byte) (*proto.TransactionResponse, error) {
+	request := &proto.TransactionFinalizationRequest{
+		Transaction: tx,
+		Signature:   signature,
+	}
+	response := &proto.TransactionResponse{}
+
+	err := client.onetClient.SendProtobuf(dst, request, response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, err
+}
+
+// PerformCall sends a request to execute a Call (R-only method, "view method")
+// on a previously deployed EVM contract instance. Returns the call response.
+func (client *Client) PerformCall(dst *network.ServerIdentity, blockID []byte,
+	serverConfig string, bevmInstanceID byzcoin.InstanceID,
+	accountAddress []byte, contractAddress []byte, abi string,
+	method string, args ...string) (*proto.CallResponse, error) {
+	request := &proto.CallRequest{
+		BlockID:         blockID,
+		ServerConfig:    serverConfig,
+		BEvmInstanceID:  bevmInstanceID[:],
+		AccountAddress:  accountAddress,
+		ContractAddress: contractAddress,
+		Abi:             abi,
+		Method:          method,
+		Args:            args,
+	}
+	response := &proto.CallResponse{}
+
+	err := client.onetClient.SendProtobuf(dst, request, response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, err
 }
 
 // ---------------------------------------------------------------------------
