@@ -16,7 +16,6 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
 	"go.dedis.ch/cothority/v3"
-	proto "go.dedis.ch/cothority/v3/bevm/proto"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/onet/v3"
@@ -428,8 +427,8 @@ func (client *Client) GetAccountBalance(address common.Address) (
 func (client *Client) PrepareDeployTx(dst *network.ServerIdentity,
 	gasLimit uint64, gasPrice uint64, amount uint64, nonce uint64,
 	bytecode []byte, abi string,
-	args ...string) (*proto.TransactionHashResponse, error) {
-	request := &proto.DeployRequest{
+	args ...string) (*TransactionHashResponse, error) {
+	request := &DeployRequest{
 		GasLimit: gasLimit,
 		GasPrice: gasPrice,
 		Amount:   amount,
@@ -438,7 +437,7 @@ func (client *Client) PrepareDeployTx(dst *network.ServerIdentity,
 		Abi:      abi,
 		Args:     args,
 	}
-	response := &proto.TransactionHashResponse{}
+	response := &TransactionHashResponse{}
 
 	err := client.onetClient.SendProtobuf(dst, request, response)
 	if err != nil {
@@ -454,8 +453,8 @@ func (client *Client) PrepareDeployTx(dst *network.ServerIdentity,
 func (client *Client) PrepareTransactionTx(dst *network.ServerIdentity,
 	gasLimit uint64, gasPrice uint64, amount uint64,
 	contractAddress []byte, nonce uint64, abi string,
-	method string, args ...string) (*proto.TransactionHashResponse, error) {
-	request := &proto.TransactionRequest{
+	method string, args ...string) (*TransactionHashResponse, error) {
+	request := &TransactionRequest{
 		GasLimit:        gasLimit,
 		GasPrice:        gasPrice,
 		Amount:          amount,
@@ -465,7 +464,7 @@ func (client *Client) PrepareTransactionTx(dst *network.ServerIdentity,
 		Method:          method,
 		Args:            args,
 	}
-	response := &proto.TransactionHashResponse{}
+	response := &TransactionHashResponse{}
 
 	err := client.onetClient.SendProtobuf(dst, request, response)
 	if err != nil {
@@ -479,12 +478,12 @@ func (client *Client) PrepareTransactionTx(dst *network.ServerIdentity,
 // (deployment of contract or execution of transaction). Returns a signed EVM
 // transaction, ready to be sent to ByzCoin.
 func (client *Client) FinalizeTx(dst *network.ServerIdentity,
-	tx []byte, signature []byte) (*proto.TransactionResponse, error) {
-	request := &proto.TransactionFinalizationRequest{
+	tx []byte, signature []byte) (*TransactionResponse, error) {
+	request := &TransactionFinalizationRequest{
 		Transaction: tx,
 		Signature:   signature,
 	}
-	response := &proto.TransactionResponse{}
+	response := &TransactionResponse{}
 
 	err := client.onetClient.SendProtobuf(dst, request, response)
 	if err != nil {
@@ -499,8 +498,8 @@ func (client *Client) FinalizeTx(dst *network.ServerIdentity,
 func (client *Client) PerformCall(dst *network.ServerIdentity, blockID []byte,
 	serverConfig string, bevmInstanceID byzcoin.InstanceID,
 	accountAddress []byte, contractAddress []byte, abi string,
-	method string, args ...string) (*proto.CallResponse, error) {
-	request := &proto.CallRequest{
+	method string, args ...string) (*CallResponse, error) {
+	request := &CallRequest{
 		BlockID:         blockID,
 		ServerConfig:    serverConfig,
 		BEvmInstanceID:  bevmInstanceID[:],
@@ -510,7 +509,7 @@ func (client *Client) PerformCall(dst *network.ServerIdentity, blockID []byte,
 		Method:          method,
 		Args:            args,
 	}
-	response := &proto.CallResponse{}
+	response := &CallResponse{}
 
 	err := client.onetClient.SendProtobuf(dst, request, response)
 	if err != nil {

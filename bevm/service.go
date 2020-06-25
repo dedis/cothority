@@ -14,8 +14,6 @@ import (
 	"go.dedis.ch/onet/v3/app"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
-
-	proto "go.dedis.ch/cothority/v3/bevm/proto"
 )
 
 // ServiceName is the name to refer to the BEvm service.
@@ -45,7 +43,7 @@ func init() {
 // PrepareDeployTx builds a transaction to deploy an EVM contract. Returns an
 // EVM transaction and its hash to be signed by the caller.
 func (service *Service) PrepareDeployTx(
-	req *proto.DeployRequest) (network.Message, error) {
+	req *DeployRequest) (network.Message, error) {
 	abi, err := abi.JSON(strings.NewReader(req.Abi))
 	if err != nil {
 		return nil, err
@@ -76,7 +74,7 @@ func (service *Service) PrepareDeployTx(
 
 	log.Lvl4("Returning", unsignedBuffer, hashedTx)
 
-	return &proto.TransactionHashResponse{Transaction: unsignedBuffer,
+	return &TransactionHashResponse{Transaction: unsignedBuffer,
 		TransactionHash: hashedTx[:]}, nil
 }
 
@@ -84,7 +82,7 @@ func (service *Service) PrepareDeployTx(
 // previously deployed EVM contract instance. Returns an EVM transaction and
 // its hash to be signed by the caller.
 func (service *Service) PrepareTransactionTx(
-	req *proto.TransactionRequest) (network.Message, error) {
+	req *TransactionRequest) (network.Message, error) {
 	abi, err := abi.JSON(strings.NewReader(req.Abi))
 	if err != nil {
 		return nil, err
@@ -115,7 +113,7 @@ func (service *Service) PrepareTransactionTx(
 
 	log.Lvl4("Returning", unsignedBuffer, hashedTx)
 
-	return &proto.TransactionHashResponse{Transaction: unsignedBuffer,
+	return &TransactionHashResponse{Transaction: unsignedBuffer,
 		TransactionHash: hashedTx[:]}, nil
 }
 
@@ -123,7 +121,7 @@ func (service *Service) PrepareTransactionTx(
 // caller. Returns an EVM transaction ready to be sent to ByzCoin and handled
 // by the bevm contract.
 func (service *Service) FinalizeTx(
-	req *proto.TransactionFinalizationRequest) (network.Message, error) {
+	req *TransactionFinalizationRequest) (network.Message, error) {
 	signer := types.HomesteadSigner{}
 
 	var tx types.Transaction
@@ -144,14 +142,14 @@ func (service *Service) FinalizeTx(
 
 	log.Lvl4("Returning", signedBuffer)
 
-	return &proto.TransactionResponse{
+	return &TransactionResponse{
 		Transaction: signedBuffer,
 	}, nil
 }
 
 // PerformCall executes a R-only method on a previously deployed EVM contract
 // instance by contacting a ByzCoin cothority. Returns the call response.
-func (service *Service) PerformCall(req *proto.CallRequest) (network.Message,
+func (service *Service) PerformCall(req *CallRequest) (network.Message,
 	error) {
 	abi, err := abi.JSON(strings.NewReader(req.Abi))
 	if err != nil {
@@ -204,7 +202,7 @@ func (service *Service) PerformCall(req *proto.CallRequest) (network.Message,
 		return nil, err
 	}
 
-	return &proto.CallResponse{Result: string(resultJSON)}, nil
+	return &CallResponse{Result: string(resultJSON)}, nil
 }
 
 // newBEvmService creates a new service for BEvm functionality
