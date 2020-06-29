@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "crypto";
+import { randomBytes } from "crypto";
 import { ec } from "elliptic";
 import Keccak from "keccak";
 
@@ -10,6 +10,9 @@ import Log from "../log";
 
 import { BEvmService } from "./service";
 
+/**
+ * Ethereum account
+ */
 export class EvmAccount {
     static EC = new ec("secp256k1");
 
@@ -21,13 +24,12 @@ export class EvmAccount {
         h.update(pubBytes.slice(1));
 
         const address = h.digest().slice(12);
-        Log.llvl2("Computed account address", address.toString("hex"));
+        Log.lvl3("Computed account address", address.toString("hex"));
 
         return address;
     }
 
     readonly address: Buffer;
-    readonly name: string;
     protected key: ec.KeyPair;
     private _nonce: number;
 
@@ -35,9 +37,7 @@ export class EvmAccount {
         return this._nonce;
     }
 
-    constructor(name: string, privKey?: Buffer, nonce: number = 0) {
-        this.name = name;
-
+    constructor(readonly name: string, privKey?: Buffer, nonce: number = 0) {
         if (privKey === undefined) {
             privKey = randomBytes(32);
         }
@@ -68,6 +68,9 @@ export class EvmAccount {
     }
 }
 
+/**
+ * Ethereum smart contract
+ */
 export class EvmContract {
     private static computeAddress(data: Buffer, nonce: number): Buffer {
         const buf = EvmContract.erlEncode(data, nonce);
@@ -76,7 +79,7 @@ export class EvmContract {
         h.update(buf);
 
         const address = h.digest().slice(12);
-        Log.llvl2("Computed contract address", address.toString("hex"));
+        Log.lvl3("Computed contract address", address.toString("hex"));
 
         return address;
     }
@@ -112,19 +115,15 @@ export class EvmContract {
         return buf;
     }
 
-    readonly name: string;
-    readonly bytecode: Buffer;
-    readonly abi: string;
     readonly transactions: string[];
     readonly viewMethods: string[];
-    private _addresses: Buffer[] = [];
 
-    constructor(name: string, bytecode: Buffer, abi: string) {
-        this.name = name;
-        this.bytecode = bytecode;
-        this.abi = abi;
-
+    constructor(readonly name: string,
+                readonly bytecode: Buffer,
+                readonly abi: string,
+                readonly addresses: Buffer[] = []) {
         const abiObj = JSON.parse(abi);
+
         const transactions = abiObj.filter((elem: any) => {
             return elem.type === "function" &&  elem.stateMutability !== "view";
         }).map((elem: any) => elem.name);
@@ -136,16 +135,15 @@ export class EvmContract {
         this.viewMethods = viewMethods;
     }
 
-    get addresses(): Buffer[] {
-        return this._addresses;
-    }
-
     createNewAddress(account: EvmAccount) {
         const newAddress = EvmContract.computeAddress(account.address, account.nonce);
-        this._addresses.push(newAddress);
+        this.addresses.push(newAddress);
     }
 }
 
+/**
+ * BEvm client
+ */
 export class BEvmClient extends Instance {
     static readonly contractID = "bevm";
 
@@ -157,25 +155,13 @@ export class BEvmClient extends Instance {
     static readonly argumentAmount = "amount";
 
     /**
-     * Generate the BEvm instance ID for a given darc ID
+     * Spawn a new BEvm instance
      *
-     * @param buf Any buffer that is known to the caller
-     * @returns the id as a buffer
-     */
-    static getInstanceID(buf: Buffer): InstanceID {
-        const h = createHash("sha256");
-        h.update(Buffer.from(BEvmClient.contractID));
-        h.update(buf);
-        return h.digest();
-    }
-
-    /**
-     * Spawn a BEvm instance from a darc id
+     * @param bc        ByzCoin RPC to use
+     * @param darcID    DARC instance ID
+     * @param signers   List of signers for the ByzCoin transaction
      *
-     * @param bc        The RPC to use
-     * @param darcID    The darc instance ID
-     * @param signers   The list of signers for the transaction
-     * @returns a promise that resolves with the new instance
+     * @return New BEvm instance
      */
     static async spawn(bc: ByzCoinRPC, darcID: InstanceID, signers: Signer[]): Promise<BEvmClient> {
         const inst = Instruction.createSpawn(
@@ -193,48 +179,49 @@ export class BEvmClient extends Instance {
     }
 
     /**
-     * Create returns a BevmRPC from the given parameters.
-     * @param bc
-     * @param bevmID
-     * @param darcID
-     */
-    static create(bc: ByzCoinRPC, bevmID: InstanceID, darcID: InstanceID): BEvmClient {
-        return new BEvmClient(bc, new Instance({
-            contractID: BEvmClient.contractID,
-            darcID,
-            data: Buffer.from(""),
-            id: bevmID,
-        }));
-    }
-
-    /**
-     * Initializes using an existing coinInstance from ByzCoin
-     * @param bc    The RPC to use
-     * @param iid   The instance ID
-     * @returns a promise that resolves with the BEvm instance
+     * Retrieve an existing BEvm instance
+     *
+     * @param bc    ByzCoin RPC to use
+     * @param iid   BEvm instance ID
+     *
+     * @returns BEvm instance
      */
     static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID,
-                             waitMatch: number = 0, interval: number = 1000): Promise<BEvmClient> {
-        return new BEvmClient(bc, await Instance.fromByzcoin(bc, iid, waitMatch, interval));
+                             waitMatch: number = 0,
+                             interval: number = 1000): Promise<BEvmClient> {
+        const instance = await Instance.fromByzcoin(bc, iid, waitMatch, interval);
+
+        return new BEvmClient(bc, instance);
     }
 
     private bevmService: BEvmService;
 
-    constructor(private rpc: ByzCoinRPC, inst: Instance) {
+    constructor(private byzcoinRPC: ByzCoinRPC, inst: Instance) {
         super(inst);
+
         if (inst.contractID.toString() !== BEvmClient.contractID) {
             throw new Error(`mismatch contract name: ${inst.contractID} vs ${BEvmClient.contractID}`);
         }
     }
 
-    setBEvmService(rpc: BEvmService) {
-        this.bevmService = rpc;
+    /**
+     * Set the BEvm service to use
+     */
+    setBEvmService(bevmService: BEvmService) {
+        this.bevmService = bevmService;
     }
 
     /**
-     * * Execute a BEvm transaction.
+     * Deploy an EVM smart contract
      *
-     * FIXME: document parameters
+     * @param signers   ByzCoin identities signing the ByzCoin transaction
+     * @param gasLimit  Gas limit for the transaction
+     * @param gasPrice  Gas price for the transaction
+     * @param amount    Amount transferred during the transaction
+     * @param account   EVM account
+     * @param contract  EVM contract to deploy
+     * @param args      Arguments for the smart contract constructor
+     * @param wait      Number of blocks to wait for the ByzCoin transaction to be included
      */
     async deploy(signers: Signer[],
                  gasLimit: number,
@@ -263,9 +250,18 @@ export class BEvmClient extends Instance {
     }
 
     /**
-     * * Execute a BEvm transaction.
+     * Execute an EVM transaction on a deployed smart contract (R/W method)
      *
-     * FIXME: document parameters
+     * @param signers       ByzCoin identities signing the ByzCoin transaction
+     * @param gasLimit      Gas limit for the transaction
+     * @param gasPrice      Gas price for the transaction
+     * @param amount        Amount transferred during the transaction
+     * @param account       EVM account
+     * @param contract      EVM contract
+     * @param instanceIndex Index of the deployed smart contract instance
+     * @param method        Name of the method to execute
+     * @param args          Arguments for the smart contract method
+     * @param wait          Number of blocks to wait for the ByzCoin transaction to be included
      */
     async transaction(signers: Signer[],
                       gasLimit: number,
@@ -296,11 +292,25 @@ export class BEvmClient extends Instance {
     }
 
     /**
-     * * Execute a BEvm view method.
+     * Execute a view method on a deployed smart contract (read-only method)
      *
-     * FIXME: document parameters
+     * A view method is executed on a conode on behalf of the client. This
+     * conode does not necessarily belong to the ByzCoin cothority. Therefore,
+     * the actual cothority configuration, the BEvm ID as well as the ByzCoin
+     * ID that contains it must be provided.
+     *
+     * @param byzcoinId         ByzCoin ID
+     * @param serverConfig      Cothority server config in TOML
+     * @param bevmInstanceId    BEvm instance ID
+     * @param account           EVM account
+     * @param contract          EVM contract
+     * @param instanceIndex     Index of the deployed smart contract instance
+     * @param method            Name of the view method to execute
+     * @param args              Arguments for the smart contract method
+     *
+     * @return Result of the view method execution
      */
-    async call(blockId: Buffer,
+    async call(byzcoinId: Buffer,
                serverConfig: string,
                bevmInstanceId: Buffer,
                account: EvmAccount,
@@ -309,25 +319,42 @@ export class BEvmClient extends Instance {
                method: string,
                args?: string[]): Promise<any> {
         const contractAddress = contract.addresses[instanceIndex];
+
         const response = await this.bevmService.performCall(
-            blockId, serverConfig, bevmInstanceId, account.address,
-            contractAddress, contract.abi, method, args);
+            byzcoinId,
+            serverConfig,
+            bevmInstanceId,
+            account.address,
+            contractAddress,
+            contract.abi,
+            method,
+            args);
 
         return JSON.parse(response.result);
     }
 
+    /**
+     * Credit an EVM account by the specified amount
+     *
+     * @param signers   ByzCoin identities signing the ByzCoin transaction
+     * @param account   EVM account
+     * @param amount    Amount to credit on the account
+     * @param wait      Number of blocks to wait for the ByzCoin transaction to be included
+     */
     async creditAccount(signers: Signer[],
-                        address: Buffer,
+                        account: EvmAccount,
                         amount: Buffer,
                         wait?: number) {
         await this.invoke(
-            BEvmClient.commandCredit, [
+            BEvmClient.commandCredit,
+            [
                 new Argument({name: BEvmClient.argumentAddress,
-                             value: address}),
+                             value: account.address}),
                 new Argument({name: BEvmClient.argumentAmount,
                              value: amount}),
             ],
-            signers, wait);
+            signers,
+            wait);
     }
 
     private async invoke(command: string,
@@ -335,13 +362,12 @@ export class BEvmClient extends Instance {
                          signers: Signer[],
                          wait?: number) {
         const ctx = ClientTransaction.make(
-            this.rpc.getProtocolVersion(),
+            this.byzcoinRPC.getProtocolVersion(),
             Instruction.createInvoke(
                 this.id, BEvmClient.contractID, command, args,
             ));
 
-        await ctx.updateCountersAndSign(this.rpc, [signers]);
-
-        await this.rpc.sendTransactionAndWait(ctx, wait);
+        await ctx.updateCountersAndSign(this.byzcoinRPC, [signers]);
+        await this.byzcoinRPC.sendTransactionAndWait(ctx, wait);
     }
 }

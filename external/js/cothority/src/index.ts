@@ -1,3 +1,4 @@
+import * as bevm from "./bevm";
 import * as byzcoin from "./byzcoin";
 import * as contracts from "./byzcoin/contracts";
 import * as calypso from "./calypso";
@@ -9,6 +10,7 @@ import * as skipchain from "./skipchain";
 import * as status from "./status";
 
 export {
+    bevm,
     byzcoin,
     calypso,
     contracts,
