@@ -132,7 +132,7 @@ export class CallRequest extends Message<CallRequest> {
         registerMessage("bevm.CallRequest", CallRequest);
     }
 
-    readonly blockId: Buffer;
+    readonly byzcoinId: Buffer;
     readonly serverConfig: string;
     readonly bevmInstanceId: Buffer;
     readonly accountAddress: Buffer;
@@ -145,9 +145,9 @@ export class CallRequest extends Message<CallRequest> {
         super(props);
 
         /* Protobuf aliases */
-        Object.defineProperty(this, "blockid", {
+        Object.defineProperty(this, "byzcoinid", {
             get(): Buffer {
-                return this.blockId;
+                return this.byzcoinId;
             },
             set(value: Buffer) {
                 this.blockId = value;
