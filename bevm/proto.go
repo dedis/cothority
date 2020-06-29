@@ -55,9 +55,9 @@ type TransactionResponse struct {
 	Transaction []byte
 }
 
-// CallRequest is a request to execute a view method (read-ponly).
+// CallRequest is a request to execute a view method (read-only).
 type CallRequest struct {
-	BlockID         []byte
+	ByzCoinID       []byte
 	ServerConfig    string
 	BEvmInstanceID  []byte
 	AccountAddress  []byte

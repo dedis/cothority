@@ -179,7 +179,7 @@ func (service *Service) PerformCall(req *CallRequest) (network.Message,
 		return nil, err
 	}
 	// Instantiate a new ByzCoin client
-	bcClient := byzcoin.NewClient(req.BlockID, *grp.Roster)
+	bcClient := byzcoin.NewClient(req.ByzCoinID, *grp.Roster)
 
 	// Instantiate a new BEvm client (we don't need a darc to read proofs)
 	bevmClient, err := NewClient(bcClient, darc.Signer{},

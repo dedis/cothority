@@ -495,12 +495,12 @@ func (client *Client) FinalizeTx(dst *network.ServerIdentity,
 
 // PerformCall sends a request to execute a Call (R-only method, "view method")
 // on a previously deployed EVM contract instance. Returns the call response.
-func (client *Client) PerformCall(dst *network.ServerIdentity, blockID []byte,
+func (client *Client) PerformCall(dst *network.ServerIdentity, byzcoinID []byte,
 	serverConfig string, bevmInstanceID byzcoin.InstanceID,
 	accountAddress []byte, contractAddress []byte, abi string,
 	method string, args ...string) (*CallResponse, error) {
 	request := &CallRequest{
-		BlockID:         blockID,
+		ByzCoinID:       byzcoinID,
 		ServerConfig:    serverConfig,
 		BEvmInstanceID:  bevmInstanceID[:],
 		AccountAddress:  accountAddress,

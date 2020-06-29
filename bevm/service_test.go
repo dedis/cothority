@@ -213,7 +213,7 @@ func TestService_Call(t *testing.T) {
 	contractAddress, err := hex.DecodeString("8cdaf0cd259887258bc13a92c0a6da92698644c0")
 	require.NoError(t, err)
 
-	blockID, err := hex.DecodeString("92601ebb9b0499efc5fde5141d0005f4a6fd350f39bff5a87efb8d4567091929")
+	byzcoinID, err := hex.DecodeString("92601ebb9b0499efc5fde5141d0005f4a6fd350f39bff5a87efb8d4567091929")
 	require.NoError(t, err)
 
 	serverConfig := `[[servers]]
@@ -268,7 +268,7 @@ func TestService_Call(t *testing.T) {
 
 	candyAbi := `[{"constant":false,"inputs":[{"name":"candies","type":"uint256"}],"name":"eatCandy","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"getRemainingCandies","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[{"name":"_candies","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"}]`
 
-	response, err := client.PerformCall(ro.List[0], blockID, serverConfig, bevmInstanceID, accountAddress, contractAddress, candyAbi, "getRemainingCandies")
+	response, err := client.PerformCall(ro.List[0], byzcoinID, serverConfig, bevmInstanceID, accountAddress, contractAddress, candyAbi, "getRemainingCandies")
 	require.NoError(t, err)
 
 	var result interface{}
