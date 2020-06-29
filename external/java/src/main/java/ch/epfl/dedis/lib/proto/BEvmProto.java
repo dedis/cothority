@@ -4722,13 +4722,13 @@ public final class BEvmProto {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>required bytes blockid = 1;</code>
+     * <code>required bytes byzcoinid = 1;</code>
      */
-    boolean hasBlockid();
+    boolean hasByzcoinid();
     /**
-     * <code>required bytes blockid = 1;</code>
+     * <code>required bytes byzcoinid = 1;</code>
      */
-    com.google.protobuf.ByteString getBlockid();
+    com.google.protobuf.ByteString getByzcoinid();
 
     /**
      * <code>required string serverconfig = 2;</code>
@@ -4848,7 +4848,7 @@ public final class BEvmProto {
   }
   /**
    * <pre>
-   * CallRequest is a request to execute a view method (read-ponly).
+   * CallRequest is a request to execute a view method (read-only).
    * </pre>
    *
    * Protobuf type {@code bevm.CallRequest}
@@ -4863,7 +4863,7 @@ public final class BEvmProto {
       super(builder);
     }
     private CallRequest() {
-      blockid_ = com.google.protobuf.ByteString.EMPTY;
+      byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
       serverconfig_ = "";
       bevminstanceid_ = com.google.protobuf.ByteString.EMPTY;
       accountaddress_ = com.google.protobuf.ByteString.EMPTY;
@@ -4899,7 +4899,7 @@ public final class BEvmProto {
               break;
             case 10: {
               bitField0_ |= 0x00000001;
-              blockid_ = input.readBytes();
+              byzcoinid_ = input.readBytes();
               break;
             }
             case 18: {
@@ -4980,19 +4980,19 @@ public final class BEvmProto {
     }
 
     private int bitField0_;
-    public static final int BLOCKID_FIELD_NUMBER = 1;
-    private com.google.protobuf.ByteString blockid_;
+    public static final int BYZCOINID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString byzcoinid_;
     /**
-     * <code>required bytes blockid = 1;</code>
+     * <code>required bytes byzcoinid = 1;</code>
      */
-    public boolean hasBlockid() {
+    public boolean hasByzcoinid() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>required bytes blockid = 1;</code>
+     * <code>required bytes byzcoinid = 1;</code>
      */
-    public com.google.protobuf.ByteString getBlockid() {
-      return blockid_;
+    public com.google.protobuf.ByteString getByzcoinid() {
+      return byzcoinid_;
     }
 
     public static final int SERVERCONFIG_FIELD_NUMBER = 2;
@@ -5230,7 +5230,7 @@ public final class BEvmProto {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
-      if (!hasBlockid()) {
+      if (!hasByzcoinid()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -5266,7 +5266,7 @@ public final class BEvmProto {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, blockid_);
+        output.writeBytes(1, byzcoinid_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, serverconfig_);
@@ -5300,7 +5300,7 @@ public final class BEvmProto {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, blockid_);
+          .computeBytesSize(1, byzcoinid_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, serverconfig_);
@@ -5347,10 +5347,10 @@ public final class BEvmProto {
       ch.epfl.dedis.lib.proto.BEvmProto.CallRequest other = (ch.epfl.dedis.lib.proto.BEvmProto.CallRequest) obj;
 
       boolean result = true;
-      result = result && (hasBlockid() == other.hasBlockid());
-      if (hasBlockid()) {
-        result = result && getBlockid()
-            .equals(other.getBlockid());
+      result = result && (hasByzcoinid() == other.hasByzcoinid());
+      if (hasByzcoinid()) {
+        result = result && getByzcoinid()
+            .equals(other.getByzcoinid());
       }
       result = result && (hasServerconfig() == other.hasServerconfig());
       if (hasServerconfig()) {
@@ -5395,9 +5395,9 @@ public final class BEvmProto {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasBlockid()) {
-        hash = (37 * hash) + BLOCKID_FIELD_NUMBER;
-        hash = (53 * hash) + getBlockid().hashCode();
+      if (hasByzcoinid()) {
+        hash = (37 * hash) + BYZCOINID_FIELD_NUMBER;
+        hash = (53 * hash) + getByzcoinid().hashCode();
       }
       if (hasServerconfig()) {
         hash = (37 * hash) + SERVERCONFIG_FIELD_NUMBER;
@@ -5524,7 +5524,7 @@ public final class BEvmProto {
     }
     /**
      * <pre>
-     * CallRequest is a request to execute a view method (read-ponly).
+     * CallRequest is a request to execute a view method (read-only).
      * </pre>
      *
      * Protobuf type {@code bevm.CallRequest}
@@ -5564,7 +5564,7 @@ public final class BEvmProto {
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        blockid_ = com.google.protobuf.ByteString.EMPTY;
+        byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
         serverconfig_ = "";
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -5611,7 +5611,7 @@ public final class BEvmProto {
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
         }
-        result.blockid_ = blockid_;
+        result.byzcoinid_ = byzcoinid_;
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
         }
@@ -5690,8 +5690,8 @@ public final class BEvmProto {
 
       public Builder mergeFrom(ch.epfl.dedis.lib.proto.BEvmProto.CallRequest other) {
         if (other == ch.epfl.dedis.lib.proto.BEvmProto.CallRequest.getDefaultInstance()) return this;
-        if (other.hasBlockid()) {
-          setBlockid(other.getBlockid());
+        if (other.hasByzcoinid()) {
+          setByzcoinid(other.getByzcoinid());
         }
         if (other.hasServerconfig()) {
           bitField0_ |= 0x00000002;
@@ -5734,7 +5734,7 @@ public final class BEvmProto {
 
       @java.lang.Override
       public final boolean isInitialized() {
-        if (!hasBlockid()) {
+        if (!hasByzcoinid()) {
           return false;
         }
         if (!hasServerconfig()) {
@@ -5778,37 +5778,37 @@ public final class BEvmProto {
       }
       private int bitField0_;
 
-      private com.google.protobuf.ByteString blockid_ = com.google.protobuf.ByteString.EMPTY;
+      private com.google.protobuf.ByteString byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required bytes blockid = 1;</code>
+       * <code>required bytes byzcoinid = 1;</code>
        */
-      public boolean hasBlockid() {
+      public boolean hasByzcoinid() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>required bytes blockid = 1;</code>
+       * <code>required bytes byzcoinid = 1;</code>
        */
-      public com.google.protobuf.ByteString getBlockid() {
-        return blockid_;
+      public com.google.protobuf.ByteString getByzcoinid() {
+        return byzcoinid_;
       }
       /**
-       * <code>required bytes blockid = 1;</code>
+       * <code>required bytes byzcoinid = 1;</code>
        */
-      public Builder setBlockid(com.google.protobuf.ByteString value) {
+      public Builder setByzcoinid(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000001;
-        blockid_ = value;
+        byzcoinid_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required bytes blockid = 1;</code>
+       * <code>required bytes byzcoinid = 1;</code>
        */
-      public Builder clearBlockid() {
+      public Builder clearByzcoinid() {
         bitField0_ = (bitField0_ & ~0x00000001);
-        blockid_ = getDefaultInstance().getBlockid();
+        byzcoinid_ = getDefaultInstance().getByzcoinid();
         onChanged();
         return this;
       }
@@ -7053,13 +7053,13 @@ public final class BEvmProto {
       "nsactionhash\030\002 \002(\014\"H\n\036TransactionFinaliz" +
       "ationRequest\022\023\n\013transaction\030\001 \002(\014\022\021\n\tsig" +
       "nature\030\002 \002(\014\"*\n\023TransactionResponse\022\023\n\013t" +
-      "ransaction\030\001 \002(\014\"\250\001\n\013CallRequest\022\017\n\007bloc" +
-      "kid\030\001 \002(\014\022\024\n\014serverconfig\030\002 \002(\t\022\026\n\016bevmi" +
-      "nstanceid\030\003 \002(\014\022\026\n\016accountaddress\030\004 \002(\014\022" +
-      "\027\n\017contractaddress\030\005 \002(\014\022\013\n\003abi\030\006 \002(\t\022\016\n" +
-      "\006method\030\007 \002(\t\022\014\n\004args\030\010 \003(\t\"\036\n\014CallRespo" +
-      "nse\022\016\n\006result\030\001 \002(\tB$\n\027ch.epfl.dedis.lib" +
-      ".protoB\tBEvmProto"
+      "ransaction\030\001 \002(\014\"\252\001\n\013CallRequest\022\021\n\tbyzc" +
+      "oinid\030\001 \002(\014\022\024\n\014serverconfig\030\002 \002(\t\022\026\n\016bev" +
+      "minstanceid\030\003 \002(\014\022\026\n\016accountaddress\030\004 \002(" +
+      "\014\022\027\n\017contractaddress\030\005 \002(\014\022\013\n\003abi\030\006 \002(\t\022" +
+      "\016\n\006method\030\007 \002(\t\022\014\n\004args\030\010 \003(\t\"\036\n\014CallRes" +
+      "ponse\022\016\n\006result\030\001 \002(\tB$\n\027ch.epfl.dedis.l" +
+      "ib.protoB\tBEvmProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -7108,7 +7108,7 @@ public final class BEvmProto {
     internal_static_bevm_CallRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_bevm_CallRequest_descriptor,
-        new java.lang.String[] { "Blockid", "Serverconfig", "Bevminstanceid", "Accountaddress", "Contractaddress", "Abi", "Method", "Args", });
+        new java.lang.String[] { "Byzcoinid", "Serverconfig", "Bevminstanceid", "Accountaddress", "Contractaddress", "Abi", "Method", "Args", });
     internal_static_bevm_CallResponse_descriptor =
       getDescriptor().getMessageTypes().get(6);
     internal_static_bevm_CallResponse_fieldAccessorTable = new

@@ -53,9 +53,9 @@ message TransactionResponse {
   required bytes transaction = 1;
 }
 
-// CallRequest is a request to execute a view method (read-ponly).
+// CallRequest is a request to execute a view method (read-only).
 message CallRequest {
-  required bytes blockid = 1;
+  required bytes byzcoinid = 1;
   required string serverconfig = 2;
   required bytes bevminstanceid = 3;
   required bytes accountaddress = 4;
