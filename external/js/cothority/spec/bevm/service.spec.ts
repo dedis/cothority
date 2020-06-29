@@ -1,6 +1,9 @@
 import { BEvmService } from "../../src/bevm";
 import { ROSTER, startConodes } from "../support/conondes";
 
+// For debugging
+// import Log from "../../src/log";
+
 describe("BEvmService", () => {
     const conode = ROSTER.list[0];
 
