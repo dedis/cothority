@@ -1,7 +1,8 @@
 import fs from "fs";
 import Long from "long";
 
-import Log from "../../src/log";
+// For debugging
+// import Log from "../../src/log";
 
 import ByzCoinRPC from "../../src/byzcoin/byzcoin-rpc";
 import SignerEd25519 from "../../src/darc/signer-ed25519";
@@ -33,7 +34,9 @@ describe("BEvmClient", async () => {
         await startConodes();
 
         roster = ROSTER.slice(0, 4);
-        rosterTOML = fs.readFileSync(process.cwd() + "/spec/support/public.toml").toString();
+        // Taken from  .../spec/support/conondes.ts
+        rosterTOML = fs.readFileSync(
+            process.cwd() + "/spec/support/public.toml").toString();
 
         const srvConode = roster.list[0];
         srv = new BEvmService(srvConode);
@@ -85,45 +88,52 @@ describe("BEvmClient", async () => {
 
         const amount = Buffer.from(WEI_PER_ETHER.mul(5).toBytesBE());
 
-        Log.lvl2("Credit an account with:", amount);
-        await expectAsync(client.creditAccount([admin], account.address, amount)).toBeResolved();
+        // Credit an account so that we can perform actions
+        await expectAsync(client.creditAccount(
+            [admin],
+            account,
+            amount,
+        )).toBeResolved();
 
-        Log.lvl2("Deploy a Candy contract");
-        await expectAsync(client.deploy([admin],
-                                        1e7,
-                                        1,
-                                        0,
-                                        account,
-                                        contract,
-                                        [JSON.stringify(String(100))],
-                                       )).toBeResolved();
+        // Deploy a Candy contract with 100 candies
+        await expectAsync(client.deploy(
+            [admin],
+            1e7,
+            1,
+            0,
+            account,
+            contract,
+            [JSON.stringify(String(100))],
+        )).toBeResolved();
         expect(contract.addresses[0]).toEqual(expectedContractAddress);
 
+        // Eat a bunch of candies
         for (let nbCandies = 1; nbCandies <= 10; nbCandies++) {
-            Log.lvl2(`Eat ${nbCandies} candies`);
-            await expectAsync(client.transaction([admin],
-                                                 1e7,
-                                                 1,
-                                                 0,
-                                                 account,
-                                                 contract,
-                                                 0,
-                                                 "eatCandy",
-                                                 [JSON.stringify(String(nbCandies))],
-                                                )).toBeResolved();
+            await expectAsync(client.transaction(
+                [admin],
+                1e7,
+                1,
+                0,
+                account,
+                contract,
+                0,
+                "eatCandy",
+                [JSON.stringify(String(nbCandies))],
+            )).toBeResolved();
         }
 
-        Log.lvl2("Retrieve number of remaining candies");
+        // Retrieve number of remaining candies, which should be 100 - (1 + 2 +
+        // ... + 10) = 100 - (10 * 11 / 2)
         const expectedRemainingCoins = 100 - (10 * 11 / 2);
-        await expectAsync(client.call(byzcoinRPC.genesisID,
-                                      rosterTOML,
-                                      // roster.toTOML(),
-                                      client.id,
-                                      account,
-                                      contract,
-                                      0,
-                                      "getRemainingCandies",
-                                      [],
-                                     )).toBeResolvedTo(expectedRemainingCoins);
+        await expectAsync(client.call(
+            byzcoinRPC.genesisID,
+            rosterTOML,
+            client.id,
+            account,
+            contract,
+            0,
+            "getRemainingCandies",
+            [],
+        )).toBeResolvedTo(expectedRemainingCoins);
     }, 60000); // Extend Jasmine default timeout interval to 1 minute
 });
