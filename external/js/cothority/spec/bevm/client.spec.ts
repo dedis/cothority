@@ -8,7 +8,7 @@ import ByzCoinRPC from "../../src/byzcoin/byzcoin-rpc";
 import SignerEd25519 from "../../src/darc/signer-ed25519";
 import { Roster } from "../../src/network";
 
-import { BEvmClient, BEvmService, EvmAccount, EvmContract } from "../../src/bevm";
+import { BEvmClient, BEvmService, EvmAccount, EvmContract, WEI_PER_ETHER } from "../../src/bevm";
 
 import { ROSTER, startConodes } from "../support/conondes";
 
@@ -28,7 +28,6 @@ describe("BEvmClient", async () => {
 [{"constant":false,"inputs":[{"name":"candies","type":"uint256"}],"name":"eatCandy","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"getRemainingCandies","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[{"name":"_candies","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"}]
 `.trim();
     /* tslint:enable:max-line-length */
-    const WEI_PER_ETHER = Long.fromString("1000000000000000000");
 
     beforeAll(async () => {
         await startConodes();
@@ -86,7 +85,7 @@ describe("BEvmClient", async () => {
 
         const contract = new EvmContract("Candy", candyBytecode, candyAbi);
 
-        const amount = Buffer.from(WEI_PER_ETHER.mul(5).toBytesBE());
+        const amount = WEI_PER_ETHER.mul(5);
 
         // Credit an account so that we can perform actions
         await expectAsync(client.creditAccount(

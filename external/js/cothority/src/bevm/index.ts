@@ -1,4 +1,4 @@
-import { BEvmClient, EvmAccount, EvmContract } from "./client";
+import { BEvmClient, EvmAccount, EvmContract, WEI_PER_ETHER } from "./client";
 import { BEvmService } from "./service";
 
 export {
@@ -6,4 +6,5 @@ export {
     EvmAccount,
     EvmContract,
     BEvmClient,
+    WEI_PER_ETHER,
 };
