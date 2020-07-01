@@ -1,6 +1,7 @@
 import { randomBytes } from "crypto";
 import { ec } from "elliptic";
 import Keccak from "keccak";
+import Long from "long";
 
 import ByzCoinRPC from "../byzcoin/byzcoin-rpc";
 import ClientTransaction, { Argument, Instruction } from "../byzcoin/client-transaction";
@@ -37,6 +38,14 @@ export class EvmAccount {
         return this._nonce;
     }
 
+    /**
+     * Create a new EVM account
+     *
+     * @param name      Account name
+     * @param privKey   Private key for the account (32 bytes); if not
+     *                  specified, a new one is generated randomly
+     * @param nonce     Initial nonce for the account; should normally not be specified
+     */
     constructor(readonly name: string, privKey?: Buffer, nonce: number = 0) {
         if (privKey === undefined) {
             privKey = randomBytes(32);
@@ -118,6 +127,14 @@ export class EvmContract {
     readonly transactions: string[];
     readonly viewMethods: string[];
 
+    /**
+     * Create a new EVM contract
+     *
+     * @param name      Contract name
+     * @param bytecode  Contract bytecode
+     * @param abi       Contract ABI (JSON-encoded)
+     * @param addresses Array of deployed contract instances; should normally not be specified
+     */
     constructor(readonly name: string,
                 readonly bytecode: Buffer,
                 readonly abi: string,
@@ -140,6 +157,9 @@ export class EvmContract {
         this.addresses.push(newAddress);
     }
 }
+
+// Number of WEIs in one ETHER
+export const WEI_PER_ETHER = Long.fromString("1000000000000000000");
 
 /**
  * BEvm client
@@ -222,6 +242,20 @@ export class BEvmClient extends Instance {
      * @param contract  EVM contract to deploy
      * @param args      Arguments for the smart contract constructor
      * @param wait      Number of blocks to wait for the ByzCoin transaction to be included
+     *
+     * The `args` are passed as an array of strings, one per argument, each of
+     * them JSON-encoded.
+     * The following argument types are currently supported:
+     *
+     *   Solidity type          | JSON type | Example
+     *   --------------------------------------------
+     *   uint, uint256, uint128 | string    | "12345"
+     *   int, int256, int128    | string    | "-12345"
+     *   uint32, uint16, uint128| number    | 12345
+     *   int32, int16, int128   | number    | -12345
+     *   address                | string    | "112233445566778899aabbccddeeff0011223344"
+     *   string                 | string    | "look at me I am a string"
+     *   array, e.g. uint[2]    | array     | ["123", "456"]
      */
     async deploy(signers: Signer[],
                  gasLimit: number,
@@ -262,6 +296,8 @@ export class BEvmClient extends Instance {
      * @param method        Name of the method to execute
      * @param args          Arguments for the smart contract method
      * @param wait          Number of blocks to wait for the ByzCoin transaction to be included
+     *
+     * See `deploy()` for a description of `args`.
      */
     async transaction(signers: Signer[],
                       gasLimit: number,
@@ -309,6 +345,8 @@ export class BEvmClient extends Instance {
      * @param args              Arguments for the smart contract method
      *
      * @return Result of the view method execution
+     *
+     * See `deploy()` for a description of `args`.
      */
     async call(byzcoinId: Buffer,
                serverConfig: string,
@@ -343,15 +381,17 @@ export class BEvmClient extends Instance {
      */
     async creditAccount(signers: Signer[],
                         account: EvmAccount,
-                        amount: Buffer,
+                        amount: Long,
                         wait?: number) {
+        const amountBuf = Buffer.from(amount.toBytesBE());
+
         await this.invoke(
             BEvmClient.commandCredit,
             [
                 new Argument({name: BEvmClient.argumentAddress,
                              value: account.address}),
                 new Argument({name: BEvmClient.argumentAmount,
-                             value: amount}),
+                             value: amountBuf}),
             ],
             signers,
             wait);
