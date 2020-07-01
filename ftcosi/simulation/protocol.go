@@ -125,7 +125,6 @@ func (s *SimulationProtocol) Node(config *onet.SimulationConfig) error {
 
 // Run implements onet.Simulation.
 func (s *SimulationProtocol) Run(config *onet.SimulationConfig) error {
-	log.SetDebugVisible(2)
 	size := config.Tree.Size()
 	log.Lvl2("Size is:", size, "rounds:", s.Rounds)
 	for round := 0; round < s.Rounds; round++ {
