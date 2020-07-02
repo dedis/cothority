@@ -197,5 +197,5 @@ func TestDarcRetrieval(t *testing.T) {
 		err = darc.EvalExprDarc(rootSign, getDarcs, true, darcID.String())
 		require.NoError(t, err)
 	}
-	log.Lvl1("time to search:", time.Now().Sub(start))
+	log.Lvl1("time to search:", time.Since(start))
 }

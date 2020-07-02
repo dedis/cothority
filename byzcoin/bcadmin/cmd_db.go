@@ -185,8 +185,6 @@ type sumFetcher struct {
 	maxTPS          float64
 	maxBlockSize    int
 	totalBlockSize  int
-	verifyFLSig     bool
-	maxBlocks       int
 }
 
 func newSumFetcher(c *cli.Context) *sumFetcher {
@@ -416,7 +414,7 @@ func dbRemove(c *cli.Context) error {
 		if latest.Index-blocks <= int(binary.LittleEndian.Uint32(buf)) {
 			return errors.New("need to keep blocks up to the trie-state." +
 				"\nUse `bcadmin db replay --write` to replay the db to a" +
-				" previous state.")
+				" previous state")
 		}
 		return nil
 	})
@@ -567,7 +565,6 @@ type fetchBlocks struct {
 	roster           *onet.Roster
 	genesis          *skipchain.SkipBlock
 	latest           *skipchain.SkipBlock
-	single           int
 	index            int
 	boltDB           *bbolt.DB
 	db               *skipchain.SkipBlockDB
@@ -604,6 +601,9 @@ func newFetchBlocks(c *cli.Context) (*fetchBlocks,
 	if c.NArg() >= 2 {
 		var bi skipchain.SkipBlockID
 		bi, err = hex.DecodeString(c.Args().Get(1))
+		if err != nil {
+			return nil, fmt.Errorf("couldn't decode skipchain-ID: %v", err)
+		}
 		fb.bcID = &bi
 		fb.genesis = fb.db.GetByID(*fb.bcID)
 		if fb.genesis != nil {
@@ -727,14 +727,6 @@ func (fb *fetchBlocks) addURL(url string) error {
 	fb.latest = updateChain.Update[len(updateChain.Update)-1]
 	fb.cl.UseNode(0)
 	return nil
-}
-
-func (fb *fetchBlocks) blockFetcher(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
-	sb := fb.db.GetByID(sib)
-	if sb == nil {
-		return nil, nil
-	}
-	return sb, nil
 }
 
 func (fb *fetchBlocks) openDB(name string) (*skipchain.SkipBlockDB,

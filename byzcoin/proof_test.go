@@ -25,10 +25,10 @@ func TestNewProof(t *testing.T) {
 	_, err := NewProof(s.c, s.s, skipchain.SkipBlockID{}, []byte{})
 	require.Error(t, err)
 
-	key := []byte{1}
-	p, err := NewProof(s.c, s.s, s.genesis.Hash, key)
+	instKey := []byte{1}
+	p, err := NewProof(s.c, s.s, s.genesis.Hash, instKey)
 	require.NoError(t, err)
-	require.False(t, p.InclusionProof.Match(key))
+	require.False(t, p.InclusionProof.Match(instKey))
 
 	p, err = NewProof(s.c, s.s, s.genesis.Hash, s.key)
 	require.NoError(t, err)
@@ -41,9 +41,9 @@ func TestVerify(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, p.InclusionProof.Match(s.key))
 	require.Nil(t, p.Verify(s.genesis.SkipChainID()))
-	key, val, _, _, err := p.KeyValue()
+	instKey, val, _, _, err := p.KeyValue()
 	require.NoError(t, err)
-	require.Equal(t, s.key, key)
+	require.Equal(t, s.key, instKey)
 	require.Equal(t, s.value, val)
 
 	require.True(t, xerrors.Is(p.Verify(s.genesis2.SkipChainID()), ErrorVerifySkipchain))
@@ -134,7 +134,9 @@ func genForwardLink(t *testing.T, from, to *skipchain.SkipBlock, privs []kyber.S
 		From: from.Hash,
 		To:   to.Hash,
 	}
-	if !from.Roster.ID.Equal(to.Roster.ID) {
+	equals, err := from.Roster.Equal(to.Roster)
+	require.NoError(t, err)
+	if !equals {
 		fwd.NewRoster = to.Roster
 	}
 	sig, err := bls.Sign(pairing.NewSuiteBn256(), privs[0], fwd.Hash())

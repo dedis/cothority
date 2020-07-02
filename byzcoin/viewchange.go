@@ -189,8 +189,8 @@ func (s *Service) sendNewView(proof []viewchange.InitReq) error {
 		return fmt.Errorf("couldn't get header of block: %+v", err)
 	}
 
+	s.working.Add(1)
 	go func() {
-		s.working.Add(1)
 		defer s.working.Done()
 		var sig []byte
 		// Only version < VersionViewchange uses the signing of the view-change
@@ -347,8 +347,11 @@ func (s *Service) verifyViewChange(msg []byte, data []byte) bool {
 		log.Error(s.ServerIdentity(), "view does not exist")
 		return false
 	}
-	newRosterID := rotateRoster(sb.Roster, req.GetView().LeaderIndex).ID
-	if !newRosterID.Equal(req.Roster.ID) {
+	equals, err := req.Roster.Equal(rotateRoster(sb.Roster, req.GetView().LeaderIndex))
+	if err != nil {
+		log.Error(s.ServerIdentity(), "couldn't compare rosters: %+v", err)
+	}
+	if !equals {
 		log.Error(s.ServerIdentity(), "invalid roster in request")
 		return false
 	}

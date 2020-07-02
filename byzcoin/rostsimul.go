@@ -2,6 +2,7 @@ package byzcoin
 
 import (
 	"errors"
+	"fmt"
 
 	"golang.org/x/xerrors"
 
@@ -148,7 +149,7 @@ func (s *ROSTSimul) CreateSCB(sa StateAction, cID string, id InstanceID,
 	value interface{}, darcID darc.ID) (err error) {
 	valueBuf, err := protobuf.Encode(value)
 	if err != nil {
-		err = xerrors.Errorf("couldn't encode coin: %+v", err)
+		return fmt.Errorf("couldn't encode coin: %v", err)
 	}
 	if darcID == nil {
 		darcID = make([]byte, 32)

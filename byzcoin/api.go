@@ -380,7 +380,7 @@ func (c *Client) GetDeferredDataAfter(instrID InstanceID, barrier *skipchain.Ski
 
 	header, err := decodeBlockHeader(c.Latest)
 	if err != nil {
-		return nil, xerrors.Errorf("decoding header: %w")
+		return nil, xerrors.Errorf("decoding header: %v", err)
 	}
 
 	result.ProposedTransaction.Instructions.SetVersion(header.Version)
@@ -426,6 +426,9 @@ func (c *Client) GetGenDarc() (*darc.Darc, error) {
 
 	// Sanity check the values.
 	_, _, contract, darcID, err := p.Proof.KeyValue()
+	if err != nil {
+		return nil, fmt.Errorf("couldn't get genesis darc: %v", err)
+	}
 	if contract != ContractConfigID {
 		return nil, xerrors.New("expected contract to be config but got: " + contract)
 	}
@@ -477,6 +480,9 @@ func (c *Client) GetChainConfig() (*ChainConfig, error) {
 	}
 
 	_, configBuf, contract, _, err := p.Proof.KeyValue()
+	if err != nil {
+		return nil, fmt.Errorf("couldn't get chain config: %v", err)
+	}
 	if contract != ContractConfigID {
 		return nil, xerrors.New("expected contract to be config but got: " + contract)
 	}
@@ -516,7 +522,7 @@ func (c *Client) WaitProof(id InstanceID, interval time.Duration, value []byte) 
 			if err != nil {
 				return nil, xerrors.Errorf("couldn't get keyvalue: %+v", err)
 			}
-			if bytes.Compare(buf, value) == 0 {
+			if bytes.Equal(buf, value) {
 				return &pr, nil
 			}
 		}

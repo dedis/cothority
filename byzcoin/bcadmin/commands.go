@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/urfave/cli"
@@ -48,7 +47,7 @@ var cmds = cli.Commands{
 		},
 		// UsageText should be used instead, but its not working:
 		// see https://github.com/urfave/cli/issues/592
-		Description: fmt.Sprint(`
+		Description: `
    bcadmin [--export] contract CONTRACT { 
                                spawn  --bc <byzcoin config> 
                                       [--<arg name> <arg value>, ...]
@@ -64,10 +63,9 @@ var cmds = cli.Commands{
                                       --instid, i <instance ID>,
                                delete --bc <byzcoin config>
                                       --instid, i <instance ID>
-                                      [--darc <darc id>] 
                                       [--sign <pub key>]     
                              }
-   CONTRACT   {value,deferred,config}`),
+   CONTRACT   {value,deferred,config}`,
 		Subcommands: cli.Commands{
 			{
 				Name:  "value",
@@ -161,10 +159,6 @@ var cmds = cli.Commands{
 							cli.StringFlag{
 								Name:  "instid, i",
 								Usage: "the instance ID of the value contract",
-							},
-							cli.StringFlag{
-								Name:  "darc",
-								Usage: "DARC with the right to invoke.update a value contract (default is the admin DARC)",
 							},
 							cli.StringFlag{
 								Name:  "sign",
@@ -290,10 +284,6 @@ var cmds = cli.Commands{
 							cli.StringFlag{
 								Name:  "instid, i",
 								Usage: "the instance ID of the value contract",
-							},
-							cli.StringFlag{
-								Name:  "darc",
-								Usage: "DARC with the right to invoke.update a value contract (default is the admin DARC)",
 							},
 							cli.StringFlag{
 								Name:  "sign",

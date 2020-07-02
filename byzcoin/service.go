@@ -719,15 +719,12 @@ func (s *Service) DownloadState(req *DownloadState) (resp *DownloadStateResponse
 		Nonce: s.downloadState.nonce,
 		Total: s.downloadState.total,
 	}
-query:
 	for i := 0; i < req.Length; i++ {
-		select {
-		case kv, ok := <-s.downloadState.read:
-			if !ok {
-				break query
-			}
-			resp.KeyValues = append(resp.KeyValues, kv)
+		kv, ok := <-s.downloadState.read
+		if !ok {
+			break
 		}
+		resp.KeyValues = append(resp.KeyValues, kv)
 	}
 	return
 }
@@ -1616,8 +1613,8 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		return nil
 	} else if sb.Index > trieIndex+1 {
 		log.Warn(s.ServerIdentity(), "Got new block while catching up - ignoring block for now")
+		s.working.Add(1)
 		go func() {
-			s.working.Add(1)
 			defer s.working.Done()
 
 			// This new block will catch up at the end of the current catch up (if any)
@@ -1940,8 +1937,8 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 	}
 
 	stopChan := make(chan bool)
+	s.pollChanWG.Add(1)
 	go func() {
-		s.pollChanWG.Add(1)
 		defer s.pollChanWG.Done()
 
 		s.closedMutex.Lock()
@@ -1965,7 +1962,8 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool {
 	start := time.Now()
 	defer func() {
-		log.Lvlf3("%s Verify done after %s", s.ServerIdentity(), time.Now().Sub(start))
+		log.Lvlf3("%s Verify done after %s", s.ServerIdentity(),
+			time.Since(start))
 	}()
 
 	header, err := decodeBlockHeader(newSB)
@@ -2068,16 +2066,16 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 	}
 
 	// Check that the hashes in DataHeader are right.
-	if bytes.Compare(header.ClientTransactionHash, txOut.Hash()) != 0 {
+	if !bytes.Equal(header.ClientTransactionHash, txOut.Hash()) {
 		log.Lvl2(s.ServerIdentity(), "Client Transaction Hash doesn't verify")
 		return false
 	}
 
-	if bytes.Compare(header.TrieRoot, mtr) != 0 {
+	if !bytes.Equal(header.TrieRoot, mtr) {
 		log.Lvl2(s.ServerIdentity(), "Trie root doesn't verify")
 		return false
 	}
-	if bytes.Compare(header.StateChangesHash, scs.Hash()) != 0 {
+	if !bytes.Equal(header.StateChangesHash, scs.Hash()) {
 		log.Lvl2(s.ServerIdentity(), "State Changes hash doesn't verify")
 		return false
 	}
@@ -2177,13 +2175,11 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 		return
 	}
 	log.Lvl3(s.ServerIdentity(), "state changes from cache: MISS")
-	err = nil
 
 	var maxsz, blocksz int
-	_, maxsz, err = loadBlockInfo(sst)
 	// no error or expected "no trie" err, so keep going with the
 	// maxsz we got.
-	err = nil
+	_, maxsz, _ = loadBlockInfo(sst)
 
 	deadline := time.Now().Add(timeout)
 
@@ -2464,11 +2460,11 @@ func (s *Service) executeInstruction(gs GlobalState, cin []Coin,
 			// Special case 1: first time call to
 			// genesis-configuration must return correct contract
 			// type.
-			contractFactory, exists = s.GetContractConstructor(ContractConfigID)
+			contractFactory, _ = s.GetContractConstructor(ContractConfigID)
 		} else if NamingInstanceID.Equal(instr.InstanceID) {
 			// Special case 2: first time call to the naming
 			// contract must return the correct type too.
-			contractFactory, exists = s.GetContractConstructor(ContractNamingID)
+			contractFactory, _ = s.GetContractConstructor(ContractNamingID)
 		} else {
 			// If the leader does not have a verifier for this
 			// contract, it drops the transaction.
@@ -2754,8 +2750,8 @@ func (s *Service) startAllChains() error {
 
 	// All the logic necessary to start the chains is delayed to a goroutine so that
 	// the other services can start immediately and are not blocked by Byzcoin.
+	s.working.Add(1)
 	go func() {
-		s.working.Add(1)
 		defer s.working.Done()
 
 		// Catch up is done before starting the chains to prevent undesired events

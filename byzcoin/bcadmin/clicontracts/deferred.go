@@ -470,11 +470,6 @@ func DeferredDelete(c *cli.Context) error {
 		return err
 	}
 
-	dstr := c.String("darc")
-	if dstr == "" {
-		dstr = cfg.AdminDarc.GetIdentityString()
-	}
-
 	var signer *darc.Signer
 
 	sstr := c.String("sign")

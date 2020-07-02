@@ -189,6 +189,9 @@ func transfer(c *cli.Context) error {
 		return err
 	}
 	target, err := coinHash(targetBuf)
+	if err != nil {
+		return fmt.Errorf("couldn't create hash of coin: %v", err)
+	}
 
 	cfg, cl, err := loadConfig()
 	if err != nil {
@@ -227,6 +230,9 @@ func transfer(c *cli.Context) error {
 
 	signer := darc.NewSignerEd25519(cfg.KeyPair.Public, cfg.KeyPair.Private)
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
+	if err != nil {
+		return fmt.Errorf("couldn't get signer counter: %v", err)
+	}
 	multi := c.Int("multi")
 	if multi > 200 {
 		log.Warn("Only allowing 200 transactions at a time")
@@ -436,8 +442,12 @@ func (cfg config) save() error {
 		return err
 	}
 
+	id, err := cfg.BCConfig.Roster.GetID()
+	if err != nil {
+		return fmt.Errorf("couldn't get ID of bcconfig-roster: %v", err)
+	}
 	jr := rosterJSON{
-		ID:        fmt.Sprintf("%x", cfg.BCConfig.Roster.ID[:]),
+		ID:        fmt.Sprintf("%x", id[:]),
 		Aggregate: cfg.BCConfig.Roster.Aggregate.String(),
 	}
 	for _, si := range cfg.BCConfig.Roster.List {
@@ -473,7 +483,12 @@ func (cfg config) save() error {
 	}
 
 	buf, err := json.MarshalIndent(cfgJSON, "", " ")
+	if err != nil {
+		return fmt.Errorf("couldn't marshal cfgJSON: %v", err)
+	}
 
-	os.MkdirAll(configPath, 0700)
+	if err := os.MkdirAll(configPath, 0700); err != nil {
+		return fmt.Errorf("couldn't mkdir for configPath: %v", err)
+	}
 	return ioutil.WriteFile(filepath.Join(configPath, configName), buf, 0600)
 }
