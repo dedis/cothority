@@ -1,6 +1,6 @@
 package trie
 
-import "golang.org/x/xerrors"
+import "errors"
 
 type nodeProcessor interface {
 	OnEmpty(n emptyNode, k, v []byte) error
@@ -13,7 +13,7 @@ type nodeProcessor interface {
 func (t *Trie) dfs(p nodeProcessor, nodeKey []byte, b Bucket) error {
 	nodeVal := b.Get(nodeKey)
 	if len(nodeVal) == 0 {
-		return xerrors.New("node key does not exist in copyTo")
+		return errors.New("node key does not exist in copyTo")
 	}
 	switch nodeType(nodeVal[0]) {
 	case typeEmpty:
@@ -44,7 +44,7 @@ func (t *Trie) dfs(p nodeProcessor, nodeKey []byte, b Bucket) error {
 		}
 		return nil
 	}
-	return xerrors.New("invalid node type")
+	return errors.New("invalid node type")
 }
 
 type countNodeProcessor struct {

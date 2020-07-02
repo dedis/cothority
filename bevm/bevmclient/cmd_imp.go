@@ -1,13 +1,12 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/big"
 	"reflect"
 	"strconv"
-
-	"golang.org/x/xerrors"
 
 	cli "github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3/bevm"
@@ -25,12 +24,12 @@ func createAccount(ctx *cli.Context) error {
 
 	pk, err := crypto.GenerateKey()
 	if err != nil {
-		return xerrors.Errorf("failed to generate EVM account key: %v", err)
+		return fmt.Errorf("failed to generate EVM account key: %v", err)
 	}
 
 	account, err := bevm.NewEvmAccount(common.Bytes2Hex(crypto.FromECDSA(pk)))
 	if err != nil {
-		return xerrors.Errorf("failed to create new EVM account: %v", err)
+		return fmt.Errorf("failed to create new EVM account: %v", err)
 	}
 
 	fmt.Printf("New account \"%s\" created at address: %s\n",
@@ -44,17 +43,17 @@ func creditAccount(ctx *cli.Context) error {
 
 	opt, err := handleCommonOptions(ctx)
 	if err != nil {
-		return xerrors.Errorf("failed to handle provided options: %v", err)
+		return fmt.Errorf("failed to handle provided options: %v", err)
 	}
 
 	if !ctx.Args().Present() {
-		return xerrors.New("missing <amount> argument")
+		return errors.New("missing <amount> argument")
 	}
 
 	amountStr := ctx.Args().First()
 	amount, err := strconv.ParseUint(amountStr, 0, 64)
 	if err != nil {
-		return xerrors.Errorf("failed to parse <amount> value: %v", err)
+		return fmt.Errorf("failed to parse <amount> value: %v", err)
 	}
 
 	// Perform command
@@ -64,13 +63,13 @@ func creditAccount(ctx *cli.Context) error {
 
 	_, err = opt.bevmClient.CreditAccount(amountBig, opt.account.Address)
 	if err != nil {
-		return xerrors.Errorf("failed to credit BEvm account: %v", err)
+		return fmt.Errorf("failed to credit BEvm account: %v", err)
 	}
 
 	_, err = fmt.Fprintf(ctx.App.Writer, "Credited account %s with %d Ether\n",
 		opt.account.Address.Hex(), amount)
 	if err != nil {
-		return xerrors.Errorf("failed to write report msg: %v", err)
+		return fmt.Errorf("failed to write report msg: %v", err)
 	}
 
 	return nil
@@ -81,14 +80,14 @@ func getAccountBalance(ctx *cli.Context) error {
 
 	opt, err := handleCommonOptions(ctx)
 	if err != nil {
-		return xerrors.Errorf("failed to handle provided options: %v", err)
+		return fmt.Errorf("failed to handle provided options: %v", err)
 	}
 
 	// Perform command
 
 	amount, err := opt.bevmClient.GetAccountBalance(opt.account.Address)
 	if err != nil {
-		return xerrors.Errorf("failed to retrieve BEvm account "+
+		return fmt.Errorf("failed to retrieve BEvm account "+
 			"balance: %v", err)
 	}
 
@@ -98,7 +97,7 @@ func getAccountBalance(ctx *cli.Context) error {
 		"Balance of account %s: %v Ether, %v Wei\n",
 		opt.account.Address.Hex(), amountEther.String(), amountWei.String())
 	if err != nil {
-		return xerrors.Errorf("failed to write report msg: %v", err)
+		return fmt.Errorf("failed to write report msg: %v", err)
 	}
 
 	return nil
@@ -109,7 +108,7 @@ func deployContract(ctx *cli.Context) error {
 
 	opt, err := handleCommonOptions(ctx)
 	if err != nil {
-		return xerrors.Errorf("failed to handle provided options: %v", err)
+		return fmt.Errorf("failed to handle provided options: %v", err)
 	}
 
 	gasLimit := ctx.Uint64("gasLimit")
@@ -118,7 +117,7 @@ func deployContract(ctx *cli.Context) error {
 	contractName := ctx.String("contractName")
 
 	if ctx.NArg() < 2 {
-		return xerrors.Errorf("missing some argument (expected at least 2, "+
+		return fmt.Errorf("missing some argument (expected at least 2, "+
 			"got %d)", ctx.NArg())
 	}
 
@@ -127,32 +126,32 @@ func deployContract(ctx *cli.Context) error {
 
 	abiData, err := ioutil.ReadFile(abiFilepath)
 	if err != nil {
-		return xerrors.Errorf("failed to read contract ABI from "+
+		return fmt.Errorf("failed to read contract ABI from "+
 			"provided file: %v", err)
 	}
 
 	binData, err := ioutil.ReadFile(binFilepath)
 	if err != nil {
-		return xerrors.Errorf("failed to read contract Bytecode "+
+		return fmt.Errorf("failed to read contract Bytecode "+
 			"from provided file: %v", err)
 	}
 
 	contract, err := bevm.NewEvmContract("newContract",
 		string(abiData), string(binData))
 	if err != nil {
-		return xerrors.Errorf("failed to create new BEvm contract: %v", err)
+		return fmt.Errorf("failed to create new BEvm contract: %v", err)
 	}
 
 	constrAbi := contract.Abi.Constructor
 	userArgs := ctx.Args()[2:]
 	if len(userArgs) != len(constrAbi.Inputs) {
-		return xerrors.Errorf("wrong number of arguments for contract "+
+		return fmt.Errorf("wrong number of arguments for contract "+
 			"constructor: expected %d, got %d",
 			len(constrAbi.Inputs), len(userArgs))
 	}
 	args, err := bevm.DecodeEvmArgs(userArgs, constrAbi.Inputs)
 	if err != nil {
-		return xerrors.Errorf("failed to decode contract constructor "+
+		return fmt.Errorf("failed to decode contract constructor "+
 			"arguments: %v", err)
 	}
 
@@ -161,22 +160,22 @@ func deployContract(ctx *cli.Context) error {
 	_, contractInstance, err := opt.bevmClient.Deploy(
 		gasLimit, gasPrice, amount, opt.account, contract, args...)
 	if err != nil {
-		return xerrors.Errorf("failed to deploy new BEvm contract: %v", err)
+		return fmt.Errorf("failed to deploy new BEvm contract: %v", err)
 	}
 
 	err = writeAccountFile(opt.account, opt.accountName, false)
 	if err != nil {
-		return xerrors.Errorf("failed to save account information: %v", err)
+		return fmt.Errorf("failed to save account information: %v", err)
 	}
 
 	err = writeContractFile(contractInstance, abiFilepath, contractName, true)
 	if err != nil {
-		return xerrors.Errorf("failed to save contract information: %v", err)
+		return fmt.Errorf("failed to save contract information: %v", err)
 	}
 
 	_, err = fmt.Fprintf(ctx.App.Writer, "%s deployed\n", contractInstance)
 	if err != nil {
-		return xerrors.Errorf("failed to write report msg: %v", err)
+		return fmt.Errorf("failed to write report msg: %v", err)
 	}
 
 	return nil
@@ -187,7 +186,7 @@ func executeTransaction(ctx *cli.Context) error {
 
 	opt, err := handleCommonOptions(ctx)
 	if err != nil {
-		return xerrors.Errorf("failed to handle pprovided options: %v", err)
+		return fmt.Errorf("failed to handle pprovided options: %v", err)
 	}
 
 	gasLimit := ctx.Uint64("gasLimit")
@@ -197,28 +196,28 @@ func executeTransaction(ctx *cli.Context) error {
 
 	contractInstance, err := readContractFile(contractName)
 	if err != nil {
-		return xerrors.Errorf("failed to load contract information: %v", err)
+		return fmt.Errorf("failed to load contract information: %v", err)
 	}
 
 	if ctx.NArg() == 0 {
-		return xerrors.New("missing transaction name argument")
+		return errors.New("missing transaction name argument")
 	}
 
 	method := ctx.Args().First()
 	methodAbi, ok := contractInstance.Parent.Abi.Methods[method]
 	if !ok {
-		return xerrors.Errorf("transaction \"%s\" does not exist "+
+		return fmt.Errorf("transaction \"%s\" does not exist "+
 			"for this contract", method)
 	}
 
 	userArgs := ctx.Args().Tail()
 	if len(userArgs) != len(methodAbi.Inputs) {
-		return xerrors.Errorf("wrong number of arguments for \"%s\": "+
+		return fmt.Errorf("wrong number of arguments for \"%s\": "+
 			"expected %d, got %d", method, len(methodAbi.Inputs), len(userArgs))
 	}
 	args, err := bevm.DecodeEvmArgs(userArgs, methodAbi.Inputs)
 	if err != nil {
-		return xerrors.Errorf("failed to decode contract transaction "+
+		return fmt.Errorf("failed to decode contract transaction "+
 			"arguments: %v", err)
 	}
 
@@ -228,17 +227,17 @@ func executeTransaction(ctx *cli.Context) error {
 		gasLimit, gasPrice, amount, opt.account, contractInstance,
 		method, args...)
 	if err != nil {
-		return xerrors.Errorf("failed to execute contract transaction: %v", err)
+		return fmt.Errorf("failed to execute contract transaction: %v", err)
 	}
 
 	err = writeAccountFile(opt.account, opt.accountName, false)
 	if err != nil {
-		return xerrors.Errorf("failed to save account information: %v", err)
+		return fmt.Errorf("failed to save account information: %v", err)
 	}
 
 	_, err = fmt.Fprintf(ctx.App.Writer, "transaction executed\n")
 	if err != nil {
-		return xerrors.Errorf("failed to write report msg: %v", err)
+		return fmt.Errorf("failed to write report msg: %v", err)
 	}
 
 	return nil
@@ -249,38 +248,38 @@ func executeCall(ctx *cli.Context) error {
 
 	opt, err := handleCommonOptions(ctx)
 	if err != nil {
-		return xerrors.Errorf("failed to handle provided options: %v", err)
+		return fmt.Errorf("failed to handle provided options: %v", err)
 	}
 
 	contractName := ctx.String("contractName")
 
 	contractInstance, err := readContractFile(contractName)
 	if err != nil {
-		return xerrors.Errorf("failed to load contract information: %v", err)
+		return fmt.Errorf("failed to load contract information: %v", err)
 	}
 
 	if ctx.NArg() == 0 {
-		return xerrors.New("missing view method name argument")
+		return errors.New("missing view method name argument")
 	}
 
 	method := ctx.Args().First()
 	methodAbi, ok := contractInstance.Parent.Abi.Methods[method]
 	if !ok {
-		return xerrors.Errorf("view method \"%s\" does not exist for this "+
+		return fmt.Errorf("view method \"%s\" does not exist for this "+
 			"contract", method)
 	}
 	if !methodAbi.Const {
-		return xerrors.Errorf("callable \"%s\" is not a view method", method)
+		return fmt.Errorf("callable \"%s\" is not a view method", method)
 	}
 
 	userArgs := ctx.Args().Tail()
 	if len(userArgs) != len(methodAbi.Inputs) {
-		return xerrors.Errorf("wrong number of arguments for \"%s\": "+
+		return fmt.Errorf("wrong number of arguments for \"%s\": "+
 			"expected %d, got %d", method, len(methodAbi.Inputs), len(userArgs))
 	}
 	args, err := bevm.DecodeEvmArgs(userArgs, methodAbi.Inputs)
 	if err != nil {
-		return xerrors.Errorf("failed to decode contract view method "+
+		return fmt.Errorf("failed to decode contract view method "+
 			"arguments: %v", err)
 	}
 
@@ -289,13 +288,13 @@ func executeCall(ctx *cli.Context) error {
 	result, err := opt.bevmClient.Call(opt.account, contractInstance,
 		method, args...)
 	if err != nil {
-		return xerrors.Errorf("failed to execute view method: %v", err)
+		return fmt.Errorf("failed to execute view method: %v", err)
 	}
 
 	_, err = fmt.Fprintf(ctx.App.Writer, "call return value: %v [%s]\n",
 		result, reflect.TypeOf(result))
 	if err != nil {
-		return xerrors.Errorf("failed to write report msg: %v", err)
+		return fmt.Errorf("failed to write report msg: %v", err)
 	}
 
 	return nil

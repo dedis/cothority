@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"go.dedis.ch/cothority/v3/byzcoin/trie"
-	"go.dedis.ch/kyber/v3/pairing"
-	"golang.org/x/xerrors"
 
 	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
 	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3/pairing"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
 )
@@ -31,7 +30,7 @@ type ReplayStateOptions struct {
 }
 
 func replayError(sb *skipchain.SkipBlock, err error) error {
-	return cothority.ErrorOrNilSkip(err, fmt.Sprintf("replay failed in block at index %d with message", sb.Index), 2)
+	return cothority.ErrorOrNil(err, fmt.Sprintf("replay failed in block at index %d with message", sb.Index))
 }
 
 // ReplayState builds the state changes from the genesis of the given skipchain ID until
@@ -115,7 +114,7 @@ func (s *Service) ReplayState(id skipchain.SkipBlockID,
 			dBody.TxResults.SetVersion(dHead.Version)
 
 			if !bytes.Equal(dHead.ClientTransactionHash, dBody.TxResults.Hash()) {
-				return nil, replayError(sb, xerrors.New("client transaction hash does not match"))
+				return nil, replayError(sb, errors.New("client transaction hash does not match"))
 			}
 
 			sst := st.MakeStagingStateTrie()
@@ -136,7 +135,7 @@ func (s *Service) ReplayState(id skipchain.SkipBlockID,
 				} else {
 					_, _, err = s.processOneTx(sst, tx.ClientTransaction, id, dHead.Timestamp)
 					if err == nil {
-						return nil, replayError(sb, xerrors.New("refused transaction passes"))
+						return nil, replayError(sb, errors.New("refused transaction passes"))
 					}
 				}
 			}
@@ -156,7 +155,7 @@ func (s *Service) ReplayState(id skipchain.SkipBlockID,
 						}
 					}
 				}
-				err = xerrors.New("merkle tree root doesn't match with trie root")
+				err = errors.New("merkle tree root doesn't match with trie root")
 				return nil, replayError(sb, err)
 			}
 
@@ -184,7 +183,7 @@ func (s *Service) ReplayState(id skipchain.SkipBlockID,
 					err = fl.VerifyWithScheme(pairing.NewSuiteBn256(), pubs, sb.SignatureScheme)
 					if err != nil {
 						log.Errorf("Found error in forward-link: '%s' - #%d: %+v", err, j, fl)
-						return nil, xerrors.Errorf("invalid forward-link: %v", err)
+						return nil, fmt.Errorf("invalid forward-link: %v", err)
 					}
 				}
 			}

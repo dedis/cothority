@@ -29,6 +29,7 @@ package calypso
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"math"
 	"net"
@@ -38,7 +39,6 @@ import (
 	"time"
 
 	"go.dedis.ch/kyber/v3/sign/schnorr"
-	"golang.org/x/xerrors"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -160,12 +160,12 @@ func (s *Service) ProcessClientRequest(req *http.Request, path string, buf []byt
 		h, _, err := net.SplitHostPort(req.RemoteAddr)
 
 		if err != nil {
-			return nil, nil, xerrors.Errorf("splitting host port: %v", err)
+			return nil, nil, fmt.Errorf("splitting host port: %v", err)
 		}
 		ip := net.ParseIP(h)
 		if !ip.IsLoopback() {
 
-			return nil, nil, xerrors.New("authorise is only allowed on loopback")
+			return nil, nil, errors.New("authorise is only allowed on loopback")
 		}
 	}
 	return s.ServiceProcessor.ProcessClientRequest(req, path, buf)
@@ -177,21 +177,21 @@ func (s *Service) ProcessClientRequest(req *http.Request, path string, buf []byt
 // Deprecated: please use Authorize.
 func (s *Service) Authorise(req *Authorise) (*AuthoriseReply, error) {
 	if len(req.ByzCoinID) == 0 {
-		return nil, xerrors.New("empty ByzCoin ID")
+		return nil, errors.New("empty ByzCoin ID")
 	}
 
 	s.storage.Lock()
 	bcID := string(req.ByzCoinID)
 	if _, ok := s.storage.AuthorisedByzCoinIDs[bcID]; ok {
 		s.storage.Unlock()
-		return nil, xerrors.New("ByzCoinID already authorised")
+		return nil, errors.New("ByzCoinID already authorised")
 	}
 	s.storage.AuthorisedByzCoinIDs[bcID] = true
 	s.storage.Unlock()
 
 	err := s.save()
 	if err != nil {
-		return nil, xerrors.Errorf("saving data: %v", err)
+		return nil, fmt.Errorf("saving data: %v", err)
 	}
 	log.Lvl1("Stored ByzCoinID")
 	return &AuthoriseReply{}, err
@@ -206,21 +206,21 @@ func (s *Service) Authorise(req *Authorise) (*AuthoriseReply, error) {
 // skipped.
 func (s *Service) Authorize(req *Authorize) (*AuthorizeReply, error) {
 	if len(req.ByzCoinID) == 0 {
-		return nil, xerrors.New("empty ByzCoin ID")
+		return nil, errors.New("empty ByzCoin ID")
 	}
 
 	if !allowInsecureAdmin {
 		if len(req.Signature) == 0 {
-			return nil, xerrors.New("no signature provided")
+			return nil, errors.New("no signature provided")
 		}
 		if math.Abs(time.Now().Sub(time.Unix(req.Timestamp, 0)).Seconds()) > 60 {
-			return nil, xerrors.New("signature is too old")
+			return nil, errors.New("signature is too old")
 		}
 		msg := append(req.ByzCoinID, make([]byte, 8)...)
 		binary.LittleEndian.PutUint64(msg[32:], uint64(req.Timestamp))
 		err := schnorr.Verify(cothority.Suite, s.ServerIdentity().Public, msg, req.Signature)
 		if err != nil {
-			return nil, xerrors.Errorf("signature verification failed: %v", err)
+			return nil, fmt.Errorf("signature verification failed: %v", err)
 		}
 	}
 
@@ -232,14 +232,14 @@ func (s *Service) Authorize(req *Authorize) (*AuthorizeReply, error) {
 		// `external/js/cothority/src/calypso/calypso-rpc.ts, so if you change the
 		// error-message here, all apps depending on the @dedis/cothority
 		// npm-package will fail.
-		return nil, xerrors.New("ByzCoinID already authorised")
+		return nil, errors.New("ByzCoinID already authorised")
 	}
 	s.storage.AuthorisedByzCoinIDs[bcID] = true
 	s.storage.Unlock()
 
 	err := s.save()
 	if err != nil {
-		return nil, xerrors.Errorf("saving data: %v", err)
+		return nil, fmt.Errorf("saving data: %v", err)
 	}
 	log.Lvl1("Stored ByzCoinID")
 	return &AuthorizeReply{}, nil
@@ -250,41 +250,41 @@ func (s *Service) Authorize(req *Authorize) (*AuthorizeReply, error) {
 // decryption requests. The LTSID should be the InstanceID.
 func (s *Service) CreateLTS(req *CreateLTS) (reply *CreateLTSReply, err error) {
 	if err := s.verifyProof(&req.Proof); err != nil {
-		return nil, xerrors.Errorf("verifying proof: %v", err)
+		return nil, fmt.Errorf("verifying proof: %v", err)
 	}
 
 	roster, instID, err := s.getLtsRoster(&req.Proof)
 	if err != nil {
-		return nil, xerrors.Errorf("get roster: %v", err)
+		return nil, fmt.Errorf("get roster: %v", err)
 	}
 
 	// NOTE: the roster stored in ByzCoin must have myself.
 	tree := roster.GenerateNaryTreeWithRoot(len(roster.List), s.ServerIdentity())
 	if tree == nil {
 		log.Error("cannot create tree with roster", roster.List)
-		return nil, xerrors.New("error while generating tree")
+		return nil, errors.New("error while generating tree")
 	}
 	cfg := newLtsConfig{
 		req.Proof,
 	}
 	cfgBuf, err := protobuf.Encode(&cfg)
 	if err != nil {
-		return nil, xerrors.Errorf("serializing configuration, %v", err)
+		return nil, fmt.Errorf("serializing configuration, %v", err)
 	}
 	pi, err := s.CreateProtocol(dkgprotocol.Name, tree)
 	if err != nil {
-		return nil, xerrors.Errorf("creating dkg protocol: %v", err)
+		return nil, fmt.Errorf("creating dkg protocol: %v", err)
 	}
 	setupDKG := pi.(*dkgprotocol.Setup)
 	setupDKG.Wait = true
 	err = setupDKG.SetConfig(&onet.GenericConfig{Data: cfgBuf})
 	if err != nil {
-		return nil, xerrors.Errorf("set dkg config: %v", err)
+		return nil, fmt.Errorf("set dkg config: %v", err)
 	}
 	setupDKG.KeyPair = s.getKeyPair()
 
 	if err := pi.Start(); err != nil {
-		return nil, xerrors.Errorf("starting dkg protocol: %v", err)
+		return nil, fmt.Errorf("starting dkg protocol: %v", err)
 	}
 
 	log.Lvl3("Started DKG-protocol - waiting for done", len(roster.List))
@@ -292,7 +292,7 @@ func (s *Service) CreateLTS(req *CreateLTS) (reply *CreateLTSReply, err error) {
 	case <-setupDKG.Finished:
 		shared, dks, err := setupDKG.SharedSecret()
 		if err != nil {
-			return nil, xerrors.Errorf("get aggregate public key: %v", err)
+			return nil, fmt.Errorf("get aggregate public key: %v", err)
 		}
 		reply = &CreateLTSReply{
 			ByzCoinID:  req.Proof.Latest.SkipChainID(),
@@ -308,11 +308,11 @@ func (s *Service) CreateLTS(req *CreateLTS) (reply *CreateLTSReply, err error) {
 		s.storage.Unlock()
 		err = s.save()
 		if err != nil {
-			return nil, xerrors.Errorf("save dkg state: %v", err)
+			return nil, fmt.Errorf("save dkg state: %v", err)
 		}
 		log.Lvlf2("%v Created LTS with ID: %v, pk %v", s.ServerIdentity(), instID, reply.X)
 	case <-time.After(propagationTimeout):
-		return nil, xerrors.New("new-dkg didn't finish in time")
+		return nil, errors.New("new-dkg didn't finish in time")
 	}
 	return
 }
@@ -324,10 +324,10 @@ func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 	// Verify the request
 	roster, id, err := s.getLtsRoster(&req.Proof)
 	if err != nil {
-		return nil, xerrors.Errorf("get roster: %v", err)
+		return nil, fmt.Errorf("get roster: %v", err)
 	}
 	if err := s.verifyProof(&req.Proof); err != nil {
-		return nil, xerrors.Errorf("verifying proof: %v", err)
+		return nil, fmt.Errorf("verifying proof: %v", err)
 	}
 
 	// Iterate through the new roster and update the set of valid peers
@@ -336,7 +336,7 @@ func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 	for _, srv := range roster.List {
 		err := cl.SendProtobuf(srv, &updateValidPeers{Proof: req.Proof}, &reply)
 		if err != nil {
-			return nil, xerrors.Errorf("updating valid peers on %v: %v",
+			return nil, fmt.Errorf("updating valid peers on %v: %v",
 				srv, err)
 		}
 	}
@@ -348,13 +348,13 @@ func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 
 		// Check that we know the shared secret, otherwise don't do re-sharing
 		if s.storage.Shared[id] == nil || s.storage.DKS[id] == nil {
-			return nil, xerrors.New("cannot start resharing without an LTS")
+			return nil, errors.New("cannot start resharing without an LTS")
 		}
 
 		// NOTE: the roster stored in ByzCoin must have myself.
 		tree := roster.GenerateNaryTreeWithRoot(len(roster.List), s.ServerIdentity())
 		if tree == nil {
-			return nil, xerrors.New("failed to generate tree " +
+			return nil, errors.New("failed to generate tree " +
 				"-- root not in roster")
 		}
 
@@ -367,18 +367,18 @@ func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 		}
 		cfgBuf, err := protobuf.Encode(&cfg)
 		if err != nil {
-			return nil, xerrors.Errorf("serializing configuration: %v", err)
+			return nil, fmt.Errorf("serializing configuration: %v", err)
 		}
 		pi, err := s.CreateProtocol(calypsoReshareProto, tree)
 		if err != nil {
-			return nil, xerrors.Errorf("creating reshare protocol: %v", err)
+			return nil, fmt.Errorf("creating reshare protocol: %v", err)
 		}
 		setupDKG := pi.(*dkgprotocol.Setup)
 		setupDKG.Wait = true
 		setupDKG.KeyPair = s.getKeyPair()
 		err = setupDKG.SetConfig(&onet.GenericConfig{Data: cfgBuf})
 		if err != nil {
-			return nil, xerrors.Errorf("setting dkg configuration: %v", err)
+			return nil, fmt.Errorf("setting dkg configuration: %v", err)
 		}
 
 		// Because we are the node starting the resharing protocol, by
@@ -403,10 +403,10 @@ func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 		return setupDKG, nil
 	}()
 	if err != nil {
-		return nil, xerrors.Errorf("initializing dkg: %v", err)
+		return nil, fmt.Errorf("initializing dkg: %v", err)
 	}
 	if err := setupDKG.Start(); err != nil {
-		return nil, xerrors.Errorf("starting dkg: %v", err)
+		return nil, fmt.Errorf("starting dkg: %v", err)
 	}
 	log.Lvl3(s.ServerIdentity(), "Started resharing DKG-protocol - waiting for done")
 
@@ -415,19 +415,19 @@ func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 	case <-setupDKG.Finished:
 		shared, dks, err := setupDKG.SharedSecret()
 		if err != nil {
-			return nil, xerrors.Errorf("getting shared secret: %v", err)
+			return nil, fmt.Errorf("getting shared secret: %v", err)
 		}
 		pk = shared.X
 		s.storage.Lock()
 		// Check the secret shares are different
 		if shared.V.Equal(s.storage.Shared[id].V) {
 			s.storage.Unlock()
-			return nil, xerrors.New("the reshared secret is the same")
+			return nil, errors.New("the reshared secret is the same")
 		}
 		// Check the public key remains the same
 		if !shared.X.Equal(s.storage.Shared[id].X) {
 			s.storage.Unlock()
-			return nil, xerrors.New("the reshared public point is different")
+			return nil, errors.New("the reshared public point is different")
 		}
 		s.storage.Shared[id] = shared
 		s.storage.Polys[id] = &pubPoly{s.Suite().Point().Base(), dks.Commits}
@@ -436,13 +436,13 @@ func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 		s.storage.Unlock()
 		err = s.save()
 		if err != nil {
-			return nil, xerrors.Errorf("saving dkg state: %v", err)
+			return nil, fmt.Errorf("saving dkg state: %v", err)
 		}
 		if s.afterReshare != nil {
 			s.afterReshare()
 		}
 	case <-time.After(propagationTimeout):
-		return nil, xerrors.New("resharing-dkg didn't finish in time")
+		return nil, errors.New("resharing-dkg didn't finish in time")
 	}
 
 	log.Lvl2(s.ServerIdentity(), "resharing protocol finished")
@@ -456,12 +456,12 @@ func (s *Service) updateValidPeers(req *updateValidPeers) (
 	*updateValidPeersReply, error) {
 	err := s.verifyProof(&req.Proof)
 	if err != nil {
-		return nil, xerrors.Errorf("verifying proof: %v", err)
+		return nil, fmt.Errorf("verifying proof: %v", err)
 	}
 
 	newRoster, ltsID, err := s.getLtsRoster(&req.Proof)
 	if err != nil {
-		return nil, xerrors.Errorf("retrieving roster: %v", err)
+		return nil, fmt.Errorf("retrieving roster: %v", err)
 	}
 
 	s.SetValidPeers(s.NewPeerSetID(ltsID[:]), newRoster.List)
@@ -474,12 +474,12 @@ func (s *Service) verifyProof(proof *byzcoin.Proof) error {
 	s.storage.Lock()
 	defer s.storage.Unlock()
 	if _, ok := s.storage.AuthorisedByzCoinIDs[string(scID)]; !ok {
-		return xerrors.New("this ByzCoin ID is not authorised")
+		return errors.New("this ByzCoin ID is not authorised")
 	}
 
 	sb, err := s.fetchGenesisBlock(scID, proof.Latest.Roster)
 	if err != nil {
-		return xerrors.Errorf("fetching genesis block: %v", err)
+		return fmt.Errorf("fetching genesis block: %v", err)
 	}
 
 	return cothority.ErrorOrNil(proof.VerifyFromBlock(sb),
@@ -497,7 +497,7 @@ func (s *Service) fetchGenesisBlock(scID skipchain.SkipBlockID, roster *onet.Ros
 	cl := skipchain.NewClient()
 	sb, err := cl.GetSingleBlock(roster, scID)
 	if err != nil {
-		return nil, xerrors.Errorf("getting single block: %v", err)
+		return nil, fmt.Errorf("getting single block: %v", err)
 	}
 
 	// Genesis block can be reused later on.
@@ -510,14 +510,14 @@ func (s *Service) getLtsRoster(proof *byzcoin.Proof) (*onet.Roster, byzcoin.Inst
 	instanceID, buf, _, _, err := proof.KeyValue()
 	if err != nil {
 		return nil, byzcoin.InstanceID{},
-			xerrors.Errorf("getting keys and values in the proof: %v", err)
+			fmt.Errorf("getting keys and values in the proof: %v", err)
 	}
 
 	var info LtsInstanceInfo
 	err = protobuf.DecodeWithConstructors(buf, &info, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
 		return nil, byzcoin.InstanceID{},
-			xerrors.Errorf("decoding roster: %v", err)
+			fmt.Errorf("decoding roster: %v", err)
 	}
 	return &info.Roster, byzcoin.NewInstanceID(instanceID), nil
 }
@@ -534,15 +534,15 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 
 	var read Read
 	if err := dkr.Read.VerifyAndDecode(cothority.Suite, ContractReadID, &read); err != nil {
-		return nil, xerrors.New("didn't get a read instance: " + err.Error())
+		return nil, errors.New("didn't get a read instance: " + err.Error())
 	}
 
 	var write Write
 	if err := dkr.Write.VerifyAndDecode(cothority.Suite, ContractWriteID, &write); err != nil {
-		return nil, xerrors.New("didn't get a write instance: " + err.Error())
+		return nil, errors.New("didn't get a write instance: " + err.Error())
 	}
 	if !read.Write.Equal(byzcoin.NewInstanceID(dkr.Write.InclusionProof.Key())) {
-		return nil, xerrors.New("read doesn't point to passed write")
+		return nil, errors.New("read doesn't point to passed write")
 	}
 	s.storage.Lock()
 	id := write.LTSID
@@ -550,17 +550,17 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	if roster == nil {
 		s.storage.Unlock()
 		return nil,
-			xerrors.Errorf("don't know the LTSID '%v' stored in write", id)
+			fmt.Errorf("don't know the LTSID '%v' stored in write", id)
 	}
 	s.storage.Unlock()
 
 	if err = s.verifyProof(&dkr.Read); err != nil {
-		return nil, xerrors.Errorf(
+		return nil, fmt.Errorf(
 			"read proof cannot be verified to come from scID: %v",
 			err)
 	}
 	if err = s.verifyProof(&dkr.Write); err != nil {
-		return nil, xerrors.Errorf(
+		return nil, fmt.Errorf(
 			"write proof cannot be verified to come from scID: %v",
 			err)
 	}
@@ -572,7 +572,7 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	tree := roster.GenerateNaryTreeWithRoot(nodes, s.ServerIdentity())
 	pi, err := s.CreateProtocol(protocol.NameOCS, tree)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to create ocs-protocol: %v", err)
+		return nil, fmt.Errorf("failed to create ocs-protocol: %v", err)
 	}
 	ocsProto := pi.(*protocol.OCS)
 	ocsProto.U = write.U
@@ -584,7 +584,7 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	ocsProto.VerificationData, err = protobuf.Encode(verificationData)
 	if err != nil {
 		return nil,
-			xerrors.Errorf("couldn't marshal verification data: %v", err)
+			fmt.Errorf("couldn't marshal verification data: %v", err)
 	}
 
 	// Make sure everything used from the s.Storage structure is copied, so
@@ -604,20 +604,20 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	err = ocsProto.SetConfig(&onet.GenericConfig{Data: id.Slice()})
 	if err != nil {
 		return nil,
-			xerrors.Errorf("failed to set config for ocs-protocol: %v", err)
+			fmt.Errorf("failed to set config for ocs-protocol: %v", err)
 	}
 	err = ocsProto.Start()
 	if err != nil {
-		return nil, xerrors.Errorf("failed to start ocs-protocol: %v", err)
+		return nil, fmt.Errorf("failed to start ocs-protocol: %v", err)
 	}
 	if !<-ocsProto.Reencrypted {
-		return nil, xerrors.New("reencryption got refused")
+		return nil, errors.New("reencryption got refused")
 	}
 	log.Lvl3("Reencryption protocol is done.")
 	reply.XhatEnc, err = share.RecoverCommit(cothority.Suite, ocsProto.Uis,
 		threshold, nodes)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to recover commit: %v", err)
+		return nil, fmt.Errorf("failed to recover commit: %v", err)
 	}
 	reply.C = write.C
 	log.Lvl3("Successfully reencrypted the key")
@@ -631,7 +631,7 @@ func (s *Service) GetLTSReply(req *GetLTSReply) (*CreateLTSReply, error) {
 	defer s.storage.Unlock()
 	reply, ok := s.storage.Replies[req.LTSID]
 	if !ok {
-		return nil, xerrors.Errorf("didn't find this LTS: %v", req.LTSID)
+		return nil, fmt.Errorf("didn't find this LTS: %v", req.LTSID)
 	}
 	return &CreateLTSReply{
 		ByzCoinID:  append([]byte{}, reply.ByzCoinID...),
@@ -654,20 +654,20 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 	case dkgprotocol.Name:
 		var cfg newLtsConfig
 		if err := protobuf.DecodeWithConstructors(conf.Data, &cfg, network.DefaultConstructors(cothority.Suite)); err != nil {
-			return nil, xerrors.Errorf("decoding LTS config: %v", err)
+			return nil, fmt.Errorf("decoding LTS config: %v", err)
 		}
 		if err := s.verifyProof(&cfg.Proof); err != nil {
-			return nil, xerrors.Errorf("verifying proof: %v", err)
+			return nil, fmt.Errorf("verifying proof: %v", err)
 		}
 		inst, _, _, _, err := cfg.KeyValue()
 		if err != nil {
-			return nil, xerrors.Errorf("getting key value from proof: %v", err)
+			return nil, fmt.Errorf("getting key value from proof: %v", err)
 		}
 		instID := byzcoin.NewInstanceID(inst)
 
 		pi, err := dkgprotocol.NewSetup(tn)
 		if err != nil {
-			return nil, xerrors.Errorf("error setting up dkg: %v", err)
+			return nil, fmt.Errorf("error setting up dkg: %v", err)
 		}
 		setupDKG := pi.(*dkgprotocol.Setup)
 		setupDKG.KeyPair = s.getKeyPair()
@@ -701,10 +701,10 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		// Decode and verify config
 		var cfg reshareLtsConfig
 		if err := protobuf.DecodeWithConstructors(conf.Data, &cfg, network.DefaultConstructors(cothority.Suite)); err != nil {
-			return nil, xerrors.Errorf("decoding config: %v", err)
+			return nil, fmt.Errorf("decoding config: %v", err)
 		}
 		if err := s.verifyProof(&cfg.Proof); err != nil {
-			return nil, xerrors.Errorf("verifying proof: %v", err)
+			return nil, fmt.Errorf("verifying proof: %v", err)
 		}
 
 		roster, id, err := s.getLtsRoster(&cfg.Proof)
@@ -712,7 +712,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		// Set up the protocol
 		pi, err := dkgprotocol.NewSetup(tn)
 		if err != nil {
-			return nil, xerrors.Errorf("setting up dkg protocol: %v", err)
+			return nil, fmt.Errorf("setting up dkg protocol: %v", err)
 		}
 		setupDKG := pi.(*dkgprotocol.Setup)
 		setupDKG.KeyPair = s.getKeyPair()
@@ -806,7 +806,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		}
 		pi, err := protocol.NewOCS(tn)
 		if err != nil {
-			return nil, xerrors.Errorf("creating OCS protocol instance: %v", err)
+			return nil, fmt.Errorf("creating OCS protocol instance: %v", err)
 		}
 		ocs := pi.(*protocol.OCS)
 		ocs.Shared = shared
@@ -831,25 +831,25 @@ func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
 		var verificationData vData
 		err := protobuf.DecodeWithConstructors(*rc.VerificationData, &verificationData, network.DefaultConstructors(cothority.Suite))
 		if err != nil {
-			return xerrors.Errorf("decoding verification data: %v", err)
+			return fmt.Errorf("decoding verification data: %v", err)
 		}
 		_, v0, contractID, _, err := verificationData.Proof.KeyValue()
 		if err != nil {
-			return xerrors.Errorf("proof cannot return values: %v", err)
+			return fmt.Errorf("proof cannot return values: %v", err)
 		}
 		if contractID != ContractReadID {
-			return xerrors.New("proof doesn't point to read instance")
+			return errors.New("proof doesn't point to read instance")
 		}
 		var r Read
 		err = protobuf.DecodeWithConstructors(v0, &r, network.DefaultConstructors(cothority.Suite))
 		if err != nil {
-			return xerrors.Errorf("couldn't decode read data: %v", err)
+			return fmt.Errorf("couldn't decode read data: %v", err)
 		}
 		if verificationData.Ephemeral != nil {
-			return xerrors.New("ephemeral keys not supported yet")
+			return errors.New("ephemeral keys not supported yet")
 		}
 		if !r.Xc.Equal(rc.Xc) {
-			return xerrors.New("wrong reader")
+			return errors.New("wrong reader")
 		}
 		return nil
 	}()
@@ -870,11 +870,11 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 	if err := s.RegisterHandlers(s.CreateLTS, s.ReshareLTS, s.DecryptKey,
 		s.GetLTSReply, s.Authorise, s.Authorize, s.updateValidPeers); err != nil {
-		return nil, xerrors.New("couldn't register messages")
+		return nil, errors.New("couldn't register messages")
 	}
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
-		return nil, xerrors.Errorf("loading configuration: %v", err)
+		return nil, fmt.Errorf("loading configuration: %v", err)
 	}
 
 	// Initialize the sets of valid peers for all existing LTS

@@ -21,8 +21,6 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/xerrors"
-
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/blscosi/protocol"
 	"go.dedis.ch/cothority/v3/byzcoinx"
@@ -1001,7 +999,7 @@ func (s *Service) NewProtocol(ti *onet.TreeNodeInstance, conf *onet.GenericConfi
 	s.closedMutex.Lock()
 	defer s.closedMutex.Unlock()
 	if s.closed {
-		return nil, xerrors.New("don't process protocols if closed")
+		return nil, errors.New("don't process protocols if closed")
 	}
 	if ti.ProtocolName() == ProtocolExtendRoster {
 		// Start by getting latest blocks of all followers
@@ -1591,11 +1589,11 @@ func (s *Service) propagateForwardLinkHandler(msg network.Message) error {
 	s.closedMutex.Lock()
 	defer s.closedMutex.Unlock()
 	if s.closed {
-		return xerrors.New("service is closed")
+		return errors.New("service is closed")
 	}
 	pfl, ok := msg.(*PropagateForwardLink)
 	if !ok {
-		return xerrors.New("couldn't convert to a ForwardLink propagation")
+		return errors.New("couldn't convert to a ForwardLink propagation")
 	}
 
 	// Get the block to update the list of FLs
@@ -1603,14 +1601,14 @@ func (s *Service) propagateForwardLinkHandler(msg network.Message) error {
 	if sb == nil {
 		// Here we assume the block must be there because it should
 		// have caught up during the signature request
-		return xerrors.New("couldn't get the block to attach the forward link")
+		return errors.New("couldn't get the block to attach the forward link")
 	}
 	log.Lvlf2("Adding Forwardlink to block %d: (%x height:%d %x)",
 		sb.Index, pfl.Height, pfl.ForwardLink.From, pfl.ForwardLink.To)
 
 	err := sb.AddForwardLink(pfl.ForwardLink, pfl.Height)
 	if err != nil {
-		return xerrors.Errorf("couldn't add forward-link: %v", err)
+		return fmt.Errorf("couldn't add forward-link: %v", err)
 	}
 
 	blocks := []*SkipBlock{sb}
@@ -1618,7 +1616,7 @@ func (s *Service) propagateForwardLinkHandler(msg network.Message) error {
 	if pfl.Height == 0 {
 		newBlock := s.blockBuffer.get(sb.SkipChainID(), pfl.ForwardLink.To)
 		if newBlock == nil {
-			return xerrors.New("cannot store forward-link if there is no" +
+			return errors.New("cannot store forward-link if there is no" +
 				" corresponding block")
 		}
 		blocks = append(blocks, newBlock)
@@ -1635,7 +1633,7 @@ func (s *Service) propagateForwardLinkHandler(msg network.Message) error {
 	// block.
 	log.Lvl2("Storing new forward-link and eventual new block")
 	if _, err := s.db.StoreBlocks(blocks); err != nil {
-		return xerrors.Errorf("error while storing forward-link and new block"+
+		return fmt.Errorf("error while storing forward-link and new block"+
 			": %v", err)
 	}
 

@@ -18,7 +18,6 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
-	"golang.org/x/xerrors"
 )
 
 type viewChangeManager struct {
@@ -121,13 +120,13 @@ func (m *viewChangeManager) closeAll() {
 // function should only be used as a callback in viewchange.Controller.
 func (s *Service) sendViewChangeReq(view viewchange.View) error {
 	if view.LeaderIndex < 0 {
-		return xerrors.New("leader index must be positive")
+		return errors.New("leader index must be positive")
 	}
 
 	log.Lvl2(s.ServerIdentity(), "sending view-change request for view:", view)
 	latest, err := s.db().GetLatestByID(view.ID)
 	if err != nil {
-		return xerrors.Errorf("getting latest from db: %v", err)
+		return fmt.Errorf("getting latest from db: %v", err)
 	}
 	log.Lvlf2("%s: current leader: %s - asking to elect leader: %s", s.ServerIdentity(), latest.Roster.List[0],
 		latest.Roster.List[view.LeaderIndex%len(latest.Roster.List)])
@@ -136,7 +135,7 @@ func (s *Service) sendViewChangeReq(view viewchange.View) error {
 		View:     view,
 	}
 	if err := req.Sign(s.getPrivateKey()); err != nil {
-		return xerrors.Errorf("signing request: %v", err)
+		return fmt.Errorf("signing request: %v", err)
 	}
 	for _, sid := range latest.Roster.List {
 		if sid.Equal(s.ServerIdentity()) {
@@ -186,7 +185,7 @@ func (s *Service) sendNewView(proof []viewchange.InitReq) error {
 
 	var header DataHeader
 	if err := protobuf.Decode(sb.Data, &header); err != nil {
-		return fmt.Errorf("couldn't get header of block: %+v", err)
+		return fmt.Errorf("couldn't get header of block: %v", err)
 	}
 
 	go func() {
@@ -222,7 +221,7 @@ func (s *Service) sendNewView(proof []viewchange.InitReq) error {
 func (s *Service) computeInitialDuration(scID skipchain.SkipBlockID) (time.Duration, error) {
 	interval, _, err := s.LoadBlockInfo(scID)
 	if err != nil {
-		return 0, xerrors.Errorf("loading block info: %v", err)
+		return 0, fmt.Errorf("loading block info: %v", err)
 	}
 	return s.rotationWindow * interval, nil
 }
@@ -238,16 +237,16 @@ func (s *Service) handleViewChangeReq(env *network.Envelope) error {
 	// Parse message.
 	req, ok := env.Msg.(*viewchange.InitReq)
 	if !ok {
-		return xerrors.Errorf("%v failed to cast to viewchange.ViewChangeReq", s.ServerIdentity())
+		return fmt.Errorf("%v failed to cast to viewchange.ViewChangeReq", s.ServerIdentity())
 	}
 	// Should not be sending to ourself.
 	if req.SignerID.Equal(s.ServerIdentity().ID) {
-		return xerrors.Errorf("%v should not send to ourself", s.ServerIdentity())
+		return fmt.Errorf("%v should not send to ourself", s.ServerIdentity())
 	}
 
 	// Check that the genesis exists and the view is valid.
 	if gen := s.db().GetByID(req.View.Gen); gen == nil || gen.Index != 0 {
-		return xerrors.Errorf("%v cannot find the genesis block in request", s.ServerIdentity())
+		return fmt.Errorf("%v cannot find the genesis block in request", s.ServerIdentity())
 	}
 	reqLatest := s.db().GetByID(req.View.ID)
 	if reqLatest == nil {
@@ -256,7 +255,7 @@ func (s *Service) handleViewChangeReq(env *network.Envelope) error {
 		// delay for triggering view-change should be longer than the
 		// time it takes to create and propagate a new block. Hence,
 		// somebody is sending bogus views.
-		return xerrors.Errorf("%v we do not know this view", s.ServerIdentity())
+		return fmt.Errorf("%v we do not know this view", s.ServerIdentity())
 	}
 	if len(reqLatest.ForwardLink) != 0 {
 		// This is because the node is out-of-sync with others. If the current leader happens
@@ -271,16 +270,16 @@ func (s *Service) handleViewChangeReq(env *network.Envelope) error {
 			log.Errorf("View change failed to propagate a proof: %+v", err)
 		}
 
-		return xerrors.Errorf("%v view-change should not happen for blocks that are not the latest", s.ServerIdentity())
+		return fmt.Errorf("%v view-change should not happen for blocks that are not the latest", s.ServerIdentity())
 	}
 
 	// Check signature.
 	_, signerSID := reqLatest.Roster.Search(req.SignerID)
 	if signerSID == nil {
-		return xerrors.Errorf("%v signer does not exist", s.ServerIdentity())
+		return fmt.Errorf("%v signer does not exist", s.ServerIdentity())
 	}
 	if err := schnorr.Verify(cothority.Suite, signerSID.Public, req.Hash(), req.Signature); err != nil {
-		return xerrors.Errorf("%v: %v", s.ServerIdentity(), err)
+		return fmt.Errorf("%v: %v", s.ServerIdentity(), err)
 	}
 
 	log.Lvlf2("Adding valid view-change from %s: %+v", env.ServerIdentity, req)
@@ -295,20 +294,20 @@ func (s *Service) startViewChangeCosi(req viewchange.NewViewReq) ([]byte, error)
 	sb := s.db().GetByID(req.GetView().ID)
 	newRoster := rotateRoster(sb.Roster, req.GetView().LeaderIndex)
 	if !newRoster.List[0].Equal(s.ServerIdentity()) {
-		return nil, xerrors.New("startViewChangeCosi should not be called by non-leader")
+		return nil, errors.New("startViewChangeCosi should not be called by non-leader")
 	}
 	proto, err := s.CreateProtocol(viewChangeFtCosi, newRoster.GenerateBinaryTree())
 	if err != nil {
-		return nil, xerrors.Errorf("creating protocol: %v", err)
+		return nil, fmt.Errorf("creating protocol: %v", err)
 	}
 	payload, err := protobuf.Encode(&req)
 	if err != nil {
-		return nil, xerrors.Errorf("encoding request: %v", err)
+		return nil, fmt.Errorf("encoding request: %v", err)
 	}
 
 	interval, _, err := s.LoadBlockInfo(req.GetView().ID)
 	if err != nil {
-		return nil, xerrors.Errorf("loading block info: %v", err)
+		return nil, fmt.Errorf("loading block info: %v", err)
 	}
 
 	cosiProto := proto.(*protocol.BlsCosi)
@@ -319,7 +318,7 @@ func (s *Service) startViewChangeCosi(req viewchange.NewViewReq) ([]byte, error)
 
 	log.Lvl2("Starting protocol for getting leadership", newRoster.List)
 	if err := cosiProto.Start(); err != nil {
-		return nil, xerrors.Errorf("starting protocol: %v", err)
+		return nil, fmt.Errorf("starting protocol: %v", err)
 	}
 	// The protocol should always send FinalSignature because it has a
 	// timeout, so we don't need a select.
@@ -410,30 +409,30 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 	defer log.Lvl2(s.ServerIdentity(), "created view-change block")
 	sb, err := s.db().GetLatestByID(req.GetGen())
 	if err != nil {
-		return xerrors.Errorf("getting latest: %v", err)
+		return fmt.Errorf("getting latest: %v", err)
 	}
 	if len(req.Roster.List) < 4 {
-		return xerrors.New("roster size is too small, must be >= 4")
+		return errors.New("roster size is too small, must be >= 4")
 	}
 	header, err := decodeBlockHeader(sb)
 	if err != nil {
-		return xerrors.Errorf("decoding header: %v", err)
+		return fmt.Errorf("decoding header: %v", err)
 	}
 
 	reqBuf, err := protobuf.Encode(&req)
 	if err != nil {
-		return xerrors.Errorf("encoding request: %v", err)
+		return fmt.Errorf("encoding request: %v", err)
 	}
 
 	signer := darc.NewSignerEd25519(s.ServerIdentity().Public, s.getPrivateKey())
 
 	st, err := s.GetReadOnlyStateTrie(sb.SkipChainID())
 	if err != nil {
-		return xerrors.Errorf("getting trie: %v", err)
+		return fmt.Errorf("getting trie: %v", err)
 	}
 	ctr, err := getSignerCounter(st, signer.Identity().String())
 	if err != nil {
-		return xerrors.Errorf("getting counter: %v", err)
+		return fmt.Errorf("getting counter: %v", err)
 	}
 
 	ctx := ClientTransaction{
@@ -464,7 +463,7 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 	ctx.Instructions.SetVersion(header.Version)
 
 	if err = ctx.Instructions[0].SignWith(ctx.Instructions.Hash(), signer); err != nil {
-		return xerrors.Errorf("signing tx: %v", err)
+		return fmt.Errorf("signing tx: %v", err)
 	}
 
 	_, err = s.createNewBlock(req.GetGen(), rotateRoster(sb.Roster, req.GetView().LeaderIndex), []TxResult{{ctx, false}})

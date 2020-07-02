@@ -3,12 +3,13 @@ package contracts
 import (
 	"crypto/sha256"
 	"encoding/binary"
+	"errors"
+	"fmt"
 
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
-	"golang.org/x/xerrors"
 )
 
 // ContractCoinID denotes a contract that can store and transfer coins.
@@ -37,7 +38,7 @@ func contractCoinFromBytes(in []byte) (byzcoin.Contract, error) {
 	c := &contractCoin{}
 	err := protobuf.Decode(in, &c.Coin)
 	if err != nil {
-		return nil, xerrors.Errorf("couldn't unmarshal instance data: %v", err)
+		return nil, fmt.Errorf("couldn't unmarshal instance data: %v", err)
 	}
 	return c, nil
 }
@@ -77,7 +78,7 @@ func (c *contractCoin) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 	log.Lvlf2("Spawning coin to %x, with darc %x", ca.Slice(), darcID[:])
 	if t := inst.Spawn.Args.Search("type"); t != nil {
 		if len(t) != len(byzcoin.InstanceID{}) {
-			return nil, nil, xerrors.New("type needs to be an InstanceID")
+			return nil, nil, errors.New("type needs to be an InstanceID")
 		}
 		c.Name = byzcoin.NewInstanceID(t)
 	} else {
@@ -86,7 +87,7 @@ func (c *contractCoin) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 	var ciBuf []byte
 	ciBuf, err = protobuf.Encode(&c.Coin)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("couldn't encode CoinInstance: %v", err)
+		return nil, nil, fmt.Errorf("couldn't encode CoinInstance: %v", err)
 	}
 	sc = []byzcoin.StateChange{
 		byzcoin.NewStateChange(byzcoin.Create, ca, ContractCoinID, ciBuf, darcID),
@@ -108,11 +109,11 @@ func (c *contractCoin) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instru
 	if inst.Invoke.Command != "store" {
 		coinsBuf := inst.Invoke.Args.Search("coins")
 		if coinsBuf == nil {
-			err = xerrors.New("argument \"coins\" is missing")
+			err = errors.New("argument \"coins\" is missing")
 			return
 		}
 		if len(coinsBuf) != 8 {
-			err = xerrors.New("argument \"coins\" is wrong length")
+			err = errors.New("argument \"coins\" is wrong length")
 			return
 		}
 		coinsArg = binary.LittleEndian.Uint64(coinsBuf)
@@ -135,12 +136,12 @@ func (c *contractCoin) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instru
 			did darc.ID
 		)
 		if inst.InstanceID.Equal(byzcoin.NewInstanceID(target)) {
-			err = xerrors.New("cannot send coins to ourselves")
+			err = errors.New("cannot send coins to ourselves")
 			return
 		}
 		v, _, cid, did, err = rst.GetValues(target)
 		if err == nil && cid != ContractCoinID {
-			err = xerrors.New("destination is not a coin contract")
+			err = errors.New("destination is not a coin contract")
 		}
 		if err != nil {
 			return
@@ -149,7 +150,7 @@ func (c *contractCoin) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instru
 		var targetCI byzcoin.Coin
 		err = protobuf.Decode(v, &targetCI)
 		if err != nil {
-			return nil, nil, xerrors.Errorf("couldn't unmarshal target account: %v", err)
+			return nil, nil, fmt.Errorf("couldn't unmarshal target account: %v", err)
 		}
 		err = c.SafeSub(coinsArg)
 		if err != nil {
@@ -161,7 +162,7 @@ func (c *contractCoin) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instru
 		}
 		targetBuf, err := protobuf.Encode(&targetCI)
 		if err != nil {
-			return nil, nil, xerrors.Errorf("couldn't marshal target account: %v", err)
+			return nil, nil, fmt.Errorf("couldn't marshal target account: %v", err)
 		}
 		log.Lvlf2("transferring %d to %x", coinsArg, target)
 		sc = append(sc, byzcoin.NewStateChange(byzcoin.Update, byzcoin.NewInstanceID(target),
@@ -189,7 +190,7 @@ func (c *contractCoin) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instru
 			}
 		}
 	default:
-		err = xerrors.New("coin contract can only mine and transfer")
+		err = errors.New("coin contract can only mine and transfer")
 		return
 	}
 
@@ -211,7 +212,7 @@ func (c *contractCoin) Delete(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instru
 	}
 
 	if c.Value > 0 {
-		err = xerrors.New("cannot destroy a coinInstance that still has coins in it")
+		err = errors.New("cannot destroy a coinInstance that still has coins in it")
 		return
 	}
 	sc = byzcoin.StateChanges{

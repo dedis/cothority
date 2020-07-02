@@ -1,6 +1,7 @@
 package personhood
 
 import (
+	"errors"
 	"sync"
 
 	"go.dedis.ch/cothority/v3/personhood/contracts"
@@ -11,7 +12,6 @@ import (
 	"go.dedis.ch/onet/v3/network"
 
 	"go.dedis.ch/protobuf"
-	"golang.org/x/xerrors"
 )
 
 const dbVersion = 2
@@ -62,7 +62,7 @@ func (s *Service) tryLoad() error {
 		return protobuf.DecodeWithConstructors(buf[16:], s.storage,
 			network.DefaultConstructors(cothority.Suite))
 	default:
-		return xerrors.New("unknown version")
+		return errors.New("unknown version")
 	}
 }
 

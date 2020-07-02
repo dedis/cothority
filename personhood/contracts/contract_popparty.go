@@ -8,8 +8,6 @@ import (
 	"fmt"
 	"strings"
 
-	"golang.org/x/xerrors"
-
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/group/edwards25519"
 	"go.dedis.ch/kyber/v3/sign/anon"
@@ -315,7 +313,7 @@ func NewInstructionPoppartySpawn(dst byzcoin.InstanceID, did darc.ID,
 	binary.LittleEndian.PutUint64(rewardBuf, reward)
 	descBuf, err := protobuf.Encode(&desc)
 	if err != nil {
-		err = xerrors.Errorf("couldn't encode description: %+v", err)
+		err = fmt.Errorf("couldn't encode description: %v", err)
 	}
 	inst.Spawn = &byzcoin.Spawn{
 		ContractID: ContractCredentialID,

@@ -3,11 +3,11 @@ package clicontracts
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"time"
-
-	"golang.org/x/xerrors"
 
 	"go.dedis.ch/onet/v3/log"
 
@@ -31,13 +31,13 @@ func DeferredSpawn(c *cli.Context) error {
 	// ---
 	proposedTransactionBuf, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
-		return xerrors.Errorf("failed to read from stding: %v", err)
+		return fmt.Errorf("failed to read from stding: %v", err)
 	}
 
 	proposedTransaction := byzcoin.ClientTransaction{}
 	err = protobuf.Decode(proposedTransactionBuf, &proposedTransaction)
 	if err != nil {
-		return xerrors.Errorf("failed to decode transaction, did you use --export ?: %v", err)
+		return fmt.Errorf("failed to decode transaction, did you use --export ?: %v", err)
 	}
 
 	// ---
@@ -45,7 +45,7 @@ func DeferredSpawn(c *cli.Context) error {
 	// ---
 	bcArg := c.String("bc")
 	if bcArg == "" {
-		return xerrors.New("--bc flag is required")
+		return errors.New("--bc flag is required")
 	}
 
 	cfg, cl, err := lib.LoadConfig(bcArg)
@@ -76,7 +76,7 @@ func DeferredSpawn(c *cli.Context) error {
 
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
 	if err != nil {
-		return xerrors.Errorf("couldn't get signer counters: %+v", err)
+		return fmt.Errorf("couldn't get signer counters: %v", err)
 	}
 
 	spawn := byzcoin.Spawn{
@@ -120,18 +120,18 @@ func DeferredSpawn(c *cli.Context) error {
 	// ---
 	proof, err := cl.WaitProof(byzcoin.NewInstanceID(instID), time.Second, nil)
 	if err != nil {
-		return xerrors.Errorf("couldn't get proof for admin-darc: %+v", err)
+		return fmt.Errorf("couldn't get proof for admin-darc: %v", err)
 	}
 
 	_, resultBuf, _, _, err := proof.KeyValue()
 	if err != nil {
-		return xerrors.Errorf("couldn't get value out of proof: %v", err)
+		return fmt.Errorf("couldn't get value out of proof: %v", err)
 	}
 
 	result := byzcoin.DeferredData{}
 	err = protobuf.Decode(resultBuf, &result)
 	if err != nil {
-		return xerrors.Errorf("couldn't decode the result: %v", err)
+		return fmt.Errorf("couldn't decode the result: %v", err)
 	}
 
 	log.Infof("Here is the deferred data:\n%s", result)
@@ -155,7 +155,7 @@ func DeferredInvokeAddProof(c *cli.Context) error {
 	// ---
 	bcArg := c.String("bc")
 	if bcArg == "" {
-		return xerrors.New("--bc flag is required")
+		return errors.New("--bc flag is required")
 	}
 
 	cfg, cl, err := lib.LoadConfig(bcArg)
@@ -177,20 +177,20 @@ func DeferredInvokeAddProof(c *cli.Context) error {
 
 	hashStr := c.String("hash")
 	if hashStr == "" {
-		return xerrors.New("--hash not found")
+		return errors.New("--hash not found")
 	}
 	hash, err := hex.DecodeString(hashStr)
 	if err != nil {
-		return xerrors.Errorf("coulndn't decode the hash string: %v", err)
+		return fmt.Errorf("coulndn't decode the hash string: %v", err)
 	}
 
 	instID := c.String("instid")
 	if instID == "" {
-		return xerrors.New("--instid flag is required")
+		return errors.New("--instid flag is required")
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
-		return xerrors.Errorf("failed to decode the instid string: %v", err)
+		return fmt.Errorf("failed to decode the instid string: %v", err)
 	}
 
 	instrIdx := c.Uint("instrIdx")
@@ -204,12 +204,12 @@ func DeferredInvokeAddProof(c *cli.Context) error {
 	identity := signer.Identity()
 	identityBuf, err := protobuf.Encode(&identity)
 	if err != nil {
-		return xerrors.Errorf("coulndn't encode the identity: %v", err)
+		return fmt.Errorf("coulndn't encode the identity: %v", err)
 	}
 
 	signature, err := signer.Sign(hash)
 	if err != nil {
-		return xerrors.Errorf("couldn't sign the hash: %v", err)
+		return fmt.Errorf("couldn't sign the hash: %v", err)
 	}
 
 	// ---
@@ -217,7 +217,7 @@ func DeferredInvokeAddProof(c *cli.Context) error {
 	// ---
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
 	if err != nil {
-		return xerrors.Errorf("couldn't get signer counters: %+v", err)
+		return fmt.Errorf("couldn't get signer counters: %v", err)
 	}
 
 	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
@@ -269,18 +269,18 @@ func DeferredInvokeAddProof(c *cli.Context) error {
 	}
 	pr, err := cl.GetProofFromLatest(instIDBuf)
 	if err != nil {
-		return xerrors.Errorf("couldn't get proof for admin-darc: %v", err)
+		return fmt.Errorf("couldn't get proof for admin-darc: %v", err)
 	}
 
 	_, resultBuf, _, _, err := pr.Proof.KeyValue()
 	if err != nil {
-		return xerrors.Errorf("couldn't get value out of proof: %v", err)
+		return fmt.Errorf("couldn't get value out of proof: %v", err)
 	}
 
 	result := byzcoin.DeferredData{}
 	err = protobuf.Decode(resultBuf, &result)
 	if err != nil {
-		return xerrors.Errorf("couldn't decode the result: %v", err)
+		return fmt.Errorf("couldn't decode the result: %v", err)
 	}
 
 	log.Infof("Here is the deferred data: \n%s", result)
@@ -301,12 +301,12 @@ func ExecProposedTx(c *cli.Context) error {
 	// ---
 	bcArg := c.String("bc")
 	if bcArg == "" {
-		return xerrors.New("--bc flag is required")
+		return errors.New("--bc flag is required")
 	}
 
 	cfg, cl, err := lib.LoadConfig(bcArg)
 	if err != nil {
-		return xerrors.Errorf("couldn't load config: %+v", err)
+		return fmt.Errorf("couldn't load config: %v", err)
 	}
 
 	var signer *darc.Signer
@@ -318,16 +318,16 @@ func ExecProposedTx(c *cli.Context) error {
 		signer, err = lib.LoadKeyFromString(sstr)
 	}
 	if err != nil {
-		return xerrors.Errorf("couldn't load key: %+v", err)
+		return fmt.Errorf("couldn't load key: %v", err)
 	}
 
 	instID := c.String("instid")
 	if instID == "" {
-		return xerrors.New("--instid flag is required")
+		return errors.New("--instid flag is required")
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
-		return xerrors.New("failed to decode the instid string")
+		return errors.New("failed to decode the instid string")
 	}
 
 	// ---
@@ -335,7 +335,7 @@ func ExecProposedTx(c *cli.Context) error {
 	// ---
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
 	if err != nil {
-		return xerrors.Errorf("couldn't get counters: %+v", err)
+		return fmt.Errorf("couldn't get counters: %v", err)
 	}
 
 	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
@@ -347,12 +347,12 @@ func ExecProposedTx(c *cli.Context) error {
 		SignerCounter: []uint64{counters.Counters[0] + 1},
 	})
 	if err != nil {
-		return xerrors.Errorf("couldn't create transaction: %+v", err)
+		return fmt.Errorf("couldn't create transaction: %v", err)
 	}
 
 	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {
-		return xerrors.Errorf("couldn't fill signers and sign: %+v", err)
+		return fmt.Errorf("couldn't fill signers and sign: %v", err)
 	}
 
 	if lib.FindRecursivefBool("export", c) {
@@ -361,7 +361,7 @@ func ExecProposedTx(c *cli.Context) error {
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	if err != nil {
-		return xerrors.Errorf("couldn't add transaction: %+v", err)
+		return fmt.Errorf("couldn't add transaction: %v", err)
 	}
 
 	// ---
@@ -369,22 +369,22 @@ func ExecProposedTx(c *cli.Context) error {
 	// ---
 	err = lib.WaitPropagation(c, cl)
 	if err != nil {
-		return xerrors.Errorf("waiting on propagation failed: %+v", err)
+		return fmt.Errorf("waiting on propagation failed: %v", err)
 	}
 	pr, err := cl.GetProofFromLatest(instIDBuf)
 	if err != nil {
-		return xerrors.Errorf("couldn't get proof for admin-darc: %+v", err)
+		return fmt.Errorf("couldn't get proof for admin-darc: %v", err)
 	}
 
 	_, resultBuf, _, _, err := pr.Proof.KeyValue()
 	if err != nil {
-		return xerrors.Errorf("couldn't get value out of proof: %+v", err)
+		return fmt.Errorf("couldn't get value out of proof: %v", err)
 	}
 
 	result := byzcoin.DeferredData{}
 	err = protobuf.Decode(resultBuf, &result)
 	if err != nil {
-		return xerrors.Errorf("couldn't decode the result: %+v", err)
+		return fmt.Errorf("couldn't decode the result: %v", err)
 	}
 
 	log.Infof("Here is the deferred data: \n%s", result)
@@ -397,7 +397,7 @@ func DeferredGet(c *cli.Context) error {
 
 	bcArg := c.String("bc")
 	if bcArg == "" {
-		return xerrors.New("--bc flag is required")
+		return errors.New("--bc flag is required")
 	}
 
 	_, cl, err := lib.LoadConfig(bcArg)
@@ -407,41 +407,41 @@ func DeferredGet(c *cli.Context) error {
 
 	instID := c.String("instid")
 	if instID == "" {
-		return xerrors.New("--instid flag is required")
+		return errors.New("--instid flag is required")
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
-		return xerrors.New("failed to decode the instid string")
+		return errors.New("failed to decode the instid string")
 	}
 
 	pr, err := cl.GetProofFromLatest(instIDBuf)
 	if err != nil {
-		return xerrors.Errorf("couldn't get proof: %v", err)
+		return fmt.Errorf("couldn't get proof: %v", err)
 	}
 	proof := pr.Proof
 
 	exist, err := proof.InclusionProof.Exists(instIDBuf)
 	if err != nil {
-		return xerrors.Errorf("error while checking if proof exist: %v", err)
+		return fmt.Errorf("error while checking if proof exist: %v", err)
 	}
 	if !exist {
-		return xerrors.New("proof not found")
+		return errors.New("proof not found")
 	}
 
 	match := proof.InclusionProof.Match(instIDBuf)
 	if !match {
-		return xerrors.New("proof does not match")
+		return errors.New("proof does not match")
 	}
 
 	_, resultBuf, _, _, err := proof.KeyValue()
 	if err != nil {
-		return xerrors.Errorf("couldn't get value out of proof: %v", err)
+		return fmt.Errorf("couldn't get value out of proof: %v", err)
 	}
 
 	result := byzcoin.DeferredData{}
 	err = protobuf.Decode(resultBuf, &result)
 	if err != nil {
-		return xerrors.Errorf("Failed to decode the result: %v", err)
+		return fmt.Errorf("Failed to decode the result: %v", err)
 	}
 
 	log.Infof("%s", result)
@@ -453,16 +453,16 @@ func DeferredGet(c *cli.Context) error {
 func DeferredDelete(c *cli.Context) error {
 	bcArg := c.String("bc")
 	if bcArg == "" {
-		return xerrors.New("--bc flag is required")
+		return errors.New("--bc flag is required")
 	}
 
 	instID := c.String("instid")
 	if instID == "" {
-		return xerrors.New("--instid flag is required")
+		return errors.New("--instid flag is required")
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
-		return xerrors.New("failed to decode the instid string")
+		return errors.New("failed to decode the instid string")
 	}
 
 	cfg, cl, err := lib.LoadConfig(bcArg)
@@ -489,7 +489,7 @@ func DeferredDelete(c *cli.Context) error {
 
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
 	if err != nil {
-		return xerrors.Errorf("couldn't get signer counters: %+v", err)
+		return fmt.Errorf("couldn't get signer counters: %v", err)
 	}
 
 	delete := byzcoin.Delete{

@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,7 +14,6 @@ import (
 	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
-	"golang.org/x/xerrors"
 )
 
 var ciZero, ciOne, ciTwo []byte
@@ -292,7 +292,7 @@ func (ct cvTest) GetContractID(key []byte) (string, error) {
 	return ct.contractIDs[string(key)], nil
 }
 func (ct cvTest) GetProof(key []byte) (*trie.Proof, error) {
-	return nil, xerrors.New("not implemented")
+	return nil, errors.New("not implemented")
 }
 
 func (ct cvTest) GetIndex() int {
@@ -304,19 +304,19 @@ func (ct cvTest) GetVersion() byzcoin.Version {
 }
 
 func (ct cvTest) ForEach(f func(k, v []byte) error) error {
-	return xerrors.New("not implemented")
+	return errors.New("not implemented")
 }
 
 func (ct cvTest) GetNonce() ([]byte, error) {
-	return nil, xerrors.New("not implemented")
+	return nil, errors.New("not implemented")
 }
 
 func (ct cvTest) StoreAllToReplica(scs byzcoin.StateChanges) (byzcoin.ReadOnlyStateTrie, error) {
-	return nil, xerrors.New("not implemented")
+	return nil, errors.New("not implemented")
 }
 
 func (ct cvTest) GetSignerCounter(id darc.Identity) (uint64, error) {
-	return 0, xerrors.Errorf("not yet implemented")
+	return 0, fmt.Errorf("not yet implemented")
 }
 
 func (ct cvTest) LoadConfig() (*byzcoin.ChainConfig, error) {

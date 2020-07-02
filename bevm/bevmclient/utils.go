@@ -13,7 +13,6 @@ import (
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
 	"go.dedis.ch/cothority/v3/darc"
-	"golang.org/x/xerrors"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -37,10 +36,10 @@ func writeFile(file string, data []byte, check bool) error {
 
 			err = os.Rename(file, newName)
 			if err != nil {
-				return xerrors.Errorf("failed to rename file: %v", err)
+				return fmt.Errorf("failed to rename file: %v", err)
 			}
 		} else if !os.IsNotExist(err) {
-			return xerrors.Errorf("failed to stat file: %v", err)
+			return fmt.Errorf("failed to stat file: %v", err)
 		}
 	}
 
@@ -55,7 +54,7 @@ func writeAccountFile(account *bevm.EvmAccount, name string, check bool) error {
 
 	jsonData, err := json.Marshal(tmp)
 	if err != nil {
-		return xerrors.Errorf("failed to serialize account "+
+		return fmt.Errorf("failed to serialize account "+
 			"information: %v", err)
 	}
 
@@ -65,19 +64,19 @@ func writeAccountFile(account *bevm.EvmAccount, name string, check bool) error {
 func readAccountFile(name string) (*bevm.EvmAccount, error) {
 	jsonData, err := ioutil.ReadFile(fmt.Sprintf("%s.bevm_account", name))
 	if err != nil {
-		return nil, xerrors.Errorf("failed to read account file: %v", err)
+		return nil, fmt.Errorf("failed to read account file: %v", err)
 	}
 
 	var tmp userEvmAccount
 	err = json.Unmarshal(jsonData, &tmp)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to deserialize account "+
+		return nil, fmt.Errorf("failed to deserialize account "+
 			"information: %v", err)
 	}
 
 	account, err := bevm.NewEvmAccount(tmp.PrivateKey)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to create new account from "+
+		return nil, fmt.Errorf("failed to create new account from "+
 			"file data: %v", err)
 	}
 
@@ -95,7 +94,7 @@ func writeContractFile(contractInstance *bevm.EvmContractInstance,
 	abiFilepath string, name string, check bool) error {
 	jsonAbi, err := ioutil.ReadFile(abiFilepath)
 	if err != nil {
-		return xerrors.Errorf("failed to read contract ABI: %v", err)
+		return fmt.Errorf("failed to read contract ABI: %v", err)
 	}
 
 	tmp := userEvmContract{
@@ -105,7 +104,7 @@ func writeContractFile(contractInstance *bevm.EvmContractInstance,
 
 	jsonData, err := json.Marshal(tmp)
 	if err != nil {
-		return xerrors.Errorf("failed to serialize contract "+
+		return fmt.Errorf("failed to serialize contract "+
 			"information: %v", err)
 	}
 
@@ -115,19 +114,19 @@ func writeContractFile(contractInstance *bevm.EvmContractInstance,
 func readContractFile(name string) (*bevm.EvmContractInstance, error) {
 	jsonData, err := ioutil.ReadFile(fmt.Sprintf("%s.bevm_contract", name))
 	if err != nil {
-		return nil, xerrors.Errorf("failed to read contract file: %v", err)
+		return nil, fmt.Errorf("failed to read contract file: %v", err)
 	}
 
 	var tmp userEvmContract
 	err = json.Unmarshal(jsonData, &tmp)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to deserialize contract "+
+		return nil, fmt.Errorf("failed to deserialize contract "+
 			"information: %v", err)
 	}
 
 	abi, err := abi.JSON(strings.NewReader(tmp.Abi))
 	if err != nil {
-		return nil, xerrors.Errorf("failed to deserialize contract "+
+		return nil, fmt.Errorf("failed to deserialize contract "+
 			"ABI: %v", err)
 	}
 
@@ -155,12 +154,12 @@ func handleCommonOptions(ctx *cli.Context) (*commonOptions, error) {
 
 	bevmID, err := hex.DecodeString(bevmIDStr)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to decode BEvm ID: %v", err)
+		return nil, fmt.Errorf("failed to decode BEvm ID: %v", err)
 	}
 
 	cfg, cl, err := lib.LoadConfig(bcFile)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to load ByzCoin config: %v", err)
+		return nil, fmt.Errorf("failed to load ByzCoin config: %v", err)
 	}
 
 	var signer *darc.Signer
@@ -170,19 +169,19 @@ func handleCommonOptions(ctx *cli.Context) (*commonOptions, error) {
 		signer, err = lib.LoadKey(cfg.AdminIdentity)
 	}
 	if err != nil {
-		return nil, xerrors.Errorf("failed to load signer key: %v", err)
+		return nil, fmt.Errorf("failed to load signer key: %v", err)
 	}
 
 	bevmClient, err := bevm.NewClient(cl, *signer,
 		byzcoin.NewInstanceID(bevmID))
 	if err != nil {
-		return nil, xerrors.Errorf("failed to retrieve BEvm client "+
+		return nil, fmt.Errorf("failed to retrieve BEvm client "+
 			"instance: %v", err)
 	}
 
 	account, err := readAccountFile(accountName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to read account from file: %v", err)
+		return nil, fmt.Errorf("failed to read account from file: %v", err)
 	}
 
 	return &commonOptions{

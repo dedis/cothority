@@ -7,6 +7,8 @@ paper-draft about onchain-secrets (called BlockMage).
 
 import (
 	"crypto/sha256"
+	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -16,7 +18,6 @@ import (
 	"go.dedis.ch/kyber/v3/share"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
-	"golang.org/x/xerrors"
 )
 
 func init() {
@@ -59,7 +60,7 @@ func NewOCS(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 
 	err := o.RegisterHandlers(o.reencrypt, o.reencryptReply)
 	if err != nil {
-		return nil, xerrors.Errorf("registring handlers: %v", err)
+		return nil, fmt.Errorf("registring handlers: %v", err)
 	}
 	return o, nil
 }
@@ -69,11 +70,11 @@ func (o *OCS) Start() error {
 	log.Lvl3("Starting Protocol")
 	if o.Shared == nil {
 		o.finish(false)
-		return xerrors.New("please initialize Shared first")
+		return errors.New("please initialize Shared first")
 	}
 	if o.U == nil {
 		o.finish(false)
-		return xerrors.New("please initialize U first")
+		return errors.New("please initialize U first")
 	}
 	rc := &Reencrypt{
 		U:  o.U,
@@ -85,7 +86,7 @@ func (o *OCS) Start() error {
 	if o.Verify != nil {
 		if !o.Verify(rc) {
 			o.finish(false)
-			return xerrors.New("refused to reencrypt")
+			return errors.New("refused to reencrypt")
 		}
 	}
 	o.timeout = time.AfterFunc(1*time.Minute, func() {
@@ -95,7 +96,7 @@ func (o *OCS) Start() error {
 	errs := o.Broadcast(rc)
 	if len(errs) > (len(o.Roster().List)-1)/3 {
 		log.Errorf("Some nodes failed with error(s) %v", errs)
-		return xerrors.New("too many nodes failed in broadcast")
+		return errors.New("too many nodes failed in broadcast")
 	}
 	return nil
 }

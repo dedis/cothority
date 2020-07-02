@@ -3,13 +3,13 @@ package trie
 import (
 	"bytes"
 	"crypto/rand"
+	"errors"
 	"os"
 	"testing"
 	"testing/quick"
 
 	"github.com/stretchr/testify/require"
 	bbolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
 )
 
 const testDBName = "test_trie.db"
@@ -310,7 +310,7 @@ func TestIsValid(t *testing.T) {
 		k := p.Leaf.hash(testTrie.nonce)
 		leafValBuf := b.Get(k)
 		if leafValBuf == nil {
-			return xerrors.New("can't find leaf")
+			return errors.New("can't find leaf")
 		}
 
 		leaf, err := decodeLeafNode(leafValBuf)
@@ -361,7 +361,7 @@ func TestQuickCheck(t *testing.T) {
 		err := testTrie.ForEach(func(k, v []byte) error {
 			cnt++
 			if _, ok := keysMap[string(k)]; !ok {
-				return xerrors.New("missing key/value pair in foreach")
+				return errors.New("missing key/value pair in foreach")
 			}
 			return nil
 		})
@@ -503,10 +503,10 @@ func TestCopy(t *testing.T) {
 				return err
 			}
 			if v2 == nil {
-				return xerrors.New("extra node in source trie")
+				return errors.New("extra node in source trie")
 			}
 			if !bytes.Equal(v, v2) {
-				return xerrors.New("values are not equal")
+				return errors.New("values are not equal")
 			}
 			return nil
 		})
@@ -535,7 +535,7 @@ func getRootNode(t *testing.T, db DB) interiorNode {
 	err := db.View(func(b Bucket) error {
 		rootKey := b.Get([]byte(entryKey))
 		if rootKey == nil {
-			return xerrors.New("no root")
+			return errors.New("no root")
 		}
 		rootBuf := b.Get(rootKey)
 		var err error

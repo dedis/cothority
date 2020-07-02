@@ -2,8 +2,7 @@ package byzcoin
 
 import (
 	"errors"
-
-	"golang.org/x/xerrors"
+	"fmt"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin/trie"
@@ -98,7 +97,7 @@ func (s *ROSTSimul) StoreAllToReplica(scs StateChanges) (ReadOnlyStateTrie, erro
 
 // GetSignerCounter is not implemented
 func (s *ROSTSimul) GetSignerCounter(id darc.Identity) (uint64, error) {
-	return 0, xerrors.Errorf("not yet implemented")
+	return 0, fmt.Errorf("not yet implemented")
 }
 
 //
@@ -118,7 +117,7 @@ func (s *ROSTSimul) CreateBasicDarc(signer *darc.Identity, desc string) (*darc.D
 	err := s.CreateSCB(Create, ContractDarcID,
 		NewInstanceID(d.GetBaseID()), d, nil)
 	if err != nil {
-		return nil, xerrors.Errorf("store darc: %v", err)
+		return nil, fmt.Errorf("store darc: %v", err)
 	}
 	return d, nil
 }
@@ -148,7 +147,7 @@ func (s *ROSTSimul) CreateSCB(sa StateAction, cID string, id InstanceID,
 	value interface{}, darcID darc.ID) (err error) {
 	valueBuf, err := protobuf.Encode(value)
 	if err != nil {
-		err = xerrors.Errorf("couldn't encode coin: %+v", err)
+		err = fmt.Errorf("couldn't encode coin: %v", err)
 	}
 	if darcID == nil {
 		darcID = make([]byte, 32)
@@ -171,7 +170,7 @@ func (s *ROSTSimul) CreateSCB(sa StateAction, cID string, id InstanceID,
 func (s *ROSTSimul) SetCoin(id InstanceID, value uint64) error {
 	coin, err := s.GetCoin(id)
 	if err != nil {
-		return xerrors.Errorf("couldn't get coin: %+v", err)
+		return fmt.Errorf("couldn't get coin: %v", err)
 	}
 	coin.Value = value
 	return s.CreateSCB(Update, coinID, id, &coin, nil)
@@ -181,16 +180,16 @@ func (s *ROSTSimul) SetCoin(id InstanceID, value uint64) error {
 func (s *ROSTSimul) GetCoin(id InstanceID) (coin Coin, err error) {
 	sc, found := s.Values[string(id[:])]
 	if !found {
-		err = xerrors.New("didn't find this coin")
+		err = errors.New("didn't find this coin")
 		return
 	}
 	if sc.ContractID != coinID {
-		err = xerrors.Errorf("id doesn't point to a coin, but to '%s'",
+		err = fmt.Errorf("id doesn't point to a coin, but to '%s'",
 			sc.ContractID)
 		return
 	}
 	if err = protobuf.Decode(sc.Value, &coin); err != nil {
-		err = xerrors.Errorf("couldn't decode coin: %+v", err)
+		err = fmt.Errorf("couldn't decode coin: %v", err)
 	}
 	return
 }
@@ -203,17 +202,17 @@ func (s *ROSTSimul) WithdrawCoin(id InstanceID,
 	value uint64) (updated, withdrawn Coin, err error) {
 	updated, err = s.GetCoin(id)
 	if err != nil {
-		err = xerrors.Errorf("couldn't get coin: %+v", err)
+		err = fmt.Errorf("couldn't get coin: %v", err)
 		return
 	}
 	if updated.Value < value {
-		err = xerrors.New("coin doesn't have enough value")
+		err = errors.New("coin doesn't have enough value")
 		return
 	}
 	updated.Value -= value
 	err = s.SetCoin(id, updated.Value)
 	if err != nil {
-		err = xerrors.Errorf("couldn't set coin to new value: %+v", err)
+		err = fmt.Errorf("couldn't set coin to new value: %v", err)
 		return
 	}
 	withdrawn.Name = updated.Name

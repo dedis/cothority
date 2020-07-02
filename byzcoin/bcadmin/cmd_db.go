@@ -23,19 +23,18 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
 )
 
 // dbStatus returns the last block in the db - useful for the integration tests.
 func dbStatus(c *cli.Context) error {
 	fb, err := newFetchBlocks(c)
 	if err != nil {
-		return xerrors.Errorf("couldn't create fetchBlock: %+v", err)
+		return fmt.Errorf("couldn't create fetchBlock: %v", err)
 	}
 
 	last, err := fb.db.GetLatest(fb.genesis)
 	if err != nil {
-		return xerrors.Errorf("couldn't get latest block: %+v", err)
+		return fmt.Errorf("couldn't get latest block: %v", err)
 	}
 	log.Infof("Last block is: %d / %x", last.Index, last.Hash)
 	return nil
@@ -44,12 +43,12 @@ func dbStatus(c *cli.Context) error {
 // dbCatchup uses the live byzcoin chain to update to the latest blocks
 func dbCatchup(c *cli.Context) error {
 	if c.NArg() < 1 {
-		return xerrors.New("please give the following arguments: " +
+		return errors.New("please give the following arguments: " +
 			"conode.db [byzCoinID [url]]")
 	}
 	fb, err := newFetchBlocks(c)
 	if err != nil {
-		return xerrors.Errorf("couldn't create fetchBlock: %+v", err)
+		return fmt.Errorf("couldn't create fetchBlock: %v", err)
 	}
 
 	askAllNodes := true
@@ -57,7 +56,7 @@ func dbCatchup(c *cli.Context) error {
 		askAllNodes = false
 		err = fb.addURL(c.Args().Get(2))
 		if err != nil {
-			return xerrors.Errorf("couldn't add URL connection: %+v", err)
+			return fmt.Errorf("couldn't add URL connection: %v", err)
 		}
 	}
 
@@ -77,7 +76,7 @@ func dbCatchup(c *cli.Context) error {
 	for {
 		sb, err := fb.gbMulti(latestID)
 		if err != nil {
-			return xerrors.Errorf("couldn't get blocks from network: %+v", err)
+			return fmt.Errorf("couldn't get blocks from network: %v", err)
 		}
 		if len(sb.ForwardLink) == 0 {
 			if askAllNodes {
@@ -110,7 +109,7 @@ func dbCatchup(c *cli.Context) error {
 func dbReplay(c *cli.Context) error {
 	fb, err := newFetchBlocks(c)
 	if err != nil {
-		return xerrors.Errorf("couldn't initialize fetchBlocks: %v", err)
+		return fmt.Errorf("couldn't initialize fetchBlocks: %v", err)
 	}
 
 	log.Info("Preparing db")
@@ -129,7 +128,7 @@ func dbReplay(c *cli.Context) error {
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("couldn't add bucket: %+v", err)
+		return fmt.Errorf("couldn't add bucket: %v", err)
 	}
 
 	log.Lvl2("Copying blocks to skipchain's DB")
@@ -145,7 +144,7 @@ func dbReplay(c *cli.Context) error {
 	}
 	st, err := fb.service.ReplayState(start, newSumFetcher(c), rso)
 	if err != nil {
-		return xerrors.Errorf("couldn't replay blocks: %+v", err)
+		return fmt.Errorf("couldn't replay blocks: %v", err)
 	}
 	log.Info("Successfully checked and replayed all blocks.")
 	if c.Bool("write") {
@@ -268,18 +267,18 @@ func (sf *sumFetcher) LogAppliedBlock(sb *skipchain.SkipBlock,
 // dbMerge takes new blocks from a conode-db and applies them to the replay-db.
 func dbMerge(c *cli.Context) error {
 	if c.NArg() < 3 {
-		return xerrors.New("please give the following arguments: " +
+		return errors.New("please give the following arguments: " +
 			"conode.db byzCoinID conode2.db")
 	}
 
 	fb, err := newFetchBlocks(c)
 	if err != nil {
-		return xerrors.Errorf("couldn't create fetchBlock: %+v", err)
+		return fmt.Errorf("couldn't create fetchBlock: %v", err)
 	}
 
 	dbBack, _, err := fb.openDB(c.Args().Get(2))
 	if err != nil {
-		return xerrors.Errorf("couldn't open DB: %+v", err)
+		return fmt.Errorf("couldn't open DB: %v", err)
 	}
 	sb := dbBack.GetByID(*fb.bcID)
 	if sb != nil {
@@ -296,7 +295,7 @@ func dbMerge(c *cli.Context) error {
 	if c.Bool("overwrite") {
 		err = fb.db.RemoveSkipchain(*fb.bcID)
 		if err != nil {
-			return xerrors.Errorf("couldn't remove skipchain: %+v", err)
+			return fmt.Errorf("couldn't remove skipchain: %v", err)
 		}
 		sb = dbBack.GetByID(*fb.bcID)
 		for sb != nil {
@@ -341,11 +340,11 @@ func dbMerge(c *cli.Context) error {
 func dbReset(c *cli.Context) error {
 	fb, err := newFetchBlocks(c)
 	if err != nil {
-		return xerrors.Errorf("couldn't create fetchBlock: %+v", err)
+		return fmt.Errorf("couldn't create fetchBlock: %v", err)
 	}
 
 	if fb.bcID == nil {
-		return xerrors.New("need bcID")
+		return errors.New("need bcID")
 	}
 
 	latest := *fb.bcID
@@ -354,21 +353,21 @@ func dbReset(c *cli.Context) error {
 		sb := fb.db.GetByID(latest)
 		if sb == nil {
 			if previous == nil {
-				return xerrors.New("didn't find first block")
+				return errors.New("didn't find first block")
 			}
 			sb = fb.db.GetByID(previous)
 			log.Info("Found dangling forward-link in block", sb.Index)
 			sb.ForwardLink = []*skipchain.ForwardLink{}
 			err = fb.db.RemoveBlock(previous)
 			if err != nil {
-				return xerrors.Errorf("couldn't remove block: %v", err)
+				return fmt.Errorf("couldn't remove block: %v", err)
 			}
 			fb.db.Store(sb)
 			log.Info("DB updated")
 			break
 		}
 		if len(sb.ForwardLink) == 0 {
-			return xerrors.New("no dangling forward-links")
+			return errors.New("no dangling forward-links")
 		}
 		previous = latest
 		latest = sb.ForwardLink[len(sb.ForwardLink)-1].To
@@ -381,11 +380,11 @@ func dbReset(c *cli.Context) error {
 func dbRemove(c *cli.Context) error {
 	fb, err := newFetchBlocks(c)
 	if err != nil {
-		return xerrors.Errorf("couldn't create fetchBlock: %+v", err)
+		return fmt.Errorf("couldn't create fetchBlock: %v", err)
 	}
 
 	if fb.bcID == nil {
-		return xerrors.New("need bcID")
+		return errors.New("need bcID")
 	}
 
 	latest, err := fb.db.GetLatestByID(*fb.bcID)
@@ -454,18 +453,18 @@ func dbRemove(c *cli.Context) error {
 func dbCheck(c *cli.Context) error {
 	fb, err := newFetchBlocks(c)
 	if err != nil {
-		return xerrors.Errorf("couldn't create fetchBlock: %+v", err)
+		return fmt.Errorf("couldn't create fetchBlock: %v", err)
 	}
 
 	if fb.bcID == nil {
-		return xerrors.New("need bcID")
+		return errors.New("need bcID")
 	}
 
 	sb := fb.db.GetByID(*fb.bcID)
 	start := c.Int("start")
 	for sb.Index < start {
 		if len(sb.ForwardLink) == 0 {
-			return xerrors.Errorf("cannot find block %d", start)
+			return fmt.Errorf("cannot find block %d", start)
 		}
 		sb = fb.db.GetByID(sb.ForwardLink[0].To)
 	}
@@ -580,7 +579,7 @@ type fetchBlocks struct {
 func newFetchBlocks(c *cli.Context) (*fetchBlocks,
 	error) {
 	if c.NArg() < 1 {
-		return nil, xerrors.New("please give the following arguments: " +
+		return nil, errors.New("please give the following arguments: " +
 			"conode.db [byzCoinID]")
 	}
 
@@ -598,7 +597,7 @@ func newFetchBlocks(c *cli.Context) (*fetchBlocks,
 	log.Info("Opening database", c.Args().First())
 	fb.db, fb.boltDB, err = fb.openDB(c.Args().First())
 	if err != nil {
-		return nil, xerrors.Errorf("couldn't open DB: %+v", err)
+		return nil, fmt.Errorf("couldn't open DB: %v", err)
 	}
 
 	if c.NArg() >= 2 {
@@ -623,7 +622,7 @@ func newFetchBlocks(c *cli.Context) (*fetchBlocks,
 	if c.Command.Name != "catchup" {
 		err := fb.needBcID()
 		if err != nil {
-			return nil, xerrors.Errorf("couldn't check bcID: %+v", err)
+			return nil, fmt.Errorf("couldn't check bcID: %v", err)
 		}
 	}
 
@@ -673,25 +672,25 @@ func (fb *fetchBlocks) needBcID() error {
 	log.Info("No bcID given - searching for all skipchains")
 	sbs, err := fb.db.GetSkipchains()
 	if err != nil {
-		return xerrors.Errorf("couldn't list all blocks: %+v", err)
+		return fmt.Errorf("couldn't list all blocks: %v", err)
 	}
 	for _, sb := range sbs {
 		scIDs = append(scIDs, hex.EncodeToString(sb.SkipChainID()))
 	}
 	log.Info("The following chains are available in your db:",
 		strings.Join(scIDs, "\n"))
-	return xerrors.New("need byzCoinID in arguments")
+	return errors.New("need byzCoinID in arguments")
 }
 
 func (fb *fetchBlocks) addURL(url string) error {
 	if url == "" {
-		return xerrors.New("cannot use empty url")
+		return errors.New("cannot use empty url")
 	}
 
 	if fb.bcID == nil {
 		fs := &flag.FlagSet{}
 		if err := fs.Parse([]string{url}); err != nil {
-			return xerrors.Errorf("couldn't parse url: %+v", err)
+			return fmt.Errorf("couldn't parse url: %v", err)
 		}
 		c := cli.NewContext(nil, fs, nil)
 		err := debugList(c)
@@ -713,7 +712,7 @@ func (fb *fetchBlocks) addURL(url string) error {
 	}})
 	updateChain, err := fb.cl.GetUpdateChain(fb.roster, *fb.bcID)
 	if err != nil {
-		return xerrors.Errorf("couldn't get latest block: %+v", err)
+		return fmt.Errorf("couldn't get latest block: %v", err)
 	}
 	fb.roster.List = []*network.ServerIdentity{}
 	for _, sb := range updateChain.Update {
@@ -741,7 +740,7 @@ func (fb *fetchBlocks) openDB(name string) (*skipchain.SkipBlockDB,
 	*bbolt.DB, error) {
 	db, err := bbolt.Open(name, 0600, nil)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("couldn't open db: %+v", err)
+		return nil, nil, fmt.Errorf("couldn't open db: %v", err)
 	}
 	bucketName := []byte("Skipchain_skipblocks")
 	err = db.Update(func(tx *bbolt.Tx) error {
@@ -749,7 +748,7 @@ func (fb *fetchBlocks) openDB(name string) (*skipchain.SkipBlockDB,
 		return err
 	})
 	if err != nil {
-		return nil, nil, xerrors.Errorf("couldn't create bucket: %+v", err)
+		return nil, nil, fmt.Errorf("couldn't create bucket: %v", err)
 	}
 	return skipchain.NewSkipBlockDB(db, bucketName), db, nil
 }
@@ -788,7 +787,7 @@ func (fb *fetchBlocks) gbMulti(startID skipchain.SkipBlockID) (
 
 		_, err = fb.db.StoreBlocks(blocks)
 		if err != nil {
-			return nil, xerrors.Errorf("couldn't store blocks: %+v", err)
+			return nil, fmt.Errorf("couldn't store blocks: %v", err)
 		}
 
 		url := fb.roster.List[fb.index].URL
@@ -817,7 +816,7 @@ func (fb *fetchBlocks) gbSingle(blockID skipchain.SkipBlockID) (
 			}
 			_, err = fb.db.StoreBlocks([]*skipchain.SkipBlock{sb})
 			if err != nil {
-				return nil, xerrors.Errorf("couldn't store blocks: %+v", err)
+				return nil, fmt.Errorf("couldn't store blocks: %v", err)
 			}
 			if len(sb.ForwardLink) == 0 {
 				return sb, nil
@@ -827,7 +826,7 @@ func (fb *fetchBlocks) gbSingle(blockID skipchain.SkipBlockID) (
 		if sb != nil && !sb.ForwardLink[0].To.Equal(blockID) {
 			blockID = sb.ForwardLink[0].To
 		} else {
-			return sb, xerrors.New("couldn't fetch next block")
+			return sb, errors.New("couldn't fetch next block")
 		}
 	}
 	return sb, nil

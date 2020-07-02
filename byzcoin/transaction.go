@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"hash"
 	"regexp"
@@ -17,7 +18,6 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
-	"golang.org/x/xerrors"
 )
 
 // An InstanceID is a unique identifier for one instance of a contract.
@@ -237,7 +237,7 @@ func (instr Instruction) DeriveID(what string) InstanceID {
 // If the instruction is not a spawn-instruction, it returns an error.
 func (instr Instruction) DeriveIDArg(what, arg string) (InstanceID, error) {
 	if instr.GetType() != SpawnType {
-		return NewInstanceID(nil), xerrors.New("can only get ID from spawn")
+		return NewInstanceID(nil), errors.New("can only get ID from spawn")
 	}
 	if instIDBuf := instr.Spawn.Args.Search(arg); instIDBuf != nil {
 		h := sha256.New()
@@ -328,24 +328,24 @@ func (instr Instruction) String() string {
 // side.
 func (instr *Instruction) SignWith(msg []byte, signers ...darc.Signer) error {
 	if len(signers) != len(instr.SignerIdentities) {
-		return xerrors.New("the number of signers does not match the number of identities")
+		return errors.New("the number of signers does not match the number of identities")
 	}
 	if len(signers) != len(instr.SignerCounter) {
-		return xerrors.New("the number of signers does not match the number of counters")
+		return errors.New("the number of signers does not match the number of counters")
 	}
 	if instr.version < VersionInstructionHash {
-		return xerrors.New("cannot sign old instruction hashes - please use" +
+		return errors.New("cannot sign old instruction hashes - please use" +
 			" byzcoin.NewClientTransaction")
 	}
 	instr.Signatures = make([][]byte, len(signers))
 	for i := range signers {
 		signerID := signers[i].Identity()
 		if !instr.SignerIdentities[i].Equal(&signerID) {
-			return xerrors.New("signer identity is not set correctly")
+			return errors.New("signer identity is not set correctly")
 		}
 		sig, err := signers[i].Sign(msg)
 		if err != nil {
-			return xerrors.Errorf("signing failed: %v", err)
+			return fmt.Errorf("signing failed: %v", err)
 		}
 		instr.Signatures[i] = sig
 	}
@@ -406,39 +406,39 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops 
 
 	// check the number of signers match with the number of signatures
 	if len(instr.SignerIdentities) != len(instr.Signatures) {
-		return xerrors.New("length of identities does not match the length of" +
+		return errors.New("length of identities does not match the length of" +
 			" signatures")
 	}
 
 	// check the signature counters
 	if !ops.IgnoreCounters {
 		if err := verifySignerCounters(st, instr.SignerCounter, instr.SignerIdentities); err != nil {
-			return xerrors.Errorf("signer counter: %v", err)
+			return fmt.Errorf("signer counter: %v", err)
 		}
 	}
 
 	// get the valid DARC contract IDs from the configuration
 	config, err := st.LoadConfig()
 	if err != nil {
-		return xerrors.Errorf("reading trie: %v", err)
+		return fmt.Errorf("reading trie: %v", err)
 	}
 
 	// get the darc
 	d, err := getInstanceDarc(st, instr.InstanceID, config.DarcContractIDs)
 	if err != nil {
-		return xerrors.Errorf("darc not found: %v", err)
+		return fmt.Errorf("darc not found: %v", err)
 	}
 	if len(instr.Signatures) == 0 {
-		return xerrors.New("no signatures - nothing to verify")
+		return errors.New("no signatures - nothing to verify")
 	}
 
 	// check the action
 	if !d.Rules.Contains(darc.Action(instr.Action())) {
-		return xerrors.Errorf("action '%v' does not exist", instr.Action())
+		return fmt.Errorf("action '%v' does not exist", instr.Action())
 	}
 
 	if instr.usesForbiddenIdentities() {
-		return xerrors.Errorf("instruction is using a forbidden signer identity")
+		return fmt.Errorf("instruction is using a forbidden signer identity")
 	}
 
 	// check the signature

@@ -1,6 +1,8 @@
 package bevm
 
 import (
+	"errors"
+	"fmt"
 	"math/big"
 	"testing"
 	"time"
@@ -10,7 +12,6 @@ import (
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
-	"golang.org/x/xerrors"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
@@ -45,7 +46,7 @@ func (c myValueContract) Spawn(rst byzcoin.ReadOnlyStateTrie,
 	var darcID darc.ID
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to get darcID: %v", err)
+		return nil, nil, fmt.Errorf("failed to get darcID: %v", err)
 	}
 
 	var newInstanceID byzcoin.InstanceID
@@ -78,7 +79,7 @@ func (c myValueContract) Invoke(rst byzcoin.ReadOnlyStateTrie,
 
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to get darcID: %v", err)
+		return nil, nil, fmt.Errorf("failed to get darcID: %v", err)
 	}
 
 	switch inst.Invoke.Command {
@@ -94,7 +95,7 @@ func (c myValueContract) Invoke(rst byzcoin.ReadOnlyStateTrie,
 		return
 
 	default:
-		return nil, nil, xerrors.New("Value contract can only update")
+		return nil, nil, errors.New("Value contract can only update")
 	}
 }
 
@@ -108,7 +109,7 @@ func (c myValueContract) Delete(rst byzcoin.ReadOnlyStateTrie,
 
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to get darcID: %v", err)
+		return nil, nil, fmt.Errorf("failed to get darcID: %v", err)
 	}
 
 	sc = []byzcoin.StateChange{

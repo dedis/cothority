@@ -3,7 +3,7 @@ package trie
 import (
 	"bytes"
 
-	"golang.org/x/xerrors"
+	"errors"
 )
 
 const entryKey = "dedis_trie"
@@ -30,10 +30,10 @@ func (t *Trie) SetMetadata(key []byte, val []byte) error {
 // transaction.
 func (t *Trie) SetMetadataWithBucket(key []byte, val []byte, b Bucket) error {
 	if len(key) > metaMaxLen {
-		return xerrors.New("key must be " + string(metaMaxLen) + " bytes or shorter")
+		return errors.New("key must be " + string(metaMaxLen) + " bytes or shorter")
 	}
 	if isIllegalKey(key) {
-		return xerrors.New("the key is illegal, it cannot be \"" + entryKey + "\" or \"" + nonceKey + "\"")
+		return errors.New("the key is illegal, it cannot be \"" + entryKey + "\" or \"" + nonceKey + "\"")
 	}
 	return b.Put(key, val)
 }
@@ -81,10 +81,10 @@ func (t *Trie) DeleteMetadata(key []byte) error {
 // transaction.
 func (t *Trie) DeleteMetadataWithBucket(key []byte, b Bucket) error {
 	if len(key) > metaMaxLen {
-		return xerrors.New("key must be " + string(metaMaxLen) + " bytes or shorter")
+		return errors.New("key must be " + string(metaMaxLen) + " bytes or shorter")
 	}
 	if isIllegalKey(key) {
-		return xerrors.New("the key is illegal, it cannot be \"" + entryKey + "\" or \"" + nonceKey + "\"")
+		return errors.New("the key is illegal, it cannot be \"" + entryKey + "\" or \"" + nonceKey + "\"")
 	}
 	return b.Delete(key)
 }

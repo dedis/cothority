@@ -16,7 +16,6 @@ import (
 	"go.dedis.ch/onet/v3/cfgpath"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
-	"golang.org/x/xerrors"
 )
 
 func init() {
@@ -125,7 +124,7 @@ func spawn(c *cli.Context) error {
 
 	cfg, cl, err := lib.LoadConfig(bcFile)
 	if err != nil {
-		return xerrors.Errorf("failed to load ByzCoin config: %v", err)
+		return fmt.Errorf("failed to load ByzCoin config: %v", err)
 	}
 
 	var signer *darc.Signer
@@ -136,7 +135,7 @@ func spawn(c *cli.Context) error {
 		signer, err = lib.LoadKeyFromString(signerStr)
 	}
 	if err != nil {
-		return xerrors.Errorf("failed to load signer key: %v", err)
+		return fmt.Errorf("failed to load signer key: %v", err)
 	}
 
 	var darc *darc.Darc
@@ -146,18 +145,18 @@ func spawn(c *cli.Context) error {
 	}
 	darc, err = lib.GetDarcByString(cl, darcStr)
 	if err != nil {
-		return xerrors.Errorf("failed to load DARC data: %v", err)
+		return fmt.Errorf("failed to load DARC data: %v", err)
 	}
 
 	bevmInstID, err := bevm.NewBEvm(cl, *signer, darc)
 	if err != nil {
-		return xerrors.Errorf("failed to spawn new BEvm instance: %v", err)
+		return fmt.Errorf("failed to spawn new BEvm instance: %v", err)
 	}
 
 	_, err = fmt.Fprintf(c.App.Writer, "Created BEvm instance with ID: %s\n",
 		bevmInstID)
 	if err != nil {
-		return xerrors.Errorf("failed to write report msg: %v", err)
+		return fmt.Errorf("failed to write report msg: %v", err)
 	}
 
 	// Save ID in file if provided
@@ -165,7 +164,7 @@ func spawn(c *cli.Context) error {
 	if outFile != "" {
 		err = ioutil.WriteFile(outFile, []byte(bevmInstID.String()), 0644)
 		if err != nil {
-			return xerrors.Errorf("failed to write BEvm ID to file: %v", err)
+			return fmt.Errorf("failed to write BEvm ID to file: %v", err)
 		}
 	}
 
@@ -177,7 +176,7 @@ func delete(c *cli.Context) error {
 
 	cfg, cl, err := lib.LoadConfig(bcFile)
 	if err != nil {
-		return xerrors.Errorf("failed to load ByzCoin config: %v", err)
+		return fmt.Errorf("failed to load ByzCoin config: %v", err)
 	}
 
 	var signer *darc.Signer
@@ -188,31 +187,31 @@ func delete(c *cli.Context) error {
 		signer, err = lib.LoadKeyFromString(signerStr)
 	}
 	if err != nil {
-		return xerrors.Errorf("failed to load signer key: %v", err)
+		return fmt.Errorf("failed to load signer key: %v", err)
 	}
 
 	bevmIDStr := c.String("bevmID")
 
 	bevmID, err := hex.DecodeString(bevmIDStr)
 	if err != nil {
-		return xerrors.Errorf("invalid BEvm ID provided: %v", err)
+		return fmt.Errorf("invalid BEvm ID provided: %v", err)
 	}
 	bevmClient, err := bevm.NewClient(cl, *signer,
 		byzcoin.NewInstanceID(bevmID))
 	if err != nil {
-		return xerrors.Errorf("failed to retrieve BEvm client "+
+		return fmt.Errorf("failed to retrieve BEvm client "+
 			"instance: %v", err)
 	}
 
 	err = bevmClient.Delete()
 	if err != nil {
-		return xerrors.Errorf("failed to delete BEvm instance: %v", err)
+		return fmt.Errorf("failed to delete BEvm instance: %v", err)
 	}
 
 	_, err = fmt.Fprintf(c.App.Writer, "Delete BEvm instance with ID: %s\n",
 		bevmIDStr)
 	if err != nil {
-		return xerrors.Errorf("failed to write report msg: %v", err)
+		return fmt.Errorf("failed to write report msg: %v", err)
 	}
 
 	return nil

@@ -1,11 +1,11 @@
 package trie
 
 import (
-	bbolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
+	"errors"
+	"go.etcd.io/bbolt"
 )
 
-var errDryRun = xerrors.New("this is a dry-run")
+var errDryRun = errors.New("this is a dry-run")
 
 // diskDB is the DB implementation for boltdb.
 type diskDB struct {
@@ -26,7 +26,7 @@ func (r *diskDB) Update(f func(Bucket) error) error {
 	return r.db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(r.bucket)
 		if b == nil {
-			return xerrors.New("bucket does not exist")
+			return errors.New("bucket does not exist")
 		}
 		return f(&diskBucket{b})
 	})
@@ -36,7 +36,7 @@ func (r *diskDB) View(f func(Bucket) error) error {
 	return r.db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(r.bucket)
 		if b == nil {
-			return xerrors.New("bucket does not exist")
+			return errors.New("bucket does not exist")
 		}
 		return f(&diskBucket{b})
 	})
@@ -50,7 +50,7 @@ func (r *diskDB) UpdateDryRun(f func(Bucket) error) error {
 	err := r.db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(r.bucket)
 		if b == nil {
-			return xerrors.New("bucket does not exist")
+			return errors.New("bucket does not exist")
 		}
 		if err := f(&diskBucket{b}); err != nil {
 			return err

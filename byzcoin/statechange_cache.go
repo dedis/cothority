@@ -2,10 +2,10 @@ package byzcoin
 
 import (
 	"bytes"
+	"errors"
 	"sync"
 
 	"go.dedis.ch/cothority/v3/skipchain"
-	"golang.org/x/xerrors"
 )
 
 // stateChangeCache is a simple struct that maintains a cache of state changes
@@ -38,11 +38,11 @@ func (c *stateChangeCache) get(scID skipchain.SkipBlockID, digest []byte) (merkl
 	key := string(scID)
 	out, ok := c.cache[key]
 	if !ok {
-		err = xerrors.New("key does not exist")
+		err = errors.New("key does not exist")
 		return
 	}
 	if !bytes.Equal(out.digest, digest) {
-		err = xerrors.New("digest is not the same")
+		err = errors.New("digest is not the same")
 		return
 	}
 

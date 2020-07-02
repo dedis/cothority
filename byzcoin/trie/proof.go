@@ -3,9 +3,8 @@ package trie
 import (
 	"bytes"
 	"crypto/sha256"
+	"errors"
 	"fmt"
-
-	"golang.org/x/xerrors"
 )
 
 func (p *Proof) String() string {
@@ -23,11 +22,11 @@ func (p *Proof) String() string {
 // Exists checks the proof for inclusion/absence
 func (p *Proof) Exists(key []byte) (bool, error) {
 	if key == nil {
-		return false, xerrors.New("key is nil")
+		return false, errors.New("key is nil")
 	}
 
 	if len(p.Interiors) == 0 {
-		return false, xerrors.New("no interior nodes")
+		return false, errors.New("no interior nodes")
 	}
 
 	bits := p.binSlice(key)
@@ -36,7 +35,7 @@ func (p *Proof) Exists(key []byte) (bool, error) {
 	var i int
 	for i = range p.Interiors {
 		if !bytes.Equal(expectedHash, p.Interiors[i].hash()) {
-			return false, xerrors.New("invalid hash chain")
+			return false, errors.New("invalid hash chain")
 		}
 		if bits[i] {
 			expectedHash = p.Interiors[i].Left
@@ -46,16 +45,16 @@ func (p *Proof) Exists(key []byte) (bool, error) {
 	}
 	if bytes.Equal(expectedHash, p.Leaf.hash(p.Nonce)) {
 		if !equal(bits[:i+1], p.Leaf.Prefix) {
-			return false, xerrors.New("invalid prefix in leaf node")
+			return false, errors.New("invalid prefix in leaf node")
 		}
 		return bytes.Equal(p.Leaf.Key, key), nil
 	} else if bytes.Equal(expectedHash, p.Empty.hash(p.Nonce)) {
 		if !equal(bits[:i+1], p.Empty.Prefix) {
-			return false, xerrors.New("invalid prefix in empty node")
+			return false, errors.New("invalid prefix in empty node")
 		}
 		return false, nil
 	} else {
-		return false, xerrors.New("invalid edge node")
+		return false, errors.New("invalid edge node")
 	}
 }
 
@@ -107,7 +106,7 @@ func (t *Trie) GetProof(key []byte) (*Proof, error) {
 	err := t.db.View(func(b Bucket) error {
 		rootKey := t.GetRootWithBucket(b)
 		if rootKey == nil {
-			return xerrors.New("no root key")
+			return errors.New("no root key")
 		}
 		p.Nonce = clone(t.nonce)
 		return t.getProof(0, rootKey, t.binSlice(key), p, b)
@@ -119,7 +118,7 @@ func (t *Trie) GetProof(key []byte) (*Proof, error) {
 func (t *Trie) getProof(depth int, nodeKey []byte, bits []bool, p *Proof, b Bucket) error {
 	nodeVal := clone(b.Get(nodeKey))
 	if len(nodeVal) == 0 {
-		return xerrors.New("invalid node key")
+		return errors.New("invalid node key")
 	}
 	switch nodeType(nodeVal[0]) {
 	case typeEmpty:
@@ -148,7 +147,7 @@ func (t *Trie) getProof(depth int, nodeKey []byte, bits []bool, p *Proof, b Buck
 		// look right
 		return t.getProof(depth+1, node.Right, bits, p, b)
 	}
-	return xerrors.New("invalid node type")
+	return errors.New("invalid node type")
 }
 
 func (p *Proof) binSlice(buf []byte) []bool {

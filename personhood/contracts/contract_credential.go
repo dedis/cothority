@@ -5,9 +5,8 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"strings"
-
-	"golang.org/x/xerrors"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/darc/expression"
@@ -65,7 +64,7 @@ func (c *ContractCredential) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.I
 		var cid string
 		_, _, cid, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 		if err != nil {
-			err = xerrors.Errorf("couldn't get darc: %+v", err)
+			err = fmt.Errorf("couldn't get darc: %v", err)
 			return
 		}
 		if cid != byzcoin.ContractDarcID {

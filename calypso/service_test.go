@@ -1,11 +1,11 @@
 package calypso
 
 import (
+	"errors"
+	"fmt"
 	"sync"
 	"testing"
 	"time"
-
-	"golang.org/x/xerrors"
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
@@ -544,11 +544,11 @@ func (s *ts) reconstructKeyFunc() (kyber.Scalar, error) {
 	n := len(s.ltsRoster.List)
 	th := n - (n-1)/3
 	if n != len(sshares) {
-		return nil, xerrors.New("not correct amount of shares")
+		return nil, errors.New("not correct amount of shares")
 	}
 	sec, err := share.RecoverSecret(cothority.Suite, sshares, th, n)
 	if err != nil {
-		return nil, xerrors.Errorf("while recovering secret: %v", err)
+		return nil, fmt.Errorf("while recovering secret: %v", err)
 	}
 	return sec, nil
 }

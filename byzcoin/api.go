@@ -17,7 +17,6 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
-	"golang.org/x/xerrors"
 )
 
 // ServiceName is used for registration on the onet.
@@ -68,7 +67,7 @@ func NewLedger(msg *CreateGenesisBlock, keep bool) (*Client, *CreateGenesisBlock
 
 	reply, err := newLedgerWithClient(msg, c)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("creating ledger: %v", err)
+		return nil, nil, fmt.Errorf("creating ledger: %v", err)
 	}
 
 	c.ID = reply.Skipblock.Hash
@@ -88,7 +87,7 @@ func (c *Client) getLatestKnownBlock() *skipchain.SkipBlock {
 // UseNode sets the options so that only the given node will be contacted
 func (c *Client) UseNode(n int) error {
 	if n < 0 || n >= len(c.Roster.List) {
-		return xerrors.New("index of node points past roster-list")
+		return errors.New("index of node points past roster-list")
 	}
 	c.options = &onet.ParallelOptions{
 		DontShuffle: true,
@@ -111,12 +110,12 @@ func (c *Client) DontContact(si *network.ServerIdentity) {
 func newLedgerWithClient(msg *CreateGenesisBlock, c *Client) (*CreateGenesisBlockResponse, error) {
 	reply := &CreateGenesisBlockResponse{}
 	if err := c.SendProtobuf(msg.Roster.List[0], msg, reply); err != nil {
-		return nil, xerrors.Errorf("client request: %v", err)
+		return nil, fmt.Errorf("client request: %v", err)
 	}
 
 	// checks if the returned genesis block has the same parameters
 	if err := verifyGenesisBlock(reply.Skipblock, msg); err != nil {
-		return nil, xerrors.Errorf("genesis verification: %v", err)
+		return nil, fmt.Errorf("genesis verification: %v", err)
 	}
 
 	return reply, nil
@@ -127,7 +126,7 @@ func newLedgerWithClient(msg *CreateGenesisBlock, c *Client) (*CreateGenesisBloc
 func (c *Client) GetAllByzCoinIDs(si *network.ServerIdentity) (*GetAllByzCoinIDsResponse, error) {
 	reply := &GetAllByzCoinIDsResponse{}
 	if err := c.SendProtobuf(si, &GetAllByzCoinIDsRequest{}, reply); err != nil {
-		return nil, xerrors.Errorf("client request: %v", err)
+		return nil, fmt.Errorf("client request: %v", err)
 	}
 
 	return reply, nil
@@ -137,13 +136,13 @@ func (c *Client) GetAllByzCoinIDs(si *network.ServerIdentity) (*GetAllByzCoinIDs
 func (c *Client) CreateTransaction(instrs ...Instruction) (ClientTransaction, error) {
 	if c.Latest == nil {
 		if _, err := c.GetChainConfig(); err != nil {
-			return ClientTransaction{}, xerrors.Errorf("chain config: %v", err)
+			return ClientTransaction{}, fmt.Errorf("chain config: %v", err)
 		}
 	}
 
 	h, err := decodeBlockHeader(c.Latest)
 	if err != nil {
-		return ClientTransaction{}, xerrors.Errorf("decoding header: %v", err)
+		return ClientTransaction{}, fmt.Errorf("decoding header: %v", err)
 	}
 
 	tx := NewClientTransaction(h.Version, instrs...)
@@ -166,13 +165,13 @@ func (c *Client) AddTransaction(tx ClientTransaction) (*AddTxResponse, error) {
 func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxResponse, error) {
 	if c.Genesis == nil {
 		if err := c.fetchGenesis(); err != nil {
-			return nil, xerrors.Errorf("fetching genesis: %v", err)
+			return nil, fmt.Errorf("fetching genesis: %v", err)
 		}
 	}
 
 	for _, inst := range tx.Instructions {
 		if inst.version < VersionInstructionHash {
-			return nil, xerrors.New(
+			return nil, errors.New(
 				"got instruction with pre-hash version - please use byzcoin." +
 					"NewClientTransaction")
 		}
@@ -191,16 +190,16 @@ func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxRe
 		ProofFrom:     latest.Hash,
 	}, reply, c.options)
 	if err != nil {
-		return nil, xerrors.Errorf("sending: %v", err)
+		return nil, fmt.Errorf("sending: %v", err)
 	}
 
 	if reply.Error != "" {
-		return reply, xerrors.New(reply.Error)
+		return reply, errors.New(reply.Error)
 	}
 
 	if reply.Proof != nil {
 		if err := reply.Proof.VerifyFromBlock(latest); err != nil {
-			return reply, xerrors.Errorf("proof verification: %v", err)
+			return reply, fmt.Errorf("proof verification: %v", err)
 		}
 
 		if c.Latest == nil || c.Latest.Index < reply.Proof.Latest.Index {
@@ -219,7 +218,7 @@ func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxRe
 func (c *Client) GetProof(key []byte) (*GetProofResponse, error) {
 	if c.Genesis == nil {
 		if err := c.fetchGenesis(); err != nil {
-			return nil, xerrors.Errorf("fetching genesis block: %v", err)
+			return nil, fmt.Errorf("fetching genesis block: %v", err)
 		}
 	}
 
@@ -307,20 +306,20 @@ func (c *Client) getProofRaw(key []byte, from, include *skipchain.SkipBlock) (*G
 	decoder := func(buf []byte, msg interface{}) error {
 		err := protobuf.Decode(buf, msg)
 		if err != nil {
-			return xerrors.Errorf("decoding: %+v", err)
+			return fmt.Errorf("decoding: %v", err)
 		}
 
 		gpr, ok := msg.(*GetProofResponse)
 		if !ok {
-			return xerrors.New("couldn't cast msg")
+			return errors.New("couldn't cast msg")
 		}
 
 		if err := gpr.Proof.VerifyFromBlock(from); err != nil {
-			return xerrors.Errorf("proof verification: %+v", err)
+			return fmt.Errorf("proof verification: %v", err)
 		}
 
 		if include != nil && gpr.Proof.Latest.Index < include.Index {
-			return xerrors.New("latest block in proof is too old")
+			return errors.New("latest block in proof is too old")
 		}
 
 		return nil
@@ -339,7 +338,7 @@ func (c *Client) getProofRaw(key []byte, from, include *skipchain.SkipBlock) (*G
 	reply := &GetProofResponse{}
 	_, err := c.SendProtobufParallelWithDecoder(c.Roster.List, req, reply, c.options, decoder)
 	if err != nil {
-		return nil, xerrors.Errorf("sending: %+v", err)
+		return nil, fmt.Errorf("sending: %v", err)
 	}
 
 	if c.Latest == nil || c.Latest.Index < reply.Proof.Latest.Index {
@@ -362,25 +361,25 @@ func (c *Client) GetDeferredData(instrID InstanceID) (*DeferredData, error) {
 func (c *Client) GetDeferredDataAfter(instrID InstanceID, barrier *skipchain.SkipBlock) (*DeferredData, error) {
 	pr, err := c.getProofRaw(instrID.Slice(), c.getLatestKnownBlock(), barrier)
 	if err != nil {
-		return nil, xerrors.Errorf("getting proof: %w", err)
+		return nil, fmt.Errorf("getting proof: %v", err)
 	}
 
 	if !pr.Proof.InclusionProof.Match(instrID.Slice()) {
-		return nil, xerrors.New("key not set")
+		return nil, errors.New("key not set")
 	}
 
 	dataBuf, _, _, err := pr.Proof.Get(instrID.Slice())
 	if err != nil {
-		return nil, xerrors.Errorf("getting proof value: %w", err)
+		return nil, fmt.Errorf("getting proof value: %v", err)
 	}
 	var result DeferredData
 	if err = protobuf.Decode(dataBuf, &result); err != nil {
-		return nil, xerrors.Errorf("decoding data: %w", err)
+		return nil, fmt.Errorf("decoding data: %v", err)
 	}
 
 	header, err := decodeBlockHeader(c.Latest)
 	if err != nil {
-		return nil, xerrors.Errorf("decoding header: %w")
+		return nil, fmt.Errorf("decoding header: %v", err)
 	}
 
 	result.ProposedTransaction.Instructions.SetVersion(header.Version)
@@ -399,7 +398,7 @@ func (c *Client) CheckAuthorization(dID darc.ID, ids ...darc.Identity) ([]darc.A
 		Identities: ids,
 	}, reply, c.options)
 	if err != nil {
-		return nil, xerrors.Errorf("request: %v", err)
+		return nil, fmt.Errorf("request: %v", err)
 	}
 	var ret []darc.Action
 	for _, a := range reply.Actions {
@@ -414,49 +413,49 @@ func (c *Client) GetGenDarc() (*darc.Darc, error) {
 	// Get proof of the genesis darc.
 	p, err := c.GetProofFromLatest(NewInstanceID(nil).Slice())
 	if err != nil {
-		return nil, xerrors.Errorf("proof request: %v", err)
+		return nil, fmt.Errorf("proof request: %v", err)
 	}
 	ok, err := p.Proof.InclusionProof.Exists(NewInstanceID(nil).Slice())
 	if err != nil {
-		return nil, xerrors.Errorf("invalid proof: %v", err)
+		return nil, fmt.Errorf("invalid proof: %v", err)
 	}
 	if !ok {
-		return nil, xerrors.New("cannot find genesis Darc ID")
+		return nil, errors.New("cannot find genesis Darc ID")
 	}
 
 	// Sanity check the values.
 	_, _, contract, darcID, err := p.Proof.KeyValue()
 	if contract != ContractConfigID {
-		return nil, xerrors.New("expected contract to be config but got: " + contract)
+		return nil, errors.New("expected contract to be config but got: " + contract)
 	}
 	if len(darcID) != 32 {
-		return nil, xerrors.New("genesis darc ID is wrong length")
+		return nil, errors.New("genesis darc ID is wrong length")
 	}
 
 	// Find the actual darc.
 	p, err = c.GetProofFromLatest(darcID)
 	if err != nil {
-		return nil, xerrors.Errorf("darc proof: %v", err)
+		return nil, fmt.Errorf("darc proof: %v", err)
 	}
 	ok, err = p.Proof.InclusionProof.Exists(darcID)
 	if err != nil {
-		return nil, xerrors.Errorf("invalid proof: %v", err)
+		return nil, fmt.Errorf("invalid proof: %v", err)
 	}
 	if !ok {
-		return nil, xerrors.New("cannot find genesis Darc")
+		return nil, errors.New("cannot find genesis Darc")
 	}
 
 	// Check and parse the darc.
 	_, darcBuf, contract, _, err := p.Proof.KeyValue()
 	if err != nil {
-		return nil, xerrors.Errorf("invalid proof: %v", err)
+		return nil, fmt.Errorf("invalid proof: %v", err)
 	}
 	if contract != ContractDarcID {
-		return nil, xerrors.New("expected contract to be darc but got: " + contract)
+		return nil, errors.New("expected contract to be darc but got: " + contract)
 	}
 	d, err := darc.NewFromProtobuf(darcBuf)
 	if err != nil {
-		return nil, xerrors.Errorf("making proof: %v", err)
+		return nil, fmt.Errorf("making proof: %v", err)
 	}
 	return d, nil
 }
@@ -466,19 +465,19 @@ func (c *Client) GetGenDarc() (*darc.Darc, error) {
 func (c *Client) GetChainConfig() (*ChainConfig, error) {
 	p, err := c.GetProofFromLatest(NewInstanceID(nil).Slice())
 	if err != nil {
-		return nil, xerrors.Errorf("config proof: %v", err)
+		return nil, fmt.Errorf("config proof: %v", err)
 	}
 	ok, err := p.Proof.InclusionProof.Exists(NewInstanceID(nil).Slice())
 	if err != nil {
-		return nil, xerrors.Errorf("config proof: %v", err)
+		return nil, fmt.Errorf("config proof: %v", err)
 	}
 	if !ok {
-		return nil, xerrors.New("cannot find config")
+		return nil, errors.New("cannot find config")
 	}
 
 	_, configBuf, contract, _, err := p.Proof.KeyValue()
 	if contract != ContractConfigID {
-		return nil, xerrors.New("expected contract to be config but got: " + contract)
+		return nil, errors.New("expected contract to be config but got: " + contract)
 	}
 	config := &ChainConfig{}
 	err = protobuf.DecodeWithConstructors(configBuf, config, network.DefaultConstructors(cothority.Suite))
@@ -505,7 +504,7 @@ func (c *Client) WaitProof(id InstanceID, interval time.Duration, value []byte) 
 		pr = resp.Proof
 		ok, err := pr.InclusionProof.Exists(id.Slice())
 		if err != nil {
-			return nil, xerrors.Errorf(
+			return nil, fmt.Errorf(
 				"inclusion proof couldn't be checked: %+v", err)
 		}
 		if ok {
@@ -514,7 +513,7 @@ func (c *Client) WaitProof(id InstanceID, interval time.Duration, value []byte) 
 			}
 			_, buf, _, _, err := pr.KeyValue()
 			if err != nil {
-				return nil, xerrors.Errorf("couldn't get keyvalue: %+v", err)
+				return nil, fmt.Errorf("couldn't get keyvalue: %v", err)
 			}
 			if bytes.Compare(buf, value) == 0 {
 				return &pr, nil
@@ -525,7 +524,7 @@ func (c *Client) WaitProof(id InstanceID, interval time.Duration, value []byte) 
 		time.Sleep(interval / 5)
 	}
 
-	return nil, xerrors.New("timeout reached and inclusion not found")
+	return nil, errors.New("timeout reached and inclusion not found")
 }
 
 // StreamTransactions sends a streaming request to the service. If successful,
@@ -549,7 +548,7 @@ func (c *Client) StreamTransactions(handler func(StreamingResponse, error)) erro
 	conn, err := c.Stream(c.Roster.List[n], &req)
 	if err != nil {
 		handler(StreamingResponse{}, err)
-		return xerrors.Errorf("stream error: %v", err)
+		return fmt.Errorf("stream error: %v", err)
 	}
 	for {
 		resp := StreamingResponse{}
@@ -562,7 +561,7 @@ func (c *Client) StreamTransactions(handler func(StreamingResponse, error)) erro
 			// send the block only if the integrity is correct
 			handler(resp, nil)
 		} else {
-			err := xerrors.Errorf("got a corrupted block from %v", c.Roster.List[0])
+			err := fmt.Errorf("got a corrupted block from %v", c.Roster.List[0])
 			log.Warnf("%+v", err)
 			handler(StreamingResponse{}, err)
 		}
@@ -572,12 +571,12 @@ func (c *Client) StreamTransactions(handler func(StreamingResponse, error)) erro
 func (c *Client) signerCounterDecoder(buf []byte, data interface{}) error {
 	err := protobuf.Decode(buf, data)
 	if err != nil {
-		return xerrors.Errorf("couldn't decode the counters reply: %w", err)
+		return fmt.Errorf("couldn't decode the counters reply: %v", err)
 	}
 
 	reply, ok := data.(*GetSignerCountersResponse)
 	if !ok {
-		return xerrors.New("wrong type of response")
+		return errors.New("wrong type of response")
 	}
 
 	// This assumes the client is up-to-date with the latest block which
@@ -587,7 +586,7 @@ func (c *Client) signerCounterDecoder(buf []byte, data interface{}) error {
 	if c.Latest != nil {
 		header, err := decodeBlockHeader(c.Latest)
 		if err != nil {
-			return xerrors.Errorf("decoding header: %w", err)
+			return fmt.Errorf("decoding header: %v", err)
 		}
 
 		if header.Version < 2 {
@@ -597,7 +596,7 @@ func (c *Client) signerCounterDecoder(buf []byte, data interface{}) error {
 		}
 
 		if uint64(c.Latest.Index) > reply.Index {
-			return xerrors.New("data coming from an old block")
+			return errors.New("data coming from an old block")
 		}
 	}
 
@@ -636,7 +635,7 @@ func (c *Client) GetSignerCounters(ids ...string) (*GetSignerCountersResponse, e
 // trie which can be `protobuf.Decode`d into a struct{map[string][]byte}.
 func (c *Client) DownloadState(byzcoinID skipchain.SkipBlockID, nonce uint64, length int) (reply *DownloadStateResponse, err error) {
 	if length <= 0 {
-		return nil, xerrors.New("invalid parameter")
+		return nil, errors.New("invalid parameter")
 	}
 
 	reply = &DownloadStateResponse{}
@@ -705,7 +704,7 @@ searchLatest:
 		for node := range c.Roster.List {
 			log.Lvlf2("Searching node %d for block %d", node, sb.Index)
 			if err := c.UseNode(node); err != nil {
-				return xerrors.Errorf("couldn't set node: %+v", err)
+				return fmt.Errorf("couldn't set node: %v", err)
 			}
 			pr, err := c.GetProof(make([]byte, 32))
 			if err != nil {
@@ -722,7 +721,7 @@ searchLatest:
 				}
 				same, err := c.Roster.Equal(&cc.Roster)
 				if err != nil {
-					return xerrors.Errorf("couldn't compare rosters: %+v", err)
+					return fmt.Errorf("couldn't compare rosters: %v", err)
 				}
 				if !same {
 					c.Roster = cc.Roster
@@ -741,7 +740,7 @@ searchLatest:
 		}
 		return nil
 	}
-	return xerrors.New("didn't get the same blocks from everybody within 10 seconds")
+	return errors.New("didn't get the same blocks from everybody within 10 seconds")
 }
 
 // Debug can be used to dump things from a byzcoin service. If byzcoinID is nil, it will return all
@@ -761,7 +760,7 @@ func Debug(url string, byzcoinID *skipchain.SkipBlockID) (*DebugResponse, error)
 func DebugRemove(si *network.ServerIdentity, byzcoinID skipchain.SkipBlockID) error {
 	sig, err := schnorr.Sign(cothority.Suite, si.GetPrivate(), byzcoinID)
 	if err != nil {
-		return xerrors.Errorf("sign error: %v", err)
+		return fmt.Errorf("sign error: %v", err)
 	}
 	request := &DebugRemoveRequest{
 		ByzCoinID: byzcoinID,
@@ -776,7 +775,7 @@ func DebugRemove(si *network.ServerIdentity, byzcoinID skipchain.SkipBlockID) er
 // darc contract.
 func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Identity) (*CreateGenesisBlock, error) {
 	if len(ids) == 0 {
-		return nil, xerrors.New("no identities ")
+		return nil, errors.New("no identities ")
 	}
 
 	rs := darc.NewRules()
@@ -787,29 +786,29 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Id
 	ownerExpr := expression.InitAndExpr(ownerIDs...)
 	if err := rs.AddRule("invoke:"+ContractConfigID+"."+"update_config", ownerExpr); err != nil {
 		log.Error(err)
-		return nil, xerrors.Errorf("adding rule: %v", err)
+		return nil, fmt.Errorf("adding rule: %v", err)
 	}
 	if err := rs.AddRule("spawn:"+ContractDarcID, ownerExpr); err != nil {
-		return nil, xerrors.Errorf("adding rule: %v", err)
+		return nil, fmt.Errorf("adding rule: %v", err)
 	}
 	if err := rs.AddRule("invoke:"+ContractDarcID+"."+cmdDarcEvolve, ownerExpr); err != nil {
-		return nil, xerrors.Errorf("adding rule: %v", err)
+		return nil, fmt.Errorf("adding rule: %v", err)
 	}
 	if err := rs.AddRule("invoke:"+ContractDarcID+"."+cmdDarcEvolveUnrestriction, ownerExpr); err != nil {
-		return nil, xerrors.Errorf("adding rule: %v", err)
+		return nil, fmt.Errorf("adding rule: %v", err)
 	}
 	if err := rs.AddRule("_sign", ownerExpr); err != nil {
-		return nil, xerrors.Errorf("adding rule: %v", err)
+		return nil, fmt.Errorf("adding rule: %v", err)
 	}
 	if err := rs.AddRule("spawn:"+ContractNamingID, ownerExpr); err != nil {
-		return nil, xerrors.Errorf("adding rule: %v", err)
+		return nil, fmt.Errorf("adding rule: %v", err)
 	}
 	d := darc.NewDarc(rs, []byte("genesis darc"))
 
 	// extra rules
 	for _, r := range rules {
 		if err := d.Rules.AddRule(darc.Action(r), ownerExpr); err != nil {
-			return nil, xerrors.Errorf("adding rule: %v", err)
+			return nil, fmt.Errorf("adding rule: %v", err)
 		}
 	}
 
@@ -838,7 +837,7 @@ func (c *Client) fetchGenesis() error {
 	// Integrity check is done by the request function.
 	sb, err := skClient.GetSingleBlock(&c.Roster, c.ID)
 	if err != nil {
-		return xerrors.Errorf("request failed: %v", err)
+		return fmt.Errorf("request failed: %v", err)
 	}
 
 	c.Genesis = sb
@@ -848,25 +847,25 @@ func (c *Client) fetchGenesis() error {
 
 func verifyGenesisBlock(actual *skipchain.SkipBlock, expected *CreateGenesisBlock) error {
 	if !actual.CalculateHash().Equal(actual.Hash) {
-		return xerrors.New("got a corrupted block")
+		return errors.New("got a corrupted block")
 	}
 
 	// check the block is like the proposal
 	ok, err := actual.Roster.Equal(&expected.Roster)
 	if err != nil {
-		return xerrors.Errorf("roster comparison: %v", err)
+		return fmt.Errorf("roster comparison: %v", err)
 	}
 	if !ok {
-		return xerrors.New("wrong roster in genesis block")
+		return errors.New("wrong roster in genesis block")
 	}
 
 	darcID, err := extractDarcID(actual)
 	if err != nil {
-		return xerrors.Errorf("darc id: %v", err)
+		return fmt.Errorf("darc id: %v", err)
 	}
 
 	if !darcID.Equal(expected.GenesisDarc.GetID()) {
-		return xerrors.New("wrong darc spawned")
+		return errors.New("wrong darc spawned")
 	}
 
 	return nil
@@ -876,26 +875,26 @@ func extractDarcID(sb *skipchain.SkipBlock) (darc.ID, error) {
 	var data DataBody
 	err := protobuf.Decode(sb.Payload, &data)
 	if err != nil {
-		return nil, xerrors.Errorf("fail to decode data: %v", err)
+		return nil, fmt.Errorf("fail to decode data: %v", err)
 	}
 
 	if len(data.TxResults) != 1 {
-		return nil, xerrors.New("genesis block should only have one transaction")
+		return nil, errors.New("genesis block should only have one transaction")
 	}
 
 	if len(data.TxResults[0].ClientTransaction.Instructions) != 1 {
-		return nil, xerrors.New("genesis transaction should have exactly one instructions")
+		return nil, errors.New("genesis transaction should have exactly one instructions")
 	}
 
 	instr := data.TxResults[0].ClientTransaction.Instructions[0]
 	if instr.Spawn == nil {
-		return nil, xerrors.New("didn't get a spawn instruction")
+		return nil, errors.New("didn't get a spawn instruction")
 	}
 
 	var darc darc.Darc
 	err = protobuf.Decode(instr.Spawn.Args.Search("darc"), &darc)
 	if err != nil {
-		return nil, xerrors.Errorf("fail to decode the darc: %v", err)
+		return nil, fmt.Errorf("fail to decode the darc: %v", err)
 	}
 
 	return darc.GetID(), nil

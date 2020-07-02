@@ -4,6 +4,8 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"errors"
+	"fmt"
 	"io"
 	"testing"
 
@@ -16,7 +18,6 @@ import (
 	"go.dedis.ch/kyber/v3/util/key"
 	"go.dedis.ch/kyber/v3/util/random"
 	"go.dedis.ch/onet/v3/log"
-	"golang.org/x/xerrors"
 )
 
 var suite = suites.MustFind("Ed25519")
@@ -106,7 +107,7 @@ func CreateDKGs(suite dkg.Suite, nbrNodes, threshold int) (dkgs []*dkg.DistKeyGe
 		dkgs[i], err = dkg.NewDistKeyGenerator(suite,
 			scalars[i], points, threshold)
 		if err != nil {
-			err = xerrors.Errorf("creating new distirbuted key generator: %v", err)
+			err = fmt.Errorf("creating new distirbuted key generator: %v", err)
 			return
 		}
 	}
@@ -116,12 +117,12 @@ func CreateDKGs(suite dkg.Suite, nbrNodes, threshold int) (dkgs []*dkg.DistKeyGe
 		responses[i] = make([]*dkg.Response, nbrNodes)
 		deals, err := p.Deals()
 		if err != nil {
-			return nil, xerrors.Errorf("getting deals: %v", err)
+			return nil, fmt.Errorf("getting deals: %v", err)
 		}
 		for j, d := range deals {
 			responses[i][j], err = dkgs[j].ProcessDeal(d)
 			if err != nil {
-				return nil, xerrors.Errorf("processing deals: %v", err)
+				return nil, fmt.Errorf("processing deals: %v", err)
 			}
 		}
 	}
@@ -134,11 +135,11 @@ func CreateDKGs(suite dkg.Suite, nbrNodes, threshold int) (dkgs []*dkg.DistKeyGe
 					justification, err := p.ProcessResponse(r)
 					if err != nil {
 						return nil,
-							xerrors.Errorf("processing responses: %v", err)
+							fmt.Errorf("processing responses: %v", err)
 					}
 					if justification != nil {
 						return nil,
-							xerrors.New("there should be no justification")
+							errors.New("there should be no justification")
 					}
 				}
 			}
@@ -148,7 +149,7 @@ func CreateDKGs(suite dkg.Suite, nbrNodes, threshold int) (dkgs []*dkg.DistKeyGe
 	// Verify if all is OK
 	for _, p := range dkgs {
 		if !p.Certified() {
-			return nil, xerrors.New("one of the dkgs is not finished yet")
+			return nil, errors.New("one of the dkgs is not finished yet")
 		}
 	}
 	return
@@ -168,19 +169,19 @@ func aeadSeal(symKey, data []byte) ([]byte, error) {
 	block, err := aes.NewCipher(symKey)
 	if err != nil {
 		return nil,
-			xerrors.Errorf("creating aes cipher block instance: %v", err)
+			fmt.Errorf("creating aes cipher block instance: %v", err)
 	}
 
 	// Never use more than 2^32 random nonces with a given key because of the risk of a repeat.
 	nonce := make([]byte, nonceLen)
 	_, err = io.ReadFull(rand.Reader, nonce)
 	if err != nil {
-		return nil, xerrors.Errorf("reading nonce: %v", err)
+		return nil, fmt.Errorf("reading nonce: %v", err)
 	}
 
 	aesgcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, xerrors.Errorf("creating aesgcm instance: %v", err)
+		return nil, fmt.Errorf("creating aesgcm instance: %v", err)
 	}
 	encData := aesgcm.Seal(nil, nonce, data, nil)
 	encData = append(encData, nonce...)
@@ -191,17 +192,17 @@ func aeadOpen(t *testing.T, key, ciphertext []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil,
-			xerrors.Errorf("creating aes cipher block instance: %v", err)
+			fmt.Errorf("creating aes cipher block instance: %v", err)
 	}
 
 	aesgcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, xerrors.Errorf("creating aesgcm instance: %v", err)
+		return nil, fmt.Errorf("creating aesgcm instance: %v", err)
 	}
 	require.NoError(t, err)
 
 	if len(ciphertext) < 12 {
-		return nil, xerrors.New("ciphertext too short")
+		return nil, errors.New("ciphertext too short")
 	}
 	nonce := ciphertext[len(ciphertext)-nonceLen:]
 	out, err := aesgcm.Open(nil, nonce, ciphertext[0:len(ciphertext)-nonceLen], nil)

@@ -3,6 +3,7 @@ package personhood
 import (
 	"crypto/sha256"
 	"encoding/binary"
+	"errors"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -13,7 +14,6 @@ import (
 	"go.dedis.ch/kyber/v3/util/key"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
-	"golang.org/x/xerrors"
 )
 
 // PopPartySpawn returns the instanceID of the newly created pop-party, or an error if it
@@ -187,7 +187,7 @@ func PopPartyMineDetailed(
 ) (*byzcoin.AddTxResponse, error) {
 	if (coinIID == nil && d == nil) ||
 		(coinIID != nil && d != nil) {
-		return nil, xerrors.New("either set coinIID or d, but not both")
+		return nil, errors.New("either set coinIID or d, but not both")
 	}
 	if atts == nil {
 		popProof, err := cl.GetProofAfter(popIID.Slice(), true, barrier)
@@ -199,7 +199,7 @@ func PopPartyMineDetailed(
 			return nil, err
 		}
 		if cID != contracts.ContractPopPartyID {
-			return nil, xerrors.New(
+			return nil, errors.New(
 				"given popIID is not of contract-type PopParty")
 		}
 		var pop contracts.PopPartyStruct
@@ -218,7 +218,7 @@ func PopPartyMineDetailed(
 		}
 	}
 	if mine == -1 {
-		return nil, xerrors.New(
+		return nil, errors.New(
 			"didn't find public key of keypair in attendees")
 	}
 

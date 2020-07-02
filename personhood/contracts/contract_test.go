@@ -2,12 +2,12 @@ package contracts
 
 import (
 	"errors"
+	"fmt"
 
 	"go.dedis.ch/cothority/v3/byzcoin/contracts"
 	"go.dedis.ch/protobuf"
 
 	"go.dedis.ch/kyber/v3/util/random"
-	"golang.org/x/xerrors"
 
 	"go.dedis.ch/cothority/v3"
 
@@ -72,7 +72,7 @@ func (s *rstSimul) Process(scs byzcoin.StateChanges) {
 }
 
 func (s *rstSimul) GetSignerCounter(id darc.Identity) (uint64, error) {
-	return 0, xerrors.Errorf("not yet implemented")
+	return 0, fmt.Errorf("not yet implemented")
 }
 
 func (s *rstSimul) addDarc(signer *darc.Identity, desc string) (*darc.Darc,
@@ -85,7 +85,7 @@ func (s *rstSimul) addDarc(signer *darc.Identity, desc string) (*darc.Darc,
 	d := darc.NewDarc(darc.InitRules(ids, ids), []byte(desc))
 	buf, err := d.ToProto()
 	if err != nil {
-		return nil, xerrors.Errorf("couldn't convert darc to protobuf: %+v",
+		return nil, fmt.Errorf("couldn't convert darc to protobuf: %v",
 			err)
 	}
 	s.values[string(d.GetBaseID())] = byzcoin.StateChangeBody{
@@ -104,7 +104,7 @@ func (s *rstSimul) createCoin(name string, value uint64) (id byzcoin.InstanceID,
 	id = byzcoin.NewInstanceID(random.Bits(256, true, random.New()))
 	coinBuf, err := protobuf.Encode(&coin)
 	if err != nil {
-		err = xerrors.Errorf("couldn't encode coin: %+v", err)
+		err = fmt.Errorf("couldn't encode coin: %v", err)
 	}
 	s.values[string(id[:])] = byzcoin.StateChangeBody{
 		StateAction: byzcoin.Create,
@@ -119,12 +119,12 @@ func (s *rstSimul) createCoin(name string, value uint64) (id byzcoin.InstanceID,
 func (s *rstSimul) setCoin(id byzcoin.InstanceID, value uint64) error {
 	coin, err := s.getCoin(id)
 	if err != nil {
-		return xerrors.Errorf("couldn't get coin: %+v", err)
+		return fmt.Errorf("couldn't get coin: %v", err)
 	}
 	coin.Value = value
 	coinBuf, err := protobuf.Encode(&coin)
 	if err != nil {
-		return xerrors.Errorf("couldn't encode coin: %+v", err)
+		return fmt.Errorf("couldn't encode coin: %v", err)
 	}
 	s.values[string(id[:])] = byzcoin.StateChangeBody{
 		StateAction: byzcoin.Update,
@@ -139,16 +139,16 @@ func (s *rstSimul) setCoin(id byzcoin.InstanceID, value uint64) error {
 func (s *rstSimul) getCoin(id byzcoin.InstanceID) (coin byzcoin.Coin, err error) {
 	sc, found := s.values[string(id[:])]
 	if !found {
-		err = xerrors.New("didn't find this coin")
+		err = errors.New("didn't find this coin")
 		return
 	}
 	if sc.ContractID != contracts.ContractCoinID {
-		err = xerrors.Errorf("id doesn't point to a coin, but to '%s'",
+		err = fmt.Errorf("id doesn't point to a coin, but to '%s'",
 			sc.ContractID)
 		return
 	}
 	if err = protobuf.Decode(sc.Value, &coin); err != nil {
-		err = xerrors.Errorf("couldn't decode coin: %+v", err)
+		err = fmt.Errorf("couldn't decode coin: %v", err)
 	}
 	return
 }
@@ -162,17 +162,17 @@ func (s *rstSimul) withdrawCoin(id byzcoin.InstanceID,
 	value uint64) (updated, withdrawn byzcoin.Coin, err error) {
 	updated, err = s.getCoin(id)
 	if err != nil {
-		err = xerrors.Errorf("couldn't get coin: %+v", err)
+		err = fmt.Errorf("couldn't get coin: %v", err)
 		return
 	}
 	if updated.Value < value {
-		err = xerrors.New("coin doesn't have enough value")
+		err = errors.New("coin doesn't have enough value")
 		return
 	}
 	updated.Value -= value
 	err = s.setCoin(id, updated.Value)
 	if err != nil {
-		err = xerrors.Errorf("couldn't set coin to new value: %+v", err)
+		err = fmt.Errorf("couldn't set coin to new value: %v", err)
 		return
 	}
 	withdrawn.Name = updated.Name

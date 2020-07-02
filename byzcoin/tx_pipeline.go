@@ -2,6 +2,7 @@ package byzcoin
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -10,7 +11,6 @@ import (
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
-	"golang.org/x/xerrors"
 )
 
 // collectTxResult contains the aggregated response of the conodes to the
@@ -107,7 +107,7 @@ func (s *defaultTxProcessor) CollectTx() (*collectTxResult, error) {
 	if err != nil {
 		log.Error(s.ServerIdentity(), "couldn't get configuration - this is bad and probably "+
 			"a problem with the database! ", err)
-		return nil, xerrors.Errorf("reading config: %v", err)
+		return nil, fmt.Errorf("reading config: %v", err)
 	}
 
 	if s.skService().ChainIsProcessing(s.scID) {
@@ -121,7 +121,7 @@ func (s *defaultTxProcessor) CollectTx() (*collectTxResult, error) {
 		log.Errorf("Error while searching for %x", s.scID[:])
 		log.Error("DB is in bad state and cannot find skipchain anymore."+
 			" This function should never be called on a skipchain that does not exist.", err)
-		return nil, xerrors.Errorf("reading latest: %v", err)
+		return nil, fmt.Errorf("reading latest: %v", err)
 	}
 
 	// Keep track of the latest block for the processing
@@ -139,7 +139,7 @@ func (s *defaultTxProcessor) CollectTx() (*collectTxResult, error) {
 			" e.g., the protocol does not exist."+
 			" Hence, we cannot recover from this failure without putting"+
 			" the server in a strange state, so we panic.", err)
-		return nil, xerrors.Errorf("creating protocol: %v", err)
+		return nil, fmt.Errorf("creating protocol: %v", err)
 	}
 	root := proto.(*CollectTxProtocol)
 	root.SkipchainID = s.scID
@@ -151,7 +151,7 @@ func (s *defaultTxProcessor) CollectTx() (*collectTxResult, error) {
 			" Start() only returns an error when the protocol is not initialised correctly,"+
 			" e.g., not all the required fields are set."+
 			" If you see this message then there may be a programmer error.", err)
-		return nil, xerrors.Errorf("starting protocol: %v", err)
+		return nil, fmt.Errorf("starting protocol: %v", err)
 	}
 
 	// When we poll, the child nodes must reply within half of the block
@@ -201,12 +201,12 @@ func (s *defaultTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcesso
 	latest := s.latest
 	s.Unlock()
 	if latest == nil {
-		return nil, xerrors.New("missing latest block in processor")
+		return nil, errors.New("missing latest block in processor")
 	}
 
 	header, err := decodeBlockHeader(latest)
 	if err != nil {
-		return nil, xerrors.Errorf("decoding header: %v", err)
+		return nil, fmt.Errorf("decoding header: %v", err)
 	}
 
 	tx.Instructions.SetVersion(header.Version)
@@ -261,7 +261,7 @@ func (s *defaultTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcesso
 func (s *defaultTxProcessor) ProposeBlock(state *txProcessorState) error {
 	config, err := state.sst.LoadConfig()
 	if err != nil {
-		return xerrors.Errorf("reading trie: %v", err)
+		return fmt.Errorf("reading trie: %v", err)
 	}
 	_, err = s.createNewBlock(s.scID, &config.Roster, state.txs)
 	return cothority.ErrorOrNil(err, "creating block")

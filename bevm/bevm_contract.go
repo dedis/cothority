@@ -2,6 +2,7 @@ package bevm
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math/big"
 	"strings"
@@ -15,7 +16,6 @@ import (
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
-	"golang.org/x/xerrors"
 )
 
 // ContractBEvmID identifies the ByzCoin contract that handles Ethereum
@@ -48,7 +48,7 @@ func contractBEvmFromBytes(in []byte) (byzcoin.Contract, error) {
 
 	err := protobuf.Decode(in, &contract.State)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to decode BEvm contract "+
+		return nil, fmt.Errorf("failed to decode BEvm contract "+
 			"state: %v", err)
 	}
 
@@ -67,7 +67,7 @@ func NewEvmDb(es *State, roStateTrie byzcoin.ReadOnlyStateTrie,
 	instanceID byzcoin.InstanceID) (*state.StateDB, error) {
 	byzDb, err := NewServerByzDatabase(instanceID, es.KeyList, roStateTrie)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to create new ServerByzDatabase "+
+		return nil, fmt.Errorf("failed to create new ServerByzDatabase "+
 			"for BEvm: %v", err)
 	}
 
@@ -82,26 +82,26 @@ func NewContractState(stateDb *state.StateDB) (*State,
 	// Commit the underlying databases first
 	root, err := stateDb.Commit(true)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to commit EVM "+
+		return nil, nil, fmt.Errorf("failed to commit EVM "+
 			"state DB: %v", err)
 	}
 
 	err = stateDb.Database().TrieDB().Commit(root, true)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to commit EVM TrieDB: %v", err)
+		return nil, nil, fmt.Errorf("failed to commit EVM TrieDB: %v", err)
 	}
 
 	// Retrieve the low-level database
 	byzDb, ok := stateDb.Database().TrieDB().DiskDB().(*ServerByzDatabase)
 	if !ok {
-		return nil, nil, xerrors.New("internal error: EVM State DB is not " +
+		return nil, nil, errors.New("internal error: EVM State DB is not " +
 			"of expected type")
 	}
 
 	// Dump the low-level database contents changes
 	stateChanges, keyList, err := byzDb.Dump()
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to dump EVM state DB: %v", err)
+		return nil, nil, fmt.Errorf("failed to dump EVM state DB: %v", err)
 	}
 
 	// Build the new EVM state
@@ -115,7 +115,7 @@ func DeleteValues(keyList []string,
 	// Retrieve the low-level database
 	byzDb, ok := stateDb.Database().TrieDB().DiskDB().(*ServerByzDatabase)
 	if !ok {
-		return nil, xerrors.New("internal error: EVM State DB is not " +
+		return nil, errors.New("internal error: EVM State DB is not " +
 			"of expected type")
 	}
 
@@ -123,7 +123,7 @@ func DeleteValues(keyList []string,
 	for _, key := range keyList {
 		err := byzDb.Delete([]byte(key))
 		if err != nil {
-			return nil, xerrors.Errorf("failed to delete EVM state DB "+
+			return nil, fmt.Errorf("failed to delete EVM state DB "+
 				"values: %v", err)
 		}
 	}
@@ -131,12 +131,12 @@ func DeleteValues(keyList []string,
 	// Dump the low-level database contents changes
 	stateChanges, keyList, err := byzDb.Dump()
 	if err != nil {
-		return nil, xerrors.Errorf("failed to dump EVM state DB: %v", err)
+		return nil, fmt.Errorf("failed to dump EVM state DB: %v", err)
 	}
 
 	// Sanity check: the resulted list of keys should be empty
 	if len(keyList) != 0 {
-		return nil, xerrors.New("internal error: DeleteValues() does not " +
+		return nil, errors.New("internal error: DeleteValues() does not " +
 			"produce an empty key list")
 	}
 
@@ -154,19 +154,19 @@ func (c *contractBEvm) Spawn(rst byzcoin.ReadOnlyStateTrie,
 
 	stateDb, err := NewEvmDb(&c.State, rst, instanceID)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to creating new EVM "+
+		return nil, nil, fmt.Errorf("failed to creating new EVM "+
 			"state DB for BEvm: %v", err)
 	}
 
 	contractState, _, err := NewContractState(stateDb)
 	if err != nil {
 		return nil, nil,
-			xerrors.Errorf("failed to create new BEvm contract state: %v", err)
+			fmt.Errorf("failed to create new BEvm contract state: %v", err)
 	}
 
 	contractData, err := protobuf.Encode(contractState)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to encode BEvm "+
+		return nil, nil, fmt.Errorf("failed to encode BEvm "+
 			"contract state: %v", err)
 	}
 	// State changes to ByzCoin contain a single Create
@@ -182,7 +182,7 @@ func (c *contractBEvm) Spawn(rst byzcoin.ReadOnlyStateTrie,
 func checkArguments(inst byzcoin.Instruction, names ...string) error {
 	for _, name := range names {
 		if inst.Invoke.Args.Search(name) == nil {
-			return xerrors.Errorf("missing '%s' argument in BEvm contract "+
+			return fmt.Errorf("missing '%s' argument in BEvm contract "+
 				"invocation", name)
 		}
 	}
@@ -198,12 +198,12 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 	var darcID darc.ID
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to get darcID: %v", err)
+		return nil, nil, fmt.Errorf("failed to get darcID: %v", err)
 	}
 
 	stateDb, err := NewEvmDb(&c.State, rst, inst.InstanceID)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to creatw new EVM "+
+		return nil, nil, fmt.Errorf("failed to creatw new EVM "+
 			"state DB: %v", err)
 	}
 
@@ -212,7 +212,7 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 		err := checkArguments(inst, "address", "amount")
 		if err != nil {
 			return nil, nil,
-				xerrors.Errorf("failed to validate arguments for 'credit' "+
+				fmt.Errorf("failed to validate arguments for 'credit' "+
 					"invocation on BEvm: %v", err)
 		}
 
@@ -224,14 +224,14 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 		contractState, stateChanges, err := NewContractState(stateDb)
 		if err != nil {
 			return nil, nil,
-				xerrors.Errorf("failed to create new BEvm contract "+
+				fmt.Errorf("failed to create new BEvm contract "+
 					"state: %v", err)
 		}
 
 		contractData, err := protobuf.Encode(contractState)
 		if err != nil {
 			return nil, nil,
-				xerrors.Errorf("failed to encode BEvm contract state: %v", err)
+				fmt.Errorf("failed to encode BEvm contract state: %v", err)
 		}
 
 		// State changes to ByzCoin contain the Update to the main contract
@@ -249,21 +249,21 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 		err := checkArguments(inst, "tx")
 		if err != nil {
 			return nil, nil,
-				xerrors.Errorf("failed to validate arguments for "+
+				fmt.Errorf("failed to validate arguments for "+
 					"'transaction' invocation on BEvm: %v", err)
 		}
 
 		var ethTx types.Transaction
 		err = ethTx.UnmarshalJSON(inst.Invoke.Args.Search("tx"))
 		if err != nil {
-			return nil, nil, xerrors.Errorf("failed to decode JSON for EVM "+
+			return nil, nil, fmt.Errorf("failed to decode JSON for EVM "+
 				"transaction: %v", err)
 		}
 
 		// Retrieve the TimeReader (we are actually called with a GlobalState)
 		tr, ok := rst.(byzcoin.TimeReader)
 		if !ok {
-			return nil, nil, xerrors.Errorf("internal error: cannot convert " +
+			return nil, nil, fmt.Errorf("internal error: cannot convert " +
 				"ReadOnlyStateTrie to TimeReader")
 		}
 
@@ -274,7 +274,7 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 		txReceipt, err := sendTx(&ethTx, stateDb, evmTs)
 		if err != nil {
 			return nil, nil,
-				xerrors.Errorf("failed to send transaction to EVM: %v", err)
+				fmt.Errorf("failed to send transaction to EVM: %v", err)
 		}
 
 		if txReceipt.ContractAddress.Hex() != nilAddress.Hex() {
@@ -288,21 +288,21 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 
 		eventStateChanges, err := handleLogs(inst, rst, txReceipt.Logs)
 		if err != nil {
-			return nil, nil, xerrors.Errorf("failed to handle EVM transaction "+
+			return nil, nil, fmt.Errorf("failed to handle EVM transaction "+
 				"logs: %v", err)
 		}
 
 		contractState, evmStateChanges, err := NewContractState(stateDb)
 		if err != nil {
 			return nil, nil,
-				xerrors.Errorf("failed to create new BEvm contract "+
+				fmt.Errorf("failed to create new BEvm contract "+
 					"state: %v", err)
 		}
 
 		contractData, err := protobuf.Encode(contractState)
 		if err != nil {
 			return nil, nil,
-				xerrors.Errorf("failed to encode BEvm contract state: %v", err)
+				fmt.Errorf("failed to encode BEvm contract state: %v", err)
 		}
 
 		// State changes to ByzCoin contain the Update to the main contract
@@ -352,7 +352,7 @@ func sendTx(tx *types.Transaction, stateDb *state.StateDB, timestamp uint64) (
 	receipt, usedGas, err := core.ApplyTransaction(chainConfig, bc,
 		&nilAddress, gp, stateDb, header, tx, ug, vmConfig)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to apply transaction "+
+		return nil, fmt.Errorf("failed to apply transaction "+
 			"on EVM: %v", err)
 	}
 
@@ -367,19 +367,19 @@ func (c *contractBEvm) Delete(rst byzcoin.ReadOnlyStateTrie,
 	var darcID darc.ID
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to get darcID: %v", err)
+		return nil, nil, fmt.Errorf("failed to get darcID: %v", err)
 	}
 
 	stateDb, err := NewEvmDb(&c.State, rst, inst.InstanceID)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to create new "+
+		return nil, nil, fmt.Errorf("failed to create new "+
 			"EVM state DB: %v", err)
 	}
 
 	stateChanges, err := DeleteValues(c.State.KeyList, stateDb)
 	if err != nil {
 		return nil, nil,
-			xerrors.Errorf("failed to delete values in EVM state DB: %v", err)
+			fmt.Errorf("failed to delete values in EVM state DB: %v", err)
 	}
 
 	// State changes to ByzCoin contain the Delete of the main contract state,
@@ -401,7 +401,7 @@ func handleLogs(inst byzcoin.Instruction, rst byzcoin.ReadOnlyStateTrie,
 	var err error
 	eventsAbi, err := abi.JSON(strings.NewReader(eventsAbiJSON))
 	if err != nil {
-		return nil, xerrors.Errorf("failed to decode ABI for EVM "+
+		return nil, fmt.Errorf("failed to decode ABI for EVM "+
 			"events: %v", err)
 	}
 
@@ -420,7 +420,7 @@ func handleLogs(inst byzcoin.Instruction, rst byzcoin.ReadOnlyStateTrie,
 		eventName, eventIface, err := unpackEvent(eventsAbi, eventID,
 			logEntry.Data)
 		if err != nil {
-			return nil, xerrors.Errorf("failed to unpack EVM "+
+			return nil, fmt.Errorf("failed to unpack EVM "+
 				"event: %v", err)
 		}
 
@@ -433,7 +433,7 @@ func handleLogs(inst byzcoin.Instruction, rst byzcoin.ReadOnlyStateTrie,
 		// Build the instruction from the event
 		instr, err := getInstrForEvent(eventName, eventIface)
 		if err != nil {
-			return nil, xerrors.Errorf("failed to build instruction "+
+			return nil, fmt.Errorf("failed to build instruction "+
 				"for EVM event: %v", err)
 		}
 
@@ -447,7 +447,7 @@ func handleLogs(inst byzcoin.Instruction, rst byzcoin.ReadOnlyStateTrie,
 			// Counter not yet available -- retrieve from Byzcoin
 			counter, err = rst.GetSignerCounter(identity)
 			if err != nil {
-				return nil, xerrors.Errorf("failed to get counter "+
+				return nil, fmt.Errorf("failed to get counter "+
 					"for identity '%s': %v", identity, err)
 			}
 		}
@@ -464,14 +464,14 @@ func handleLogs(inst byzcoin.Instruction, rst byzcoin.ReadOnlyStateTrie,
 
 		err = instr.SignWith([]byte{}, signer)
 		if err != nil {
-			return nil, xerrors.Errorf("failed to sign instruction "+
+			return nil, fmt.Errorf("failed to sign instruction "+
 				"from EVM: %v", err)
 		}
 
 		// Encode the instruction and store it in the state change's value
 		encodedInstr, err := protobuf.Encode(instr)
 		if err != nil {
-			return nil, xerrors.Errorf("failed to encode instruction "+
+			return nil, fmt.Errorf("failed to encode instruction "+
 				"from EVM: %v", err)
 		}
 

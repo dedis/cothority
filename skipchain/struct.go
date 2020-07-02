@@ -20,9 +20,8 @@ import (
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
-	"golang.org/x/xerrors"
 
-	bbolt "go.etcd.io/bbolt"
+	"go.etcd.io/bbolt"
 	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
@@ -859,7 +858,7 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 						}
 					}
 					if !found {
-						return fmt.Errorf("Tried to store unlinkable block: %+v", sb.SkipBlockFix)
+						return fmt.Errorf("Tried to store unlinkable block: %v", sb.SkipBlockFix)
 					}
 				}
 
@@ -1310,7 +1309,7 @@ func (db *SkipBlockDB) storeToTx(tx *bbolt.Tx, sb *SkipBlock) error {
 // The caller must ensure that this function is called from within a valid transaction.
 func (db *SkipBlockDB) getFromTx(tx *bbolt.Tx, sbID SkipBlockID) (*SkipBlock, error) {
 	if sbID == nil {
-		return nil, xerrors.New("cannot look up skipblock with ID == nil")
+		return nil, errors.New("cannot look up skipblock with ID == nil")
 	}
 
 	val := tx.Bucket(db.bucketName).Get(sbID)

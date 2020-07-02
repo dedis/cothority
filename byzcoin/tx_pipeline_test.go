@@ -3,11 +3,11 @@ package byzcoin
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"sync"
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3/darc"
-	"golang.org/x/xerrors"
 
 	"testing"
 	"time"
@@ -85,7 +85,7 @@ func (p *defaultMockTxProc) ProposeBlock(state *txProcessorState) error {
 	if len(p.proposed) <= p.failAt && p.failAt < len(p.proposed)+len(state.txs) {
 		// we only fail it once, so reset it here
 		p.failAt = len(p.txs)
-		return xerrors.New("simulating proposal failure")
+		return errors.New("simulating proposal failure")
 	}
 
 	p.proposed = append(p.proposed, state.txs...)

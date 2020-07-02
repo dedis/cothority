@@ -17,7 +17,6 @@ import (
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/app"
-	"golang.org/x/xerrors"
 
 	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
@@ -77,21 +76,21 @@ func main() {
 
 func authorize(c *cli.Context) error {
 	if c.NArg() < 2 {
-		return xerrors.New("please give: private.toml byzcoin-id")
+		return errors.New("please give: private.toml byzcoin-id")
 	}
 
 	cfg, err := app.LoadCothority(c.Args().First())
 	if err != nil {
-		return xerrors.Errorf("loading cothority: %v", err)
+		return fmt.Errorf("loading cothority: %v", err)
 	}
 	si, err := cfg.GetServerIdentity()
 	if err != nil {
-		return xerrors.Errorf("getting server identity: %v", err)
+		return fmt.Errorf("getting server identity: %v", err)
 	}
 
 	bc, err := hex.DecodeString(c.Args().Get(1))
 	if err != nil {
-		return xerrors.Errorf("decoding byzcoin-id: %v", err)
+		return fmt.Errorf("decoding byzcoin-id: %v", err)
 	}
 	log.Infof("Contacting %s to authorize byzcoin %x", si.Address, bc)
 	cl := calypso.NewClient(nil)
@@ -104,34 +103,34 @@ func authorize(c *cli.Context) error {
 func dkgStart(c *cli.Context) error {
 	bcArg := c.String("bc")
 	if bcArg == "" {
-		return xerrors.New("--bc flag is required")
+		return errors.New("--bc flag is required")
 	}
 
 	_, cl, err := lib.LoadConfig(bcArg)
 	if err != nil {
-		return xerrors.Errorf("failed to load config: %v", err)
+		return fmt.Errorf("failed to load config: %v", err)
 	}
 
 	instidstr := c.String("instid")
 	if instidstr == "" {
-		return xerrors.New("please provide an LTS instance ID with --instid")
+		return errors.New("please provide an LTS instance ID with --instid")
 	}
 
 	instid, err := hex.DecodeString(instidstr)
 	if err != nil {
-		return xerrors.Errorf("failed to decode LTS instance id: %v", err)
+		return fmt.Errorf("failed to decode LTS instance id: %v", err)
 	}
 
 	resp, err := cl.GetProof(instid)
 	if err != nil {
-		return xerrors.Errorf("failed to get proof: %v", err)
+		return fmt.Errorf("failed to get proof: %v", err)
 	}
 	exist, err := resp.Proof.InclusionProof.Exists(instid)
 	if err != nil {
-		return xerrors.Errorf("failed to get inclusion proof: %v", err)
+		return fmt.Errorf("failed to get inclusion proof: %v", err)
 	}
 	if !exist {
-		return xerrors.New("proof for the given \"--instid\" not found")
+		return errors.New("proof for the given \"--instid\" not found")
 	}
 
 	var ltsInfo calypso.LtsInstanceInfo
@@ -154,13 +153,13 @@ func dkgStart(c *cli.Context) error {
 		Proof: resp.Proof,
 	}, reply)
 	if err != nil {
-		return xerrors.Errorf("failed to send create LTS protobof: %v", err)
+		return fmt.Errorf("failed to send create LTS protobof: %v", err)
 	}
 
 	// Get the public key (X) as a string
 	keyBuf, err := reply.X.MarshalBinary()
 	if err != nil {
-		return xerrors.Errorf("failed to marshal X: %v", err)
+		return fmt.Errorf("failed to marshal X: %v", err)
 	}
 	keyStr := hex.EncodeToString(keyBuf)
 
@@ -168,7 +167,7 @@ func dkgStart(c *cli.Context) error {
 		reader := bytes.NewReader([]byte(keyStr))
 		_, err = io.Copy(os.Stdout, reader)
 		if err != nil {
-			return xerrors.Errorf("failed to copy to stdout: %v", err)
+			return fmt.Errorf("failed to copy to stdout: %v", err)
 		}
 		return nil
 	}
@@ -184,46 +183,46 @@ func dkgStart(c *cli.Context) error {
 func dkgInfo(c *cli.Context) error {
 	bcArg := c.String("bc")
 	if bcArg == "" {
-		return xerrors.New("--bc flag is required")
+		return errors.New("--bc flag is required")
 	}
 
 	_, cl, err := lib.LoadConfig(bcArg)
 	if err != nil {
-		return xerrors.New("failed to load config: " + err.Error())
+		return errors.New("failed to load config: " + err.Error())
 	}
 
 	instidstr := c.String("instid")
 	if instidstr == "" {
-		return xerrors.New("please provide an LTS instance ID with --instid")
+		return errors.New("please provide an LTS instance ID with --instid")
 	}
 
 	instid, err := hex.DecodeString(instidstr)
 	if err != nil {
-		return xerrors.New("failed to decode LTS instance id: " + err.Error())
+		return errors.New("failed to decode LTS instance id: " + err.Error())
 	}
 
 	resp, err := cl.GetProof(instid)
 	if err != nil {
-		return xerrors.New("failed to get proof: " + err.Error())
+		return errors.New("failed to get proof: " + err.Error())
 	}
 	exist, err := resp.Proof.InclusionProof.Exists(instid)
 	if err != nil {
-		return xerrors.New("failed to get inclusion proof: " + err.Error())
+		return errors.New("failed to get inclusion proof: " + err.Error())
 	}
 	if !exist {
-		return xerrors.New("proof for the given \"--instid\" not found")
+		return errors.New("proof for the given \"--instid\" not found")
 	}
 	val, cid, _, err := resp.Proof.Get(instid)
 	if err != nil {
-		return xerrors.New("couldn't get values: " + err.Error())
+		return errors.New("couldn't get values: " + err.Error())
 	}
 	if cid != calypso.ContractLongTermSecretID {
-		return xerrors.New("given instanceID is not from an LTS contract")
+		return errors.New("given instanceID is not from an LTS contract")
 	}
 	var ltsInfo calypso.LtsInstanceInfo
 	err = protobuf.Decode(val, &ltsInfo)
 	if err != nil {
-		return xerrors.New("couldn't decode info: " + err.Error())
+		return errors.New("couldn't decode info: " + err.Error())
 	}
 	log.Info("lts-roster is:", ltsInfo.Roster.List)
 	return nil
@@ -237,18 +236,18 @@ func reencrypt(c *cli.Context) error {
 
 	bcArg := c.String("bc")
 	if bcArg == "" {
-		return xerrors.New("--bc flag is required")
+		return errors.New("--bc flag is required")
 	}
 
 	_, cl, err := lib.LoadConfig(bcArg)
 	if err != nil {
-		return xerrors.Errorf("failed to load config: %v", err)
+		return fmt.Errorf("failed to load config: %v", err)
 	}
 
 	// needed to get the block interval for WaitProof
 	chainConfig, err := cl.GetChainConfig()
 	if err != nil {
-		return xerrors.Errorf("failed to get chain config: %v", err)
+		return fmt.Errorf("failed to get chain config: %v", err)
 	}
 
 	// Get and check the proof of an instance given an argument's name that
@@ -261,24 +260,24 @@ func reencrypt(c *cli.Context) error {
 		}
 		iid, err := hex.DecodeString(iidStr)
 		if err != nil {
-			return nil, xerrors.Errorf("failed to decode instance id: %v", err)
+			return nil, fmt.Errorf("failed to decode instance id: %v", err)
 		}
 		proof, err := cl.WaitProof(byzcoin.NewInstanceID(iid),
 			chainConfig.BlockInterval*10, nil)
 		if err != nil {
-			return nil, xerrors.Errorf("couldn't get proof: %v", err)
+			return nil, fmt.Errorf("couldn't get proof: %v", err)
 		}
 		exist, err := proof.InclusionProof.Exists(iid)
 		if err != nil {
 			return nil,
-				xerrors.Errorf("error while checking if proof exist: %v", err)
+				fmt.Errorf("error while checking if proof exist: %v", err)
 		}
 		if !exist {
-			return nil, xerrors.New("proof not found")
+			return nil, errors.New("proof not found")
 		}
 		match := proof.InclusionProof.Match(iid)
 		if !match {
-			return nil, xerrors.New("proof does not match")
+			return nil, errors.New("proof does not match")
 		}
 
 		return proof, nil
@@ -286,11 +285,11 @@ func reencrypt(c *cli.Context) error {
 
 	writeProof, err := getProof("writeid")
 	if err != nil {
-		return xerrors.Errorf("failed to get write proof: %v", err)
+		return fmt.Errorf("failed to get write proof: %v", err)
 	}
 	readProof, err := getProof("readid")
 	if err != nil {
-		return xerrors.Errorf("failed to get read proof: %v", err)
+		return fmt.Errorf("failed to get read proof: %v", err)
 	}
 
 	decryptKey := &calypso.DecryptKey{Write: *writeProof, Read: *readProof}
@@ -299,7 +298,7 @@ func reencrypt(c *cli.Context) error {
 	oc := onet.NewClient(cothority.Suite, calypso.ServiceName)
 	err = oc.SendProtobuf(cl.Roster.List[0], decryptKey, reply)
 	if err != nil {
-		return xerrors.Errorf("failed to send protobuf decryptkey: %v", err)
+		return fmt.Errorf("failed to send protobuf decryptkey: %v", err)
 	}
 
 	if c.Bool("export") {
@@ -307,12 +306,12 @@ func reencrypt(c *cli.Context) error {
 		// encoded and sent to STDOUT.
 		buf, err := protobuf.Encode(reply)
 		if err != nil {
-			return xerrors.Errorf("failed to encode reply: %v", err)
+			return fmt.Errorf("failed to encode reply: %v", err)
 		}
 		reader := bytes.NewReader(buf)
 		_, err = io.Copy(os.Stdout, reader)
 		if err != nil {
-			return xerrors.Errorf("failed to copy to stdout: %v", err)
+			return fmt.Errorf("failed to copy to stdout: %v", err)
 		}
 		return nil
 	}
@@ -331,23 +330,23 @@ func reencrypt(c *cli.Context) error {
 func decrypt(c *cli.Context) error {
 	decryptKeyReplyBuf, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
-		return xerrors.Errorf("failed to read from stdin: %v", err)
+		return fmt.Errorf("failed to read from stdin: %v", err)
 	}
 
 	dkr := calypso.DecryptKeyReply{}
 	err = protobuf.Decode(decryptKeyReplyBuf, &dkr)
 	if err != nil {
-		return xerrors.Errorf("failed to decode decryptKeyReply: %v", err)
+		return fmt.Errorf("failed to decode decryptKeyReply: %v", err)
 	}
 
 	bcArg := c.String("bc")
 	if bcArg == "" {
-		return xerrors.New("--bc flag is required")
+		return errors.New("--bc flag is required")
 	}
 
 	cfg, _, err := lib.LoadConfig(bcArg)
 	if err != nil {
-		return xerrors.Errorf("loading byzcoin config: %v", err)
+		return fmt.Errorf("loading byzcoin config: %v", err)
 	}
 
 	keyPath := c.String("key")
@@ -358,24 +357,24 @@ func decrypt(c *cli.Context) error {
 		signer, err = lib.LoadSigner(keyPath)
 	}
 	if err != nil {
-		return xerrors.Errorf("failed to load key file: %v", err)
+		return fmt.Errorf("failed to load key file: %v", err)
 	}
 
 	xc, err := signer.GetPrivate()
 	if err != nil {
-		return xerrors.Errorf("failed to get private key: %v", err)
+		return fmt.Errorf("failed to get private key: %v", err)
 	}
 
 	key, err := dkr.RecoverKey(xc)
 	if err != nil {
-		return xerrors.Errorf("failed to recover the key: %v", err)
+		return fmt.Errorf("failed to recover the key: %v", err)
 	}
 
 	if c.Bool("export") {
 		reader := bytes.NewReader(key)
 		_, err = io.Copy(os.Stdout, reader)
 		if err != nil {
-			return xerrors.Errorf("failed to copy to stdout: %v", err)
+			return fmt.Errorf("failed to copy to stdout: %v", err)
 		}
 		return nil
 	}

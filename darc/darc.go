@@ -47,8 +47,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
-	"golang.org/x/xerrors"
-
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/kyber/v3"
@@ -1088,7 +1086,7 @@ func (id IdentityEvmContract) Verify(msg, s []byte) error {
 		return nil
 	}
 
-	return xerrors.Errorf("invalid EVM Contract signature")
+	return fmt.Errorf("invalid EVM Contract signature")
 }
 
 // ParseIdentity returns an Identity structure that matches
@@ -1160,13 +1158,13 @@ func parseIDProxy(in string) (Identity, error) {
 func parseIDEvmContract(in string) (Identity, error) {
 	fields := strings.Split(in, ":")
 	if len(fields) != 2 {
-		return Identity{}, xerrors.Errorf("failed to parse EVM contract " +
+		return Identity{}, fmt.Errorf("failed to parse EVM contract " +
 			"identity: expected format 'evm_contract:bevm_id:contract_address'")
 	}
 
 	bevmID, err := hex.DecodeString(fields[0])
 	if err != nil {
-		return Identity{}, xerrors.Errorf("failed to parse BEvmID of EVM "+
+		return Identity{}, fmt.Errorf("failed to parse BEvmID of EVM "+
 			"contract identity: %v", err)
 	}
 

@@ -1,10 +1,9 @@
 package byzcoin
 
 import (
+	"errors"
 	"sync"
 	"time"
-
-	"golang.org/x/xerrors"
 )
 
 // heartbeat is used for monitoring signals (or heartbeats) that are suppose to
@@ -40,7 +39,7 @@ func (r *heartbeats) beat(key string) error {
 		c.beatChan <- true
 		return nil
 	}
-	return xerrors.New("key does not exist")
+	return errors.New("key does not exist")
 }
 
 func (r *heartbeats) getLatestHeartbeat(key string) (time.Time, error) {
@@ -52,7 +51,7 @@ func (r *heartbeats) getLatestHeartbeat(key string) (time.Time, error) {
 		t := <-resultsChan
 		return t, nil
 	}
-	return time.Unix(0, 0), xerrors.New("key does not exist")
+	return time.Unix(0, 0), errors.New("key does not exist")
 }
 
 func (r *heartbeats) closeAll() {
@@ -98,7 +97,7 @@ func (r *heartbeats) start(key string, timeout time.Duration, timeoutChan chan s
 	r.Lock()
 	defer r.Unlock()
 	if _, ok := r.heartbeatMap[key]; ok {
-		return xerrors.New("key already exists")
+		return errors.New("key already exists")
 	}
 
 	r.heartbeatMap[key] = &heartbeat{

@@ -19,7 +19,6 @@ import (
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
-	"golang.org/x/xerrors"
 )
 
 // WeiPerEther represents the number of Wei (the smallest currency denomination
@@ -46,7 +45,7 @@ func NewEvmContract(name string, abiJSON string, binData string) (
 	*EvmContract, error) {
 	contractAbi, err := abi.JSON(strings.NewReader(abiJSON))
 	if err != nil {
-		return nil, xerrors.Errorf("failed to decode JSON for "+
+		return nil, fmt.Errorf("failed to decode JSON for "+
 			"contract ABI: %v", err)
 	}
 
@@ -86,7 +85,7 @@ func unpackResult(contractAbi abi.ABI, methodName string,
 	resultBytes []byte) (interface{}, error) {
 	methodAbi, ok := contractAbi.Methods[methodName]
 	if !ok {
-		return nil, xerrors.Errorf("method \"%s\" does not exist for "+
+		return nil, fmt.Errorf("method \"%s\" does not exist for "+
 			"this contract", methodName)
 	}
 
@@ -107,7 +106,7 @@ func unpackData(contractAbi abi.ABI, objectName string,
 		err := contractAbi.Unpack(result.Interface(),
 			objectName, dataBytes)
 		if err != nil {
-			return nil, xerrors.Errorf("failed to unpack single "+
+			return nil, fmt.Errorf("failed to unpack single "+
 				"element of EVM data: %v", err)
 		}
 
@@ -138,7 +137,7 @@ func unpackData(contractAbi abi.ABI, objectName string,
 		err := contractAbi.Unpack(s.Interface(),
 			objectName, dataBytes)
 		if err != nil {
-			return nil, xerrors.Errorf("failed to unpack multiple "+
+			return nil, fmt.Errorf("failed to unpack multiple "+
 				"elements of EVM data: %v", err)
 		}
 
@@ -160,7 +159,7 @@ func unpackData(contractAbi abi.ABI, objectName string,
 		// err := contractInstance.Parent.Abi.Unpack(result.Interface(),
 		// 	method, resultBytes)
 		// if err != nil {
-		// 	return nil, xerrors.Errorf("unpacking multiple result: %v", err)
+		// 	return nil, fmt.Errorf("unpacking multiple result: %v", err)
 		// }
 
 		// for i := range abiOutputs {
@@ -188,7 +187,7 @@ type EvmAccount struct {
 func NewEvmAccount(privateKey string) (*EvmAccount, error) {
 	privKey, err := crypto.HexToECDSA(privateKey)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to decode private "+
+		return nil, fmt.Errorf("failed to decode private "+
 			"key for account creation: %v", err)
 	}
 
@@ -224,7 +223,7 @@ func NewBEvm(bcClient *byzcoin.Client, signer darc.Signer, gDarc *darc.Darc) (
 			Args:       byzcoin.Arguments{},
 		})
 	if err != nil {
-		return instanceID, xerrors.Errorf("failed to execute ByzCoin "+
+		return instanceID, fmt.Errorf("failed to execute ByzCoin "+
 			"spawn command for BEvm contract: %v", err)
 	}
 
@@ -250,7 +249,7 @@ func (client *Client) Delete() error {
 		ContractID: ContractBEvmID,
 	})
 	if err != nil {
-		return xerrors.Errorf("failed to execute ByzCoin "+
+		return fmt.Errorf("failed to execute ByzCoin "+
 			"delete command for BEvm instance: %v", err)
 	}
 
@@ -266,7 +265,7 @@ func (client *Client) Deploy(gasLimit uint64, gasPrice uint64, amount uint64,
 
 	packedArgs, err := contract.packConstructor(args...)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to pack arguments for "+
+		return nil, nil, fmt.Errorf("failed to pack arguments for "+
 			"contract constructor: %v", err)
 	}
 
@@ -275,7 +274,7 @@ func (client *Client) Deploy(gasLimit uint64, gasPrice uint64, amount uint64,
 		gasLimit, big.NewInt(int64(gasPrice)), callData)
 	signedTxBuffer, err := account.signAndMarshalTx(tx)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to prepare EVM transaction "+
+		return nil, nil, fmt.Errorf("failed to prepare EVM transaction "+
 			"for EVM contract deployment: %v", err)
 	}
 
@@ -283,7 +282,7 @@ func (client *Client) Deploy(gasLimit uint64, gasPrice uint64, amount uint64,
 		{Name: "tx", Value: signedTxBuffer},
 	})
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to invoke ByzCoin transaction "+
+		return nil, nil, fmt.Errorf("failed to invoke ByzCoin transaction "+
 			"for EVM contract deployment: %v", err)
 	}
 
@@ -307,7 +306,7 @@ func (client *Client) Transaction(gasLimit uint64, gasPrice uint64,
 
 	callData, err := contractInstance.packMethod(method, args...)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to pack arguments for contract "+
+		return nil, fmt.Errorf("failed to pack arguments for contract "+
 			"method '%s': %v", method, err)
 	}
 
@@ -316,7 +315,7 @@ func (client *Client) Transaction(gasLimit uint64, gasPrice uint64,
 		callData)
 	signedTxBuffer, err := account.signAndMarshalTx(tx)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to prepare EVM transaction for "+
+		return nil, fmt.Errorf("failed to prepare EVM transaction for "+
 			"EVM method execution: %v", err)
 	}
 
@@ -324,7 +323,7 @@ func (client *Client) Transaction(gasLimit uint64, gasPrice uint64,
 		{Name: "tx", Value: signedTxBuffer},
 	})
 	if err != nil {
-		return nil, xerrors.Errorf("failed to invoke ByzCoin transaction for "+
+		return nil, fmt.Errorf("failed to invoke ByzCoin transaction for "+
 			"EVM method execution: %v", err)
 	}
 
@@ -345,14 +344,14 @@ func (client *Client) Call(account *EvmAccount,
 	// Pack the method call and arguments
 	callData, err := contractInstance.packMethod(method, args...)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to pack arguments for contract "+
+		return nil, fmt.Errorf("failed to pack arguments for contract "+
 			"view method '%s': %v", method, err)
 	}
 
 	// Retrieve the EVM state
 	stateDb, err := getEvmDb(client.bcClient, client.instanceID)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to retrieve EVM state: %v", err)
+		return nil, fmt.Errorf("failed to retrieve EVM state: %v", err)
 	}
 
 	// Compute timestamp for the EVM
@@ -369,14 +368,14 @@ func (client *Client) Call(account *EvmAccount,
 		contractInstance.Address, callData, uint64(1*WeiPerEther),
 		big.NewInt(0))
 	if err != nil {
-		return nil, xerrors.Errorf("failed to execute EVM view "+
+		return nil, fmt.Errorf("failed to execute EVM view "+
 			"method: %v", err)
 	}
 
 	// Unpack the result
 	result, err := unpackResult(contractInstance.getAbi(), method, ret)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to unpack EVM view "+
+		return nil, fmt.Errorf("failed to unpack EVM view "+
 			"method result: %v", err)
 	}
 
@@ -391,7 +390,7 @@ func (client *Client) CreditAccount(amount *big.Int,
 		{Name: "amount", Value: amount.Bytes()},
 	})
 	if err != nil {
-		return nil, xerrors.Errorf("failed to credit EVM account: %v", err)
+		return nil, fmt.Errorf("failed to credit EVM account: %v", err)
 	}
 
 	log.Lvlf2("Credited %d wei on '%x'", amount, address)
@@ -404,7 +403,7 @@ func (client *Client) GetAccountBalance(address common.Address) (
 	*big.Int, error) {
 	stateDb, err := getEvmDb(client.bcClient, client.instanceID)
 	if err != nil {
-		return nil, xerrors.Errorf("failed toretrieve EVM state: %v", err)
+		return nil, fmt.Errorf("failed toretrieve EVM state: %v", err)
 	}
 
 	balance := stateDb.GetBalance(address)
@@ -429,7 +428,7 @@ func DecodeEvmArgs(encodedArgs []string, abi abi.Arguments) (
 		var arg interface{}
 		err := json.Unmarshal([]byte(argJSON), &arg)
 		if err != nil {
-			return nil, xerrors.Errorf("failed to decode JSON-encoded "+
+			return nil, fmt.Errorf("failed to decode JSON-encoded "+
 				"arguments for EVM call: %v", err)
 		}
 
@@ -438,13 +437,13 @@ func DecodeEvmArgs(encodedArgs []string, abi abi.Arguments) (
 		if arrayBracket == -1 {
 			args[i], err = decodeEvmValue(abiTypeStr, abi[i].Type.Type, arg)
 			if err != nil {
-				return nil, xerrors.Errorf("failed to decode simple-type "+
+				return nil, fmt.Errorf("failed to decode simple-type "+
 					"value for EVM call: %v", err)
 			}
 		} else {
 			args[i], err = decodeEvmArray(abiTypeStr[:arrayBracket], abi[i], arg)
 			if err != nil {
-				return nil, xerrors.Errorf("failed to decode array-type "+
+				return nil, fmt.Errorf("failed to decode array-type "+
 					"value for EVM call: %v", err)
 			}
 		}
@@ -466,13 +465,13 @@ func decodeEvmValue(abiType string, argType reflect.Type, arg interface{}) (
 		// We use strings to ensure big numbers are handled properly in JSON
 		argAsString, ok := arg.(string)
 		if !ok {
-			return nil, xerrors.Errorf("received '%v' for value of type "+
+			return nil, fmt.Errorf("received '%v' for value of type "+
 				"'%s', expected to be a JSON string", arg, abiType)
 		}
 
 		val, ok := big.NewInt(0).SetString(argAsString, 0)
 		if !ok {
-			return nil, xerrors.Errorf("invalid big number value: %v", arg)
+			return nil, fmt.Errorf("invalid big number value: %v", arg)
 		}
 
 		decodedArg = val
@@ -482,7 +481,7 @@ func decodeEvmValue(abiType string, argType reflect.Type, arg interface{}) (
 		// expects uint{32,16,8}
 		argAsFloat, ok := arg.(float64)
 		if !ok {
-			return nil, xerrors.Errorf("received '%v' for value of type "+
+			return nil, fmt.Errorf("received '%v' for value of type "+
 				"'%s', expected to be a JSON number", arg, abiType)
 		}
 
@@ -496,7 +495,7 @@ func decodeEvmValue(abiType string, argType reflect.Type, arg interface{}) (
 		// expects int{32,16,8}
 		argAsFloat, ok := arg.(float64)
 		if !ok {
-			return nil, xerrors.Errorf("received '%v' for value of type "+
+			return nil, fmt.Errorf("received '%v' for value of type "+
 				"'%s', expected to be a JSON number", arg, abiType)
 		}
 
@@ -508,7 +507,7 @@ func decodeEvmValue(abiType string, argType reflect.Type, arg interface{}) (
 	case "address":
 		argAsString, ok := arg.(string)
 		if !ok {
-			return nil, xerrors.Errorf("received '%v' for value of type "+
+			return nil, fmt.Errorf("received '%v' for value of type "+
 				"'%s', expected to be a JSON string", arg, abiType)
 		}
 
@@ -517,14 +516,14 @@ func decodeEvmValue(abiType string, argType reflect.Type, arg interface{}) (
 	case "string":
 		argAsString, ok := arg.(string)
 		if !ok {
-			return nil, xerrors.Errorf("received '%v' for value of type "+
+			return nil, fmt.Errorf("received '%v' for value of type "+
 				"'%s', expected to be a JSON string", arg, abiType)
 		}
 
 		decodedArg = argAsString
 
 	default:
-		return nil, xerrors.Errorf("unsupported type for EVM argument "+
+		return nil, fmt.Errorf("unsupported type for EVM argument "+
 			"value: %s", abiType)
 	}
 
@@ -538,11 +537,11 @@ func decodeEvmArray(abiType string, abi abi.Argument, arg interface{}) (
 
 	argAsArray, ok := arg.([]interface{})
 	if !ok {
-		return nil, xerrors.Errorf("received '%v' for value of type "+
+		return nil, fmt.Errorf("received '%v' for value of type "+
 			"'%s[%d]', expected to be a JSON array", arg, abiType, arr.Len())
 	}
 	if len(argAsArray) != arr.Len() {
-		return nil, xerrors.Errorf("incorrect array size %d for value of "+
+		return nil, fmt.Errorf("incorrect array size %d for value of "+
 			"type '%s[%d]'", len(argAsArray), abiType, arr.Len())
 	}
 
@@ -550,7 +549,7 @@ func decodeEvmArray(abiType string, abi abi.Argument, arg interface{}) (
 	for i := 0; i < arr.Len(); i++ {
 		val, err := decodeEvmValue(abiType, abi.Type.Type.Elem(), argAsArray[i])
 		if err != nil {
-			return nil, xerrors.Errorf("failed to decode element of "+
+			return nil, fmt.Errorf("failed to decode element of "+
 				"EVM array value: %v", err)
 		}
 		arr.Index(i).Set(reflect.ValueOf(val))
@@ -570,12 +569,12 @@ func (account EvmAccount) signAndMarshalTx(tx *types.Transaction) (
 
 	signedTx, err := types.SignTx(tx, signer, account.PrivateKey)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to sign EVM transaction: %v", err)
+		return nil, fmt.Errorf("failed to sign EVM transaction: %v", err)
 	}
 
 	signedBuffer, err := signedTx.MarshalJSON()
 	if err != nil {
-		return nil, xerrors.Errorf("failed to serialize EVM transaction "+
+		return nil, fmt.Errorf("failed to serialize EVM transaction "+
 			"to JSON: %v", err)
 	}
 
@@ -588,27 +587,27 @@ func getEvmDb(bcClient *byzcoin.Client, instID byzcoin.InstanceID) (
 	// Retrieve the proof of the Byzcoin instance
 	proofResponse, err := bcClient.GetProofFromLatest(instID[:])
 	if err != nil {
-		return nil, xerrors.Errorf("failed to retrieve BEvm instance: %v", err)
+		return nil, fmt.Errorf("failed to retrieve BEvm instance: %v", err)
 	}
 
 	// Extract the value from the proof
 	_, value, _, _, err := proofResponse.Proof.KeyValue()
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get BEvm instance value: %v", err)
+		return nil, fmt.Errorf("failed to get BEvm instance value: %v", err)
 	}
 
 	// Decode the proof value into an EVM State
 	var bs State
 	err = protobuf.Decode(value, &bs)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to decode BEvm instance "+
+		return nil, fmt.Errorf("failed to decode BEvm instance "+
 			"value: %v", err)
 	}
 
 	// Create a client ByzDB instance
 	byzDb, err := NewClientByzDatabase(instID, bcClient)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to creatw a new ByzDB "+
+		return nil, fmt.Errorf("failed to creatw a new ByzDB "+
 			"instance: %v", err)
 	}
 
@@ -626,7 +625,7 @@ func (client *Client) invoke(command string, args byzcoin.Arguments) (
 		Args:       args,
 	})
 	if err != nil {
-		return nil, xerrors.Errorf("failed to execute ByzCoin invoke "+
+		return nil, fmt.Errorf("failed to execute ByzCoin invoke "+
 			"instruction: %v", err)
 	}
 
@@ -657,7 +656,7 @@ func execByzCoinTx(bcClient *byzcoin.Client,
 	deleteInstr *byzcoin.Delete) (*byzcoin.ClientTransaction, error) {
 	counters, err := bcClient.GetSignerCounters(signer.Identity().String())
 	if err != nil {
-		return nil, xerrors.Errorf("failed to retrieve signer "+
+		return nil, fmt.Errorf("failed to retrieve signer "+
 			"counters from ByzCoin: %v", err)
 	}
 
@@ -669,13 +668,13 @@ func execByzCoinTx(bcClient *byzcoin.Client,
 		Delete:        deleteInstr,
 	})
 	if err != nil {
-		return nil, xerrors.Errorf("failed to create ByzCoin "+
+		return nil, fmt.Errorf("failed to create ByzCoin "+
 			"transaction: %v", err)
 	}
 
 	err = tx.FillSignersAndSignWith(signer)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to sign ByzCoin "+
+		return nil, fmt.Errorf("failed to sign ByzCoin "+
 			"transaction: %v", err)
 	}
 
@@ -683,7 +682,7 @@ func execByzCoinTx(bcClient *byzcoin.Client,
 	// global state - first we must wait for the new block to be created.
 	_, err = bcClient.AddTransactionAndWait(tx, 5)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to send ByzCoin "+
+		return nil, fmt.Errorf("failed to send ByzCoin "+
 			"transaction: %v", err)
 	}
 

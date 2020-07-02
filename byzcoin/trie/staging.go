@@ -1,9 +1,8 @@
 package trie
 
 import (
+	"errors"
 	"sync"
-
-	"golang.org/x/xerrors"
 )
 
 // OpType is the operation type that modifies state.
@@ -142,7 +141,7 @@ func (t *StagingTrie) Batch(pairs []KVPair) error {
 			}
 		case Nop:
 		default:
-			return xerrors.New("no such operation")
+			return errors.New("no such operation")
 		}
 	}
 	return nil
@@ -165,7 +164,7 @@ func (t *StagingTrie) Commit() error {
 					return err
 				}
 			default:
-				return xerrors.New("invalid instruction during commit")
+				return errors.New("invalid instruction during commit")
 			}
 		}
 		return nil
@@ -196,7 +195,7 @@ func (t *StagingTrie) GetRoot() []byte {
 					return err
 				}
 			default:
-				return xerrors.New("invalid instruction during get root")
+				return errors.New("invalid instruction during get root")
 			}
 		}
 		root = clone(t.source.GetRootWithBucket(b))
@@ -226,13 +225,13 @@ func (t *StagingTrie) GetProof(key []byte) (*Proof, error) {
 					return err
 				}
 			default:
-				return xerrors.New("invalid instruction during get proof")
+				return errors.New("invalid instruction during get proof")
 			}
 		}
 		// create the proof
 		rootKey := t.source.GetRootWithBucket(b)
 		if rootKey == nil {
-			return xerrors.New("no root key")
+			return errors.New("no root key")
 		}
 		p.Nonce = clone(t.source.nonce)
 		return t.source.getProof(0, rootKey, t.source.binSlice(key), p, b)
@@ -280,7 +279,7 @@ func (t *StagingTrie) sanityCheck() error {
 	defer t.Unlock()
 	for k := range t.deleteList {
 		if _, ok := t.overlay[k]; ok {
-			return xerrors.New("deleted key in overlay")
+			return errors.New("deleted key in overlay")
 		}
 	}
 	return nil

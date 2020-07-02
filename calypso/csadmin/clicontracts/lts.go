@@ -3,12 +3,12 @@ package clicontracts
 import (
 	"bytes"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 
 	"go.dedis.ch/onet/v3/log"
-	"golang.org/x/xerrors"
 
 	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -25,12 +25,12 @@ import (
 func LTSSpawn(c *cli.Context) error {
 	bcArg := c.String("bc")
 	if bcArg == "" {
-		return xerrors.New("--bc flag is required")
+		return errors.New("--bc flag is required")
 	}
 
 	cfg, cl, err := lib.LoadConfig(bcArg)
 	if err != nil {
-		return xerrors.Errorf("failed to load config: %v", err)
+		return fmt.Errorf("failed to load config: %v", err)
 	}
 
 	dstr := c.String("darc")
@@ -39,7 +39,7 @@ func LTSSpawn(c *cli.Context) error {
 	}
 	d, err := lib.GetDarcByString(cl, dstr)
 	if err != nil {
-		return xerrors.Errorf("failed to get darc by string: %v", err)
+		return fmt.Errorf("failed to get darc by string: %v", err)
 	}
 
 	var signer *darc.Signer
@@ -51,12 +51,12 @@ func LTSSpawn(c *cli.Context) error {
 		signer, err = lib.LoadKeyFromString(sstr)
 	}
 	if err != nil {
-		return xerrors.Errorf("failed to parse the signer: %v", err)
+		return fmt.Errorf("failed to parse the signer: %v", err)
 	}
 
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
 	if err != nil {
-		return xerrors.Errorf("failed to get the signer counters: %v", err)
+		return fmt.Errorf("failed to get the signer counters: %v", err)
 	}
 
 	export := c.Bool("export")
@@ -75,7 +75,7 @@ func LTSSpawn(c *cli.Context) error {
 	}
 	buf, err := protobuf.Encode(&ltsInstanceInfo)
 	if err != nil {
-		return xerrors.Errorf("failed to encode instance info: %v", err)
+		return fmt.Errorf("failed to encode instance info: %v", err)
 	}
 
 	inst := byzcoin.Instruction{
@@ -96,19 +96,19 @@ func LTSSpawn(c *cli.Context) error {
 
 	err = tx.FillSignersAndSignWith(*signer)
 	if err != nil {
-		return xerrors.Errorf("failed to fill signers and sign: %v", err)
+		return fmt.Errorf("failed to fill signers and sign: %v", err)
 	}
 
 	_, err = cl.AddTransactionAndWait(tx, 10)
 	if err != nil {
-		return xerrors.Errorf("failed to add transaction and wait: %v", err)
+		return fmt.Errorf("failed to add transaction and wait: %v", err)
 	}
 
 	newInstID := tx.Instructions[0].DeriveID("").Slice()
 
 	err = lib.WaitPropagation(c, cl)
 	if err != nil {
-		return xerrors.Errorf("waiting for block propagation: %v", err)
+		return fmt.Errorf("waiting for block propagation: %v", err)
 	}
 
 	iidStr := hex.EncodeToString(newInstID)
@@ -116,7 +116,7 @@ func LTSSpawn(c *cli.Context) error {
 		reader := bytes.NewReader([]byte(iidStr))
 		_, err = io.Copy(os.Stdout, reader)
 		if err != nil {
-			return xerrors.Errorf("failed to copy to stdout: %v", err)
+			return fmt.Errorf("failed to copy to stdout: %v", err)
 		}
 		return nil
 	}

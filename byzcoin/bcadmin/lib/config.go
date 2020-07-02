@@ -17,7 +17,6 @@ import (
 	"go.dedis.ch/onet/v3/app"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
-	"golang.org/x/xerrors"
 )
 
 // ConfigPath points to where the files will be stored by default.
@@ -60,7 +59,7 @@ func LoadKey(id darc.Identity) (*darc.Signer, error) {
 	// Check if this is an empty identity. Note: we expect an identity to use 32
 	// bytes
 	if bytes.Equal(id.GetPublicBytes(), emptyID) {
-		return nil, xerrors.New("failed to load the key because the identity is empty")
+		return nil, errors.New("failed to load the key because the identity is empty")
 	}
 	// Find private key file.
 	fn := fmt.Sprintf("key-%s.cfg", id)
@@ -81,7 +80,7 @@ func LoadKeyFromString(id string) (*darc.Signer, error) {
 func LoadSigner(fn string) (*darc.Signer, error) {
 	buf, err := ioutil.ReadFile(fn)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to read this path: '%s': %v", fn, err)
+		return nil, fmt.Errorf("failed to read this path: '%s': %v", fn, err)
 	}
 
 	var signer darc.Signer
@@ -104,7 +103,7 @@ func SaveKey(signer darc.Signer) error {
 	// perms = 0400 because there is key material inside this file.
 	f, err := os.OpenFile(fn, os.O_RDWR|os.O_CREATE, 0400)
 	if err != nil {
-		return xerrors.Errorf("could not write %v: %v", fn, err)
+		return fmt.Errorf("could not write %v: %v", fn, err)
 	}
 
 	buf, err := protobuf.Encode(&signer)
@@ -176,7 +175,7 @@ func LoadConfig(file string) (cfg Config, cl *byzcoin.Client, err error) {
 func ReadRoster(file string) (r *onet.Roster, err error) {
 	in, err := os.Open(file)
 	if err != nil {
-		return nil, xerrors.Errorf("Could not open roster %v: %v", file, err)
+		return nil, fmt.Errorf("Could not open roster %v: %v", file, err)
 	}
 	defer in.Close()
 
@@ -186,7 +185,7 @@ func ReadRoster(file string) (r *onet.Roster, err error) {
 	}
 
 	if len(group.Roster.List) == 0 {
-		return nil, xerrors.New("empty roster")
+		return nil, errors.New("empty roster")
 	}
 	return group.Roster, nil
 }

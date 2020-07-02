@@ -3,12 +3,13 @@ package clicontracts
 import (
 	"bytes"
 	"encoding/hex"
+	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 
 	"go.dedis.ch/onet/v3/log"
-	"golang.org/x/xerrors"
 
 	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3"
@@ -35,12 +36,12 @@ import (
 func WriteSpawn(c *cli.Context) error {
 	bcArg := c.String("bc")
 	if bcArg == "" {
-		return xerrors.New("--bc flag is required")
+		return errors.New("--bc flag is required")
 	}
 
 	cfg, cl, err := lib.LoadConfig(bcArg)
 	if err != nil {
-		return xerrors.Errorf("loading configuration: %v", err)
+		return fmt.Errorf("loading configuration: %v", err)
 	}
 
 	dstr := c.String("darc")
@@ -55,12 +56,12 @@ func WriteSpawn(c *cli.Context) error {
 	var dataBuf []byte
 	if c.Bool("readData") {
 		if c.Bool("readExtra") {
-			return xerrors.New("--readData can not be used toghether with" +
+			return errors.New("--readData can not be used toghether with" +
 				"--readExtra")
 		}
 		dataBuf, err = ioutil.ReadAll(os.Stdin)
 		if err != nil {
-			return xerrors.Errorf("failed to read from stdin: %v", err)
+			return fmt.Errorf("failed to read from stdin: %v", err)
 		}
 	} else {
 		dataBuf = []byte(c.String("data"))
@@ -70,7 +71,7 @@ func WriteSpawn(c *cli.Context) error {
 	if c.Bool("readExtra") {
 		extraDataBuf, err = ioutil.ReadAll(os.Stdin)
 		if err != nil {
-			return xerrors.Errorf("failed to read from stdin: %v", err)
+			return fmt.Errorf("failed to read from stdin: %v", err)
 		}
 		// We found out that a newline is automatically added when using pipes
 		extraDataBuf = bytes.TrimRight(extraDataBuf, "\n")
@@ -80,34 +81,34 @@ func WriteSpawn(c *cli.Context) error {
 
 	secret := c.String("secret")
 	if secret == "" {
-		return xerrors.New("please provide secret with --secret")
+		return errors.New("please provide secret with --secret")
 	}
 	secretBuf, err := hex.DecodeString(secret)
 	if err != nil {
-		return xerrors.Errorf("failed to decode secret as hexadecimal: %v", err)
+		return fmt.Errorf("failed to decode secret as hexadecimal: %v", err)
 	}
 
 	instidstr := c.String("instid")
 	if instidstr == "" {
-		return xerrors.New("please provide the LTS instance ID with --instid")
+		return errors.New("please provide the LTS instance ID with --instid")
 	}
 	instidbuf, err := hex.DecodeString(instidstr)
 	if err != nil {
-		return xerrors.Errorf("failed to decode instance id: %v", err)
+		return fmt.Errorf("failed to decode instance id: %v", err)
 	}
 
 	keyStr := c.String("key")
 	if keyStr == "" {
-		return xerrors.New("please provide the hex string public key with --key")
+		return errors.New("please provide the hex string public key with --key")
 	}
 	keyBuf, err := hex.DecodeString(keyStr)
 	if err != nil {
-		return xerrors.Errorf("failed to decode hex string key: %v", err)
+		return fmt.Errorf("failed to decode hex string key: %v", err)
 	}
 	p := cothority.Suite.Point()
 	err = p.UnmarshalBinary(keyBuf)
 	if err != nil {
-		return xerrors.Errorf("failed to unmarshal key: %v", err)
+		return fmt.Errorf("failed to unmarshal key: %v", err)
 	}
 
 	instid := byzcoin.NewInstanceID(instidbuf)
@@ -116,14 +117,14 @@ func WriteSpawn(c *cli.Context) error {
 
 	write := calypso.NewWrite(cothority.Suite, instid, d.GetBaseID(), p, secretBuf)
 	if write == nil {
-		return xerrors.New("got a nil write, this is due to a key that is " +
+		return errors.New("got a nil write, this is due to a key that is " +
 			"too long to be embeded")
 	}
 	write.Data = dataBuf
 	write.ExtraData = extraDataBuf
 	writeBuf, err := protobuf.Encode(write)
 	if err != nil {
-		return xerrors.Errorf("failed to encode Write struct: %v", err)
+		return fmt.Errorf("failed to encode Write struct: %v", err)
 	}
 
 	var signer *darc.Signer
@@ -135,12 +136,12 @@ func WriteSpawn(c *cli.Context) error {
 		signer, err = lib.LoadKeyFromString(sstr)
 	}
 	if err != nil {
-		return xerrors.Errorf("failed to parse the signer: %v", err)
+		return fmt.Errorf("failed to parse the signer: %v", err)
 	}
 
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
 	if err != nil {
-		return xerrors.Errorf("getting signer counters: %v", err)
+		return fmt.Errorf("getting signer counters: %v", err)
 	}
 
 	ctx := byzcoin.NewClientTransaction(byzcoin.CurrentVersion,
@@ -157,18 +158,18 @@ func WriteSpawn(c *cli.Context) error {
 
 	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {
-		return xerrors.Errorf("failed to sign transaction: %v", err)
+		return fmt.Errorf("failed to sign transaction: %v", err)
 	}
 
 	reply.InstanceID = ctx.Instructions[0].DeriveID("")
 	reply.AddTxResponse, err = cl.AddTransactionAndWait(ctx, 10)
 	if err != nil {
-		return xerrors.Errorf("failed to send transaction: %v", err)
+		return fmt.Errorf("failed to send transaction: %v", err)
 	}
 
 	err = lib.WaitPropagation(c, cl)
 	if err != nil {
-		return xerrors.Errorf("waiting for block propagation: %v", err)
+		return fmt.Errorf("waiting for block propagation: %v", err)
 	}
 
 	iidStr := hex.EncodeToString(reply.InstanceID.Slice())
@@ -176,7 +177,7 @@ func WriteSpawn(c *cli.Context) error {
 		reader := bytes.NewReader([]byte(iidStr))
 		_, err = io.Copy(os.Stdout, reader)
 		if err != nil {
-			return xerrors.Errorf("failed to copy to stdout: %v", err)
+			return fmt.Errorf("failed to copy to stdout: %v", err)
 		}
 		return nil
 	}
@@ -192,57 +193,57 @@ func WriteGet(c *cli.Context) error {
 
 	bcArg := c.String("bc")
 	if bcArg == "" {
-		return xerrors.New("--bc flag is required")
+		return errors.New("--bc flag is required")
 	}
 
 	_, cl, err := lib.LoadConfig(bcArg)
 	if err != nil {
-		return xerrors.Errorf("loading configuration: %v", err)
+		return fmt.Errorf("loading configuration: %v", err)
 	}
 
 	instID := c.String("instid")
 	if instID == "" {
-		return xerrors.New("--instid flag is required")
+		return errors.New("--instid flag is required")
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
-		return xerrors.New("failed to decode the instID string")
+		return errors.New("failed to decode the instID string")
 	}
 
 	pr, err := cl.GetProofFromLatest(instIDBuf)
 	if err != nil {
-		return xerrors.Errorf("couldn't get proof: %v", err)
+		return fmt.Errorf("couldn't get proof: %v", err)
 	}
 	proof := pr.Proof
 
 	exist, err := proof.InclusionProof.Exists(instIDBuf)
 	if err != nil {
-		return xerrors.Errorf("error while checking if proof exist: %v", err)
+		return fmt.Errorf("error while checking if proof exist: %v", err)
 	}
 	if !exist {
-		return xerrors.New("proof not found")
+		return errors.New("proof not found")
 	}
 
 	match := proof.InclusionProof.Match(instIDBuf)
 	if !match {
-		return xerrors.New("proof does not match")
+		return errors.New("proof does not match")
 	}
 
 	var write calypso.Write
 	err = proof.VerifyAndDecode(cothority.Suite, calypso.ContractWriteID, &write)
 	if err != nil {
-		return xerrors.Errorf("didn't get a write instance: %v", err)
+		return fmt.Errorf("didn't get a write instance: %v", err)
 	}
 
 	if c.Bool("export") {
 		_, buf, _, _, err := proof.KeyValue()
 		if err != nil {
-			return xerrors.Errorf("failed to get value from proof: %v", err)
+			return fmt.Errorf("failed to get value from proof: %v", err)
 		}
 		reader := bytes.NewReader(buf)
 		_, err = io.Copy(os.Stdout, reader)
 		if err != nil {
-			return xerrors.Errorf("failed to copy to stdout: %v", err)
+			return fmt.Errorf("failed to copy to stdout: %v", err)
 		}
 		return nil
 	}
@@ -250,12 +251,12 @@ func WriteGet(c *cli.Context) error {
 	if c.Bool("export") {
 		_, buf, _, _, err := proof.KeyValue()
 		if err != nil {
-			return xerrors.Errorf("failed to get value from proof: %v", err)
+			return fmt.Errorf("failed to get value from proof: %v", err)
 		}
 		reader := bytes.NewReader(buf)
 		_, err = io.Copy(os.Stdout, reader)
 		if err != nil {
-			return xerrors.Errorf("failed to copy to stdout: %v", err)
+			return fmt.Errorf("failed to copy to stdout: %v", err)
 		}
 		return nil
 	}

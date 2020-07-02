@@ -4,13 +4,12 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"math/big"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
-
-	"golang.org/x/xerrors"
 
 	"github.com/stretchr/testify/require"
 
@@ -48,7 +47,7 @@ func TestStateTrie(t *testing.T) {
 	// store with bad expected root hash should fail, value should not be inside
 	require.Error(t, st.VerifiedStoreAll([]StateChange{sc}, 5, CurrentVersion, []byte("badhash")))
 	_, _, _, _, err = st.GetValues(key)
-	require.True(t, xerrors.Is(err, errKeyNotSet))
+	require.True(t, errors.Is(err, errKeyNotSet))
 
 	// store the state changes normally using StoreAll and it should work
 	require.NoError(t, st.StoreAll([]StateChange{sc}, 5, CurrentVersion))
@@ -58,7 +57,7 @@ func TestStateTrie(t *testing.T) {
 	require.Equal(t, st.GetIndex(), 6)
 
 	_, _, _, _, err = st.GetValues(append(key, byte(0)))
-	require.True(t, xerrors.Is(err, errKeyNotSet))
+	require.True(t, errors.Is(err, errKeyNotSet))
 
 	val, ver, cid, did, err := st.GetValues(key)
 	require.NoError(t, err)

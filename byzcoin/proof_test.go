@@ -2,6 +2,7 @@ package byzcoin
 
 import (
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"testing"
@@ -16,8 +17,7 @@ import (
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
-	bbolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
+	"go.etcd.io/bbolt"
 )
 
 func TestNewProof(t *testing.T) {
@@ -46,16 +46,16 @@ func TestVerify(t *testing.T) {
 	require.Equal(t, s.key, key)
 	require.Equal(t, s.value, val)
 
-	require.True(t, xerrors.Is(p.Verify(s.genesis2.SkipChainID()), ErrorVerifySkipchain))
+	require.True(t, errors.Is(p.Verify(s.genesis2.SkipChainID()), ErrorVerifySkipchain))
 
 	p.Latest.BaseHeight = 123
-	require.True(t, xerrors.Is(p.Verify(s.genesis.SkipChainID()), ErrorVerifyHash))
+	require.True(t, errors.Is(p.Verify(s.genesis.SkipChainID()), ErrorVerifyHash))
 
 	p.Latest.Data, err = protobuf.Encode(&DataHeader{
 		TrieRoot: getSBID("123"),
 	})
 	require.NoError(t, err)
-	require.True(t, xerrors.Is(p.Verify(s.genesis.SkipChainID()), ErrorVerifyTrieRoot))
+	require.True(t, errors.Is(p.Verify(s.genesis.SkipChainID()), ErrorVerifyTrieRoot))
 }
 
 type sc struct {

@@ -1,6 +1,7 @@
 package byzcoin
 
 import (
+	"errors"
 	"sync"
 	"testing"
 	"time"
@@ -12,7 +13,6 @@ import (
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
-	"golang.org/x/xerrors"
 )
 
 func init() {
@@ -386,7 +386,7 @@ func newTestService(c *onet.Context) (onet.Service, error) {
 
 func (cs *corruptedService) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 	if cs.GetProofResponse == nil {
-		return nil, xerrors.New("empty response")
+		return nil, errors.New("empty response")
 	}
 
 	return cs.GetProofResponse, nil
@@ -394,7 +394,7 @@ func (cs *corruptedService) GetProof(req *GetProof) (resp *GetProofResponse, err
 
 func (cs *corruptedService) CreateGenesisBlock(req *CreateGenesisBlock) (*CreateGenesisBlockResponse, error) {
 	if cs.CreateGenesisBlockResponse == nil {
-		return nil, xerrors.New("empty response")
+		return nil, errors.New("empty response")
 	}
 
 	return cs.CreateGenesisBlockResponse, nil

@@ -8,8 +8,6 @@ import (
 
 	"go.dedis.ch/kyber/v3"
 
-	"golang.org/x/xerrors"
-
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/calypso"
 	"go.dedis.ch/onet/v3/network"
@@ -92,7 +90,7 @@ func (c ContractRoPaSci) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instr
 	var darcID darc.ID
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		err = xerrors.Errorf("couldn't get darc: %+v", err)
+		err = fmt.Errorf("couldn't get darc: %v", err)
 		return
 	}
 
@@ -171,7 +169,7 @@ func NewInstructionRoPaSciSpawn(did darc.ID, srps RoPaSciStruct) (
 	inst.InstanceID = byzcoin.NewInstanceID(did)
 	sBuf, err := protobuf.Encode(&srps)
 	if err != nil {
-		err = xerrors.Errorf("couldn't encode rpsStruct: %+v", err)
+		err = fmt.Errorf("couldn't encode rpsStruct: %v", err)
 		return
 	}
 	inst.Spawn = &byzcoin.Spawn{
@@ -196,7 +194,7 @@ func NewInstructionRoPaSciSpawnSecret(did darc.ID,
 	}
 	sBuf, err := protobuf.Encode(&secret)
 	if err != nil {
-		err = xerrors.Errorf("couldn't encode secret: %+v", err)
+		err = fmt.Errorf("couldn't encode secret: %v", err)
 	}
 	inst.Spawn.Args = append(inst.Spawn.Args, newArg("secret", sBuf))
 	return
@@ -385,7 +383,7 @@ func NewInstructionRoPaSciInvokeSecondSecret(acc byzcoin.InstanceID,
 	choice int, pub kyber.Point) (*byzcoin.Instruction, error) {
 	pubBuf, err := pub.MarshalBinary()
 	if err != nil {
-		return nil, xerrors.Errorf("couldn't marshal the point: %+v", err)
+		return nil, fmt.Errorf("couldn't marshal the point: %v", err)
 	}
 	return &byzcoin.Instruction{
 		InstanceID: emptyInstance,

@@ -3,12 +3,12 @@ package lib
 import (
 	"bytes"
 	"encoding/hex"
+	"errors"
+	"fmt"
 	"io"
 	"math/big"
 	"os"
 	"strings"
-
-	"golang.org/x/xerrors"
 
 	"go.dedis.ch/kyber/v3/util/random"
 
@@ -21,7 +21,7 @@ import (
 // StringToDarcID converts a string representation of a DARC to a byte array
 func StringToDarcID(id string) ([]byte, error) {
 	if id == "" {
-		return nil, xerrors.New("no string given")
+		return nil, errors.New("no string given")
 	}
 	if strings.HasPrefix(id, "darc:") {
 		id = id[5:]
@@ -33,7 +33,7 @@ func StringToDarcID(id string) ([]byte, error) {
 // byte array
 func StringToEd25519Buf(pub string) ([]byte, error) {
 	if pub == "" {
-		return nil, xerrors.New("no string given")
+		return nil, errors.New("no string given")
 	}
 	if strings.HasPrefix(pub, "ed25519:") {
 		pub = pub[8:]
@@ -61,10 +61,10 @@ func GetDarcByID(cl *byzcoin.Client, id []byte) (*darc.Darc, error) {
 
 	vs, cid, _, err := p.Get(id)
 	if err != nil {
-		return nil, xerrors.Errorf("could not find darc for %x", id)
+		return nil, fmt.Errorf("could not find darc for %x", id)
 	}
 	if cid != byzcoin.ContractDarcID {
-		return nil, xerrors.Errorf("unexpected contract %v, expected a darc", cid)
+		return nil, fmt.Errorf("unexpected contract %v, expected a darc", cid)
 	}
 
 	d, err := darc.NewFromProtobuf(vs)
@@ -94,12 +94,12 @@ func ExportTransaction(tx byzcoin.ClientTransaction) error {
 	tx.Instructions = instrs
 	buf, err := protobuf.Encode(&tx)
 	if err != nil {
-		return xerrors.Errorf("failed to encode tx: %v", err)
+		return fmt.Errorf("failed to encode tx: %v", err)
 	}
 	reader := bytes.NewReader(buf)
 	_, err = io.Copy(os.Stdout, reader)
 	if err != nil {
-		return xerrors.Errorf("failed to copy to stdout: %v", err)
+		return fmt.Errorf("failed to copy to stdout: %v", err)
 	}
 	return nil
 }

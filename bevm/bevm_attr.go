@@ -2,6 +2,7 @@ package bevm
 
 import (
 	"encoding/hex"
+	"fmt"
 	"math/big"
 	"reflect"
 	"regexp"
@@ -14,7 +15,6 @@ import (
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
-	"golang.org/x/xerrors"
 )
 
 // BEvmAttrID identifies the name of the `attr` used in DARC rules
@@ -101,14 +101,14 @@ func MakeBevmAttr(rst byzcoin.ReadOnlyStateTrie,
 		// Validate arguments
 		bevmID, contractAddress, methodName, err := validateArgs(attrArgs)
 		if err != nil {
-			return xerrors.Errorf("failed to validate '"+BEvmAttrID+"' attr "+
+			return fmt.Errorf("failed to validate '"+BEvmAttrID+"' attr "+
 				"arguments: %v", err)
 		}
 
 		// Retrieve BEvm instance
 		value, _, _, _, err := rst.GetValues(bevmID[:])
 		if err != nil {
-			return xerrors.Errorf("failed to retrieve BEvm instance %v: %v",
+			return fmt.Errorf("failed to retrieve BEvm instance %v: %v",
 				bevmID, err)
 		}
 
@@ -116,27 +116,27 @@ func MakeBevmAttr(rst byzcoin.ReadOnlyStateTrie,
 		var bs State
 		err = protobuf.Decode(value, &bs)
 		if err != nil {
-			return xerrors.Errorf("failed to decode BEvm instance state: %v",
+			return fmt.Errorf("failed to decode BEvm instance state: %v",
 				err)
 		}
 
 		// Retrieve EVM stateDB
 		byzDb, err := NewStateTrieByzDatabase(bevmID, rst)
 		if err != nil {
-			return xerrors.Errorf("failed to create stateTrie-backed database "+
+			return fmt.Errorf("failed to create stateTrie-backed database "+
 				"for BEvm: %v", err)
 		}
 
 		db := state.NewDatabase(byzDb)
 		stateDb, err := state.New(bs.RootHash, db)
 		if err != nil {
-			return xerrors.Errorf("failed to create new EVM db: %v", err)
+			return fmt.Errorf("failed to create new EVM db: %v", err)
 		}
 
 		// Retrieve the TimeReader (we are actually called with a GlobalState)
 		tr, ok := rst.(byzcoin.TimeReader)
 		if !ok {
-			return xerrors.Errorf("internal error: cannot convert " +
+			return fmt.Errorf("internal error: cannot convert " +
 				"ReadOnlyStateTrie to TimeReader")
 		}
 
@@ -151,7 +151,7 @@ func MakeBevmAttr(rst byzcoin.ReadOnlyStateTrie,
 		contractAbi, err := abi.JSON(strings.NewReader(
 			strings.ReplaceAll(abiTemplate, "#METHOD_NAME#", methodName)))
 		if err != nil {
-			return xerrors.Errorf("failed to parse ABI for EVM validation view "+
+			return fmt.Errorf("failed to parse ABI for EVM validation view "+
 				"method: %v", err)
 		}
 
@@ -171,7 +171,7 @@ func MakeBevmAttr(rst byzcoin.ReadOnlyStateTrie,
 			int64(rst.GetVersion()),
 			extra)
 		if err != nil {
-			return xerrors.Errorf("failed to pack args for EVM validation view "+
+			return fmt.Errorf("failed to pack args for EVM validation view "+
 				"method: %v", err)
 		}
 
@@ -180,26 +180,26 @@ func MakeBevmAttr(rst byzcoin.ReadOnlyStateTrie,
 			contractAddress, callData, uint64(1*WeiPerEther),
 			big.NewInt(0))
 		if err != nil {
-			return xerrors.Errorf("failed to execute EVM validation view "+
+			return fmt.Errorf("failed to execute EVM validation view "+
 				"method: %v (does the method exist?)", err)
 		}
 
 		// Unpack the result
 		result, err := unpackResult(contractAbi, methodName, ret)
 		if err != nil {
-			return xerrors.Errorf("failed to unpack EVM validation view "+
+			return fmt.Errorf("failed to unpack EVM validation view "+
 				"method result: %v (is the contract address valid?)", err)
 		}
 
 		errorMsg, ok := result.(string)
 		if !ok {
-			return xerrors.Errorf("EVM validation view method did not return "+
+			return fmt.Errorf("EVM validation view method did not return "+
 				"expected type: %+v (%+v)", result,
 				reflect.TypeOf(result))
 		}
 
 		if errorMsg != "" {
-			return xerrors.Errorf("'bevm' attribute failed verification: %v",
+			return fmt.Errorf("'bevm' attribute failed verification: %v",
 				errorMsg)
 		}
 
@@ -226,21 +226,21 @@ func validateArgs(attrArgs string) (bevmID byzcoin.InstanceID,
 	const errPrefix = "failed to parse '" + BEvmAttrID + "' attr arguments: "
 
 	if len(args) != 3 {
-		err = xerrors.Errorf(errPrefix+
+		err = fmt.Errorf(errPrefix+
 			"expected 3 arguments, got %d (format is %s)",
 			len(args), format)
 		return
 	}
 
 	if !rxInstanceID.MatchString(args[0]) {
-		err = xerrors.Errorf(errPrefix+
+		err = fmt.Errorf(errPrefix+
 			"argument #1 must be a BEvm instance ID in hex, received '%v'",
 			args[0])
 		return
 	}
 	id, err := hex.DecodeString(args[0])
 	if err != nil {
-		err = xerrors.Errorf(errPrefix+
+		err = fmt.Errorf(errPrefix+
 			"argument #1 must be a BEvm instance ID in hex, received '%v' "+
 			"(this should have errored before)", args[0])
 		return
@@ -248,7 +248,7 @@ func validateArgs(attrArgs string) (bevmID byzcoin.InstanceID,
 	bevmID = byzcoin.NewInstanceID(id)
 
 	if !rxEvmAddress.MatchString(args[1]) {
-		err = xerrors.Errorf(errPrefix+
+		err = fmt.Errorf(errPrefix+
 			"argument #2 must be an EVM contract address in hex, received '%v'",
 			args[1])
 		return
@@ -256,7 +256,7 @@ func validateArgs(attrArgs string) (bevmID byzcoin.InstanceID,
 	contractAddress = common.HexToAddress(args[1])
 
 	if !rxMethodName.MatchString(args[2]) {
-		err = xerrors.Errorf(errPrefix+
+		err = fmt.Errorf(errPrefix+
 			"argument #3 must be an method name, received '%v'",
 			args[2])
 		return

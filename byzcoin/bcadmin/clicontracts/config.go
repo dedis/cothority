@@ -1,11 +1,12 @@
 package clicontracts
 
 import (
+	"errors"
+	"fmt"
 	"strings"
 	"time"
 
 	"go.dedis.ch/onet/v3/log"
-	"golang.org/x/xerrors"
 
 	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3"
@@ -28,7 +29,7 @@ func ConfigInvokeUpdateConfig(c *cli.Context) error {
 	// ---
 	bcArg := c.String("bc")
 	if bcArg == "" {
-		return xerrors.New("--bc flag is required")
+		return errors.New("--bc flag is required")
 	}
 
 	cfg, cl, err := lib.LoadConfig(bcArg)
@@ -51,18 +52,18 @@ func ConfigInvokeUpdateConfig(c *cli.Context) error {
 	// Get the latest chain config
 	pr, err := cl.GetProofFromLatest(byzcoin.ConfigInstanceID.Slice())
 	if err != nil {
-		return xerrors.Errorf("couldn't get proof for chainConfig: %v", err)
+		return fmt.Errorf("couldn't get proof for chainConfig: %v", err)
 	}
 	proof := pr.Proof
 
 	_, value, _, _, err := proof.KeyValue()
 	if err != nil {
-		return xerrors.Errorf("couldn't get value out of proof: %v", err)
+		return fmt.Errorf("couldn't get value out of proof: %v", err)
 	}
 	config := byzcoin.ChainConfig{}
 	err = protobuf.DecodeWithConstructors(value, &config, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
-		return xerrors.Errorf("couldn't decode chainConfig: %v", err)
+		return fmt.Errorf("couldn't decode chainConfig: %v", err)
 	}
 
 	// BlockInterval
@@ -71,7 +72,7 @@ func ConfigInvokeUpdateConfig(c *cli.Context) error {
 	if blockInterval != "" {
 		duration, err := time.ParseDuration(blockInterval)
 		if err != nil {
-			return xerrors.Errorf("couldn't parse blockInterval: %v", err)
+			return fmt.Errorf("couldn't parse blockInterval: %v", err)
 		}
 		config.BlockInterval = duration
 	}
@@ -80,7 +81,7 @@ func ConfigInvokeUpdateConfig(c *cli.Context) error {
 	maxBlockSize := c.Int("maxBlockSize")
 	if maxBlockSize > 0 {
 		if maxBlockSize < 16000 && maxBlockSize > 8e6 {
-			return xerrors.New("maxBlockSize out of bounds: must be between 16e3 and 8e6")
+			return errors.New("maxBlockSize out of bounds: must be between 16e3 and 8e6")
 		}
 		config.MaxBlockSize = maxBlockSize
 	}
@@ -95,12 +96,12 @@ func ConfigInvokeUpdateConfig(c *cli.Context) error {
 
 	configBuf, err := protobuf.Encode(&config)
 	if err != nil {
-		return xerrors.Errorf("failed to encode config: %v", err)
+		return fmt.Errorf("failed to encode config: %v", err)
 	}
 
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
 	if err != nil {
-		return xerrors.Errorf("couldn't get counters: %v", err)
+		return fmt.Errorf("couldn't get counters: %v", err)
 	}
 
 	invoke := byzcoin.Invoke{
@@ -149,18 +150,18 @@ func ConfigInvokeUpdateConfig(c *cli.Context) error {
 	}
 	pr, err = cl.GetProofFromLatest(byzcoin.ConfigInstanceID.Slice())
 	if err != nil {
-		return xerrors.Errorf("couldn't get proof for config: %v", err)
+		return fmt.Errorf("couldn't get proof for config: %v", err)
 	}
 	proof = pr.Proof
 	_, resultBuf, _, _, err := proof.KeyValue()
 	if err != nil {
-		return xerrors.Errorf("couldn't get value out of proof: %v", err)
+		return fmt.Errorf("couldn't get value out of proof: %v", err)
 	}
 
 	contractConfig := byzcoin.ChainConfig{}
 	err = protobuf.Decode(resultBuf, &contractConfig)
 	if err != nil {
-		return xerrors.Errorf("failed to decode contractConfig: %v", err)
+		return fmt.Errorf("failed to decode contractConfig: %v", err)
 	}
 
 	newInstID := ctx.Instructions[0].DeriveID("").Slice()
@@ -174,7 +175,7 @@ func ConfigInvokeUpdateConfig(c *cli.Context) error {
 func ConfigGet(c *cli.Context) error {
 	bcArg := c.String("bc")
 	if bcArg == "" {
-		return xerrors.New("--bc flag is required")
+		return errors.New("--bc flag is required")
 	}
 
 	_, cl, err := lib.LoadConfig(bcArg)
@@ -185,18 +186,18 @@ func ConfigGet(c *cli.Context) error {
 	// Get the latest chain config
 	pr, err := cl.GetProofFromLatest(byzcoin.ConfigInstanceID.Slice())
 	if err != nil {
-		return xerrors.Errorf("couldn't get proof for chainConfig: %v", err)
+		return fmt.Errorf("couldn't get proof for chainConfig: %v", err)
 	}
 	proof := pr.Proof
 
 	_, value, _, _, err := proof.KeyValue()
 	if err != nil {
-		return xerrors.Errorf("couldn't get value out of proof: %v", err)
+		return fmt.Errorf("couldn't get value out of proof: %v", err)
 	}
 	config := byzcoin.ChainConfig{}
 	err = protobuf.DecodeWithConstructors(value, &config, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
-		return xerrors.Errorf("couldn't decode chainConfig: %v", err)
+		return fmt.Errorf("couldn't decode chainConfig: %v", err)
 	}
 
 	log.Infof("Here is the config data:\n%s", config)

@@ -1,10 +1,10 @@
 package bevm
 
 import (
+	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"go.dedis.ch/cothority/v3/byzcoin"
-	"golang.org/x/xerrors"
 )
 
 // Whitelist of EVM-spawnable Byzcoin contracts.
@@ -177,11 +177,11 @@ func getInstrForEvent(name string, iface interface{}) (
 			}
 		})
 		if !ok {
-			return nil, xerrors.Errorf("failed to cast 'spawn' event")
+			return nil, fmt.Errorf("failed to cast 'spawn' event")
 		}
 
 		if !evmSpawnableContracts[event.ContractID] {
-			return nil, xerrors.Errorf("contract '%s' has not been "+
+			return nil, fmt.Errorf("contract '%s' has not been "+
 				"whitelisted to be spawned by an EVM contract",
 				event.ContractID)
 		}
@@ -205,7 +205,7 @@ func getInstrForEvent(name string, iface interface{}) (
 			}
 		})
 		if !ok {
-			return nil, xerrors.Errorf("failed to cast 'invoke' event")
+			return nil, fmt.Errorf("failed to cast 'invoke' event")
 		}
 
 		instr = &byzcoin.Instruction{
@@ -227,7 +227,7 @@ func getInstrForEvent(name string, iface interface{}) (
 			}
 		})
 		if !ok {
-			return nil, xerrors.Errorf("failed to cast 'delete' event")
+			return nil, fmt.Errorf("failed to cast 'delete' event")
 		}
 
 		instr = &byzcoin.Instruction{
@@ -239,7 +239,7 @@ func getInstrForEvent(name string, iface interface{}) (
 		}
 
 	default:
-		return nil, xerrors.Errorf("internal error: event '%s' not handled",
+		return nil, fmt.Errorf("internal error: event '%s' not handled",
 			name)
 	}
 

@@ -1,6 +1,7 @@
 package contracts
 
 import (
+	"errors"
 	"net/url"
 	"strconv"
 	"strings"
@@ -13,7 +14,6 @@ import (
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
-	"golang.org/x/xerrors"
 )
 
 func init() {
@@ -78,7 +78,7 @@ func (c contractAttrValue) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.In
 		}
 		return
 	default:
-		return nil, nil, xerrors.New("Value contract can only update")
+		return nil, nil, errors.New("value contract can only update")
 	}
 }
 
@@ -93,17 +93,17 @@ func (c contractAttrValue) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst
 
 		s := string(c.value)
 		if !strings.HasPrefix(s, prefix) {
-			return xerrors.New("wrong prefix")
+			return errors.New("wrong prefix")
 		}
 		if !strings.HasSuffix(s, suffix) {
-			return xerrors.New("wrong suffix")
+			return errors.New("wrong suffix")
 		}
 		return nil
 	}
 	cbSigScheme := func(attr string) error {
 		roSC, ok := rst.(byzcoin.ReadOnlySkipChain)
 		if !ok {
-			return xerrors.New("cannot access read only skipchain")
+			return errors.New("cannot access read only skipchain")
 		}
 		sb, err := roSC.GetLatest()
 		if err != nil {
@@ -121,27 +121,27 @@ func (c contractAttrValue) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst
 				return err
 			}
 			if !sb0.Equal(gen) {
-				return xerrors.New("genesis block is not at index 0")
+				return errors.New("genesis block is not at index 0")
 			}
 			sb2, err := roSC.GetBlock(sb.Hash)
 			if err != nil {
 				return err
 			}
 			if !sb2.Equal(sb) {
-				return xerrors.New("sb and sb2 should be the same")
+				return errors.New("sb and sb2 should be the same")
 			}
 		}
 
 		sigSchemeBuf := inst.Invoke.Args.Search("sigscheme")
 		if len(sigSchemeBuf) == 0 {
-			return xerrors.New("cannot find sigscheme argument")
+			return errors.New("cannot find sigscheme argument")
 		}
 		sigScheme, err := strconv.Atoi(string(sigSchemeBuf))
 		if err != nil {
 			return err
 		}
 		if int(sb.SignatureScheme) != sigScheme {
-			return xerrors.New("signature scheme did not match")
+			return errors.New("signature scheme did not match")
 		}
 		return nil
 	}

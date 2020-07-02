@@ -3,12 +3,12 @@ package byzcoin
 import (
 	"crypto/sha256"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"strings"
 
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/protobuf"
-	"golang.org/x/xerrors"
 )
 
 // The deferred contract allows a group of signers to agree on and sign a
@@ -84,7 +84,7 @@ func contractDeferredFromBytes(in []byte) (Contract, error) {
 
 	err := protobuf.Decode(in, &c.DeferredData)
 	if err != nil {
-		return nil, xerrors.Errorf("couldn't unmarshal instance data: %v", err)
+		return nil, fmt.Errorf("couldn't unmarshal instance data: %v", err)
 	}
 	return c, nil
 }
@@ -107,14 +107,14 @@ func (c *contractDeferred) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins 
 	// Find the darcID for this instance.
 	_, _, _, darcID, err := rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return nil, nil, xerrors.Errorf("reading trie: %v", err)
+		return nil, nil, fmt.Errorf("reading trie: %v", err)
 	}
 
 	// 1. Reads and parses the input
 	proposedTransaction := ClientTransaction{}
 	err = protobuf.Decode(inst.Spawn.Args.Search("proposedTransaction"), &proposedTransaction)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("couldn't decode proposedTransaction: %v", err)
+		return nil, nil, fmt.Errorf("couldn't decode proposedTransaction: %v", err)
 	}
 
 	expireBlockIndexBuf := inst.Spawn.Args.Search("expireBlockIndex")
@@ -124,7 +124,7 @@ func (c *contractDeferred) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins 
 	} else {
 		expireBlockIndex = binary.LittleEndian.Uint64(expireBlockIndexBuf)
 		if err != nil {
-			return nil, nil, xerrors.Errorf("couldn't convert expireBlockIndex: %v", err)
+			return nil, nil, fmt.Errorf("couldn't convert expireBlockIndex: %v", err)
 		}
 	}
 
@@ -145,7 +145,7 @@ func (c *contractDeferred) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins 
 	}
 	dataBuf, err := protobuf.Encode(&data)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("couldn't encode DeferredData: %v", err)
+		return nil, nil, fmt.Errorf("couldn't encode DeferredData: %v", err)
 	}
 
 	sc := StateChanges{NewStateChange(Create, inst.DeriveID(""), ContractDeferredID, dataBuf, darcID)}
@@ -163,7 +163,7 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 	//   - index uint32 (index of the instruction wrt the transaction)
 	err = c.checkInvoke(rst, inst.Invoke)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("checks of invoke failed: %v", err)
+		return nil, nil, fmt.Errorf("checks of invoke failed: %v", err)
 	}
 
 	cout = coins
@@ -184,31 +184,31 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 		// Get the given index
 		indexBuf := inst.Invoke.Args.Search("index")
 		if indexBuf == nil {
-			return nil, nil, xerrors.New("index args is nil")
+			return nil, nil, errors.New("index args is nil")
 		}
 		index := binary.LittleEndian.Uint32(indexBuf)
 
 		// Check if the index is in range
 		numInstruction := len(c.DeferredData.ProposedTransaction.Instructions)
 		if index >= uint32(numInstruction) {
-			return nil, nil, xerrors.Errorf("index is out of range (%d >= %d)", index, numInstruction)
+			return nil, nil, fmt.Errorf("index is out of range (%d >= %d)", index, numInstruction)
 		}
 
 		// Get the given Identity
 		identityBuf := inst.Invoke.Args.Search("identity")
 		if identityBuf == nil {
-			return nil, nil, xerrors.New("identity args is nil")
+			return nil, nil, errors.New("identity args is nil")
 		}
 		identity := darc.Identity{}
 		err = protobuf.Decode(identityBuf, &identity)
 		if err != nil {
-			return nil, nil, xerrors.New("couldn't decode Identity")
+			return nil, nil, errors.New("couldn't decode Identity")
 		}
 
 		// Get the given signature
 		signature := inst.Invoke.Args.Search("signature")
 		if signature == nil {
-			return nil, nil, xerrors.New("signature args is nil")
+			return nil, nil, errors.New("signature args is nil")
 		}
 		// Update the contract's data with the given signature and identity
 		c.DeferredData.ProposedTransaction.Instructions[index].SignerIdentities = append(c.DeferredData.ProposedTransaction.Instructions[index].SignerIdentities, identity)
@@ -216,7 +216,7 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 		// Save and send the modifications
 		cosiDataBuf, err2 := protobuf.Encode(&c.DeferredData)
 		if err2 != nil {
-			return nil, nil, xerrors.New("couldn't encode DeferredData")
+			return nil, nil, errors.New("couldn't encode DeferredData")
 		}
 		sc = append(sc, NewStateChange(Update, inst.InstanceID,
 			ContractDeferredID, cosiDataBuf, darcID))
@@ -242,21 +242,21 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 			// its buferred data and then calling its constructor.
 			contractBuf, _, contractID, _, err := rst.GetValues(proposedInstr.InstanceID.Slice())
 			if err != nil {
-				return nil, nil, xerrors.Errorf("couldn't get contract buf: %v", err)
+				return nil, nil, fmt.Errorf("couldn't get contract buf: %v", err)
 			}
 			// Get the contract's constructor (like "contractValueFromByte(...)")
 			if c.contracts == nil {
-				return nil, nil, xerrors.New("contracts registry is missing due to bad initialization")
+				return nil, nil, errors.New("contracts registry is missing due to bad initialization")
 			}
 
 			fn, exists := c.contracts.Search(contractID)
 			if !exists {
-				return nil, nil, xerrors.New("couldn't get the root function")
+				return nil, nil, errors.New("couldn't get the root function")
 			}
 			// Invoke the contructor and get the contract's instance
 			contract, err := fn(contractBuf)
 			if err != nil {
-				return nil, nil, xerrors.Errorf("couldn't get the root contract: %v", err)
+				return nil, nil, fmt.Errorf("couldn't get the root contract: %v", err)
 			}
 			if cwr, ok := contract.(ContractWithRegistry); ok {
 				cwr.SetRegistry(c.contracts)
@@ -264,7 +264,7 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 
 			err = contract.VerifyDeferredInstruction(rst, proposedInstr, c.DeferredData.InstructionHashes[i])
 			if err != nil {
-				return nil, nil, xerrors.Errorf("verifying the instruction failed: %v", err)
+				return nil, nil, fmt.Errorf("verifying the instruction failed: %v", err)
 			}
 
 			var stateChanges []StateChange
@@ -279,12 +279,12 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 			}
 
 			if err != nil {
-				return nil, nil, xerrors.Errorf("error while executing an instruction: %v", err)
+				return nil, nil, fmt.Errorf("error while executing an instruction: %v", err)
 			}
 
 			rst, err = rst.StoreAllToReplica(stateChanges)
 			if err != nil {
-				return nil, nil, xerrors.Errorf("error while storing state changes: %v", err)
+				return nil, nil, fmt.Errorf("error while storing state changes: %v", err)
 			}
 
 			sc = append(sc, stateChanges...)
@@ -296,14 +296,14 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 		c.DeferredData.MaxNumExecution = c.DeferredData.MaxNumExecution - 1
 		resultBuf, err2 := protobuf.Encode(&c.DeferredData)
 		if err2 != nil {
-			return nil, nil, xerrors.New("couldn't encode the result")
+			return nil, nil, errors.New("couldn't encode the result")
 		}
 		sc = append(sc, NewStateChange(Update, inst.InstanceID,
 			ContractDeferredID, resultBuf, darcID))
 
 		return
 	default:
-		return nil, nil, xerrors.New("deferred contract can only addProof and execProposedTx")
+		return nil, nil, errors.New("deferred contract can only addProof and execProposedTx")
 	}
 }
 
@@ -314,7 +314,7 @@ func (c *contractDeferred) Delete(rst ReadOnlyStateTrie, inst Instruction, coins
 	var darcID darc.ID
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return nil, nil, xerrors.Errorf("reading trie: %v", err)
+		return nil, nil, fmt.Errorf("reading trie: %v", err)
 	}
 
 	sc = StateChanges{
@@ -332,14 +332,14 @@ func (c *contractDeferred) checkInvoke(rst ReadOnlyStateTrie, invoke *Invoke) er
 
 	// 1.
 	if c.DeferredData.MaxNumExecution < uint64(1) {
-		return xerrors.New("maximum number of executions reached")
+		return errors.New("maximum number of executions reached")
 	}
 
 	// 2.
 	expireBlockIndex := c.DeferredData.ExpireBlockIndex
 	currentIndex := uint64(rst.GetIndex())
 	if currentIndex > expireBlockIndex {
-		return xerrors.Errorf("current block index is too high (%d > %d)", currentIndex, expireBlockIndex)
+		return fmt.Errorf("current block index is too high (%d > %d)", currentIndex, expireBlockIndex)
 	}
 
 	if invoke.Command == "addProof" {
@@ -351,34 +351,34 @@ func (c *contractDeferred) checkInvoke(rst ReadOnlyStateTrie, invoke *Invoke) er
 		// Get the given Identity
 		identityBuf := invoke.Args.Search("identity")
 		if identityBuf == nil {
-			return xerrors.New("identity args is nil")
+			return errors.New("identity args is nil")
 		}
 		identity := darc.Identity{}
 		err := protobuf.Decode(identityBuf, &identity)
 		if err != nil {
-			return xerrors.New("couldn't decode Identity")
+			return errors.New("couldn't decode Identity")
 		}
 		// Get the instruction index
 		indexBuf := invoke.Args.Search("index")
 		if indexBuf == nil {
-			return xerrors.New("index args is nil")
+			return errors.New("index args is nil")
 		}
 		index := binary.LittleEndian.Uint32(indexBuf)
 
 		for _, storedIdentity := range c.DeferredData.ProposedTransaction.Instructions[index].SignerIdentities {
 			if identity.Equal(&storedIdentity) {
-				return xerrors.New("identity already stored")
+				return errors.New("identity already stored")
 			}
 		}
 		// 2:
 		// Get the given signature
 		signature := invoke.Args.Search("signature")
 		if signature == nil {
-			return xerrors.New("signature args is nil")
+			return errors.New("signature args is nil")
 		}
 		err = identity.Verify(c.InstructionHashes[index], signature)
 		if err != nil {
-			return xerrors.New("bad signature")
+			return errors.New("bad signature")
 		}
 	}
 	return nil
@@ -391,7 +391,7 @@ func (c *contractDeferred) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruc
 		return nil
 	}
 	if err := inst.Verify(rst, ctxHash); err != nil {
-		return xerrors.Errorf("failed to verify instruction: %v", err)
+		return fmt.Errorf("failed to verify instruction: %v", err)
 	}
 	return nil
 }
@@ -405,7 +405,7 @@ func (c *contractDeferred) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst
 		return nil
 	}
 	if err := inst.VerifyWithOption(rst, ctxHash, &VerificationOptions{IgnoreCounters: true}); err != nil {
-		return xerrors.Errorf("failed to verify deferred instruction: %v", err)
+		return fmt.Errorf("failed to verify deferred instruction: %v", err)
 	}
 	return nil
 }

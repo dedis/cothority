@@ -22,7 +22,6 @@ import (
 	"go.dedis.ch/kyber/v3/sign/schnorr"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
-	"golang.org/x/xerrors"
 )
 
 // Used for tests
@@ -349,7 +348,7 @@ func (s *Service) verifySignature(bcID skipchain.SkipBlockID, identity darc.Iden
 			return true, nil
 		}
 	}
-	return false, xerrors.New("didn't find matching adminDarc")
+	return false, errors.New("didn't find matching adminDarc")
 }
 
 // PartyList can either store a new party in the list, or just return the list of

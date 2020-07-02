@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -27,7 +28,6 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
-	"golang.org/x/xerrors"
 
 	"github.com/urfave/cli"
 )
@@ -115,11 +115,11 @@ func main() {
 
 func join(c *cli.Context) error {
 	if _, _, err := loadConfig(); err == nil {
-		return xerrors.Errorf("configuration already exists - please delete %s first",
+		return fmt.Errorf("configuration already exists - please delete %s first",
 			filepath.Join(configPath, configName))
 	}
 	if c.NArg() < 1 {
-		return xerrors.New("please give bc-xxx.cfg")
+		return errors.New("please give bc-xxx.cfg")
 	}
 
 	bcCfg, _, err := lib.LoadConfig(c.Args().First())
@@ -177,7 +177,7 @@ func show(c *cli.Context) error {
 
 func transfer(c *cli.Context) error {
 	if c.NArg() < 2 {
-		return xerrors.New("please give the following arguments: balance address")
+		return errors.New("please give the following arguments: balance address")
 	}
 	amount, err := strconv.ParseUint(c.Args().First(), 10, 64)
 	if err != nil {
@@ -222,7 +222,7 @@ func transfer(c *cli.Context) error {
 		cl.Roster = cfg.BCConfig.Roster
 	}
 	if amount > balance {
-		return xerrors.New("your account doesn't have enough coins in it")
+		return errors.New("your account doesn't have enough coins in it")
 	}
 
 	signer := darc.NewSignerEd25519(cfg.KeyPair.Public, cfg.KeyPair.Private)

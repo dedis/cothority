@@ -24,7 +24,6 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
-	"golang.org/x/xerrors"
 )
 
 func init() {
@@ -536,21 +535,21 @@ func adminDarcIDsGet(c *cli.Context) error {
 
 	pt, err := os.Open(c.Args().First())
 	if err != nil {
-		return xerrors.Errorf("couldn't open file: %v", err)
+		return fmt.Errorf("couldn't open file: %v", err)
 	}
 	group, err := app.ReadGroupDescToml(pt)
 	if err != nil {
-		return xerrors.Errorf("wrong public.toml: %v", err)
+		return fmt.Errorf("wrong public.toml: %v", err)
 	}
 	if len(group.Roster.List) == 0 {
-		return xerrors.New("no server defined")
+		return errors.New("no server defined")
 	}
 
 	cl := personhood.NewClient()
 	log.Info("Fetching all admin-darc-IDs")
 	rep, errs := cl.GetAdminDarcIDs(group.Roster.List[0])
 	if len(errs) > 0 {
-		return xerrors.Errorf("got error while fetching ids: %s", errs)
+		return fmt.Errorf("got error while fetching ids: %s", errs)
 	}
 	for i, id := range rep.AdminDarcIDs {
 		log.Infof("Admin darc ID #%d: %x", i, id[:])
@@ -578,7 +577,7 @@ func adminDarcIDsSet(c *cli.Context) error {
 	for i, idStr := range c.Args()[1:] {
 		did, err := hex.DecodeString(idStr)
 		if err != nil {
-			return xerrors.Errorf("couldn't parse id %d: %v", i, err)
+			return fmt.Errorf("couldn't parse id %d: %v", i, err)
 		}
 		dids[i] = did
 	}
@@ -586,7 +585,7 @@ func adminDarcIDsSet(c *cli.Context) error {
 	cl := personhood.NewClient()
 	errs := cl.SetAdminDarcIDs(si, dids, si.GetPrivate())
 	if len(errs) > 0 {
-		return xerrors.Errorf("couldn't set admin darc IDs: %+v", errs)
+		return fmt.Errorf("couldn't set admin darc IDs: %v", errs)
 	}
 	log.Info("Successfully set admin darc IDs")
 

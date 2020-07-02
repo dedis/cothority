@@ -1,6 +1,8 @@
 package byzcoin
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
 	"go.dedis.ch/cothority/v3/byzcoinx"
@@ -8,7 +10,6 @@ import (
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
-	"golang.org/x/xerrors"
 )
 
 const defaultMaxNumTxs = 100
@@ -78,7 +79,7 @@ func NewCollectTxProtocol(getTxs getTxsCallback) func(*onet.TreeNodeInstance) (o
 			version:           1,
 		}
 		if err := node.RegisterChannels(&c.requestChan, &c.responseChan); err != nil {
-			return c, xerrors.Errorf("registering channels: %v", err)
+			return c, fmt.Errorf("registering channels: %v", err)
 		}
 		return c, nil
 	}
@@ -87,13 +88,13 @@ func NewCollectTxProtocol(getTxs getTxsCallback) func(*onet.TreeNodeInstance) (o
 // Start starts the protocol, it should only be called on the root node.
 func (p *CollectTxProtocol) Start() error {
 	if !p.IsRoot() {
-		return xerrors.New("only the root should call start")
+		return errors.New("only the root should call start")
 	}
 	if len(p.SkipchainID) == 0 {
-		return xerrors.New("missing skipchain ID")
+		return errors.New("missing skipchain ID")
 	}
 	if len(p.LatestID) == 0 {
-		return xerrors.New("missing latest skipblock ID")
+		return errors.New("missing latest skipblock ID")
 	}
 	req := &CollectTxRequest{
 		SkipchainID: p.SkipchainID,
@@ -103,7 +104,7 @@ func (p *CollectTxProtocol) Start() error {
 	}
 	// send to myself and the children
 	if err := p.SendTo(p.TreeNode(), req); err != nil {
-		return xerrors.Errorf("sending msg: %v", err)
+		return fmt.Errorf("sending msg: %v", err)
 	}
 	// do not return an error if we fail to send to some children
 	if errs := p.SendToChildrenInParallel(req); len(errs) > 0 {
@@ -126,9 +127,9 @@ func (p *CollectTxProtocol) Dispatch() error {
 	case <-time.After(time.Second):
 		// This timeout checks whether the root started the protocol,
 		// it is not like our usual timeout that detect failures.
-		return xerrors.New("did not receive request")
+		return errors.New("did not receive request")
 	case <-p.closing:
-		return xerrors.New("closing down system")
+		return errors.New("closing down system")
 	}
 
 	maxOut := -1
@@ -147,11 +148,11 @@ func (p *CollectTxProtocol) Dispatch() error {
 		p.ServerIdentity(), len(resp.Txs), p.getByzcoinVersion())
 	if p.IsRoot() {
 		if err := p.SendTo(p.TreeNode(), resp); err != nil {
-			return xerrors.Errorf("sending msg: %v", err)
+			return fmt.Errorf("sending msg: %v", err)
 		}
 	} else {
 		if err := p.SendToParent(resp); err != nil {
-			return xerrors.Errorf("sending msg: %v", err)
+			return fmt.Errorf("sending msg: %v", err)
 		}
 	}
 

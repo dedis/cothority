@@ -19,12 +19,12 @@ package bevm
 import (
 	"bytes"
 	"encoding/hex"
+	"fmt"
 	"sort"
 	"sync"
 
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
-	"golang.org/x/xerrors"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethdb"
@@ -55,7 +55,7 @@ func NewMemDatabase(data []byte) (*MemDatabase, error) {
 
 	err := protobuf.Decode(data, kvs)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to decode in-memory EVM "+
+		return nil, fmt.Errorf("failed to decode in-memory EVM "+
 			"state DB: %v", err)
 	}
 
@@ -124,7 +124,7 @@ func (db *MemDatabase) Get(key []byte) ([]byte, error) {
 		return common.CopyBytes(entry), nil
 	}
 
-	return nil, xerrors.Errorf("key '%s' not found in EVM state DB",
+	return nil, fmt.Errorf("key '%s' not found in EVM state DB",
 		hex.EncodeToString(key))
 }
 
