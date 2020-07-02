@@ -3,6 +3,7 @@ package messaging
 import (
 	"errors"
 	"fmt"
+	"go.dedis.ch/cothority/v3/blscosi/protocol"
 	"reflect"
 	"strings"
 	"sync"
@@ -82,7 +83,7 @@ func NewPropagationFunc(c propagationContext, name string, f PropagationStore, t
 		// Make a local copy in order to avoid a data race.
 		t := thresh
 		if t == -1 {
-			t = (len(n.Roster().List) - 1) / 3
+			t = protocol.DefaultFaultyThreshold(len(n.Roster().List))
 		}
 		p := &Propagate{
 			sd:               &PropagateSendData{[]byte{}, initialWait},
@@ -105,7 +106,8 @@ func NewPropagationFunc(c propagationContext, name string, f PropagationStore, t
 		if rooted == nil {
 			return 0, errors.New("we're not in the roster")
 		}
-		tree := rooted.GenerateNaryTree(8)
+		// Make a star (tree with height 1)
+		tree := rooted.GenerateNaryTree(len(el.List))
 		if tree == nil {
 			return 0, errors.New("Didn't find root in tree")
 		}
@@ -232,10 +234,11 @@ func (p *Propagate) Dispatch() error {
 				process = false
 			}
 		case <-time.After(timeout):
-			if received < subtreeCount-p.allowedFailures {
+			if received+1 < subtreeCount-p.allowedFailures {
 				_, _, err := network.Unmarshal(p.sd.Data, p.Suite())
-				return fmt.Errorf("Timeout of %s reached, got %v but need %v, err: %v",
-					timeout, received, subtreeCount-p.allowedFailures, err)
+				return fmt.Errorf("timeout of %s reached, got %v but need %v,"+
+					" err: %v", timeout, received,
+					subtreeCount-p.allowedFailures, err)
 			}
 			process = false
 		case <-p.closing:
