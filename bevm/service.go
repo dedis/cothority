@@ -13,7 +13,7 @@ import (
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/app"
 	"go.dedis.ch/onet/v3/log"
-	"go.dedis.ch/onet/v3/network"
+	"golang.org/x/xerrors"
 )
 
 // ServiceName is the name to refer to the BEvm service.
@@ -37,26 +37,27 @@ func init() {
 		nil))
 
 	// Initialize service
-	onet.RegisterNewService(ServiceName, newBEvmService)
+	_, err := onet.RegisterNewService(ServiceName, newBEvmService)
+	log.ErrFatal(err)
 }
 
 // PrepareDeployTx builds a transaction to deploy an EVM contract. Returns an
 // EVM transaction and its hash to be signed by the caller.
 func (service *Service) PrepareDeployTx(
-	req *DeployRequest) (network.Message, error) {
+	req *DeployRequest) (*TransactionHashResponse, error) {
 	abi, err := abi.JSON(strings.NewReader(req.Abi))
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to decode JSON ABI: %v", err)
 	}
 
 	args, err := DecodeEvmArgs(req.Args, abi.Constructor.Inputs)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to decode tx args: %v", err)
 	}
 
 	packedArgs, err := abi.Pack("", args...)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to pack tx args: %v", err)
 	}
 
 	callData := append(req.Bytecode, packedArgs...)
@@ -69,7 +70,7 @@ func (service *Service) PrepareDeployTx(
 
 	unsignedBuffer, err := tx.MarshalJSON()
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to marshal tx to JSON: %v", err)
 	}
 
 	log.Lvl4("Returning", unsignedBuffer, hashedTx)
@@ -82,20 +83,20 @@ func (service *Service) PrepareDeployTx(
 // previously deployed EVM contract instance. Returns an EVM transaction and
 // its hash to be signed by the caller.
 func (service *Service) PrepareTransactionTx(
-	req *TransactionRequest) (network.Message, error) {
+	req *TransactionRequest) (*TransactionHashResponse, error) {
 	abi, err := abi.JSON(strings.NewReader(req.Abi))
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to decode JSON ABI: %v", err)
 	}
 
 	args, err := DecodeEvmArgs(req.Args, abi.Methods[req.Method].Inputs)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to decode tx args: %v", err)
 	}
 
 	callData, err := abi.Pack(req.Method, args...)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to pack args: %v", err)
 	}
 
 	tx := types.NewTransaction(req.Nonce,
@@ -108,7 +109,7 @@ func (service *Service) PrepareTransactionTx(
 
 	unsignedBuffer, err := tx.MarshalJSON()
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to marshal tx to JSON: %v", err)
 	}
 
 	log.Lvl4("Returning", unsignedBuffer, hashedTx)
@@ -121,23 +122,24 @@ func (service *Service) PrepareTransactionTx(
 // caller. Returns an EVM transaction ready to be sent to ByzCoin and handled
 // by the bevm contract.
 func (service *Service) FinalizeTx(
-	req *TransactionFinalizationRequest) (network.Message, error) {
+	req *TransactionFinalizationRequest) (*TransactionResponse, error) {
 	signer := types.HomesteadSigner{}
 
 	var tx types.Transaction
 	err := tx.UnmarshalJSON(req.Transaction)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to unmarshal tx from JSON: %v", err)
 	}
 
 	signedTx, err := tx.WithSignature(signer, req.Signature)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to sign tx: %v", err)
 	}
 
 	signedBuffer, err := signedTx.MarshalJSON()
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to marshal signed tx"+
+			"to JSON: %v", err)
 	}
 
 	log.Lvl4("Returning", signedBuffer)
@@ -149,16 +151,16 @@ func (service *Service) FinalizeTx(
 
 // PerformCall executes a R-only method on a previously deployed EVM contract
 // instance by contacting a ByzCoin cothority. Returns the call response.
-func (service *Service) PerformCall(req *CallRequest) (network.Message,
+func (service *Service) PerformCall(req *CallRequest) (*CallResponse,
 	error) {
 	abi, err := abi.JSON(strings.NewReader(req.Abi))
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to decode JSON ABI: %v", err)
 	}
 
 	args, err := DecodeEvmArgs(req.Args, abi.Methods[req.Method].Inputs)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to decode view method args: %v", err)
 	}
 
 	// We don't need the private key for reading proofs
@@ -176,7 +178,7 @@ func (service *Service) PerformCall(req *CallRequest) (network.Message,
 	// Read server configuration from TOML data
 	grp, err := app.ReadGroupDescToml(strings.NewReader(req.ServerConfig))
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to read server TOML config: %v", err)
 	}
 	// Instantiate a new ByzCoin client
 	bcClient := byzcoin.NewClient(req.ByzCoinID, *grp.Roster)
@@ -185,21 +187,21 @@ func (service *Service) PerformCall(req *CallRequest) (network.Message,
 	bevmClient, err := NewClient(bcClient, darc.Signer{},
 		byzcoin.NewInstanceID(req.BEvmInstanceID))
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to create new BEvm client: %v", err)
 	}
 
 	// Execute the view method in the EVM
 	result, err := bevmClient.Call(account, &contractInstance,
 		req.Method, args...)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to perform BEvm call: %v", err)
 	}
 
 	log.Lvlf4("Returning: %v", result)
 
 	resultJSON, err := json.Marshal(result)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to marshal result to JSON: %v", err)
 	}
 
 	return &CallResponse{Result: string(resultJSON)}, nil
@@ -211,16 +213,15 @@ func newBEvmService(context *onet.Context) (onet.Service, error) {
 		ServiceProcessor: onet.NewServiceProcessor(context),
 	}
 
-	for _, ep := range []interface{}{
+	err := service.RegisterHandlers(
 		service.PrepareDeployTx,
 		service.PrepareTransactionTx,
 		service.FinalizeTx,
 		service.PerformCall,
-	} {
-		err := service.RegisterHandler(ep)
-		if err != nil {
-			return nil, err
-		}
+	)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to register service "+
+			"handlers: %v", err)
 	}
 
 	return service, nil
