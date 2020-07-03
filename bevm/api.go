@@ -211,7 +211,7 @@ func (account EvmAccount) String() string {
 
 // Client is the abstraction for the ByzCoin EVM client
 type Client struct {
-	onetClient *onet.Client
+	*onet.Client
 	bcClient   *byzcoin.Client
 	signer     darc.Signer
 	instanceID byzcoin.InstanceID
@@ -242,7 +242,7 @@ func NewBEvm(bcClient *byzcoin.Client, signer darc.Signer, gDarc *darc.Darc) (
 func NewClient(bcClient *byzcoin.Client, signer darc.Signer,
 	instanceID byzcoin.InstanceID) (*Client, error) {
 	return &Client{
-		onetClient: onet.NewClient(cothority.Suite, ServiceName),
+		Client:     onet.NewClient(cothority.Suite, ServiceName),
 		bcClient:   bcClient,
 		signer:     signer,
 		instanceID: instanceID,
@@ -439,7 +439,7 @@ func (client *Client) PrepareDeployTx(dst *network.ServerIdentity,
 	}
 	response := &TransactionHashResponse{}
 
-	err := client.onetClient.SendProtobuf(dst, request, response)
+	err := client.Client.SendProtobuf(dst, request, response)
 	if err != nil {
 		return nil, err
 	}
@@ -466,7 +466,7 @@ func (client *Client) PrepareTransactionTx(dst *network.ServerIdentity,
 	}
 	response := &TransactionHashResponse{}
 
-	err := client.onetClient.SendProtobuf(dst, request, response)
+	err := client.Client.SendProtobuf(dst, request, response)
 	if err != nil {
 		return nil, err
 	}
@@ -485,7 +485,7 @@ func (client *Client) FinalizeTx(dst *network.ServerIdentity,
 	}
 	response := &TransactionResponse{}
 
-	err := client.onetClient.SendProtobuf(dst, request, response)
+	err := client.Client.SendProtobuf(dst, request, response)
 	if err != nil {
 		return nil, err
 	}
@@ -511,7 +511,7 @@ func (client *Client) PerformCall(dst *network.ServerIdentity, byzcoinID []byte,
 	}
 	response := &CallResponse{}
 
-	err := client.onetClient.SendProtobuf(dst, request, response)
+	err := client.Client.SendProtobuf(dst, request, response)
 	if err != nil {
 		return nil, err
 	}
