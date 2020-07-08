@@ -251,8 +251,8 @@ export class BEvmClient extends Instance {
      *   --------------------------------------------
      *   uint, uint256, uint128 | string    | "12345"
      *   int, int256, int128    | string    | "-12345"
-     *   uint32, uint16, uint128| number    | 12345
-     *   int32, int16, int128   | number    | -12345
+     *   uint32, uint16, uint8  | number    | 12345
+     *   int32, int16, int8     | number    | -12345
      *   address                | string    | "112233445566778899aabbccddeeff0011223344"
      *   string                 | string    | "look at me I am a string"
      *   array, e.g. uint[2]    | array     | ["123", "456"]

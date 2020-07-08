@@ -664,6 +664,74 @@ func decodeEvmArray(abiType string, abi abi.Argument, arg interface{}) (
 	return arr.Interface(), nil
 }
 
+// EncodeEvmResult encodes an EVM call result into JSON.
+// This can be useful for command-line tools or calls serialized over the
+// network.
+func EncodeEvmResult(result interface{}, outputs abi.Arguments) (string, error) {
+	var jsonData []byte
+	var err error
+
+	if len(outputs) == 1 {
+		abiType := outputs[0].Type.String()
+		encodedResult, err := encodeEvmValue(abiType, result)
+		if err != nil {
+			return "", xerrors.Errorf("failed to encode EVM value: %v", err)
+		}
+
+		jsonData, err = json.Marshal(encodedResult)
+	} else {
+		resultArr, ok := result.([]interface{})
+		if !ok {
+			return "", xerrors.Errorf("received result type: %v, expected to "+
+				"be a slice", reflect.TypeOf(result))
+		}
+		if len(resultArr) != len(outputs) {
+			return "", xerrors.Errorf("received slice of length %v, expected "+
+				"to be of length %v", len(resultArr), len(outputs))
+		}
+
+		encodedResult := []interface{}{}
+		for i, output := range outputs {
+			abiType := output.Type.String()
+			encodedValue, err := encodeEvmValue(abiType, resultArr[i])
+			if err != nil {
+				return "", xerrors.Errorf("failed to encode EVM value: %v", err)
+			}
+
+			encodedResult = append(encodedResult, encodedValue)
+		}
+
+		jsonData, err = json.Marshal(encodedResult)
+	}
+
+	if err != nil {
+		return "", xerrors.Errorf("failed to encode result in JSON: %v", err)
+	}
+
+	return string(jsonData), nil
+}
+
+func encodeEvmValue(abiType string, value interface{}) (interface{}, error) {
+	var result interface{}
+
+	switch abiType {
+	case "uint", "uint256", "uint128", "int", "int256", "int128":
+		// We use strings to ensure big numbers are handled properly in JSON
+		valueAsBigInt, ok := value.(*big.Int)
+		if !ok {
+			return nil, xerrors.Errorf("received '%v' for return value of "+
+				"type '%s', expected to be a *big.Int", value, abiType)
+		}
+
+		result = valueAsBigInt.String()
+
+	default:
+		result = value
+	}
+
+	return result, nil
+}
+
 // ---------------------------------------------------------------------------
 // Helper functions
 
