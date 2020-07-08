@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/big"
-	"reflect"
 	"strconv"
 
 	"golang.org/x/xerrors"
@@ -292,8 +291,12 @@ func executeCall(ctx *cli.Context) error {
 		return xerrors.Errorf("failed to execute view method: %v", err)
 	}
 
-	_, err = fmt.Fprintf(ctx.App.Writer, "call return value: %v [%s]\n",
-		result, reflect.TypeOf(result))
+	resultJSON, err := bevm.EncodeEvmResult(result, methodAbi.Outputs)
+	if err != nil {
+		return xerrors.Errorf("failed to encode view method result: %v", err)
+	}
+
+	_, err = fmt.Fprintf(ctx.App.Writer, "call result: %v\n", resultJSON)
 	if err != nil {
 		return xerrors.Errorf("failed to write report msg: %v", err)
 	}

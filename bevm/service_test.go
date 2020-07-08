@@ -340,7 +340,8 @@ func TestService_Call(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	expectedResult, err := json.Marshal(candySupply)
+	// uint256 is encoded as a JSON string to keep precision
+	expectedResult, err := json.Marshal(candySupply.String())
 	require.NoError(t, err)
 	require.Equal(t, resp.Result, string(expectedResult))
 }

@@ -133,6 +133,6 @@ describe("BEvmClient", async () => {
             0,
             "getRemainingCandies",
             [],
-        )).toBeResolvedTo(expectedRemainingCoins);
+        )).toBeResolvedTo(String(expectedRemainingCoins));
     }, 60000); // Extend Jasmine default timeout interval to 1 minute
 });

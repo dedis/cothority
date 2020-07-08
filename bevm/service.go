@@ -1,7 +1,6 @@
 package bevm
 
 import (
-	"encoding/json"
 	"math/big"
 	"strings"
 
@@ -158,7 +157,12 @@ func (service *Service) PerformCall(req *CallRequest) (*CallResponse,
 		return nil, xerrors.Errorf("failed to decode JSON ABI: %v", err)
 	}
 
-	args, err := DecodeEvmArgs(req.Args, abi.Methods[req.Method].Inputs)
+	methodAbi, ok := abi.Methods[req.Method]
+	if !ok {
+		return nil, xerrors.Errorf("method '%s' does not exist", req.Method)
+	}
+
+	args, err := DecodeEvmArgs(req.Args, methodAbi.Inputs)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to decode view method args: %v", err)
 	}
@@ -199,12 +203,12 @@ func (service *Service) PerformCall(req *CallRequest) (*CallResponse,
 
 	log.Lvlf4("Returning: %v", result)
 
-	resultJSON, err := json.Marshal(result)
+	resultJSON, err := EncodeEvmResult(result, methodAbi.Outputs)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to marshal result to JSON: %v", err)
 	}
 
-	return &CallResponse{Result: string(resultJSON)}, nil
+	return &CallResponse{Result: resultJSON}, nil
 }
 
 // newBEvmService creates a new service for BEvm functionality
