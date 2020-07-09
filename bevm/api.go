@@ -690,15 +690,13 @@ func EncodeEvmResult(result interface{}, outputs abi.Arguments) (string, error) 
 				"to be of length %v", len(resultArr), len(outputs))
 		}
 
-		encodedResult := []interface{}{}
+		encodedResult := make([]interface{}, len(outputs))
 		for i, output := range outputs {
 			abiType := output.Type.String()
-			encodedValue, err := encodeEvmValue(abiType, resultArr[i])
+			encodedResult[i], err = encodeEvmValue(abiType, resultArr[i])
 			if err != nil {
 				return "", xerrors.Errorf("failed to encode EVM value: %v", err)
 			}
-
-			encodedResult = append(encodedResult, encodedValue)
 		}
 
 		jsonData, err = json.Marshal(encodedResult)
