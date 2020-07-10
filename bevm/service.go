@@ -203,7 +203,7 @@ func (service *Service) PerformCall(req *CallRequest) (*CallResponse,
 
 	log.Lvlf4("Returning: %v", result)
 
-	resultJSON, err := EncodeEvmResult(result, methodAbi.Outputs)
+	resultJSON, err := EncodeEvmReturnValue(result, methodAbi.Outputs)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to marshal result to JSON: %v", err)
 	}

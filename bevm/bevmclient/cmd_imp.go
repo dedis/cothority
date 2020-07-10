@@ -291,7 +291,7 @@ func executeCall(ctx *cli.Context) error {
 		return xerrors.Errorf("failed to execute view method: %v", err)
 	}
 
-	resultJSON, err := bevm.EncodeEvmResult(result, methodAbi.Outputs)
+	resultJSON, err := bevm.EncodeEvmReturnValue(result, methodAbi.Outputs)
 	if err != nil {
 		return xerrors.Errorf("failed to encode view method result: %v", err)
 	}
