@@ -664,53 +664,56 @@ func decodeEvmArray(abiType string, abi abi.Argument, arg interface{}) (
 	return arr.Interface(), nil
 }
 
-// EncodeEvmResult encodes an EVM call result into JSON.
+// EncodeEvmReturnValue encodes the return value of an EVM call to JSON.
 // This can be useful for command-line tools or calls serialized over the
 // network.
-func EncodeEvmResult(result interface{}, outputs abi.Arguments) (string, error) {
-	var jsonData []byte
+func EncodeEvmReturnValue(returnValue interface{},
+	outputs abi.Arguments) (string, error) {
+	var jsonReturnValue []byte
 	var err error
 
 	if len(outputs) == 1 {
 		abiType := outputs[0].Type.String()
-		encodedResult, err := encodeEvmValue(abiType, result)
+		encodedReturnValue, err := encodeEvmValue(abiType, returnValue)
 		if err != nil {
 			return "", xerrors.Errorf("failed to encode EVM value: %v", err)
 		}
 
-		jsonData, err = json.Marshal(encodedResult)
+		jsonReturnValue, err = json.Marshal(encodedReturnValue)
 	} else {
-		resultArr, ok := result.([]interface{})
+		returnValueSlice, ok := returnValue.([]interface{})
 		if !ok {
-			return "", xerrors.Errorf("received result type: %v, expected to "+
-				"be a slice", reflect.TypeOf(result))
+			return "", xerrors.Errorf("received return value of type: %v, "+
+				"expected to be a slice", reflect.TypeOf(returnValue))
 		}
-		if len(resultArr) != len(outputs) {
+		if len(returnValueSlice) != len(outputs) {
 			return "", xerrors.Errorf("received slice of length %v, expected "+
-				"to be of length %v", len(resultArr), len(outputs))
+				"to be of length %v", len(returnValueSlice), len(outputs))
 		}
 
-		encodedResult := make([]interface{}, len(outputs))
+		encodedReturnValue := make([]interface{}, len(outputs))
 		for i, output := range outputs {
 			abiType := output.Type.String()
-			encodedResult[i], err = encodeEvmValue(abiType, resultArr[i])
+			encodedReturnValue[i], err = encodeEvmValue(abiType,
+				returnValueSlice[i])
 			if err != nil {
 				return "", xerrors.Errorf("failed to encode EVM value: %v", err)
 			}
 		}
 
-		jsonData, err = json.Marshal(encodedResult)
+		jsonReturnValue, err = json.Marshal(encodedReturnValue)
 	}
 
 	if err != nil {
-		return "", xerrors.Errorf("failed to encode result in JSON: %v", err)
+		return "", xerrors.Errorf("failed to encode return value to JSON: %v",
+			err)
 	}
 
-	return string(jsonData), nil
+	return string(jsonReturnValue), nil
 }
 
 func encodeEvmValue(abiType string, value interface{}) (interface{}, error) {
-	var result interface{}
+	var encodedValue interface{}
 
 	switch abiType {
 	case "uint", "uint256", "uint128", "int", "int256", "int128":
@@ -721,13 +724,13 @@ func encodeEvmValue(abiType string, value interface{}) (interface{}, error) {
 				"type '%s', expected to be a *big.Int", value, abiType)
 		}
 
-		result = valueAsBigInt.String()
+		encodedValue = valueAsBigInt.String()
 
 	default:
-		result = value
+		encodedValue = value
 	}
 
-	return result, nil
+	return encodedValue, nil
 }
 
 // ---------------------------------------------------------------------------
