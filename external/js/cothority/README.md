@@ -87,7 +87,7 @@ As this is a [polyfill](https://remysharp.com/2010/10/08/what-is-a-polyfill), pl
 check that what you need is implemented or you will need to use a different approach. Of
 course for NodeJS, you will always get a [Buffer](https://nodejs.org/api/buffer.html).
 
-## Use a development version from an external app
+## Use of a development version from an external app
 
 The simplest way to use a cothority development version in an app and being able to 
 add debug-lines and change the code is to add the following to your
