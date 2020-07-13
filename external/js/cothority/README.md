@@ -44,13 +44,6 @@ npm run protobuf
 That would compile all protobuf definitions into a single JSON file
 (`models.json`). This json file is then embedded in the library automatically.
 
-Publishing
-----------
-
-You must use the given script instead of `npm publish` because we need to publish
-the _dist_ folder instead. If you try to use the official command, you will get
-an error on purpose.
-
 ### Message classes
 
 You can write a class that will be used when decoding protobuf messages by using
@@ -96,6 +89,39 @@ course for NodeJS, you will always get a [Buffer](https://nodejs.org/api/buffer.
 
 ## Use a development version from an external app
 
+The simplest way to use the cothority version in an app and being able to 
+add debug-lines and change the code is to add the following to your
+`tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "paths": {
+      "@dedis/cothority": [
+        "../cothority/external/js/cothority/src",
+        "node_modules/@dedis/cothority/*"
+      ],
+      "@dedis/cothority/*": [
+        "../cothority/external/js/cothority/src/*",
+        "node_modules/@dedis/cothority/*"
+      ]
+    }
+  }
+}
+```
+
+This will look for the cothority-sources in the parent directory of your app and
+include those. If it doesn't find them, it will use the sources found in the `node_modules`
+directory.
+
+It is important that the cothority-repository is in the parent directory, else
+typescript will try to include it in the compilation.
+
+Also, the cothority-sources need to have all the libraries installed with
+`npm ci`, else the compilation will fail.
+
+### Old way
+
 Steps to use `js/cothority` as a local module for a local external app:
 
 1) Build a version
@@ -121,4 +147,28 @@ Steps to use `js/cothority` as a local module for a local external app:
 ```bash
 (external_app) $ npm unlink @dedis/cothority
 (cothority/external/js/cothority) $ npm unlink
+```
+
+# Releases
+
+`@dedis/cothority` releases are done irregularly and on a 'as-needed' basis.
+It is good to announce a release on the DEDIS/engineer slack channel.
+This allows others to know that a new release is about to happen and propose
+eventual changes.
+Then a PR with the new version can be made and will be merged.
+Once the PR is merged, please go on as described in [Publishing](#Publishing). 
+
+## Publishing
+
+You must use the given script instead of `npm publish` because we need to publish
+the _dist_ folder instead. If you try to use the official command, you will get
+an error on purpose.
+
+## Development releases
+
+Every merged PR will create a development release, which is named:
+
+```
+@dedis/cothority-major.minor.patch+1-pYYMM.DDHH.MMSS.0
+
 ```
