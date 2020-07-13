@@ -27,7 +27,7 @@ import { newCurve } from "@dedis/kyber/curve";
 
 ## Dev Setup
 
-The simplest way to use the cothority version in an app and being able to 
+The simplest way to use a kyber development version in an app and being able to 
 add debug-lines and change the code is to add the following to your
 `tsconfig.json`:
 
