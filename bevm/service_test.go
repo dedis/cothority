@@ -322,6 +322,9 @@ func TestService_Call(t *testing.T) {
 		candySupply)
 	require.NoError(t, err)
 
+	// Ensure transaction is propagated to all nodes
+	require.NoError(t, bct.cl.WaitPropagation(-1))
+
 	// Retrieve server TOML config
 	grp := &app.Group{Roster: bct.roster}
 	grpToml, err := grp.Toml(cothority.Suite)
