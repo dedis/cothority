@@ -89,7 +89,7 @@ course for NodeJS, you will always get a [Buffer](https://nodejs.org/api/buffer.
 
 ## Use a development version from an external app
 
-The simplest way to use the cothority version in an app and being able to 
+The simplest way to use a cothority development version in an app and being able to 
 add debug-lines and change the code is to add the following to your
 `tsconfig.json`:
 
