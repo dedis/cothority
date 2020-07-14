@@ -1,4 +1,4 @@
-import { randomBytes } from "crypto";
+import { randomBytes } from "crypto-browserify";
 import { ec } from "elliptic";
 import Keccak from "keccak";
 import Long from "long";
