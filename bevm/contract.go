@@ -11,6 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/rlp"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/onet/v3/log"
@@ -246,18 +247,34 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 	case "transaction":
 		// Perform an Ethereum transaction (contract method call with state
 		// change)
-		err := checkArguments(inst, "tx")
-		if err != nil {
-			return nil, nil,
-				xerrors.Errorf("failed to validate arguments for "+
-					"'transaction' invocation on BEvm: %v", err)
-		}
 
+		// Retrieve the Ethereum transaction
 		var ethTx types.Transaction
-		err = ethTx.UnmarshalJSON(inst.Invoke.Args.Search("tx"))
-		if err != nil {
-			return nil, nil, xerrors.Errorf("failed to decode JSON for EVM "+
-				"transaction: %v", err)
+
+		// The client can send the transaction serlalized either in JSON (using
+		// the "tx" parameter) or in RLP (using the "txRlp" parameter).
+		// This latter possibility was added due to compatibility issues with
+		// the JSON produced by the JS libraries.
+		encodedTx := inst.Invoke.Args.Search("tx")
+		if encodedTx != nil {
+			err = ethTx.UnmarshalJSON(encodedTx)
+			if err != nil {
+				return nil, nil, xerrors.Errorf("failed to decode JSON for EVM "+
+					"transaction: %v", err)
+			}
+		} else {
+			encodedTx = inst.Invoke.Args.Search("txRlp")
+			if encodedTx == nil {
+				return nil, nil, xerrors.New("Missing either \"tx\" or " +
+					"\"txRlp\" argument for BEvm \"transaction\" invocation")
+			}
+
+			s := rlp.NewStream(strings.NewReader(string(encodedTx)), 0)
+			err = ethTx.DecodeRLP(s)
+			if err != nil {
+				return nil, nil, xerrors.Errorf("failed to decode RLP for EVM "+
+					"transaction: %v", err)
+			}
 		}
 
 		// Retrieve the TimeReader (we are actually called with a GlobalState)

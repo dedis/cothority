@@ -11,6 +11,10 @@ import Log from "../log";
 
 import { BEvmService } from "./service";
 
+import abi from "ethereumjs-abi";
+import { Transaction } from "ethereumjs-tx";
+import * as rlp from "rlp";
+
 /**
  * Ethereum account
  */
@@ -38,7 +42,7 @@ export class EvmAccount {
     protected key: ec.KeyPair;
     private _nonce: number;
 
-    get nonce() {
+    get nonce(): number {
         return this._nonce;
     }
 
@@ -60,20 +64,9 @@ export class EvmAccount {
         this._nonce = nonce;
     }
 
-    sign(hash: Buffer): Buffer {
-        /* WARNING: The "canonical" option is crucial to have the same
-        * signature as Ethereum */
-        const sig = this.key.sign(hash, {canonical: true});
-
-        const r = Buffer.from(sig.r.toArray("be", 32));
-        const s = Buffer.from(sig.s.toArray("be", 32));
-
-        const len = r.length + s.length + 1;
-
-        const buf = Buffer.concat([r, s], len);
-        buf.writeUInt8(sig.recoveryParam, len - 1);
-
-        return buf;
+    sign(tx: Transaction) {
+        const privKey = Buffer.from(this.key.getPrivate("hex"), "hex");
+        tx.sign(privKey);
     }
 
     incNonce() {
@@ -103,7 +96,7 @@ export class EvmContract {
     }
 
     private static computeAddress(data: Buffer, nonce: number): Buffer {
-        const buf = EvmContract.erlEncode(data, nonce);
+        const buf = rlp.encode([data, nonce]);
 
         const h = new Keccak("keccak256");
         h.update(buf);
@@ -114,63 +107,36 @@ export class EvmContract {
         return address;
     }
 
-    // Translated from the Go Ethereum code
-    private static erlEncode(address: Buffer, nonce: number): Buffer {
-        const bufNonce = Buffer.alloc(8);
-        bufNonce.writeUInt32BE(nonce / (2 ** 32), 0);
-        bufNonce.writeUInt32BE(nonce % (2 ** 32), 4);
-        let size = 8;
-        for (let i = 0; (i < 8) && (bufNonce[i] === 0); i++) {
-            size--;
-        }
-
-        const addressLen = address.length + 1;
-        const nonceLen = (nonce < 128 ? 1 : size + 1);
-
-        const buf = Buffer.alloc(1 + addressLen + nonceLen);
-        let pos = 0;
-
-        buf.writeUInt8(0xc0 + addressLen + nonceLen, pos++);
-
-        buf.writeUInt8(0x80 + address.length, pos++);
-        address.copy(buf, 2);
-        pos += address.length;
-
-        if ((nonce === 0) || (nonce >= 128)) {
-            buf.writeUInt8(0x80 + size, pos++);
-        }
-
-        bufNonce.copy(buf, pos, 8 - size);
-
-        return buf;
-    }
-
-    readonly transactions: string[];
-    readonly viewMethods: string[];
+    readonly methodAbi: Map<string, any>;
 
     /**
      * Create a new EVM contract
      *
      * @param name      Contract name
      * @param bytecode  Contract bytecode
-     * @param abi       Contract ABI (JSON-encoded)
+     * @param abiJson   Contract ABI (JSON-encoded)
      * @param addresses Array of deployed contract instances; should normally not be specified
      */
     constructor(readonly name: string,
                 readonly bytecode: Buffer,
-                readonly abi: string,
+                abiJson: string,
                 readonly addresses: Buffer[] = []) {
-        const abiObj = JSON.parse(abi);
+        this.methodAbi = new Map();
 
-        const transactions = abiObj.filter((elem: any) => {
-            return elem.type === "function" &&  elem.stateMutability !== "view";
-        }).map((elem: any) => elem.name);
-        this.transactions = transactions;
+        const abiObj = JSON.parse(abiJson);
+        abiObj.forEach((item: any) => {
+                switch (item.type) {
+                    case "constructor": {
+                        this.methodAbi.set("", item);
+                        break;
+                    }
 
-        const viewMethods = abiObj.filter((elem: any) => {
-            return elem.type === "function" &&  elem.stateMutability === "view";
-        }).map((elem: any) => elem.name);
-        this.viewMethods = viewMethods;
+                    case "function": {
+                        this.methodAbi.set(item.name, item);
+                        break;
+                    }
+                }
+            });
     }
 
     createNewAddress(account: EvmAccount) {
@@ -198,7 +164,7 @@ export class BEvmClient extends Instance {
     static readonly contractID = "bevm";
 
     static readonly commandTransaction = "transaction";
-    static readonly argumentTx = "tx";
+    static readonly argumentTx = "txRlp";
 
     static readonly commandCredit = "credit";
     static readonly argumentAddress = "address";
@@ -293,19 +259,26 @@ export class BEvmClient extends Instance {
                  amount: number,
                  account: EvmAccount,
                  contract: EvmContract,
-                 args?: string[],
+                 args?: any[],
                  wait?: number) {
-        const unsignedTx = await this.bevmService.prepareDeployTx(
-            gasLimit, gasPrice, amount, account.nonce,
-            contract.bytecode, contract.abi, args);
-        const signature = account.sign(Buffer.from(unsignedTx.transactionHash));
-        const signedTx = await this.bevmService.finalizeTx(
-            Buffer.from(unsignedTx.transaction), signature);
+        const entry = contract.methodAbi.get("");
+        const types = entry.inputs.map((arg: any) => arg.type);
+        const encodedArgs = abi.rawEncode(types, args);
+        const callData = Buffer.concat([contract.bytecode, encodedArgs]);
+
+        const ethTx = new Transaction({
+            data: callData,
+            gasLimit,
+            gasPrice,
+            nonce: account.nonce,
+            value: amount,
+        });
+        account.sign(ethTx);
 
         await this.invoke(
             BEvmClient.commandTransaction, [
                 new Argument({name: BEvmClient.argumentTx,
-                             value: Buffer.from(signedTx.transaction)}),
+                             value: ethTx.serialize()}),
             ],
             signers, wait);
 
@@ -337,20 +310,28 @@ export class BEvmClient extends Instance {
                       contract: EvmContract,
                       instanceIndex: number,
                       method: string,
-                      args?: string[],
+                      args?: any[],
                       wait?: number) {
-        const contractAddress = contract.addresses[instanceIndex];
-        const unsignedTx = await this.bevmService.prepareTransactionTx(
-            gasLimit, gasPrice, amount, contractAddress, account.nonce,
-            contract.abi, method, args);
-        const signature = account.sign(Buffer.from(unsignedTx.transactionHash));
-        const signedTx = await this.bevmService.finalizeTx(
-            Buffer.from(unsignedTx.transaction), signature);
+        const entry = contract.methodAbi.get(method);
+        const types = entry.inputs.map((arg: any) => arg.type);
+        const encodedArgs = abi.rawEncode(types, args);
+        const methodID = abi.methodID(method, types);
+        const callData = Buffer.concat([methodID, encodedArgs]);
+
+        const ethTx = new Transaction({
+            data: callData,
+            gasLimit,
+            gasPrice,
+            nonce: account.nonce,
+            to: contract.addresses[instanceIndex],
+            value: amount,
+        });
+        account.sign(ethTx);
 
         await this.invoke(
             BEvmClient.commandTransaction, [
                 new Argument({name: BEvmClient.argumentTx,
-                             value: Buffer.from(signedTx.transaction)}),
+                             value: ethTx.serialize()}),
             ],
             signers, wait);
 
@@ -385,20 +366,25 @@ export class BEvmClient extends Instance {
                contract: EvmContract,
                instanceIndex: number,
                method: string,
-               args?: string[]): Promise<any> {
-        const contractAddress = contract.addresses[instanceIndex];
+               args?: any[]): Promise<any[]> {
+        const entry = contract.methodAbi.get(method);
+        const types = entry.inputs.map((arg: any) => arg.type);
+        const encodedArgs = abi.rawEncode(types, args);
+        const methodID = abi.methodID(method, types);
+        const callData = Buffer.concat([methodID, encodedArgs]);
 
         const response = await this.bevmService.performCall(
             byzcoinId,
             serverConfig,
             bevmInstanceId,
             account.address,
-            contractAddress,
-            contract.abi,
-            method,
-            args);
+            contract.addresses[instanceIndex],
+            callData);
 
-        return JSON.parse(response.result);
+        const outTypes = entry.outputs.map((arg: any) => arg.type);
+        const decodedResult = abi.rawDecode(outTypes, response.result);
+
+        return decodedResult;
     }
 
     /**

@@ -1,3 +1,4 @@
+import BN from "bn.js";
 import fs from "fs";
 import Long from "long";
 
@@ -61,20 +62,6 @@ describe("BEvmClient", async () => {
 
     }, 30 * 1000);
 
-    it("should correctly sign a hash", () => {
-        const hash = Buffer.from("c289e67875d147429d2ffc5cc58e9a1486d581bef5aeca63017ad7855f8dab26", "hex");
-        /* tslint:disable:max-line-length */
-        const expectedSig = Buffer.from("e6efff1077fe39f6a8b3e9dca6f2462d2d32aa51e911a7d7abd8741da6b09b9e35c184ec193af4258bc603cd20b48ceb2ff9317742741e9c4e8e97dfe1d6d39d01", "hex");
-        /* tslint:enable:max-line-length */
-
-        const privKey = Buffer.from("c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3", "hex");
-        const account = new EvmAccount("test", privKey);
-
-        const sig = account.sign(hash);
-
-        expect(sig).toEqual(expectedSig);
-    });
-
     it("should successfully deploy and interact with a contract", async () => {
         const privKey = Buffer.from("c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3", "hex");
         const expectedContractAddress = Buffer.from("8cdaf0cd259887258bc13a92c0a6da92698644c0", "hex");
@@ -99,7 +86,7 @@ describe("BEvmClient", async () => {
             0,
             account,
             contract,
-            [JSON.stringify(String(100))],
+            [100],
         )).toBeResolved();
         expect(contract.addresses[0]).toEqual(expectedContractAddress);
 
@@ -114,14 +101,14 @@ describe("BEvmClient", async () => {
                 contract,
                 0,
                 "eatCandy",
-                [JSON.stringify(String(nbCandies))],
+                [nbCandies],
             )).toBeResolved();
         }
 
         // Retrieve number of remaining candies, which should be 100 - (1 + 2 +
         // ... + 10) = 100 - (10 * 11 / 2)
-        const expectedRemainingCoins = 100 - (10 * 11 / 2);
-        await expectAsync(client.call(
+        const expectedRemainingCandies = new BN(100 - (10 * 11 / 2));
+        const [remainingCandies] = await client.call(
             byzcoinRPC.genesisID,
             rosterTOML,
             client.id,
@@ -129,7 +116,48 @@ describe("BEvmClient", async () => {
             contract,
             0,
             "getRemainingCandies",
-            [],
-        )).toBeResolvedTo(String(expectedRemainingCoins));
+        );
+
+        expect(remainingCandies.eq(expectedRemainingCandies)).toBe(true);
+    }, 60000); // Extend Jasmine default timeout interval to 1 minute
+
+    it("should successfully handle large numbers", async () => {
+        const privKey = Buffer.from("d87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3", "hex");
+        const account = new EvmAccount("test", privKey);
+        const contract = new EvmContract("Candy", candyBytecode, candyAbi);
+
+        // Credit an account so that we can perform actions
+        await expectAsync(client.creditAccount(
+            [admin],
+            account,
+            WEI_PER_ETHER.mul(5),
+        )).toBeResolved();
+
+        // 2^128
+        const nbCandies = new BN("340282366920938463463374607431768211456");
+
+        // Deploy a Candy contract
+        await expectAsync(client.deploy(
+            [admin],
+            1e7,
+            1,
+            0,
+            account,
+            contract,
+            [nbCandies],
+        )).toBeResolved();
+
+        // Retrieve number of remaining candies
+        const [remainingCandies] = await client.call(
+            byzcoinRPC.genesisID,
+            rosterTOML,
+            client.id,
+            account,
+            contract,
+            0,
+            "getRemainingCandies",
+        );
+
+        expect(remainingCandies.eq(nbCandies)).toBe(true);
     }, 60000); // Extend Jasmine default timeout interval to 1 minute
 });
