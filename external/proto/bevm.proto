@@ -4,55 +4,6 @@ package bevm;
 option java_package = "ch.epfl.dedis.lib.proto";
 option java_outer_classname = "BEvmProto";
 
-// DeployRequest is the request to prepare an EVM transaction to deploy a
-// contract.
-message DeployRequest {
-  required uint64 gaslimit = 1;
-  required uint64 gasprice = 2;
-  required uint64 amount = 3;
-  required uint64 nonce = 4;
-  required bytes bytecode = 5;
-  // JSON-encoded
-  required string abi = 6;
-  // JSON-encoded
-  repeated string args = 7;
-}
-
-// TransactionRequest is the request to prepare an EVM transaction for a R/W
-// method execution.
-message TransactionRequest {
-  required uint64 gaslimit = 1;
-  required uint64 gasprice = 2;
-  required uint64 amount = 3;
-  required bytes contractaddress = 4;
-  required uint64 nonce = 5;
-  // JSON-encoded
-  required string abi = 6;
-  required string method = 7;
-  // JSON-encoded
-  repeated string args = 8;
-}
-
-// TransactionHashResponse is the response to both DeployRequest and
-// TransactionRequest, containing the transaction and its hash to sign.
-message TransactionHashResponse {
-  required bytes transaction = 1;
-  required bytes transactionhash = 2;
-}
-
-// TransactionFinalizationRequest is the request to finalize a transaction with
-// its signature.
-message TransactionFinalizationRequest {
-  required bytes transaction = 1;
-  required bytes signature = 2;
-}
-
-// TransactionResponse is the response to TransactionFinalizationRequest,
-// containing the signed transaction.
-message TransactionResponse {
-  required bytes transaction = 1;
-}
-
 // CallRequest is a request to execute a view method (read-only).
 message CallRequest {
   required bytes byzcoinid = 1;
@@ -60,15 +11,10 @@ message CallRequest {
   required bytes bevminstanceid = 3;
   required bytes accountaddress = 4;
   required bytes contractaddress = 5;
-  // JSON-encoded
-  required string abi = 6;
-  required string method = 7;
-  // JSON-encoded
-  repeated string args = 8;
+  required bytes calldata = 6;
 }
 
 // CallResponse is the response to CallRequest, containing the method response.
 message CallResponse {
-  // JSON-encoded
-  required string result = 1;
+  required bytes result = 1;
 }
