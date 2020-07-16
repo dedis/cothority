@@ -77,12 +77,9 @@ describe("BEvmClient", async () => {
 
     it("should successfully deploy and interact with a contract", async () => {
         const privKey = Buffer.from("c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3", "hex");
-        const expectedAccountAddress = Buffer.from("627306090abab3a6e1400e9345bc60c78a8bef57", "hex");
         const expectedContractAddress = Buffer.from("8cdaf0cd259887258bc13a92c0a6da92698644c0", "hex");
 
         const account = new EvmAccount("test", privKey);
-        expect(account.address).toEqual(expectedAccountAddress);
-
         const contract = new EvmContract("Candy", candyBytecode, candyAbi);
 
         const amount = WEI_PER_ETHER.mul(5);
