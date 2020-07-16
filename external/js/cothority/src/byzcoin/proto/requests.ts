@@ -241,7 +241,10 @@ export class IDVersion extends Message<IDVersion> {
  * The reply will only hold proofs for instances that have a higher version than the ones given here.
  */
 export class GetUpdatesRequest extends Message<GetUpdatesRequest> {
+    // send all instances with version 0, even those that are note updated.
     static readonly sendVersion0 = Long.fromNumber(1);
+    // send proofs for missing instances. If not present, missing instances are ignored.
+    static readonly sendMissingProofs = Long.fromNumber(2);
 
     static register() {
         registerMessage("GetUpdatesRequest", GetUpdatesRequest, IDVersion);

@@ -1,6 +1,6 @@
 import Long from "long";
 import { BehaviorSubject, fromEvent, Subscription } from "rxjs";
-import { distinct, distinctUntilChanged, elementAt, map, startWith, take, tap } from "rxjs/operators";
+import { distinct, distinctUntilChanged, elementAt, map, startWith, tap } from "rxjs/operators";
 import { Rule } from "../darc";
 import Darc from "../darc/darc";
 import IdentityEd25519 from "../darc/identity-ed25519";
@@ -149,6 +149,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
         return ByzCoinRPC.fromByzcoin(roster, ret.skipblock.hash,
             undefined, undefined, undefined, storage);
     }
+
     private static staticCounters = new Map<string, Map<string, Long>>();
     private newBlockWS: WebSocketAdapter;
     private genesisDarc: Darc;
@@ -241,7 +242,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
                 dbIP = gp[0];
                 await this.db.set(idStr, Buffer.from(InclusionProof.encode(dbIP).finish()));
             } catch (e) {
-                Log.error("couldn't getUpdate", e);
+                Log.error("couldn't getUpdates", e);
                 throw new Error(e);
             }
         }
@@ -421,9 +422,9 @@ export default class ByzCoinRPC implements ICounterUpdater {
      *
      * @param instances that will be queried for changes
      * @param flags are ORed to indicate the following behaviors:
-     *    - GUFSendVersion0 (=1) will make GetUpdates to send all instances with
+     *    - GetUpdatesRequest.sendVersion0 (=1) will make GetUpdates to send all instances with
      *     version 0, even those that are note updated.
-     *    - GUFSendMissingProofs (=2) will make GetUpdates send proofs for missing
+     *    - GetUpdatesRequest.sendMissingProofs (=2) will make GetUpdates send proofs for missing
      *     instances. If not present, missing instances are ignored.
      * @param rec used to avoid infinite recursions when the call fails.
      */
@@ -438,29 +439,39 @@ export default class ByzCoinRPC implements ICounterUpdater {
         const header = DataHeader.decode(this.latest.data);
         try {
             const reply = await this.conn.send<GetUpdatesReply>(req, GetUpdatesReply);
-            return reply.proofs.filter((pr) => pr.hashInterior(0).equals(header.trieRoot))
-                .filter((pr) => instances.find((inst) => inst.id.equals(pr.key)))
-                .filter((pr) => pr.exists(pr.key));
+            if (reply.proofs.length === 0 && flags.and(GetUpdatesRequest.sendVersion0).notEquals(0)) {
+                Log.warn("Got empty reply");
+            } else {
+                return reply.proofs.filter((pr) => pr.hashInterior(0).equals(header.trieRoot))
+                    .filter((pr) => instances.find((inst) => inst.id.equals(pr.key)))
+                    .filter((pr) => pr.exists(pr.key));
+            }
         } catch (e) {
-            if (e.toString().match("latest block") === null || rec > 5) {
+            if (e.toString().match(/(latest block|cannot find skipblock)/) === null) {
                 return Log.rcatch(e, "couldn't get a suiting block...");
             }
-            Log.warn("error while updating instance - waiting for new block");
-            return new Promise(async (resolve, reject) => {
-                // Start with the index used in the query, and add all new arriving blocks.
-                // Using `distinct` and `elementAt` to fetch only a new block-number different from
-                // the one used in the previous query.
-                const ui = await this.getUpdateInstances();
-                ui.pipe(startWith(latestIndex), distinct(), elementAt(1)).subscribe(async () => {
-                    try {
-                        const ips = await this.getUpdates(instances, flags, rec + 1);
-                        resolve(ips);
-                    } catch (e) {
-                        reject(e);
-                    }
-                });
-            });
+            Log.warn("Got retriable error from node:", e.toString());
         }
+
+        if (rec > 0) {
+            throw new Error("maximum number of tries reached");
+        }
+
+        Log.lvl2("Trying again with index", this.latest.index);
+        return new Promise(async (resolve, reject) => {
+            // Start with the index used in the query, and add all new arriving blocks.
+            // Using `distinct` and `elementAt` to fetch only a new block-number different from
+            // the one used in the previous query.
+            const ui = await this.getUpdateInstances();
+            ui.pipe(startWith(latestIndex), distinct(), elementAt(1)).subscribe(async () => {
+                try {
+                    const ips = await this.getUpdates(instances, flags, rec + 1);
+                    resolve(ips);
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        });
     }
 
     /**

@@ -608,6 +608,14 @@ func (s *Service) GetSignerCounters(req *GetSignerCounters) (*GetSignerCountersR
 // GetUpdates returns instances that have a newer versions than the ones
 // passed to it.
 func (s *Service) GetUpdates(pr *GetUpdatesRequest) (*GetUpdatesReply, error) {
+	s.catchingLock.Lock()
+	s.updateTrieLock.Lock()
+
+	defer func() {
+		s.updateTrieLock.Unlock()
+		s.catchingLock.Unlock()
+	}()
+
 	sb := s.db().GetByID(pr.LatestBlockID)
 	if sb == nil {
 		return nil, xerrors.New("cannot find skipblock while getting proof")
