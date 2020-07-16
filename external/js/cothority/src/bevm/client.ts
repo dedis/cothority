@@ -17,6 +17,10 @@ import { BEvmService } from "./service";
 export class EvmAccount {
     static EC = new ec("secp256k1");
 
+    static deserialize(obj: any): EvmAccount {
+        return new EvmAccount(obj.name, obj.privateKey, obj.nonce);
+    }
+
     private static computeAddress(key: ec.KeyPair): Buffer {
         // Marshal public key to binary
         const pubBytes = Buffer.from(key.getPublic("hex"), "hex");
@@ -75,12 +79,29 @@ export class EvmAccount {
     incNonce() {
         this._nonce += 1;
     }
+
+    serialize(): object {
+        return {
+            name: this.name,
+            nonce: this.nonce,
+            privateKey: this.key.getPrivate("hex"),
+        };
+    }
 }
 
 /**
  * Ethereum smart contract
  */
 export class EvmContract {
+    static deserialize(obj: any): EvmContract {
+        const addresses = obj.addresses.map((elem: string) => Buffer.from(elem, "hex"));
+        const bytecode = Buffer.from(obj.bytecode, "hex");
+
+        const contract = new EvmContract(obj.name, bytecode, obj.abi, addresses);
+
+        return contract;
+    }
+
     private static computeAddress(data: Buffer, nonce: number): Buffer {
         const buf = EvmContract.erlEncode(data, nonce);
 
@@ -155,6 +176,15 @@ export class EvmContract {
     createNewAddress(account: EvmAccount) {
         const newAddress = EvmContract.computeAddress(account.address, account.nonce);
         this.addresses.push(newAddress);
+    }
+
+    serialize(): object {
+        return {
+            abi: this.abi,
+            addresses: this.addresses.map((address) => address.toString("hex")),
+            bytecode: this.bytecode.toString("hex"),
+            name: this.name,
+        };
     }
 }
 
