@@ -29,6 +29,9 @@ docker:
 	cd conode/; make docker_dev
 	cd external/docker/; make docker_test
 
+docker_test_run: docker
+	docker run -ti -p7770-7777:7770-7777 dedis/conode-test
+
 test_java: docker
 	cd external/java; mvn test
 
