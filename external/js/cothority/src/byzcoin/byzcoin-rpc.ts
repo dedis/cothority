@@ -448,7 +448,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
             }
         } catch (e) {
             if (e.toString().match(/(latest block|cannot find skipblock)/) === null) {
-                return Log.rcatch(e, "couldn't get a suiting block...");
+                return Log.rcatch(e, "couldn't get a suitable block...");
             }
             Log.warn("Got retriable error from node:", e.toString());
         }
@@ -457,7 +457,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
             throw new Error("maximum number of tries reached");
         }
 
-        Log.lvl2("Trying again with index", this.latest.index);
+        Log.lvl2("Trying again with index", latestIndex + 1);
         return new Promise(async (resolve, reject) => {
             // Start with the index used in the query, and add all new arriving blocks.
             // Using `distinct` and `elementAt` to fetch only a new block-number different from

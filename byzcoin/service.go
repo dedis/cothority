@@ -609,12 +609,10 @@ func (s *Service) GetSignerCounters(req *GetSignerCounters) (*GetSignerCountersR
 // passed to it.
 func (s *Service) GetUpdates(pr *GetUpdatesRequest) (*GetUpdatesReply, error) {
 	s.catchingLock.Lock()
-	s.updateTrieLock.Lock()
+	defer s.catchingLock.Unlock()
 
-	defer func() {
-		s.updateTrieLock.Unlock()
-		s.catchingLock.Unlock()
-	}()
+	s.updateTrieLock.Lock()
+	defer s.updateTrieLock.Unlock()
 
 	sb := s.db().GetByID(pr.LatestBlockID)
 	if sb == nil {
