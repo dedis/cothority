@@ -208,135 +208,139 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 			"state DB: %v", err)
 	}
 
+	var methodSc []byzcoin.StateChange
+
 	switch inst.Invoke.Command {
-	case "credit": // Credit an Ethereum account
-		err := checkArguments(inst, "address", "amount")
+	case "credit":
+		methodSc, err = c.invokeCredit(rst, inst, stateDb, darcID)
 		if err != nil {
-			return nil, nil,
-				xerrors.Errorf("failed to validate arguments for 'credit' "+
-					"invocation on BEvm: %v", err)
+			return nil, nil, xerrors.Errorf("failed to execute \"credit\" "+
+				"method on BEvm contract: %v", err)
 		}
-
-		address := common.BytesToAddress(inst.Invoke.Args.Search("address"))
-		amount := new(big.Int).SetBytes(inst.Invoke.Args.Search("amount"))
-
-		stateDb.AddBalance(address, amount)
-
-		contractState, stateChanges, err := NewContractState(stateDb)
-		if err != nil {
-			return nil, nil,
-				xerrors.Errorf("failed to create new BEvm contract "+
-					"state: %v", err)
-		}
-
-		contractData, err := protobuf.Encode(contractState)
-		if err != nil {
-			return nil, nil,
-				xerrors.Errorf("failed to encode BEvm contract state: %v", err)
-		}
-
-		// State changes to ByzCoin contain the Update to the main contract
-		// state, plus whatever changes were produced by the EVM on its state
-		// database.
-		mainSc := byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
-			ContractBEvmID, contractData, darcID)
-
-		sc = []byzcoin.StateChange{mainSc}
-		sc = append(sc, stateChanges...)
 
 	case "transaction":
-		// Perform an Ethereum transaction (contract method call with state
-		// change)
-
-		// Retrieve the Ethereum transaction
-		var ethTx types.Transaction
-
-		// The client can send the transaction serlalized either in JSON (using
-		// the "tx" parameter) or in RLP (using the "txRlp" parameter).
-		// This latter possibility was added due to compatibility issues with
-		// the JSON produced by the JS libraries.
-		encodedTx := inst.Invoke.Args.Search("tx")
-		if encodedTx != nil {
-			err = ethTx.UnmarshalJSON(encodedTx)
-			if err != nil {
-				return nil, nil, xerrors.Errorf("failed to decode JSON for EVM "+
-					"transaction: %v", err)
-			}
-		} else {
-			encodedTx = inst.Invoke.Args.Search("txRlp")
-			if encodedTx == nil {
-				return nil, nil, xerrors.New("Missing either \"tx\" or " +
-					"\"txRlp\" argument for BEvm \"transaction\" invocation")
-			}
-
-			s := rlp.NewStream(strings.NewReader(string(encodedTx)), 0)
-			err = ethTx.DecodeRLP(s)
-			if err != nil {
-				return nil, nil, xerrors.Errorf("failed to decode RLP for EVM "+
-					"transaction: %v", err)
-			}
-		}
-
-		// Retrieve the TimeReader (we are actually called with a GlobalState)
-		tr, ok := rst.(byzcoin.TimeReader)
-		if !ok {
-			return nil, nil, xerrors.Errorf("internal error: cannot convert " +
-				"ReadOnlyStateTrie to TimeReader")
-		}
-
-		// Compute the timestamp for the EVM, converting [ns] to [s]
-		evmTs := uint64(tr.GetCurrentBlockTimestamp() / 1e9)
-
-		stateDb.Prepare(ethTx.Hash(), common.Hash{}, 0)
-		txReceipt, err := sendTx(&ethTx, stateDb, evmTs)
+		methodSc, err = c.invokeTransaction(rst, inst, stateDb, darcID)
 		if err != nil {
-			return nil, nil,
-				xerrors.Errorf("failed to send transaction to EVM: %v", err)
+			return nil, nil, xerrors.Errorf("failed to execute \"credit\" "+
+				"method on BEvm contract: %v", err)
 		}
-
-		if txReceipt.ContractAddress.Hex() != nilAddress.Hex() {
-			log.Lvlf2("Contract deployed at '%s'",
-				txReceipt.ContractAddress.Hex())
-		} else {
-			log.Lvlf2("Transaction to '%s'", ethTx.To().Hex())
-		}
-		log.Lvlf2("\\--> status = %d, gas used = %d, receipt = %s",
-			txReceipt.Status, txReceipt.GasUsed, txReceipt.TxHash.Hex())
-
-		eventStateChanges, err := handleLogs(inst, rst, txReceipt.Logs)
-		if err != nil {
-			return nil, nil, xerrors.Errorf("failed to handle EVM transaction "+
-				"logs: %v", err)
-		}
-
-		contractState, evmStateChanges, err := NewContractState(stateDb)
-		if err != nil {
-			return nil, nil,
-				xerrors.Errorf("failed to create new BEvm contract "+
-					"state: %v", err)
-		}
-
-		contractData, err := protobuf.Encode(contractState)
-		if err != nil {
-			return nil, nil,
-				xerrors.Errorf("failed to encode BEvm contract state: %v", err)
-		}
-
-		// State changes to ByzCoin contain the Update to the main contract
-		// state, plus whatever changes were produced by the EVM on its state
-		// database, plus whatever changes were produced by the events.
-		mainSc := byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
-			ContractBEvmID, contractData, darcID)
-
-		sc = []byzcoin.StateChange{mainSc}
-		sc = append(sc, evmStateChanges...)
-		sc = append(sc, eventStateChanges...)
 
 	default:
 		err = fmt.Errorf("unknown Invoke command: '%s'", inst.Invoke.Command)
 	}
 
+	contractState, evmStateChanges, err := NewContractState(stateDb)
+	if err != nil {
+		return nil, nil,
+			xerrors.Errorf("failed to create new BEvm contract "+
+				"state: %v", err)
+	}
+
+	contractData, err := protobuf.Encode(contractState)
+	if err != nil {
+		return nil, nil,
+			xerrors.Errorf("failed to encode BEvm contract state: %v", err)
+	}
+
+	// State changes to ByzCoin contain the Update to the main contract
+	// state, plus whatever changes were produced by the EVM on its state
+	// database, plus whatever changes were produced by the method.
+
+	mainSc := byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
+		ContractBEvmID, contractData, darcID)
+
+	sc = []byzcoin.StateChange{mainSc}
+	sc = append(sc, evmStateChanges...)
+	sc = append(sc, methodSc...)
+
 	return
+}
+
+// Credit an Ethereum account
+func (c *contractBEvm) invokeCredit(rst byzcoin.ReadOnlyStateTrie,
+	inst byzcoin.Instruction, stateDb *state.StateDB,
+	darcID darc.ID) ([]byzcoin.StateChange, error) {
+	err := checkArguments(inst, "address", "amount")
+	if err != nil {
+		return nil,
+			xerrors.Errorf("failed to validate arguments for 'credit' "+
+				"invocation on BEvm: %v", err)
+	}
+
+	address := common.BytesToAddress(inst.Invoke.Args.Search("address"))
+	amount := new(big.Int).SetBytes(inst.Invoke.Args.Search("amount"))
+
+	stateDb.AddBalance(address, amount)
+
+	return nil, nil
+}
+
+// Perform an Ethereum transaction (contract method call with state change)
+func (c *contractBEvm) invokeTransaction(rst byzcoin.ReadOnlyStateTrie,
+	inst byzcoin.Instruction, stateDb *state.StateDB,
+	darcID darc.ID) ([]byzcoin.StateChange, error) {
+	// Retrieve the Ethereum transaction
+	var ethTx types.Transaction
+
+	// The client can send the transaction serlalized either in JSON (using
+	// the "tx" parameter) or in RLP (using the "txRlp" parameter).
+	// This latter possibility was added due to compatibility issues with
+	// the JSON produced by the JS libraries.
+	encodedTx := inst.Invoke.Args.Search("tx")
+	if encodedTx != nil {
+		err := ethTx.UnmarshalJSON(encodedTx)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to decode JSON for EVM "+
+				"transaction: %v", err)
+		}
+	} else {
+		encodedTx = inst.Invoke.Args.Search("txRlp")
+		if encodedTx == nil {
+			return nil, xerrors.New("Missing either \"tx\" or " +
+				"\"txRlp\" argument for BEvm \"transaction\" invocation")
+		}
+
+		s := rlp.NewStream(strings.NewReader(string(encodedTx)), 0)
+		err := ethTx.DecodeRLP(s)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to decode RLP for EVM "+
+				"transaction: %v", err)
+		}
+	}
+
+	// Retrieve the TimeReader (we are actually called with a GlobalState)
+	tr, ok := rst.(byzcoin.TimeReader)
+	if !ok {
+		return nil, xerrors.Errorf("internal error: cannot convert " +
+			"ReadOnlyStateTrie to TimeReader")
+	}
+
+	// Compute the timestamp for the EVM, converting [ns] to [s]
+	evmTs := uint64(tr.GetCurrentBlockTimestamp() / 1e9)
+
+	stateDb.Prepare(ethTx.Hash(), common.Hash{}, 0)
+	txReceipt, err := sendTx(&ethTx, stateDb, evmTs)
+	if err != nil {
+		return nil,
+			xerrors.Errorf("failed to send transaction to EVM: %v", err)
+	}
+
+	if txReceipt.ContractAddress.Hex() != nilAddress.Hex() {
+		log.Lvlf2("Contract deployed at '%s'",
+			txReceipt.ContractAddress.Hex())
+	} else {
+		log.Lvlf2("Transaction to '%s'", ethTx.To().Hex())
+	}
+	log.Lvlf2("\\--> status = %d, gas used = %d, receipt = %s",
+		txReceipt.Status, txReceipt.GasUsed, txReceipt.TxHash.Hex())
+
+	eventStateChanges, err := handleLogs(inst, rst, txReceipt.Logs)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to handle EVM transaction "+
+			"logs: %v", err)
+	}
+
+	return eventStateChanges, nil
 }
 
 // Helper function that sends a transaction to the EVM
