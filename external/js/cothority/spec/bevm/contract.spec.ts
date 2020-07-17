@@ -19,6 +19,8 @@ describe("EvmContract", () => {
 
         const account = new EvmAccount("test", privKey);
         const contract = new EvmContract("candy", candyBytecode, candyAbi);
+        // Constructor, 1 transaction, 1 view method
+        expect(contract.methodAbi.size).toBe(3);
 
         contract.createNewAddress(account);
         expect(contract.addresses.length).toBe(1);
@@ -39,7 +41,8 @@ describe("EvmContract", () => {
 
         expect(contract.name).toEqual(contract2.name);
         expect(contract.bytecode).toEqual(contract2.bytecode);
-        expect(contract.abi).toEqual(contract2.abi);
+        expect(contract.abiJson).toEqual(contract2.abiJson);
+        expect(contract.methodAbi).toEqual(contract2.methodAbi);
         expect(contract.addresses).toEqual(contract2.addresses);
     });
 });

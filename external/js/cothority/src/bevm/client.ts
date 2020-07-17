@@ -119,7 +119,7 @@ export class EvmContract {
      */
     constructor(readonly name: string,
                 readonly bytecode: Buffer,
-                abiJson: string,
+                readonly abiJson: string,
                 readonly addresses: Buffer[] = []) {
         this.methodAbi = new Map();
 
@@ -146,7 +146,7 @@ export class EvmContract {
 
     serialize(): object {
         return {
-            abi: this.abi,
+            abi: this.abiJson,
             addresses: this.addresses.map((address) => address.toString("hex")),
             bytecode: this.bytecode.toString("hex"),
             name: this.name,

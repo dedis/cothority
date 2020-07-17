@@ -3,6 +3,8 @@
 
 import { EvmAccount } from "../../src/bevm";
 
+import { Transaction } from "ethereumjs-tx";
+
 describe("EvmAccount", async () => {
     it("should correctly compute its address", () => {
         const privKey = Buffer.from("c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3", "hex");
@@ -21,10 +23,12 @@ describe("EvmAccount", async () => {
         const ser = account.serialize();
         const account2 = EvmAccount.deserialize(ser);
 
-        const data = Buffer.from("this is a test");
+        const tx = new Transaction({
+            data: Buffer.from("0102030405060708090a0b0c0d0e0f00", "hex"),
+        });
 
         expect(account.address).toEqual(account2.address);
         expect(account.nonce).toEqual(account2.nonce);
-        expect(account.sign(data)).toEqual(account2.sign(data));
+        expect(account.sign(tx)).toEqual(account2.sign(tx));
     });
 });
