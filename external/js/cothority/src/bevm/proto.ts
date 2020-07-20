@@ -7,7 +7,6 @@ export class CallRequest extends Message<CallRequest> {
     }
 
     readonly byzcoinId: Buffer;
-    readonly serverConfig: string;
     readonly bevmInstanceId: Buffer;
     readonly accountAddress: Buffer;
     readonly contractAddress: Buffer;
@@ -23,15 +22,6 @@ export class CallRequest extends Message<CallRequest> {
             },
             set(value: Buffer) {
                 this.blockId = value;
-            },
-        });
-
-        Object.defineProperty(this, "serverconfig", {
-            get(): string {
-                return this.serverConfig;
-            },
-            set(value: string) {
-                this.serverConfig = value;
             },
         });
 

@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/app"
 	"go.dedis.ch/onet/v3/log"
 )
 
@@ -131,11 +130,6 @@ func TestService_Call(t *testing.T) {
 	// Ensure transaction is propagated to all nodes
 	require.NoError(t, bct.cl.WaitPropagation(-1))
 
-	// Retrieve server TOML config
-	grp := &app.Group{Roster: bct.roster}
-	grpToml, err := grp.Toml(cothority.Suite)
-	require.NoError(t, err)
-
 	callData, err := candyInstance.packMethod("getRemainingCandies")
 	require.NoError(t, err)
 
@@ -143,7 +137,6 @@ func TestService_Call(t *testing.T) {
 	resp, err := bevmClient.PerformCall(
 		bct.roster.List[0],
 		bct.cl.ID,
-		grpToml.String(),
 		bevmClient.instanceID,
 		a.Address[:],
 		candyInstance.Address[:],

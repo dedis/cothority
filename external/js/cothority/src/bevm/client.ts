@@ -347,7 +347,6 @@ export class BEvmClient extends Instance {
      * ID that contains it must be provided.
      *
      * @param byzcoinId         ByzCoin ID
-     * @param serverConfig      Cothority server config in TOML
      * @param bevmInstanceId    BEvm instance ID
      * @param account           EVM account
      * @param contract          EVM contract
@@ -360,7 +359,6 @@ export class BEvmClient extends Instance {
      * See `deploy()` for a description of `args`.
      */
     async call(byzcoinId: Buffer,
-               serverConfig: string,
                bevmInstanceId: Buffer,
                account: EvmAccount,
                contract: EvmContract,
@@ -375,7 +373,6 @@ export class BEvmClient extends Instance {
 
         const response = await this.bevmService.performCall(
             byzcoinId,
-            serverConfig,
             bevmInstanceId,
             account.address,
             contract.addresses[instanceIndex],

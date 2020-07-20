@@ -33,7 +33,6 @@ export class BEvmService {
      * Execute a view method (read-only)
      *
      * @param byzcoinId         ByzCoin ID
-     * @param serverConfig      Cothority server config in TOML
      * @param bevmInstanceId    BEvm instance ID
      * @param accountAddress    Address of the EVM account
      * @param contractAddress   Address of the smart contract
@@ -42,7 +41,6 @@ export class BEvmService {
      * @return Result of the view method execution
      */
     async performCall(byzcoinId: Buffer,
-                      serverConfig: string,
                       bevmInstanceId: Buffer,
                       accountAddress: Buffer,
                       contractAddress: Buffer,
@@ -58,7 +56,6 @@ export class BEvmService {
                 byzcoinId,
                 callData,
                 contractAddress,
-                serverConfig,
             });
 
         return this.conn.send(msg, CallResponse);

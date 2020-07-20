@@ -9,7 +9,6 @@ package bevm
 // CallRequest is a request to execute a view method (read-only).
 type CallRequest struct {
 	ByzCoinID       []byte
-	ServerConfig    string
 	BEvmInstanceID  []byte
 	AccountAddress  []byte
 	ContractAddress []byte

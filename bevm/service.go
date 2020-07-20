@@ -2,13 +2,11 @@ package bevm
 
 import (
 	"encoding/hex"
-	"strings"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"go.dedis.ch/cothority/v3/byzcoin"
-	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/app"
 	"go.dedis.ch/onet/v3/log"
 	"golang.org/x/xerrors"
 )
@@ -42,29 +40,43 @@ func init() {
 // instance by contacting a ByzCoin cothority. Returns the call response.
 func (service *Service) PerformCall(req *CallRequest) (*CallResponse,
 	error) {
-	// Read server configuration from TOML data
-	grp, err := app.ReadGroupDescToml(strings.NewReader(req.ServerConfig))
-	if err != nil {
-		return nil, xerrors.Errorf("failed to read server TOML config: %v", err)
-	}
-	// Instantiate a new ByzCoin client
-	bcClient := byzcoin.NewClient(req.ByzCoinID, *grp.Roster)
-
-	// Instantiate a new BEvm client (we don't need a darc to read proofs)
-	bevmClient, err := NewClient(bcClient, darc.Signer{},
-		byzcoin.NewInstanceID(req.BEvmInstanceID))
-	if err != nil {
-		return nil, xerrors.Errorf("failed to create new BEvm client: %v", err)
-	}
-
 	accountAddress := common.BytesToAddress(req.AccountAddress)
 	contractAddress := common.BytesToAddress(req.ContractAddress)
 
-	// Execute the view method in the EVM
-	result, err := bevmClient.CallPacked(accountAddress, contractAddress,
-		req.CallData)
+	serv := service.Context.Service(byzcoin.ServiceName)
+	if serv == nil {
+		return nil, xerrors.New("cannot find \"byzcoin\" service")
+	}
+
+	bcService, ok := serv.(*byzcoin.Service)
+	if !ok {
+		return nil,
+			xerrors.New("internal error: service is not a byzcoin.Service")
+	}
+
+	rst, err := bcService.GetReadOnlyStateTrie(req.ByzCoinID)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to perform BEvm call: %v", err)
+		return nil, xerrors.Errorf("failed to retrieve ReadOnlyStateTrie: %v",
+			err)
+	}
+
+	// Retrieve the EVM state
+	stateDb, err := getEvmDbRst(rst, byzcoin.NewInstanceID(req.BEvmInstanceID))
+	if err != nil {
+		return nil, xerrors.Errorf("failed to obtain stateTrie-backed database "+
+			"for BEvm: %v", err)
+	}
+
+	// Compute timestamp for the EVM
+	timestamp := time.Now().UnixNano()
+	// timestamp in ByzCoin is in [ns], whereas in EVM it is in [s]
+	evmTs := timestamp / 1e9
+
+	result, err := CallEVM(accountAddress, contractAddress, req.CallData,
+		stateDb, evmTs)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to execute EVM view "+
+			"method: %v", err)
 	}
 
 	log.Lvlf4("Returning: %v", hex.EncodeToString(result))

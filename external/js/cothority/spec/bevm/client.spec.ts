@@ -1,5 +1,4 @@
 import BN from "bn.js";
-import fs from "fs";
 import Long from "long";
 
 // For debugging
@@ -16,7 +15,6 @@ import { ROSTER, startConodes } from "../support/conondes";
 
 describe("BEvmClient", async () => {
     let roster: Roster;
-    let rosterTOML: string;
     let byzcoinRPC: ByzCoinRPC;
     let admin: SignerEd25519;
     let srv: BEvmService;
@@ -49,12 +47,9 @@ ateMutability":"nonpayable","type":"constructor"}]
         await startConodes();
 
         roster = ROSTER.slice(0, 4);
-        // Taken from  .../spec/support/conondes.ts
-        rosterTOML = fs.readFileSync(
-            process.cwd() + "/spec/support/public.toml").toString();
 
-        const srvConode = roster.list[0];
-        srv = new BEvmService(srvConode);
+        // Use first cothority server for service
+        srv = new BEvmService(roster.list[0]);
         srv.setTimeout(1000);
 
         admin = SignerEd25519.random();
@@ -129,7 +124,6 @@ ateMutability":"nonpayable","type":"constructor"}]
         const expectedRemainingCandies = new BN(100 - (10 * 11 / 2));
         const [remainingCandies] = await client.call(
             byzcoinRPC.genesisID,
-            rosterTOML,
             client.id,
             account,
             contract,
@@ -171,7 +165,6 @@ ateMutability":"nonpayable","type":"constructor"}]
         // Retrieve number of remaining candies
         const [remainingCandies] = await client.call(
             byzcoinRPC.genesisID,
-            rosterTOML,
             client.id,
             account,
             contract,
