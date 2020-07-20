@@ -28,52 +28,38 @@ public final class BEvmProto {
     com.google.protobuf.ByteString getByzcoinid();
 
     /**
-     * <code>required string serverconfig = 2;</code>
-     */
-    boolean hasServerconfig();
-    /**
-     * <code>required string serverconfig = 2;</code>
-     */
-    java.lang.String getServerconfig();
-    /**
-     * <code>required string serverconfig = 2;</code>
-     */
-    com.google.protobuf.ByteString
-        getServerconfigBytes();
-
-    /**
-     * <code>required bytes bevminstanceid = 3;</code>
+     * <code>required bytes bevminstanceid = 2;</code>
      */
     boolean hasBevminstanceid();
     /**
-     * <code>required bytes bevminstanceid = 3;</code>
+     * <code>required bytes bevminstanceid = 2;</code>
      */
     com.google.protobuf.ByteString getBevminstanceid();
 
     /**
-     * <code>required bytes accountaddress = 4;</code>
+     * <code>required bytes accountaddress = 3;</code>
      */
     boolean hasAccountaddress();
     /**
-     * <code>required bytes accountaddress = 4;</code>
+     * <code>required bytes accountaddress = 3;</code>
      */
     com.google.protobuf.ByteString getAccountaddress();
 
     /**
-     * <code>required bytes contractaddress = 5;</code>
+     * <code>required bytes contractaddress = 4;</code>
      */
     boolean hasContractaddress();
     /**
-     * <code>required bytes contractaddress = 5;</code>
+     * <code>required bytes contractaddress = 4;</code>
      */
     com.google.protobuf.ByteString getContractaddress();
 
     /**
-     * <code>required bytes calldata = 6;</code>
+     * <code>required bytes calldata = 5;</code>
      */
     boolean hasCalldata();
     /**
-     * <code>required bytes calldata = 6;</code>
+     * <code>required bytes calldata = 5;</code>
      */
     com.google.protobuf.ByteString getCalldata();
   }
@@ -95,7 +81,6 @@ public final class BEvmProto {
     }
     private CallRequest() {
       byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
-      serverconfig_ = "";
       bevminstanceid_ = com.google.protobuf.ByteString.EMPTY;
       accountaddress_ = com.google.protobuf.ByteString.EMPTY;
       contractaddress_ = com.google.protobuf.ByteString.EMPTY;
@@ -132,28 +117,22 @@ public final class BEvmProto {
               break;
             }
             case 18: {
-              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000002;
-              serverconfig_ = bs;
+              bevminstanceid_ = input.readBytes();
               break;
             }
             case 26: {
               bitField0_ |= 0x00000004;
-              bevminstanceid_ = input.readBytes();
+              accountaddress_ = input.readBytes();
               break;
             }
             case 34: {
               bitField0_ |= 0x00000008;
-              accountaddress_ = input.readBytes();
+              contractaddress_ = input.readBytes();
               break;
             }
             case 42: {
               bitField0_ |= 0x00000010;
-              contractaddress_ = input.readBytes();
-              break;
-            }
-            case 50: {
-              bitField0_ |= 0x00000020;
               calldata_ = input.readBytes();
               break;
             }
@@ -205,103 +184,61 @@ public final class BEvmProto {
       return byzcoinid_;
     }
 
-    public static final int SERVERCONFIG_FIELD_NUMBER = 2;
-    private volatile java.lang.Object serverconfig_;
+    public static final int BEVMINSTANCEID_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString bevminstanceid_;
     /**
-     * <code>required string serverconfig = 2;</code>
+     * <code>required bytes bevminstanceid = 2;</code>
      */
-    public boolean hasServerconfig() {
+    public boolean hasBevminstanceid() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>required string serverconfig = 2;</code>
-     */
-    public java.lang.String getServerconfig() {
-      java.lang.Object ref = serverconfig_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          serverconfig_ = s;
-        }
-        return s;
-      }
-    }
-    /**
-     * <code>required string serverconfig = 2;</code>
-     */
-    public com.google.protobuf.ByteString
-        getServerconfigBytes() {
-      java.lang.Object ref = serverconfig_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        serverconfig_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-
-    public static final int BEVMINSTANCEID_FIELD_NUMBER = 3;
-    private com.google.protobuf.ByteString bevminstanceid_;
-    /**
-     * <code>required bytes bevminstanceid = 3;</code>
-     */
-    public boolean hasBevminstanceid() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
-    }
-    /**
-     * <code>required bytes bevminstanceid = 3;</code>
+     * <code>required bytes bevminstanceid = 2;</code>
      */
     public com.google.protobuf.ByteString getBevminstanceid() {
       return bevminstanceid_;
     }
 
-    public static final int ACCOUNTADDRESS_FIELD_NUMBER = 4;
+    public static final int ACCOUNTADDRESS_FIELD_NUMBER = 3;
     private com.google.protobuf.ByteString accountaddress_;
     /**
-     * <code>required bytes accountaddress = 4;</code>
+     * <code>required bytes accountaddress = 3;</code>
      */
     public boolean hasAccountaddress() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
-     * <code>required bytes accountaddress = 4;</code>
+     * <code>required bytes accountaddress = 3;</code>
      */
     public com.google.protobuf.ByteString getAccountaddress() {
       return accountaddress_;
     }
 
-    public static final int CONTRACTADDRESS_FIELD_NUMBER = 5;
+    public static final int CONTRACTADDRESS_FIELD_NUMBER = 4;
     private com.google.protobuf.ByteString contractaddress_;
     /**
-     * <code>required bytes contractaddress = 5;</code>
+     * <code>required bytes contractaddress = 4;</code>
      */
     public boolean hasContractaddress() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
-     * <code>required bytes contractaddress = 5;</code>
+     * <code>required bytes contractaddress = 4;</code>
      */
     public com.google.protobuf.ByteString getContractaddress() {
       return contractaddress_;
     }
 
-    public static final int CALLDATA_FIELD_NUMBER = 6;
+    public static final int CALLDATA_FIELD_NUMBER = 5;
     private com.google.protobuf.ByteString calldata_;
     /**
-     * <code>required bytes calldata = 6;</code>
+     * <code>required bytes calldata = 5;</code>
      */
     public boolean hasCalldata() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000010) == 0x00000010);
     }
     /**
-     * <code>required bytes calldata = 6;</code>
+     * <code>required bytes calldata = 5;</code>
      */
     public com.google.protobuf.ByteString getCalldata() {
       return calldata_;
@@ -315,10 +252,6 @@ public final class BEvmProto {
       if (isInitialized == 0) return false;
 
       if (!hasByzcoinid()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasServerconfig()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -349,19 +282,16 @@ public final class BEvmProto {
         output.writeBytes(1, byzcoinid_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, serverconfig_);
+        output.writeBytes(2, bevminstanceid_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeBytes(3, bevminstanceid_);
+        output.writeBytes(3, accountaddress_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeBytes(4, accountaddress_);
+        output.writeBytes(4, contractaddress_);
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        output.writeBytes(5, contractaddress_);
-      }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        output.writeBytes(6, calldata_);
+        output.writeBytes(5, calldata_);
       }
       unknownFields.writeTo(output);
     }
@@ -377,23 +307,20 @@ public final class BEvmProto {
           .computeBytesSize(1, byzcoinid_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, serverconfig_);
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, bevminstanceid_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(3, bevminstanceid_);
+          .computeBytesSize(3, accountaddress_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(4, accountaddress_);
+          .computeBytesSize(4, contractaddress_);
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(5, contractaddress_);
-      }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(6, calldata_);
+          .computeBytesSize(5, calldata_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -415,11 +342,6 @@ public final class BEvmProto {
       if (hasByzcoinid()) {
         result = result && getByzcoinid()
             .equals(other.getByzcoinid());
-      }
-      result = result && (hasServerconfig() == other.hasServerconfig());
-      if (hasServerconfig()) {
-        result = result && getServerconfig()
-            .equals(other.getServerconfig());
       }
       result = result && (hasBevminstanceid() == other.hasBevminstanceid());
       if (hasBevminstanceid()) {
@@ -455,10 +377,6 @@ public final class BEvmProto {
       if (hasByzcoinid()) {
         hash = (37 * hash) + BYZCOINID_FIELD_NUMBER;
         hash = (53 * hash) + getByzcoinid().hashCode();
-      }
-      if (hasServerconfig()) {
-        hash = (37 * hash) + SERVERCONFIG_FIELD_NUMBER;
-        hash = (53 * hash) + getServerconfig().hashCode();
       }
       if (hasBevminstanceid()) {
         hash = (37 * hash) + BEVMINSTANCEID_FIELD_NUMBER;
@@ -615,16 +533,14 @@ public final class BEvmProto {
         super.clear();
         byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
-        serverconfig_ = "";
-        bitField0_ = (bitField0_ & ~0x00000002);
         bevminstanceid_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000004);
+        bitField0_ = (bitField0_ & ~0x00000002);
         accountaddress_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000004);
         contractaddress_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000008);
         calldata_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000020);
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
@@ -660,21 +576,17 @@ public final class BEvmProto {
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
         }
-        result.serverconfig_ = serverconfig_;
+        result.bevminstanceid_ = bevminstanceid_;
         if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
           to_bitField0_ |= 0x00000004;
         }
-        result.bevminstanceid_ = bevminstanceid_;
+        result.accountaddress_ = accountaddress_;
         if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
           to_bitField0_ |= 0x00000008;
         }
-        result.accountaddress_ = accountaddress_;
+        result.contractaddress_ = contractaddress_;
         if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
           to_bitField0_ |= 0x00000010;
-        }
-        result.contractaddress_ = contractaddress_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
-          to_bitField0_ |= 0x00000020;
         }
         result.calldata_ = calldata_;
         result.bitField0_ = to_bitField0_;
@@ -729,11 +641,6 @@ public final class BEvmProto {
         if (other.hasByzcoinid()) {
           setByzcoinid(other.getByzcoinid());
         }
-        if (other.hasServerconfig()) {
-          bitField0_ |= 0x00000002;
-          serverconfig_ = other.serverconfig_;
-          onChanged();
-        }
         if (other.hasBevminstanceid()) {
           setBevminstanceid(other.getBevminstanceid());
         }
@@ -754,9 +661,6 @@ public final class BEvmProto {
       @java.lang.Override
       public final boolean isInitialized() {
         if (!hasByzcoinid()) {
-          return false;
-        }
-        if (!hasServerconfig()) {
           return false;
         }
         if (!hasBevminstanceid()) {
@@ -829,112 +733,36 @@ public final class BEvmProto {
         return this;
       }
 
-      private java.lang.Object serverconfig_ = "";
+      private com.google.protobuf.ByteString bevminstanceid_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required string serverconfig = 2;</code>
+       * <code>required bytes bevminstanceid = 2;</code>
        */
-      public boolean hasServerconfig() {
+      public boolean hasBevminstanceid() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>required string serverconfig = 2;</code>
-       */
-      public java.lang.String getServerconfig() {
-        java.lang.Object ref = serverconfig_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            serverconfig_ = s;
-          }
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
-      }
-      /**
-       * <code>required string serverconfig = 2;</code>
-       */
-      public com.google.protobuf.ByteString
-          getServerconfigBytes() {
-        java.lang.Object ref = serverconfig_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          serverconfig_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <code>required string serverconfig = 2;</code>
-       */
-      public Builder setServerconfig(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000002;
-        serverconfig_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required string serverconfig = 2;</code>
-       */
-      public Builder clearServerconfig() {
-        bitField0_ = (bitField0_ & ~0x00000002);
-        serverconfig_ = getDefaultInstance().getServerconfig();
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required string serverconfig = 2;</code>
-       */
-      public Builder setServerconfigBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000002;
-        serverconfig_ = value;
-        onChanged();
-        return this;
-      }
-
-      private com.google.protobuf.ByteString bevminstanceid_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <code>required bytes bevminstanceid = 3;</code>
-       */
-      public boolean hasBevminstanceid() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
-      }
-      /**
-       * <code>required bytes bevminstanceid = 3;</code>
+       * <code>required bytes bevminstanceid = 2;</code>
        */
       public com.google.protobuf.ByteString getBevminstanceid() {
         return bevminstanceid_;
       }
       /**
-       * <code>required bytes bevminstanceid = 3;</code>
+       * <code>required bytes bevminstanceid = 2;</code>
        */
       public Builder setBevminstanceid(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000004;
+  bitField0_ |= 0x00000002;
         bevminstanceid_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required bytes bevminstanceid = 3;</code>
+       * <code>required bytes bevminstanceid = 2;</code>
        */
       public Builder clearBevminstanceid() {
-        bitField0_ = (bitField0_ & ~0x00000004);
+        bitField0_ = (bitField0_ & ~0x00000002);
         bevminstanceid_ = getDefaultInstance().getBevminstanceid();
         onChanged();
         return this;
@@ -942,34 +770,34 @@ public final class BEvmProto {
 
       private com.google.protobuf.ByteString accountaddress_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required bytes accountaddress = 4;</code>
+       * <code>required bytes accountaddress = 3;</code>
        */
       public boolean hasAccountaddress() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
-       * <code>required bytes accountaddress = 4;</code>
+       * <code>required bytes accountaddress = 3;</code>
        */
       public com.google.protobuf.ByteString getAccountaddress() {
         return accountaddress_;
       }
       /**
-       * <code>required bytes accountaddress = 4;</code>
+       * <code>required bytes accountaddress = 3;</code>
        */
       public Builder setAccountaddress(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000008;
+  bitField0_ |= 0x00000004;
         accountaddress_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required bytes accountaddress = 4;</code>
+       * <code>required bytes accountaddress = 3;</code>
        */
       public Builder clearAccountaddress() {
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000004);
         accountaddress_ = getDefaultInstance().getAccountaddress();
         onChanged();
         return this;
@@ -977,34 +805,34 @@ public final class BEvmProto {
 
       private com.google.protobuf.ByteString contractaddress_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required bytes contractaddress = 5;</code>
+       * <code>required bytes contractaddress = 4;</code>
        */
       public boolean hasContractaddress() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
-       * <code>required bytes contractaddress = 5;</code>
+       * <code>required bytes contractaddress = 4;</code>
        */
       public com.google.protobuf.ByteString getContractaddress() {
         return contractaddress_;
       }
       /**
-       * <code>required bytes contractaddress = 5;</code>
+       * <code>required bytes contractaddress = 4;</code>
        */
       public Builder setContractaddress(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000010;
+  bitField0_ |= 0x00000008;
         contractaddress_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required bytes contractaddress = 5;</code>
+       * <code>required bytes contractaddress = 4;</code>
        */
       public Builder clearContractaddress() {
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000008);
         contractaddress_ = getDefaultInstance().getContractaddress();
         onChanged();
         return this;
@@ -1012,34 +840,34 @@ public final class BEvmProto {
 
       private com.google.protobuf.ByteString calldata_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required bytes calldata = 6;</code>
+       * <code>required bytes calldata = 5;</code>
        */
       public boolean hasCalldata() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000010) == 0x00000010);
       }
       /**
-       * <code>required bytes calldata = 6;</code>
+       * <code>required bytes calldata = 5;</code>
        */
       public com.google.protobuf.ByteString getCalldata() {
         return calldata_;
       }
       /**
-       * <code>required bytes calldata = 6;</code>
+       * <code>required bytes calldata = 5;</code>
        */
       public Builder setCalldata(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000020;
+  bitField0_ |= 0x00000010;
         calldata_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required bytes calldata = 6;</code>
+       * <code>required bytes calldata = 5;</code>
        */
       public Builder clearCalldata() {
-        bitField0_ = (bitField0_ & ~0x00000020);
+        bitField0_ = (bitField0_ & ~0x00000010);
         calldata_ = getDefaultInstance().getCalldata();
         onChanged();
         return this;
@@ -1639,12 +1467,12 @@ public final class BEvmProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\nbevm.proto\022\004bevm\"\221\001\n\013CallRequest\022\021\n\tby" +
-      "zcoinid\030\001 \002(\014\022\024\n\014serverconfig\030\002 \002(\t\022\026\n\016b" +
-      "evminstanceid\030\003 \002(\014\022\026\n\016accountaddress\030\004 " +
-      "\002(\014\022\027\n\017contractaddress\030\005 \002(\014\022\020\n\010calldata" +
-      "\030\006 \002(\014\"\036\n\014CallResponse\022\016\n\006result\030\001 \002(\014B$" +
-      "\n\027ch.epfl.dedis.lib.protoB\tBEvmProto"
+      "\n\nbevm.proto\022\004bevm\"{\n\013CallRequest\022\021\n\tbyz" +
+      "coinid\030\001 \002(\014\022\026\n\016bevminstanceid\030\002 \002(\014\022\026\n\016" +
+      "accountaddress\030\003 \002(\014\022\027\n\017contractaddress\030" +
+      "\004 \002(\014\022\020\n\010calldata\030\005 \002(\014\"\036\n\014CallResponse\022" +
+      "\016\n\006result\030\001 \002(\014B$\n\027ch.epfl.dedis.lib.pro" +
+      "toB\tBEvmProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -1663,7 +1491,7 @@ public final class BEvmProto {
     internal_static_bevm_CallRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_bevm_CallRequest_descriptor,
-        new java.lang.String[] { "Byzcoinid", "Serverconfig", "Bevminstanceid", "Accountaddress", "Contractaddress", "Calldata", });
+        new java.lang.String[] { "Byzcoinid", "Bevminstanceid", "Accountaddress", "Contractaddress", "Calldata", });
     internal_static_bevm_CallResponse_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_bevm_CallResponse_fieldAccessorTable = new

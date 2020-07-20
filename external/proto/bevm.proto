@@ -7,11 +7,10 @@ option java_outer_classname = "BEvmProto";
 // CallRequest is a request to execute a view method (read-only).
 message CallRequest {
   required bytes byzcoinid = 1;
-  required string serverconfig = 2;
-  required bytes bevminstanceid = 3;
-  required bytes accountaddress = 4;
-  required bytes contractaddress = 5;
-  required bytes calldata = 6;
+  required bytes bevminstanceid = 2;
+  required bytes accountaddress = 3;
+  required bytes contractaddress = 4;
+  required bytes calldata = 5;
 }
 
 // CallResponse is the response to CallRequest, containing the method response.
