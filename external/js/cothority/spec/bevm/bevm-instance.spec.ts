@@ -8,7 +8,7 @@ import ByzCoinRPC from "../../src/byzcoin/byzcoin-rpc";
 import SignerEd25519 from "../../src/darc/signer-ed25519";
 import { Roster } from "../../src/network";
 
-import { BEvmInstance, BEvmRPC, EvmAccount, EvmContract,
+import { BEvmInstance, EvmAccount, EvmContract,
     WEI_PER_ETHER } from "../../src/bevm";
 
 import { ROSTER, startConodes } from "../support/conondes";
@@ -17,7 +17,6 @@ describe("BEvmInstance", async () => {
     let roster: Roster;
     let byzcoinRPC: ByzCoinRPC;
     let admin: SignerEd25519;
-    let bevmRPC: BEvmRPC;
     let bevmInstance: BEvmInstance;
 
     const candyBytecode = Buffer.from(`
@@ -48,10 +47,6 @@ ateMutability":"nonpayable","type":"constructor"}]
 
         roster = ROSTER.slice(0, 4);
 
-        // Use first cothority server for service
-        bevmRPC = new BEvmRPC(roster.list[0]);
-        bevmRPC.setTimeout(1000);
-
         admin = SignerEd25519.random();
 
         const darc = ByzCoinRPC.makeGenesisDarc(
@@ -69,8 +64,6 @@ ateMutability":"nonpayable","type":"constructor"}]
                                                     Long.fromNumber(1e9));
 
         bevmInstance = await BEvmInstance.spawn(byzcoinRPC, darc.getBaseID(), [admin]);
-        bevmInstance.setBEvmRPC(bevmRPC);
-
     }, 30 * 1000);
 
     it("should successfully deploy and interact with a contract", async () => {

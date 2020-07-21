@@ -219,12 +219,11 @@ export class BEvmInstance extends Instance {
         if (inst.contractID.toString() !== BEvmInstance.contractID) {
             throw new Error(`mismatch contract name: ${inst.contractID} vs ${BEvmInstance.contractID}`);
         }
-    }
 
-    /**
-     * Set the BEvm service to use
-     */
-    setBEvmRPC(bevmRPC: BEvmRPC) {
+        // Use first cothority server for service
+        const bevmRPC = new BEvmRPC(byzcoinRPC.getConfig().roster.list[0]);
+        bevmRPC.setTimeout(1000);
+
         this.bevmRPC = bevmRPC;
     }
 
