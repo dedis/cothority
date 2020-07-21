@@ -82,29 +82,7 @@ Execute `npm test` to run the unit tests and get the coverage
 
 Execute `npm run doc` to generate the documentation and browse doc/index.html
 
-# Release
+# Releases
 
-`@dedis/kyber` releases are done irregularly and on a 'as-needed' basis.
-It is good to announce a release on the DEDIS/engineer slack channel.
-This allows others to know that a new release is about to happen and propose
-eventual changes.
-Then a PR with the new version can be made and will be merged.
-Once the PR is merged, please go on as described in [Publishing](#Publishing). 
-
-As a next step, it is good to update the `@dedis/cothority` release and let it
-point to the new kyber-package.
-Unfortunately this cannot be done in one PR, as travis will not understand what's
-going on.
-
-## Publishing
-
-You must use the given script instead of `npm publish` because we need to publish the _dist_ folder instead. If you try to use the official command, you will get an error on purpose.
-
-## Development releases
-
-Every merged PR will create a development release, which is named:
-
-```
-@dedis/kyber-major.minor.patch+1-pYYMM.DDHH.MMSS.0
-
-```
+Please have a look at [PUBLISH.md](../../../PUBLISH.md) for how to create
+ releases.

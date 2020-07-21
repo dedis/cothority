@@ -35,27 +35,28 @@ environment](https://github.com/dedis/doc/tree/master/README.md).
 
 ## Versioning and Roadmap
 
-We use a yearly release cycle, with new releases arriving in February, in time
-for students to use a new stable release during the spring semester.
+The cothority repository is currently being maintained by the factory team
+ of https://c4dt.org.
+We're mostly following semantic versioning, but since DEDIS is not adding new
+ features to the project anymore, we suppose that the major version 3 is the
+  last one.
+Which means that we're trying hard not to break backward-compatibility
+, except for currently unstable features like BEVM.
+For new features, please wait for https://github.com/dedis/dela to stabilize.
 
-We use semantic versioning, and Go modules to make it possible to develop
-from a specific version and know the exact dependencies, and know when
-you are about to opt-in to an API-breaking change (because the major version
-of one or more of your dependencies changes).
+The Factory team at C4DT has the following plans to be implemented in the
+ cothority, which mostly concentrates on ByzCoin:
+- hardening: https://github.com/c4dt/byzcoin/issues/14
+- new features: https://github.com/c4dt/omniledger/issues/211
 
-We maintain a major version for at least 18 months.
+The nodes running at https://status.dedis.ch do not use any versioning, but
+ are rather deployed once a day using the latest code.
+This is done in https://github.com/c4dt/byzcoin.
 
-The current major version is v3. It was released in Feb 2019. It is currently
-built from master, and receiving security updates and new features which
-maintain backwards compatibility. There is currently no plan to start work
-on a new major version.
+For the typescript libraries, we do use semantic versioning, as they are
+ included by external apps.
+Please have a look at [PUBLISH.md](./PUBLISH.md) to see how that works.
 
-The last major version was v2, which is end of life as of June 2019.
-
-As a general rule, the current and last versions of Go are tested and expected
-to work to compile Cothority. If you encounter problems with older versions of
-the Go toolchain, please report them via a Github issue and we will try to solve
-them on a best-effort basis.
 
 ### Release v3.1.0
 
