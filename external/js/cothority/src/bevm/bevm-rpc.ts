@@ -40,12 +40,12 @@ export class BEvmRPC {
      *
      * @return Result of the view method execution
      */
-    async performViewMethodCall(byzcoinId: Buffer,
-                                bevmInstanceId: Buffer,
-                                accountAddress: Buffer,
-                                contractAddress: Buffer,
-                                callData: Buffer):
-                                    Promise<CallResponse> {
+    async callViewMethod(byzcoinId: Buffer,
+                         bevmInstanceId: Buffer,
+                         accountAddress: Buffer,
+                         contractAddress: Buffer,
+                         callData: Buffer):
+                             Promise<CallResponse> {
         this.conn.setTimeout(this.timeout);
 
         Log.lvl3("Sending BEvm call request...");
