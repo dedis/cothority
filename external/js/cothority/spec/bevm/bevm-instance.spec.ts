@@ -8,17 +8,17 @@ import ByzCoinRPC from "../../src/byzcoin/byzcoin-rpc";
 import SignerEd25519 from "../../src/darc/signer-ed25519";
 import { Roster } from "../../src/network";
 
-import { BEvmClient, BEvmService, EvmAccount, EvmContract,
+import { BEvmInstance, BEvmRPC, EvmAccount, EvmContract,
     WEI_PER_ETHER } from "../../src/bevm";
 
 import { ROSTER, startConodes } from "../support/conondes";
 
-describe("BEvmClient", async () => {
+describe("BEvmInstance", async () => {
     let roster: Roster;
     let byzcoinRPC: ByzCoinRPC;
     let admin: SignerEd25519;
-    let srv: BEvmService;
-    let client: BEvmClient;
+    let bevmRPC: BEvmRPC;
+    let bevmInstance: BEvmInstance;
 
     const candyBytecode = Buffer.from(`
 608060405234801561001057600080fd5b506040516020806101cb833981018060405281019080\
@@ -49,8 +49,8 @@ ateMutability":"nonpayable","type":"constructor"}]
         roster = ROSTER.slice(0, 4);
 
         // Use first cothority server for service
-        srv = new BEvmService(roster.list[0]);
-        srv.setTimeout(1000);
+        bevmRPC = new BEvmRPC(roster.list[0]);
+        bevmRPC.setTimeout(1000);
 
         admin = SignerEd25519.random();
 
@@ -68,8 +68,8 @@ ateMutability":"nonpayable","type":"constructor"}]
         byzcoinRPC = await ByzCoinRPC.newByzCoinRPC(roster, darc,
                                                     Long.fromNumber(1e9));
 
-        client = await BEvmClient.spawn(byzcoinRPC, darc.getBaseID(), [admin]);
-        client.setBEvmService(srv);
+        bevmInstance = await BEvmInstance.spawn(byzcoinRPC, darc.getBaseID(), [admin]);
+        bevmInstance.setBEvmRPC(bevmRPC);
 
     }, 30 * 1000);
 
@@ -86,14 +86,14 @@ ateMutability":"nonpayable","type":"constructor"}]
         const amount = WEI_PER_ETHER.mul(5);
 
         // Credit an account so that we can perform actions
-        await expectAsync(client.creditAccount(
+        await expectAsync(bevmInstance.creditAccount(
             [admin],
             account,
             amount,
         )).toBeResolved();
 
         // Deploy a Candy contract with 100 candies
-        await expectAsync(client.deploy(
+        await expectAsync(bevmInstance.deploy(
             [admin],
             1e7,
             1,
@@ -106,7 +106,7 @@ ateMutability":"nonpayable","type":"constructor"}]
 
         // Eat a bunch of candies
         for (let nbCandies = 1; nbCandies <= 10; nbCandies++) {
-            await expectAsync(client.transaction(
+            await expectAsync(bevmInstance.transaction(
                 [admin],
                 1e7,
                 1,
@@ -122,9 +122,9 @@ ateMutability":"nonpayable","type":"constructor"}]
         // Retrieve number of remaining candies, which should be 100 - (1 + 2 +
         // ... + 10) = 100 - (10 * 11 / 2)
         const expectedRemainingCandies = new BN(100 - (10 * 11 / 2));
-        const [remainingCandies] = await client.call(
+        const [remainingCandies] = await bevmInstance.call(
             byzcoinRPC.genesisID,
-            client.id,
+            bevmInstance.id,
             account,
             contract,
             0,
@@ -142,7 +142,7 @@ ateMutability":"nonpayable","type":"constructor"}]
         const contract = new EvmContract("Candy", candyBytecode, candyAbi);
 
         // Credit an account so that we can perform actions
-        await expectAsync(client.creditAccount(
+        await expectAsync(bevmInstance.creditAccount(
             [admin],
             account,
             WEI_PER_ETHER.mul(5),
@@ -152,7 +152,7 @@ ateMutability":"nonpayable","type":"constructor"}]
         const nbCandies = new BN("340282366920938463463374607431768211456");
 
         // Deploy a Candy contract
-        await expectAsync(client.deploy(
+        await expectAsync(bevmInstance.deploy(
             [admin],
             1e7,
             1,
@@ -163,9 +163,9 @@ ateMutability":"nonpayable","type":"constructor"}]
         )).toBeResolved();
 
         // Retrieve number of remaining candies
-        const [remainingCandies] = await client.call(
+        const [remainingCandies] = await bevmInstance.call(
             byzcoinRPC.genesisID,
-            client.id,
+            bevmInstance.id,
             account,
             contract,
             0,

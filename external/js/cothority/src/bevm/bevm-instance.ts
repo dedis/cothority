@@ -9,7 +9,7 @@ import Instance, { InstanceID } from "../byzcoin/instance";
 import Signer from "../darc/signer";
 import Log from "../log";
 
-import { BEvmService } from "./service";
+import { BEvmRPC } from "./bevm-rpc";
 
 import abi from "ethereumjs-abi";
 import { Transaction } from "ethereumjs-tx";
@@ -160,7 +160,7 @@ export const WEI_PER_ETHER = Long.fromString("1000000000000000000");
 /**
  * BEvm client
  */
-export class BEvmClient extends Instance {
+export class BEvmInstance extends Instance {
     static readonly contractID = "bevm";
 
     static readonly commandTransaction = "transaction";
@@ -179,10 +179,11 @@ export class BEvmClient extends Instance {
      *
      * @return New BEvm instance
      */
-    static async spawn(bc: ByzCoinRPC, darcID: InstanceID, signers: Signer[]): Promise<BEvmClient> {
+    static async spawn(bc: ByzCoinRPC, darcID: InstanceID, signers: Signer[]):
+        Promise<BEvmInstance> {
         const inst = Instruction.createSpawn(
             darcID,
-            BEvmClient.contractID,
+            BEvmInstance.contractID,
             [],
         );
 
@@ -191,7 +192,7 @@ export class BEvmClient extends Instance {
 
         await bc.sendTransactionAndWait(ctx);
 
-        return BEvmClient.fromByzcoin(bc, ctx.instructions[0].deriveId(), 2);
+        return BEvmInstance.fromByzcoin(bc, ctx.instructions[0].deriveId(), 2);
     }
 
     /**
@@ -204,27 +205,27 @@ export class BEvmClient extends Instance {
      */
     static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID,
                              waitMatch: number = 0,
-                             interval: number = 1000): Promise<BEvmClient> {
+                             interval: number = 1000): Promise<BEvmInstance> {
         const instance = await Instance.fromByzcoin(bc, iid, waitMatch, interval);
 
-        return new BEvmClient(bc, instance);
+        return new BEvmInstance(bc, instance);
     }
 
-    private bevmService: BEvmService;
+    private bevmRPC: BEvmRPC;
 
     constructor(private byzcoinRPC: ByzCoinRPC, inst: Instance) {
         super(inst);
 
-        if (inst.contractID.toString() !== BEvmClient.contractID) {
-            throw new Error(`mismatch contract name: ${inst.contractID} vs ${BEvmClient.contractID}`);
+        if (inst.contractID.toString() !== BEvmInstance.contractID) {
+            throw new Error(`mismatch contract name: ${inst.contractID} vs ${BEvmInstance.contractID}`);
         }
     }
 
     /**
      * Set the BEvm service to use
      */
-    setBEvmService(bevmService: BEvmService) {
-        this.bevmService = bevmService;
+    setBEvmRPC(bevmRPC: BEvmRPC) {
+        this.bevmRPC = bevmRPC;
     }
 
     /**
@@ -276,8 +277,8 @@ export class BEvmClient extends Instance {
         account.sign(ethTx);
 
         await this.invoke(
-            BEvmClient.commandTransaction, [
-                new Argument({name: BEvmClient.argumentTx,
+            BEvmInstance.commandTransaction, [
+                new Argument({name: BEvmInstance.argumentTx,
                              value: ethTx.serialize()}),
             ],
             signers, wait);
@@ -329,8 +330,8 @@ export class BEvmClient extends Instance {
         account.sign(ethTx);
 
         await this.invoke(
-            BEvmClient.commandTransaction, [
-                new Argument({name: BEvmClient.argumentTx,
+            BEvmInstance.commandTransaction, [
+                new Argument({name: BEvmInstance.argumentTx,
                              value: ethTx.serialize()}),
             ],
             signers, wait);
@@ -371,7 +372,7 @@ export class BEvmClient extends Instance {
         const methodID = abi.methodID(method, types);
         const callData = Buffer.concat([methodID, encodedArgs]);
 
-        const response = await this.bevmService.performCall(
+        const response = await this.bevmRPC.performViewMethodCall(
             byzcoinId,
             bevmInstanceId,
             account.address,
@@ -399,11 +400,11 @@ export class BEvmClient extends Instance {
         const amountBuf = Buffer.from(amount.toBytesBE());
 
         await this.invoke(
-            BEvmClient.commandCredit,
+            BEvmInstance.commandCredit,
             [
-                new Argument({name: BEvmClient.argumentAddress,
+                new Argument({name: BEvmInstance.argumentAddress,
                              value: account.address}),
-                new Argument({name: BEvmClient.argumentAmount,
+                new Argument({name: BEvmInstance.argumentAmount,
                              value: amountBuf}),
             ],
             signers,
@@ -417,7 +418,7 @@ export class BEvmClient extends Instance {
         const ctx = ClientTransaction.make(
             this.byzcoinRPC.getProtocolVersion(),
             Instruction.createInvoke(
-                this.id, BEvmClient.contractID, command, args,
+                this.id, BEvmInstance.contractID, command, args,
             ));
 
         await ctx.updateCountersAndSign(this.byzcoinRPC, [signers]);

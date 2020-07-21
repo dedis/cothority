@@ -8,7 +8,7 @@ import {
 /**
  * BEvm service
  */
-export class BEvmService {
+export class BEvmRPC {
     static serviceName = "BEvm";
 
     private conn: WebSocketConnection;
@@ -17,7 +17,7 @@ export class BEvmService {
     constructor(srvid: ServerIdentity) {
         this.timeout = 60 * 1000; // 60 seconds
         this.conn = new WebSocketConnection(srvid.getWebSocketAddress(),
-                                            BEvmService.serviceName);
+                                            BEvmRPC.serviceName);
     }
 
     /**
@@ -40,12 +40,12 @@ export class BEvmService {
      *
      * @return Result of the view method execution
      */
-    async performCall(byzcoinId: Buffer,
-                      bevmInstanceId: Buffer,
-                      accountAddress: Buffer,
-                      contractAddress: Buffer,
-                      callData: Buffer):
-                          Promise<CallResponse> {
+    async performViewMethodCall(byzcoinId: Buffer,
+                                bevmInstanceId: Buffer,
+                                accountAddress: Buffer,
+                                contractAddress: Buffer,
+                                callData: Buffer):
+                                    Promise<CallResponse> {
         this.conn.setTimeout(this.timeout);
 
         Log.lvl3("Sending BEvm call request...");
