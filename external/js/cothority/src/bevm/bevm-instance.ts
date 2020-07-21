@@ -240,19 +240,10 @@ export class BEvmInstance extends Instance {
      * @param args      Arguments for the smart contract constructor
      * @param wait      Number of blocks to wait for the ByzCoin transaction to be included
      *
-     * The `args` are passed as an array of strings, one per argument, each of
-     * them JSON-encoded.
-     * The following argument types are currently supported:
-     *
-     *   Solidity type          | JSON type | Example
-     *   --------------------------------------------
-     *   uint, uint256, uint128 | string    | "12345"
-     *   int, int256, int128    | string    | "-12345"
-     *   uint32, uint16, uint8  | number    | 12345
-     *   int32, int16, int8     | number    | -12345
-     *   address                | string    | "112233445566778899aabbccddeeff0011223344"
-     *   string                 | string    | "look at me I am a string"
-     *   array, e.g. uint[2]    | array     | ["123", "456"]
+     * The `args` are passed as an array of values, one per argument. The types
+     * of the arguments must match the types in the constructor ABI. In
+     * particular, for large number types (e.g. uint256), the argument can be
+     * passed as a number, string or BN value.
      */
     async deploy(signers: Signer[],
                  gasLimit: number,
@@ -355,7 +346,9 @@ export class BEvmInstance extends Instance {
      * @param method            Name of the view method to execute
      * @param args              Arguments for the smart contract method
      *
-     * @return Result of the view method execution
+     * @return Result of the view method execution, as an array of values. The
+     * types of the values will match the return values in the view method ABI.
+     * In particular, values for large number types (e.g. uint256) will be BNs.
      *
      * See `deploy()` for a description of `args`.
      */
