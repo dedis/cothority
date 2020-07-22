@@ -927,7 +927,7 @@ func (s *Service) Debug(req *DebugRequest) (resp *DebugResponse, err error) {
 		})
 		return xerrors.Errorf("iterating values: %v", err)
 	})
-	err = cothority.ErrorOrNil(err, "tx error: %v")
+	err = cothority.ErrorOrNil(err, "tx error")
 	return
 }
 
