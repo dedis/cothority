@@ -1,9 +1,6 @@
 import Log from "../log";
 import { ServerIdentity, WebSocketConnection } from "../network";
-import {
-    CallRequest,
-    CallResponse,
-} from "./proto";
+import { ViewCallRequest, ViewCallResponse } from "./proto";
 
 /**
  * BEvm service
@@ -40,17 +37,17 @@ export class BEvmRPC {
      *
      * @return Result of the view method execution
      */
-    async callViewMethod(byzcoinId: Buffer,
-                         bevmInstanceId: Buffer,
-                         accountAddress: Buffer,
-                         contractAddress: Buffer,
-                         callData: Buffer):
-                             Promise<CallResponse> {
+    async viewCall(byzcoinId: Buffer,
+                   bevmInstanceId: Buffer,
+                   accountAddress: Buffer,
+                   contractAddress: Buffer,
+                   callData: Buffer):
+                       Promise<ViewCallResponse> {
         this.conn.setTimeout(this.timeout);
 
         Log.lvl3("Sending BEvm call request...");
 
-        const msg = new CallRequest({
+        const msg = new ViewCallRequest({
                 accountAddress,
                 bevmInstanceId,
                 byzcoinId,
@@ -58,6 +55,6 @@ export class BEvmRPC {
                 contractAddress,
             });
 
-        return this.conn.send(msg, CallResponse);
+        return this.conn.send(msg, ViewCallResponse);
     }
 }

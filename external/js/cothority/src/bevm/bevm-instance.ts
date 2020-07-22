@@ -364,7 +364,7 @@ export class BEvmInstance extends Instance {
         const methodID = abi.methodID(method, types);
         const callData = Buffer.concat([methodID, encodedArgs]);
 
-        const response = await this.bevmRPC.callViewMethod(
+        const response = await this.bevmRPC.viewCall(
             byzcoinId,
             bevmInstanceId,
             account.address,

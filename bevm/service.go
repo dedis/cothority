@@ -36,9 +36,9 @@ func init() {
 	log.ErrFatal(err)
 }
 
-// PerformCall executes a R-only method on a previously deployed EVM contract
+// ViewCall executes a R-only method on a previously deployed EVM contract
 // instance by contacting a ByzCoin cothority. Returns the call response.
-func (service *Service) PerformCall(req *CallRequest) (*CallResponse,
+func (service *Service) ViewCall(req *ViewCallRequest) (*ViewCallResponse,
 	error) {
 	accountAddress := common.BytesToAddress(req.AccountAddress)
 	contractAddress := common.BytesToAddress(req.ContractAddress)
@@ -81,7 +81,7 @@ func (service *Service) PerformCall(req *CallRequest) (*CallResponse,
 
 	log.Lvlf4("Returning: %v", hex.EncodeToString(result))
 
-	return &CallResponse{Result: result}, nil
+	return &ViewCallResponse{Result: result}, nil
 }
 
 // newBEvmService creates a new service for BEvm functionality
@@ -91,7 +91,7 @@ func newBEvmService(context *onet.Context) (onet.Service, error) {
 	}
 
 	err := service.RegisterHandlers(
-		service.PerformCall,
+		service.ViewCall,
 	)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to register service "+

@@ -1,9 +1,9 @@
 import { Message, Properties } from "protobufjs/light";
 import { registerMessage } from "../protobuf";
 
-export class CallRequest extends Message<CallRequest> {
+export class ViewCallRequest extends Message<ViewCallRequest> {
     static register() {
-        registerMessage("bevm.CallRequest", CallRequest);
+        registerMessage("bevm.ViewCallRequest", ViewCallRequest);
     }
 
     readonly byzcoinId: Buffer;
@@ -12,7 +12,7 @@ export class CallRequest extends Message<CallRequest> {
     readonly contractAddress: Buffer;
     readonly callData: Buffer;
 
-    constructor(props?: Properties<CallRequest>) {
+    constructor(props?: Properties<ViewCallRequest>) {
         super(props);
 
         /* Protobuf aliases */
@@ -63,13 +63,13 @@ export class CallRequest extends Message<CallRequest> {
     }
 }
 
-export class CallResponse extends Message<CallResponse> {
+export class ViewCallResponse extends Message<ViewCallResponse> {
     static register() {
-        registerMessage("bevm.CallResponse", CallResponse);
+        registerMessage("bevm.ViewCallResponse", ViewCallResponse);
     }
 
     readonly result: Buffer;
 }
 
-CallRequest.register();
-CallResponse.register();
+ViewCallRequest.register();
+ViewCallResponse.register();

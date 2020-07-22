@@ -440,19 +440,20 @@ func (client *Client) GetAccountBalance(address common.Address) (
 // ---------------------------------------------------------------------------
 // Service methods
 
-// PerformCall sends a request to execute a Call (R-only method, "view method")
-// on a previously deployed EVM contract instance. Returns the call response.
-func (client *Client) PerformCall(dst *network.ServerIdentity, byzcoinID []byte,
+// viewCall sends a request to a conode to execute a read-only, "view method"
+// call on a previously deployed EVM contract instance. Returns the call
+// response.
+func (client *Client) viewCall(dst *network.ServerIdentity, byzcoinID []byte,
 	bevmInstanceID byzcoin.InstanceID, accountAddress []byte,
-	contractAddress []byte, callData []byte) (*CallResponse, error) {
-	request := &CallRequest{
+	contractAddress []byte, callData []byte) (*ViewCallResponse, error) {
+	request := &ViewCallRequest{
 		ByzCoinID:       byzcoinID,
 		BEvmInstanceID:  bevmInstanceID[:],
 		AccountAddress:  accountAddress,
 		ContractAddress: contractAddress,
 		CallData:        callData,
 	}
-	response := &CallResponse{}
+	response := &ViewCallResponse{}
 
 	err := client.Client.SendProtobuf(dst, request, response)
 	if err != nil {

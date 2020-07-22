@@ -134,7 +134,7 @@ func TestService_Call(t *testing.T) {
 	require.NoError(t, err)
 
 	// Get remaining candies
-	resp, err := bevmClient.PerformCall(
+	resp, err := bevmClient.viewCall(
 		bct.roster.List[0],
 		bct.cl.ID,
 		bevmClient.instanceID,
