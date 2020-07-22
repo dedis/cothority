@@ -14,8 +14,8 @@ public final class BEvmProto {
     registerAllExtensions(
         (com.google.protobuf.ExtensionRegistryLite) registry);
   }
-  public interface CallRequestOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:bevm.CallRequest)
+  public interface ViewCallRequestOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:bevm.ViewCallRequest)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -65,21 +65,21 @@ public final class BEvmProto {
   }
   /**
    * <pre>
-   * CallRequest is a request to execute a view method (read-only).
+   * ViewCallRequest is a request to execute a view method (read-only).
    * </pre>
    *
-   * Protobuf type {@code bevm.CallRequest}
+   * Protobuf type {@code bevm.ViewCallRequest}
    */
-  public  static final class CallRequest extends
+  public  static final class ViewCallRequest extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:bevm.CallRequest)
-      CallRequestOrBuilder {
+      // @@protoc_insertion_point(message_implements:bevm.ViewCallRequest)
+      ViewCallRequestOrBuilder {
   private static final long serialVersionUID = 0L;
-    // Use CallRequest.newBuilder() to construct.
-    private CallRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    // Use ViewCallRequest.newBuilder() to construct.
+    private ViewCallRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private CallRequest() {
+    private ViewCallRequest() {
       byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
       bevminstanceid_ = com.google.protobuf.ByteString.EMPTY;
       accountaddress_ = com.google.protobuf.ByteString.EMPTY;
@@ -92,7 +92,7 @@ public final class BEvmProto {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private CallRequest(
+    private ViewCallRequest(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -157,15 +157,15 @@ public final class BEvmProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_CallRequest_descriptor;
+      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_ViewCallRequest_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_CallRequest_fieldAccessorTable
+      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_ViewCallRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.lib.proto.BEvmProto.CallRequest.class, ch.epfl.dedis.lib.proto.BEvmProto.CallRequest.Builder.class);
+              ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest.class, ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest.Builder.class);
     }
 
     private int bitField0_;
@@ -332,10 +332,10 @@ public final class BEvmProto {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof ch.epfl.dedis.lib.proto.BEvmProto.CallRequest)) {
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest)) {
         return super.equals(obj);
       }
-      ch.epfl.dedis.lib.proto.BEvmProto.CallRequest other = (ch.epfl.dedis.lib.proto.BEvmProto.CallRequest) obj;
+      ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest other = (ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest) obj;
 
       boolean result = true;
       result = result && (hasByzcoinid() == other.hasByzcoinid());
@@ -399,69 +399,69 @@ public final class BEvmProto {
       return hash;
     }
 
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseFrom(
         java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseFrom(
         java.nio.ByteBuffer data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseFrom(byte[] data)
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseFrom(java.io.InputStream input)
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseDelimitedFrom(java.io.InputStream input)
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseDelimitedFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -474,7 +474,7 @@ public final class BEvmProto {
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(ch.epfl.dedis.lib.proto.BEvmProto.CallRequest prototype) {
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     @java.lang.Override
@@ -491,29 +491,29 @@ public final class BEvmProto {
     }
     /**
      * <pre>
-     * CallRequest is a request to execute a view method (read-only).
+     * ViewCallRequest is a request to execute a view method (read-only).
      * </pre>
      *
-     * Protobuf type {@code bevm.CallRequest}
+     * Protobuf type {@code bevm.ViewCallRequest}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:bevm.CallRequest)
-        ch.epfl.dedis.lib.proto.BEvmProto.CallRequestOrBuilder {
+        // @@protoc_insertion_point(builder_implements:bevm.ViewCallRequest)
+        ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequestOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_CallRequest_descriptor;
+        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_ViewCallRequest_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_CallRequest_fieldAccessorTable
+        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_ViewCallRequest_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.lib.proto.BEvmProto.CallRequest.class, ch.epfl.dedis.lib.proto.BEvmProto.CallRequest.Builder.class);
+                ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest.class, ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest.Builder.class);
       }
 
-      // Construct using ch.epfl.dedis.lib.proto.BEvmProto.CallRequest.newBuilder()
+      // Construct using ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest.newBuilder()
       private Builder() {
         maybeForceBuilderInitialization();
       }
@@ -547,17 +547,17 @@ public final class BEvmProto {
       @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_CallRequest_descriptor;
+        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_ViewCallRequest_descriptor;
       }
 
       @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.CallRequest getDefaultInstanceForType() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.CallRequest.getDefaultInstance();
+      public ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest.getDefaultInstance();
       }
 
       @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.CallRequest build() {
-        ch.epfl.dedis.lib.proto.BEvmProto.CallRequest result = buildPartial();
+      public ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest build() {
+        ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
@@ -565,8 +565,8 @@ public final class BEvmProto {
       }
 
       @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.CallRequest buildPartial() {
-        ch.epfl.dedis.lib.proto.BEvmProto.CallRequest result = new ch.epfl.dedis.lib.proto.BEvmProto.CallRequest(this);
+      public ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest buildPartial() {
+        ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest result = new ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -628,16 +628,16 @@ public final class BEvmProto {
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof ch.epfl.dedis.lib.proto.BEvmProto.CallRequest) {
-          return mergeFrom((ch.epfl.dedis.lib.proto.BEvmProto.CallRequest)other);
+        if (other instanceof ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(ch.epfl.dedis.lib.proto.BEvmProto.CallRequest other) {
-        if (other == ch.epfl.dedis.lib.proto.BEvmProto.CallRequest.getDefaultInstance()) return this;
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest other) {
+        if (other == ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest.getDefaultInstance()) return this;
         if (other.hasByzcoinid()) {
           setByzcoinid(other.getByzcoinid());
         }
@@ -683,11 +683,11 @@ public final class BEvmProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parsedMessage = null;
+        ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (ch.epfl.dedis.lib.proto.BEvmProto.CallRequest) e.getUnfinishedMessage();
+          parsedMessage = (ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -885,48 +885,48 @@ public final class BEvmProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:bevm.CallRequest)
+      // @@protoc_insertion_point(builder_scope:bevm.ViewCallRequest)
     }
 
-    // @@protoc_insertion_point(class_scope:bevm.CallRequest)
-    private static final ch.epfl.dedis.lib.proto.BEvmProto.CallRequest DEFAULT_INSTANCE;
+    // @@protoc_insertion_point(class_scope:bevm.ViewCallRequest)
+    private static final ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.BEvmProto.CallRequest();
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest();
     }
 
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest getDefaultInstance() {
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<CallRequest>
-        PARSER = new com.google.protobuf.AbstractParser<CallRequest>() {
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<ViewCallRequest>
+        PARSER = new com.google.protobuf.AbstractParser<ViewCallRequest>() {
       @java.lang.Override
-      public CallRequest parsePartialFrom(
+      public ViewCallRequest parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CallRequest(input, extensionRegistry);
+        return new ViewCallRequest(input, extensionRegistry);
       }
     };
 
-    public static com.google.protobuf.Parser<CallRequest> parser() {
+    public static com.google.protobuf.Parser<ViewCallRequest> parser() {
       return PARSER;
     }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<CallRequest> getParserForType() {
+    public com.google.protobuf.Parser<ViewCallRequest> getParserForType() {
       return PARSER;
     }
 
     @java.lang.Override
-    public ch.epfl.dedis.lib.proto.BEvmProto.CallRequest getDefaultInstanceForType() {
+    public ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
   }
 
-  public interface CallResponseOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:bevm.CallResponse)
+  public interface ViewCallResponseOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:bevm.ViewCallResponse)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -940,21 +940,22 @@ public final class BEvmProto {
   }
   /**
    * <pre>
-   * CallResponse is the response to CallRequest, containing the method response.
+   * ViewCallResponse is the response to ViewCallRequest, containing the method
+   * response.
    * </pre>
    *
-   * Protobuf type {@code bevm.CallResponse}
+   * Protobuf type {@code bevm.ViewCallResponse}
    */
-  public  static final class CallResponse extends
+  public  static final class ViewCallResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:bevm.CallResponse)
-      CallResponseOrBuilder {
+      // @@protoc_insertion_point(message_implements:bevm.ViewCallResponse)
+      ViewCallResponseOrBuilder {
   private static final long serialVersionUID = 0L;
-    // Use CallResponse.newBuilder() to construct.
-    private CallResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    // Use ViewCallResponse.newBuilder() to construct.
+    private ViewCallResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private CallResponse() {
+    private ViewCallResponse() {
       result_ = com.google.protobuf.ByteString.EMPTY;
     }
 
@@ -963,7 +964,7 @@ public final class BEvmProto {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private CallResponse(
+    private ViewCallResponse(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -1008,15 +1009,15 @@ public final class BEvmProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_CallResponse_descriptor;
+      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_ViewCallResponse_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_CallResponse_fieldAccessorTable
+      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_ViewCallResponse_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.lib.proto.BEvmProto.CallResponse.class, ch.epfl.dedis.lib.proto.BEvmProto.CallResponse.Builder.class);
+              ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse.class, ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse.Builder.class);
     }
 
     private int bitField0_;
@@ -1079,10 +1080,10 @@ public final class BEvmProto {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof ch.epfl.dedis.lib.proto.BEvmProto.CallResponse)) {
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse)) {
         return super.equals(obj);
       }
-      ch.epfl.dedis.lib.proto.BEvmProto.CallResponse other = (ch.epfl.dedis.lib.proto.BEvmProto.CallResponse) obj;
+      ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse other = (ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse) obj;
 
       boolean result = true;
       result = result && (hasResult() == other.hasResult());
@@ -1110,69 +1111,69 @@ public final class BEvmProto {
       return hash;
     }
 
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseFrom(
         java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseFrom(
         java.nio.ByteBuffer data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseFrom(byte[] data)
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseFrom(java.io.InputStream input)
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseDelimitedFrom(java.io.InputStream input)
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseDelimitedFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -1185,7 +1186,7 @@ public final class BEvmProto {
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(ch.epfl.dedis.lib.proto.BEvmProto.CallResponse prototype) {
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     @java.lang.Override
@@ -1202,29 +1203,30 @@ public final class BEvmProto {
     }
     /**
      * <pre>
-     * CallResponse is the response to CallRequest, containing the method response.
+     * ViewCallResponse is the response to ViewCallRequest, containing the method
+     * response.
      * </pre>
      *
-     * Protobuf type {@code bevm.CallResponse}
+     * Protobuf type {@code bevm.ViewCallResponse}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:bevm.CallResponse)
-        ch.epfl.dedis.lib.proto.BEvmProto.CallResponseOrBuilder {
+        // @@protoc_insertion_point(builder_implements:bevm.ViewCallResponse)
+        ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponseOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_CallResponse_descriptor;
+        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_ViewCallResponse_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_CallResponse_fieldAccessorTable
+        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_ViewCallResponse_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.lib.proto.BEvmProto.CallResponse.class, ch.epfl.dedis.lib.proto.BEvmProto.CallResponse.Builder.class);
+                ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse.class, ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse.Builder.class);
       }
 
-      // Construct using ch.epfl.dedis.lib.proto.BEvmProto.CallResponse.newBuilder()
+      // Construct using ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse.newBuilder()
       private Builder() {
         maybeForceBuilderInitialization();
       }
@@ -1250,17 +1252,17 @@ public final class BEvmProto {
       @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_CallResponse_descriptor;
+        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_ViewCallResponse_descriptor;
       }
 
       @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.CallResponse getDefaultInstanceForType() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.CallResponse.getDefaultInstance();
+      public ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse.getDefaultInstance();
       }
 
       @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.CallResponse build() {
-        ch.epfl.dedis.lib.proto.BEvmProto.CallResponse result = buildPartial();
+      public ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse build() {
+        ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
@@ -1268,8 +1270,8 @@ public final class BEvmProto {
       }
 
       @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.CallResponse buildPartial() {
-        ch.epfl.dedis.lib.proto.BEvmProto.CallResponse result = new ch.epfl.dedis.lib.proto.BEvmProto.CallResponse(this);
+      public ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse buildPartial() {
+        ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse result = new ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -1315,16 +1317,16 @@ public final class BEvmProto {
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof ch.epfl.dedis.lib.proto.BEvmProto.CallResponse) {
-          return mergeFrom((ch.epfl.dedis.lib.proto.BEvmProto.CallResponse)other);
+        if (other instanceof ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(ch.epfl.dedis.lib.proto.BEvmProto.CallResponse other) {
-        if (other == ch.epfl.dedis.lib.proto.BEvmProto.CallResponse.getDefaultInstance()) return this;
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse other) {
+        if (other == ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse.getDefaultInstance()) return this;
         if (other.hasResult()) {
           setResult(other.getResult());
         }
@@ -1346,11 +1348,11 @@ public final class BEvmProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parsedMessage = null;
+        ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (ch.epfl.dedis.lib.proto.BEvmProto.CallResponse) e.getUnfinishedMessage();
+          parsedMessage = (ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -1408,56 +1410,56 @@ public final class BEvmProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:bevm.CallResponse)
+      // @@protoc_insertion_point(builder_scope:bevm.ViewCallResponse)
     }
 
-    // @@protoc_insertion_point(class_scope:bevm.CallResponse)
-    private static final ch.epfl.dedis.lib.proto.BEvmProto.CallResponse DEFAULT_INSTANCE;
+    // @@protoc_insertion_point(class_scope:bevm.ViewCallResponse)
+    private static final ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.BEvmProto.CallResponse();
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse();
     }
 
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse getDefaultInstance() {
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<CallResponse>
-        PARSER = new com.google.protobuf.AbstractParser<CallResponse>() {
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<ViewCallResponse>
+        PARSER = new com.google.protobuf.AbstractParser<ViewCallResponse>() {
       @java.lang.Override
-      public CallResponse parsePartialFrom(
+      public ViewCallResponse parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CallResponse(input, extensionRegistry);
+        return new ViewCallResponse(input, extensionRegistry);
       }
     };
 
-    public static com.google.protobuf.Parser<CallResponse> parser() {
+    public static com.google.protobuf.Parser<ViewCallResponse> parser() {
       return PARSER;
     }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<CallResponse> getParserForType() {
+    public com.google.protobuf.Parser<ViewCallResponse> getParserForType() {
       return PARSER;
     }
 
     @java.lang.Override
-    public ch.epfl.dedis.lib.proto.BEvmProto.CallResponse getDefaultInstanceForType() {
+    public ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_bevm_CallRequest_descriptor;
+    internal_static_bevm_ViewCallRequest_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_bevm_CallRequest_fieldAccessorTable;
+      internal_static_bevm_ViewCallRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_bevm_CallResponse_descriptor;
+    internal_static_bevm_ViewCallResponse_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_bevm_CallResponse_fieldAccessorTable;
+      internal_static_bevm_ViewCallResponse_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -1467,12 +1469,12 @@ public final class BEvmProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\nbevm.proto\022\004bevm\"{\n\013CallRequest\022\021\n\tbyz" +
-      "coinid\030\001 \002(\014\022\026\n\016bevminstanceid\030\002 \002(\014\022\026\n\016" +
-      "accountaddress\030\003 \002(\014\022\027\n\017contractaddress\030" +
-      "\004 \002(\014\022\020\n\010calldata\030\005 \002(\014\"\036\n\014CallResponse\022" +
-      "\016\n\006result\030\001 \002(\014B$\n\027ch.epfl.dedis.lib.pro" +
-      "toB\tBEvmProto"
+      "\n\nbevm.proto\022\004bevm\"\177\n\017ViewCallRequest\022\021\n" +
+      "\tbyzcoinid\030\001 \002(\014\022\026\n\016bevminstanceid\030\002 \002(\014" +
+      "\022\026\n\016accountaddress\030\003 \002(\014\022\027\n\017contractaddr" +
+      "ess\030\004 \002(\014\022\020\n\010calldata\030\005 \002(\014\"\"\n\020ViewCallR" +
+      "esponse\022\016\n\006result\030\001 \002(\014B$\n\027ch.epfl.dedis" +
+      ".lib.protoB\tBEvmProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -1486,17 +1488,17 @@ public final class BEvmProto {
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         }, assigner);
-    internal_static_bevm_CallRequest_descriptor =
+    internal_static_bevm_ViewCallRequest_descriptor =
       getDescriptor().getMessageTypes().get(0);
-    internal_static_bevm_CallRequest_fieldAccessorTable = new
+    internal_static_bevm_ViewCallRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_bevm_CallRequest_descriptor,
+        internal_static_bevm_ViewCallRequest_descriptor,
         new java.lang.String[] { "Byzcoinid", "Bevminstanceid", "Accountaddress", "Contractaddress", "Calldata", });
-    internal_static_bevm_CallResponse_descriptor =
+    internal_static_bevm_ViewCallResponse_descriptor =
       getDescriptor().getMessageTypes().get(1);
-    internal_static_bevm_CallResponse_fieldAccessorTable = new
+    internal_static_bevm_ViewCallResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_bevm_CallResponse_descriptor,
+        internal_static_bevm_ViewCallResponse_descriptor,
         new java.lang.String[] { "Result", });
   }
 
