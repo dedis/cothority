@@ -18,8 +18,8 @@ For typescript projects, it is easier to directly import from the subfolders:
 import {DarcInstance} from "@dedis/cothority/byzcoin/contracts"
 ```
 
-Avoid importing from the files in the subfolders, as these are not guaranteed
- to stay in place.
+Do not import directly from files within the subfolders, as they can be moved
+ or renamed at any time, while the index files will always be correct. 
 So the previous line should not be written as:
 
 ```typescript
