@@ -258,7 +258,7 @@ func (b BasicContract) MakeAttrInterpreters(rst ReadOnlyStateTrie, inst Instruct
 			var err error
 			before, err = strconv.Atoi(beforeStr)
 			if err != nil {
-				return xerrors.Errorf("atoi: %v")
+				return xerrors.Errorf("atoi: %v", err)
 			}
 		}
 
