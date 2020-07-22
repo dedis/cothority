@@ -15,7 +15,7 @@ This pins the library to the latest available development version.
 
 ## Releasing a new version for npm @dedis/*
 
-The npm-packages should follow semantic versioning.
+The npm-packages should follow [semantic versioning](https://semver.org).
 As we don't plan to have any big changes, the major-version is probably stuck
  at `3`, except if we go the linux path and reach 3.9, a 4.0 could follow
  , but more to avoid 3.10 than because anything else - or not.
@@ -35,9 +35,10 @@ As the cothority depends on the kyber package, it's currently a bit akward to
 3. update the kyber-dependency in `cothority/package.json` and the cothority
 -version, which has to be the same as the kyber-version, push to master
 4. publish the new cothority-npm using `cothority/publish.sh`
-5. tag the latest commit using 
+5. use an annotated tag on the latest commit with - this should be signed
+ with your gpg-key 
 ```
-git tag v3.4.6
+git tag -s v3.4.6
 git push origin v3.4.6
 ```
 
