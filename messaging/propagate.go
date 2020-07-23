@@ -205,14 +205,14 @@ func (p *Propagate) Dispatch() error {
 			}
 			log.Lvl3(p.ServerIdentity(), "Sending to children", p.Children())
 			if errs = p.SendToChildrenInParallel(&msg.PropagateSendData); len(errs) != 0 {
-				var errsStr []string
-				for _, e := range errs {
-					errsStr = append(errsStr, e.Error())
+				errsStr := make([]string, len(errs))
+				for i, e := range errs {
+					errsStr[i] = e.Error()
 				}
+				log.Lvl2("Error while sending to children:", errsStr)
 				if len(errs) > p.allowedFailures {
 					return errors.New(strings.Join(errsStr, "\n"))
 				}
-				log.Lvl2("Error while sending to children:", errsStr)
 			}
 		case <-p.ChannelReply:
 			if !gotSendData {

@@ -1360,7 +1360,7 @@ func (s *Service) catchupAll() error {
 		for i, node := range sb.Roster.List {
 			cl.UseNode(i)
 			replyTmp, err := cl.GetUpdateChain(sb.Roster, sb.Hash)
-			if err != nil || replyTmp == nil {
+			if err != nil {
 				log.Warn("couldn't get update from", node)
 				continue
 			}
