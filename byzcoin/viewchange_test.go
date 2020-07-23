@@ -52,7 +52,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 		service.SetPropagationTimeout(2 * interval)
 	}
 
-	// Wait for all the genesis config to be written on all nodes.
+	log.Lvl1("Wait for all the genesis config to be written on all nodes.")
 	genesisInstanceID := InstanceID{}
 	for i := range s.services {
 		s.waitProofWithIdx(t, genesisInstanceID.Slice(), i)
@@ -82,13 +82,19 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 
 	// try to send a transaction to the node on index nFailures+1, which is
 	// a follower (not the new leader)
-	tx1, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
+	log.Lvl1("Sending a transaction to the node after the new leader")
+	tx1ID := NewInstanceID([]byte{2}).Slice()
+	counter := uint64(1)
+	tx1, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, tx1ID,
+		s.signer, counter)
+	counter++
 	require.NoError(t, err)
 	s.sendTxTo(t, tx1, nFailures+1)
 
 	// check that the leader is updated for all nodes
 	// Note: check is done after a tx has been sent so that nodes catch up if the
 	// propagation failed
+	log.Lvl1("Waiting for the new transaction to go through")
 	s.waitPropagation(t, 0)
 	for _, service := range s.services[nFailures:] {
 		// everyone should have the same leader after the genesis block is stored
@@ -98,15 +104,15 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 		require.True(t, leader.Equal(s.services[nFailures].ServerIdentity()), fmt.Sprintf("%v", leader))
 	}
 
-	// wait for the transaction to be stored on the new leader, because it
-	// polls for new transactions
-	pr := s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID.Slice(), nFailures)
-	require.True(t, pr.InclusionProof.Match(tx1.Instructions[0].InstanceID.Slice()))
+	log.Lvl1("Creating new TX")
+	s.sendDummyTx(t, nFailures+1, counter, 4)
+	counter++
 
-	// The transaction should also be stored on followers
-	for i := nFailures + 1; i < nHosts; i++ {
-		pr = s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID.Slice(), i)
-		require.True(t, pr.InclusionProof.Match(tx1.Instructions[0].InstanceID.Slice()))
+	log.Lvl1("waiting for the tx to be stored")
+	// wait for the transaction to be stored everywhere
+	for i := nFailures; i < nHosts; i++ {
+		pr := s.waitProofWithIdx(t, tx1ID, i)
+		require.True(t, pr.InclusionProof.Match(tx1ID))
 	}
 
 	// We need to bring the failed (the first nFailures) nodes back up and
@@ -116,20 +122,28 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 		s.hosts[i].Unpause()
 		require.NoError(t, s.services[i].TestRestart())
 	}
+
+	time.Sleep(3 * time.Second)
+
+	log.Lvl1("Adding two new tx for the resurrected nodes to catch up")
+	for tx := 0; tx < 2; tx++ {
+		s.sendDummyTx(t, nFailures, counter, 4)
+		counter++
+	}
+
+	log.Lvl1("Make sure resurrected nodes have caught up")
 	for i := 0; i < nFailures; i++ {
-		pr = s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID.Slice(), i)
-		require.True(t, pr.InclusionProof.Match(tx1.Instructions[0].InstanceID.Slice()))
+		pr := s.waitProofWithIdx(t, tx1ID, i)
+		require.True(t, pr.InclusionProof.Match(tx1ID))
 	}
 	s.waitPropagation(t, 0)
 
-	log.Lvl1("Sending 1st tx")
-	tx1, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 2)
-	require.NoError(t, err)
-	s.sendTxToAndWait(t, tx1, nFailures, 10)
-	log.Lvl1("Sending 2nd tx")
-	tx1, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 3)
-	require.NoError(t, err)
-	s.sendTxToAndWait(t, tx1, nFailures, 10)
+	log.Lvl1("Two final transactions")
+	for tx := 0; tx < 2; tx++ {
+		s.sendDummyTx(t, nFailures, counter, 4)
+		counter++
+	}
+
 	log.Lvl1("Sent two tx")
 	s.waitPropagation(t, -1)
 }

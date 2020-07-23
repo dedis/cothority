@@ -18,7 +18,7 @@ with the new leader at the beginning of the roster. It is more difficult, howeve
 to add a new node to the roster, as the new node will have to get the new state
 before being able to participate in the consensus.
 
-There are two cases for the new block:
+There are two cases for the new node:
 1. it already has a version of the global state that is not older than
 a given threshold of blocks
 2. it doesn't have a version, or it is too old to be considered
