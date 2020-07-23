@@ -1,10 +1,10 @@
-import { BEvmClient, EvmAccount, EvmContract, WEI_PER_ETHER } from "./client";
-import { BEvmService } from "./service";
+import { BEvmInstance, EvmAccount, EvmContract, WEI_PER_ETHER } from "./bevm-instance";
+import { BEvmRPC } from "./bevm-rpc";
 
 export {
-    BEvmService,
+    BEvmRPC,
     EvmAccount,
     EvmContract,
-    BEvmClient,
+    BEvmInstance,
     WEI_PER_ETHER,
 };

@@ -134,7 +134,7 @@ func (db *ClientByzDatabase) Put(key []byte, value []byte) error {
 	return xerrors.New("Put() not allowed on ClientByzDatabase")
 }
 
-// Retrieve the value from a BEVM value instance
+// Retrieve the value from a BEvmValue instance
 func (db *ClientByzDatabase) getBEvmValue(key []byte) ([]byte, error) {
 	instID := db.getValueInstanceID(key)
 

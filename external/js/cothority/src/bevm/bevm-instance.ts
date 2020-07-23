@@ -9,7 +9,11 @@ import Instance, { InstanceID } from "../byzcoin/instance";
 import Signer from "../darc/signer";
 import Log from "../log";
 
-import { BEvmService } from "./service";
+import { BEvmRPC } from "./bevm-rpc";
+
+import abi from "ethereumjs-abi";
+import { Transaction } from "ethereumjs-tx";
+import * as rlp from "rlp";
 
 /**
  * Ethereum account
@@ -38,7 +42,7 @@ export class EvmAccount {
     protected key: ec.KeyPair;
     private _nonce: number;
 
-    get nonce() {
+    get nonce(): number {
         return this._nonce;
     }
 
@@ -60,20 +64,9 @@ export class EvmAccount {
         this._nonce = nonce;
     }
 
-    sign(hash: Buffer): Buffer {
-        /* WARNING: The "canonical" option is crucial to have the same
-        * signature as Ethereum */
-        const sig = this.key.sign(hash, {canonical: true});
-
-        const r = Buffer.from(sig.r.toArray("be", 32));
-        const s = Buffer.from(sig.s.toArray("be", 32));
-
-        const len = r.length + s.length + 1;
-
-        const buf = Buffer.concat([r, s], len);
-        buf.writeUInt8(sig.recoveryParam, len - 1);
-
-        return buf;
+    sign(tx: Transaction) {
+        const privKey = Buffer.from(this.key.getPrivate("hex"), "hex");
+        tx.sign(privKey);
     }
 
     incNonce() {
@@ -103,7 +96,7 @@ export class EvmContract {
     }
 
     private static computeAddress(data: Buffer, nonce: number): Buffer {
-        const buf = EvmContract.erlEncode(data, nonce);
+        const buf = rlp.encode([data, nonce]);
 
         const h = new Keccak("keccak256");
         h.update(buf);
@@ -114,63 +107,36 @@ export class EvmContract {
         return address;
     }
 
-    // Translated from the Go Ethereum code
-    private static erlEncode(address: Buffer, nonce: number): Buffer {
-        const bufNonce = Buffer.alloc(8);
-        bufNonce.writeUInt32BE(nonce / (2 ** 32), 0);
-        bufNonce.writeUInt32BE(nonce % (2 ** 32), 4);
-        let size = 8;
-        for (let i = 0; (i < 8) && (bufNonce[i] === 0); i++) {
-            size--;
-        }
-
-        const addressLen = address.length + 1;
-        const nonceLen = (nonce < 128 ? 1 : size + 1);
-
-        const buf = Buffer.alloc(1 + addressLen + nonceLen);
-        let pos = 0;
-
-        buf.writeUInt8(0xc0 + addressLen + nonceLen, pos++);
-
-        buf.writeUInt8(0x80 + address.length, pos++);
-        address.copy(buf, 2);
-        pos += address.length;
-
-        if ((nonce === 0) || (nonce >= 128)) {
-            buf.writeUInt8(0x80 + size, pos++);
-        }
-
-        bufNonce.copy(buf, pos, 8 - size);
-
-        return buf;
-    }
-
-    readonly transactions: string[];
-    readonly viewMethods: string[];
+    readonly methodAbi: Map<string, any>;
 
     /**
      * Create a new EVM contract
      *
      * @param name      Contract name
      * @param bytecode  Contract bytecode
-     * @param abi       Contract ABI (JSON-encoded)
+     * @param abiJson   Contract ABI (JSON-encoded)
      * @param addresses Array of deployed contract instances; should normally not be specified
      */
     constructor(readonly name: string,
                 readonly bytecode: Buffer,
-                readonly abi: string,
+                readonly abiJson: string,
                 readonly addresses: Buffer[] = []) {
-        const abiObj = JSON.parse(abi);
+        this.methodAbi = new Map();
 
-        const transactions = abiObj.filter((elem: any) => {
-            return elem.type === "function" &&  elem.stateMutability !== "view";
-        }).map((elem: any) => elem.name);
-        this.transactions = transactions;
+        const abiObj = JSON.parse(abiJson);
+        abiObj.forEach((item: any) => {
+                switch (item.type) {
+                    case "constructor": {
+                        this.methodAbi.set("", item);
+                        break;
+                    }
 
-        const viewMethods = abiObj.filter((elem: any) => {
-            return elem.type === "function" &&  elem.stateMutability === "view";
-        }).map((elem: any) => elem.name);
-        this.viewMethods = viewMethods;
+                    case "function": {
+                        this.methodAbi.set(item.name, item);
+                        break;
+                    }
+                }
+            });
     }
 
     createNewAddress(account: EvmAccount) {
@@ -180,7 +146,7 @@ export class EvmContract {
 
     serialize(): object {
         return {
-            abi: this.abi,
+            abi: this.abiJson,
             addresses: this.addresses.map((address) => address.toString("hex")),
             bytecode: this.bytecode.toString("hex"),
             name: this.name,
@@ -194,11 +160,11 @@ export const WEI_PER_ETHER = Long.fromString("1000000000000000000");
 /**
  * BEvm client
  */
-export class BEvmClient extends Instance {
+export class BEvmInstance extends Instance {
     static readonly contractID = "bevm";
 
     static readonly commandTransaction = "transaction";
-    static readonly argumentTx = "tx";
+    static readonly argumentTx = "txRlp";
 
     static readonly commandCredit = "credit";
     static readonly argumentAddress = "address";
@@ -213,10 +179,11 @@ export class BEvmClient extends Instance {
      *
      * @return New BEvm instance
      */
-    static async spawn(bc: ByzCoinRPC, darcID: InstanceID, signers: Signer[]): Promise<BEvmClient> {
+    static async spawn(bc: ByzCoinRPC, darcID: InstanceID, signers: Signer[]):
+        Promise<BEvmInstance> {
         const inst = Instruction.createSpawn(
             darcID,
-            BEvmClient.contractID,
+            BEvmInstance.contractID,
             [],
         );
 
@@ -225,7 +192,7 @@ export class BEvmClient extends Instance {
 
         await bc.sendTransactionAndWait(ctx);
 
-        return BEvmClient.fromByzcoin(bc, ctx.instructions[0].deriveId(), 2);
+        return BEvmInstance.fromByzcoin(bc, ctx.instructions[0].deriveId(), 2);
     }
 
     /**
@@ -238,27 +205,26 @@ export class BEvmClient extends Instance {
      */
     static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID,
                              waitMatch: number = 0,
-                             interval: number = 1000): Promise<BEvmClient> {
+                             interval: number = 1000): Promise<BEvmInstance> {
         const instance = await Instance.fromByzcoin(bc, iid, waitMatch, interval);
 
-        return new BEvmClient(bc, instance);
+        return new BEvmInstance(bc, instance);
     }
 
-    private bevmService: BEvmService;
+    private bevmRPC: BEvmRPC;
 
     constructor(private byzcoinRPC: ByzCoinRPC, inst: Instance) {
         super(inst);
 
-        if (inst.contractID.toString() !== BEvmClient.contractID) {
-            throw new Error(`mismatch contract name: ${inst.contractID} vs ${BEvmClient.contractID}`);
+        if (inst.contractID.toString() !== BEvmInstance.contractID) {
+            throw new Error(`mismatch contract name: ${inst.contractID} vs ${BEvmInstance.contractID}`);
         }
-    }
 
-    /**
-     * Set the BEvm service to use
-     */
-    setBEvmService(bevmService: BEvmService) {
-        this.bevmService = bevmService;
+        // Use first cothority server for service
+        const bevmRPC = new BEvmRPC(byzcoinRPC.getConfig().roster.list[0]);
+        bevmRPC.setTimeout(1000);
+
+        this.bevmRPC = bevmRPC;
     }
 
     /**
@@ -273,19 +239,10 @@ export class BEvmClient extends Instance {
      * @param args      Arguments for the smart contract constructor
      * @param wait      Number of blocks to wait for the ByzCoin transaction to be included
      *
-     * The `args` are passed as an array of strings, one per argument, each of
-     * them JSON-encoded.
-     * The following argument types are currently supported:
-     *
-     *   Solidity type          | JSON type | Example
-     *   --------------------------------------------
-     *   uint, uint256, uint128 | string    | "12345"
-     *   int, int256, int128    | string    | "-12345"
-     *   uint32, uint16, uint8  | number    | 12345
-     *   int32, int16, int8     | number    | -12345
-     *   address                | string    | "112233445566778899aabbccddeeff0011223344"
-     *   string                 | string    | "look at me I am a string"
-     *   array, e.g. uint[2]    | array     | ["123", "456"]
+     * The `args` are passed as an array of values, one per argument. The types
+     * of the arguments must match the types in the constructor ABI. In
+     * particular, for large number types (e.g. uint256), the argument can be
+     * passed as a number, string or BN value.
      */
     async deploy(signers: Signer[],
                  gasLimit: number,
@@ -293,19 +250,26 @@ export class BEvmClient extends Instance {
                  amount: number,
                  account: EvmAccount,
                  contract: EvmContract,
-                 args?: string[],
+                 args?: any[],
                  wait?: number) {
-        const unsignedTx = await this.bevmService.prepareDeployTx(
-            gasLimit, gasPrice, amount, account.nonce,
-            contract.bytecode, contract.abi, args);
-        const signature = account.sign(Buffer.from(unsignedTx.transactionHash));
-        const signedTx = await this.bevmService.finalizeTx(
-            Buffer.from(unsignedTx.transaction), signature);
+        const entry = contract.methodAbi.get("");
+        const types = entry.inputs.map((arg: any) => arg.type);
+        const encodedArgs = abi.rawEncode(types, args);
+        const callData = Buffer.concat([contract.bytecode, encodedArgs]);
+
+        const ethTx = new Transaction({
+            data: callData,
+            gasLimit,
+            gasPrice,
+            nonce: account.nonce,
+            value: amount,
+        });
+        account.sign(ethTx);
 
         await this.invoke(
-            BEvmClient.commandTransaction, [
-                new Argument({name: BEvmClient.argumentTx,
-                             value: Buffer.from(signedTx.transaction)}),
+            BEvmInstance.commandTransaction, [
+                new Argument({name: BEvmInstance.argumentTx,
+                             value: ethTx.serialize()}),
             ],
             signers, wait);
 
@@ -337,20 +301,28 @@ export class BEvmClient extends Instance {
                       contract: EvmContract,
                       instanceIndex: number,
                       method: string,
-                      args?: string[],
+                      args?: any[],
                       wait?: number) {
-        const contractAddress = contract.addresses[instanceIndex];
-        const unsignedTx = await this.bevmService.prepareTransactionTx(
-            gasLimit, gasPrice, amount, contractAddress, account.nonce,
-            contract.abi, method, args);
-        const signature = account.sign(Buffer.from(unsignedTx.transactionHash));
-        const signedTx = await this.bevmService.finalizeTx(
-            Buffer.from(unsignedTx.transaction), signature);
+        const entry = contract.methodAbi.get(method);
+        const types = entry.inputs.map((arg: any) => arg.type);
+        const encodedArgs = abi.rawEncode(types, args);
+        const methodID = abi.methodID(method, types);
+        const callData = Buffer.concat([methodID, encodedArgs]);
+
+        const ethTx = new Transaction({
+            data: callData,
+            gasLimit,
+            gasPrice,
+            nonce: account.nonce,
+            to: contract.addresses[instanceIndex],
+            value: amount,
+        });
+        account.sign(ethTx);
 
         await this.invoke(
-            BEvmClient.commandTransaction, [
-                new Argument({name: BEvmClient.argumentTx,
-                             value: Buffer.from(signedTx.transaction)}),
+            BEvmInstance.commandTransaction, [
+                new Argument({name: BEvmInstance.argumentTx,
+                             value: ethTx.serialize()}),
             ],
             signers, wait);
 
@@ -366,7 +338,6 @@ export class BEvmClient extends Instance {
      * ID that contains it must be provided.
      *
      * @param byzcoinId         ByzCoin ID
-     * @param serverConfig      Cothority server config in TOML
      * @param bevmInstanceId    BEvm instance ID
      * @param account           EVM account
      * @param contract          EVM contract
@@ -374,31 +345,36 @@ export class BEvmClient extends Instance {
      * @param method            Name of the view method to execute
      * @param args              Arguments for the smart contract method
      *
-     * @return Result of the view method execution
+     * @return Result of the view method execution, as an array of values. The
+     * types of the values will match the return values in the view method ABI.
+     * In particular, values for large number types (e.g. uint256) will be BNs.
      *
      * See `deploy()` for a description of `args`.
      */
     async call(byzcoinId: Buffer,
-               serverConfig: string,
                bevmInstanceId: Buffer,
                account: EvmAccount,
                contract: EvmContract,
                instanceIndex: number,
                method: string,
-               args?: string[]): Promise<any> {
-        const contractAddress = contract.addresses[instanceIndex];
+               args?: any[]): Promise<any[]> {
+        const entry = contract.methodAbi.get(method);
+        const types = entry.inputs.map((arg: any) => arg.type);
+        const encodedArgs = abi.rawEncode(types, args);
+        const methodID = abi.methodID(method, types);
+        const callData = Buffer.concat([methodID, encodedArgs]);
 
-        const response = await this.bevmService.performCall(
+        const response = await this.bevmRPC.viewCall(
             byzcoinId,
-            serverConfig,
             bevmInstanceId,
             account.address,
-            contractAddress,
-            contract.abi,
-            method,
-            args);
+            contract.addresses[instanceIndex],
+            callData);
 
-        return JSON.parse(response.result);
+        const outTypes = entry.outputs.map((arg: any) => arg.type);
+        const decodedResult = abi.rawDecode(outTypes, response.result);
+
+        return decodedResult;
     }
 
     /**
@@ -416,11 +392,11 @@ export class BEvmClient extends Instance {
         const amountBuf = Buffer.from(amount.toBytesBE());
 
         await this.invoke(
-            BEvmClient.commandCredit,
+            BEvmInstance.commandCredit,
             [
-                new Argument({name: BEvmClient.argumentAddress,
+                new Argument({name: BEvmInstance.argumentAddress,
                              value: account.address}),
-                new Argument({name: BEvmClient.argumentAmount,
+                new Argument({name: BEvmInstance.argumentAmount,
                              value: amountBuf}),
             ],
             signers,
@@ -434,7 +410,7 @@ export class BEvmClient extends Instance {
         const ctx = ClientTransaction.make(
             this.byzcoinRPC.getProtocolVersion(),
             Instruction.createInvoke(
-                this.id, BEvmClient.contractID, command, args,
+                this.id, BEvmInstance.contractID, command, args,
             ));
 
         await ctx.updateCountersAndSign(this.byzcoinRPC, [signers]);

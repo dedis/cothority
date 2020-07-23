@@ -2,18 +2,14 @@ package bevm
 
 import (
 	"encoding/hex"
-	"math/big"
 	"reflect"
 	"regexp"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/state"
-	"github.com/ethereum/go-ethereum/core/vm"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/onet/v3/log"
-	"go.dedis.ch/protobuf"
 	"golang.org/x/xerrors"
 )
 
@@ -105,32 +101,10 @@ func MakeBevmAttr(rst byzcoin.ReadOnlyStateTrie,
 				"arguments: %v", err)
 		}
 
-		// Retrieve BEvm instance
-		value, _, _, _, err := rst.GetValues(bevmID[:])
+		stateDb, err := getEvmDbRst(rst, bevmID)
 		if err != nil {
-			return xerrors.Errorf("failed to retrieve BEvm instance %v: %v",
-				bevmID, err)
-		}
-
-		// Retrieve BEvm state
-		var bs State
-		err = protobuf.Decode(value, &bs)
-		if err != nil {
-			return xerrors.Errorf("failed to decode BEvm instance state: %v",
-				err)
-		}
-
-		// Retrieve EVM stateDB
-		byzDb, err := NewStateTrieByzDatabase(bevmID, rst)
-		if err != nil {
-			return xerrors.Errorf("failed to create stateTrie-backed database "+
+			return xerrors.Errorf("failed to obtain stateTrie-backed database "+
 				"for BEvm: %v", err)
-		}
-
-		db := state.NewDatabase(byzDb)
-		stateDb, err := state.New(bs.RootHash, db)
-		if err != nil {
-			return xerrors.Errorf("failed to create new EVM db: %v", err)
 		}
 
 		// Retrieve the TimeReader (we are actually called with a GlobalState)
@@ -142,10 +116,6 @@ func MakeBevmAttr(rst byzcoin.ReadOnlyStateTrie,
 
 		// Compute the timestamp for the EVM, converting [ns] to [s]
 		evmTs := int64(tr.GetCurrentBlockTimestamp() / 1e9)
-
-		// Instantiate a new EVM
-		evm := vm.NewEVM(getContext(evmTs), stateDb, getChainConfig(),
-			getVMConfig())
 
 		// Pack the call arguments according to ABI
 		contractAbi, err := abi.JSON(strings.NewReader(
@@ -175,10 +145,7 @@ func MakeBevmAttr(rst byzcoin.ReadOnlyStateTrie,
 				"method: %v", err)
 		}
 
-		// Perform the call (maxing the consumption to 1 Ether)
-		ret, _, err := evm.Call(vm.AccountRef(nilAddress),
-			contractAddress, callData, uint64(1*WeiPerEther),
-			big.NewInt(0))
+		ret, err := CallEVM(nilAddress, contractAddress, callData, stateDb, evmTs)
 		if err != nil {
 			return xerrors.Errorf("failed to execute EVM validation view "+
 				"method: %v (does the method exist?)", err)

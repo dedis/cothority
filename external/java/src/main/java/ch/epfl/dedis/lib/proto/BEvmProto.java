@@ -14,4711 +14,8 @@ public final class BEvmProto {
     registerAllExtensions(
         (com.google.protobuf.ExtensionRegistryLite) registry);
   }
-  public interface DeployRequestOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:bevm.DeployRequest)
-      com.google.protobuf.MessageOrBuilder {
-
-    /**
-     * <code>required uint64 gaslimit = 1;</code>
-     */
-    boolean hasGaslimit();
-    /**
-     * <code>required uint64 gaslimit = 1;</code>
-     */
-    long getGaslimit();
-
-    /**
-     * <code>required uint64 gasprice = 2;</code>
-     */
-    boolean hasGasprice();
-    /**
-     * <code>required uint64 gasprice = 2;</code>
-     */
-    long getGasprice();
-
-    /**
-     * <code>required uint64 amount = 3;</code>
-     */
-    boolean hasAmount();
-    /**
-     * <code>required uint64 amount = 3;</code>
-     */
-    long getAmount();
-
-    /**
-     * <code>required uint64 nonce = 4;</code>
-     */
-    boolean hasNonce();
-    /**
-     * <code>required uint64 nonce = 4;</code>
-     */
-    long getNonce();
-
-    /**
-     * <code>required bytes bytecode = 5;</code>
-     */
-    boolean hasBytecode();
-    /**
-     * <code>required bytes bytecode = 5;</code>
-     */
-    com.google.protobuf.ByteString getBytecode();
-
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string abi = 6;</code>
-     */
-    boolean hasAbi();
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string abi = 6;</code>
-     */
-    java.lang.String getAbi();
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string abi = 6;</code>
-     */
-    com.google.protobuf.ByteString
-        getAbiBytes();
-
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 7;</code>
-     */
-    java.util.List<java.lang.String>
-        getArgsList();
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 7;</code>
-     */
-    int getArgsCount();
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 7;</code>
-     */
-    java.lang.String getArgs(int index);
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 7;</code>
-     */
-    com.google.protobuf.ByteString
-        getArgsBytes(int index);
-  }
-  /**
-   * <pre>
-   * DeployRequest is the request to prepare an EVM transaction to deploy a
-   * contract.
-   * </pre>
-   *
-   * Protobuf type {@code bevm.DeployRequest}
-   */
-  public  static final class DeployRequest extends
-      com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:bevm.DeployRequest)
-      DeployRequestOrBuilder {
-  private static final long serialVersionUID = 0L;
-    // Use DeployRequest.newBuilder() to construct.
-    private DeployRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-      super(builder);
-    }
-    private DeployRequest() {
-      gaslimit_ = 0L;
-      gasprice_ = 0L;
-      amount_ = 0L;
-      nonce_ = 0L;
-      bytecode_ = com.google.protobuf.ByteString.EMPTY;
-      abi_ = "";
-      args_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-    }
-
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
-      return this.unknownFields;
-    }
-    private DeployRequest(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 8: {
-              bitField0_ |= 0x00000001;
-              gaslimit_ = input.readUInt64();
-              break;
-            }
-            case 16: {
-              bitField0_ |= 0x00000002;
-              gasprice_ = input.readUInt64();
-              break;
-            }
-            case 24: {
-              bitField0_ |= 0x00000004;
-              amount_ = input.readUInt64();
-              break;
-            }
-            case 32: {
-              bitField0_ |= 0x00000008;
-              nonce_ = input.readUInt64();
-              break;
-            }
-            case 42: {
-              bitField0_ |= 0x00000010;
-              bytecode_ = input.readBytes();
-              break;
-            }
-            case 50: {
-              com.google.protobuf.ByteString bs = input.readBytes();
-              bitField0_ |= 0x00000020;
-              abi_ = bs;
-              break;
-            }
-            case 58: {
-              com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
-                args_ = new com.google.protobuf.LazyStringArrayList();
-                mutable_bitField0_ |= 0x00000040;
-              }
-              args_.add(bs);
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        if (((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
-          args_ = args_.getUnmodifiableView();
-        }
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_DeployRequest_descriptor;
-    }
-
-    @java.lang.Override
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_DeployRequest_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest.class, ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest.Builder.class);
-    }
-
-    private int bitField0_;
-    public static final int GASLIMIT_FIELD_NUMBER = 1;
-    private long gaslimit_;
-    /**
-     * <code>required uint64 gaslimit = 1;</code>
-     */
-    public boolean hasGaslimit() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <code>required uint64 gaslimit = 1;</code>
-     */
-    public long getGaslimit() {
-      return gaslimit_;
-    }
-
-    public static final int GASPRICE_FIELD_NUMBER = 2;
-    private long gasprice_;
-    /**
-     * <code>required uint64 gasprice = 2;</code>
-     */
-    public boolean hasGasprice() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <code>required uint64 gasprice = 2;</code>
-     */
-    public long getGasprice() {
-      return gasprice_;
-    }
-
-    public static final int AMOUNT_FIELD_NUMBER = 3;
-    private long amount_;
-    /**
-     * <code>required uint64 amount = 3;</code>
-     */
-    public boolean hasAmount() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
-    }
-    /**
-     * <code>required uint64 amount = 3;</code>
-     */
-    public long getAmount() {
-      return amount_;
-    }
-
-    public static final int NONCE_FIELD_NUMBER = 4;
-    private long nonce_;
-    /**
-     * <code>required uint64 nonce = 4;</code>
-     */
-    public boolean hasNonce() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
-    }
-    /**
-     * <code>required uint64 nonce = 4;</code>
-     */
-    public long getNonce() {
-      return nonce_;
-    }
-
-    public static final int BYTECODE_FIELD_NUMBER = 5;
-    private com.google.protobuf.ByteString bytecode_;
-    /**
-     * <code>required bytes bytecode = 5;</code>
-     */
-    public boolean hasBytecode() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
-    }
-    /**
-     * <code>required bytes bytecode = 5;</code>
-     */
-    public com.google.protobuf.ByteString getBytecode() {
-      return bytecode_;
-    }
-
-    public static final int ABI_FIELD_NUMBER = 6;
-    private volatile java.lang.Object abi_;
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string abi = 6;</code>
-     */
-    public boolean hasAbi() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
-    }
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string abi = 6;</code>
-     */
-    public java.lang.String getAbi() {
-      java.lang.Object ref = abi_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          abi_ = s;
-        }
-        return s;
-      }
-    }
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string abi = 6;</code>
-     */
-    public com.google.protobuf.ByteString
-        getAbiBytes() {
-      java.lang.Object ref = abi_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        abi_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-
-    public static final int ARGS_FIELD_NUMBER = 7;
-    private com.google.protobuf.LazyStringList args_;
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 7;</code>
-     */
-    public com.google.protobuf.ProtocolStringList
-        getArgsList() {
-      return args_;
-    }
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 7;</code>
-     */
-    public int getArgsCount() {
-      return args_.size();
-    }
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 7;</code>
-     */
-    public java.lang.String getArgs(int index) {
-      return args_.get(index);
-    }
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 7;</code>
-     */
-    public com.google.protobuf.ByteString
-        getArgsBytes(int index) {
-      return args_.getByteString(index);
-    }
-
-    private byte memoizedIsInitialized = -1;
-    @java.lang.Override
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      if (!hasGaslimit()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasGasprice()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasAmount()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasNonce()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasBytecode()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasAbi()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeUInt64(1, gaslimit_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeUInt64(2, gasprice_);
-      }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeUInt64(3, amount_);
-      }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeUInt64(4, nonce_);
-      }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        output.writeBytes(5, bytecode_);
-      }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, abi_);
-      }
-      for (int i = 0; i < args_.size(); i++) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 7, args_.getRaw(i));
-      }
-      unknownFields.writeTo(output);
-    }
-
-    @java.lang.Override
-    public int getSerializedSize() {
-      int size = memoizedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeUInt64Size(1, gaslimit_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeUInt64Size(2, gasprice_);
-      }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeUInt64Size(3, amount_);
-      }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeUInt64Size(4, nonce_);
-      }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(5, bytecode_);
-      }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, abi_);
-      }
-      {
-        int dataSize = 0;
-        for (int i = 0; i < args_.size(); i++) {
-          dataSize += computeStringSizeNoTag(args_.getRaw(i));
-        }
-        size += dataSize;
-        size += 1 * getArgsList().size();
-      }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
-      return size;
-    }
-
-    @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest)) {
-        return super.equals(obj);
-      }
-      ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest other = (ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest) obj;
-
-      boolean result = true;
-      result = result && (hasGaslimit() == other.hasGaslimit());
-      if (hasGaslimit()) {
-        result = result && (getGaslimit()
-            == other.getGaslimit());
-      }
-      result = result && (hasGasprice() == other.hasGasprice());
-      if (hasGasprice()) {
-        result = result && (getGasprice()
-            == other.getGasprice());
-      }
-      result = result && (hasAmount() == other.hasAmount());
-      if (hasAmount()) {
-        result = result && (getAmount()
-            == other.getAmount());
-      }
-      result = result && (hasNonce() == other.hasNonce());
-      if (hasNonce()) {
-        result = result && (getNonce()
-            == other.getNonce());
-      }
-      result = result && (hasBytecode() == other.hasBytecode());
-      if (hasBytecode()) {
-        result = result && getBytecode()
-            .equals(other.getBytecode());
-      }
-      result = result && (hasAbi() == other.hasAbi());
-      if (hasAbi()) {
-        result = result && getAbi()
-            .equals(other.getAbi());
-      }
-      result = result && getArgsList()
-          .equals(other.getArgsList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasGaslimit()) {
-        hash = (37 * hash) + GASLIMIT_FIELD_NUMBER;
-        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-            getGaslimit());
-      }
-      if (hasGasprice()) {
-        hash = (37 * hash) + GASPRICE_FIELD_NUMBER;
-        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-            getGasprice());
-      }
-      if (hasAmount()) {
-        hash = (37 * hash) + AMOUNT_FIELD_NUMBER;
-        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-            getAmount());
-      }
-      if (hasNonce()) {
-        hash = (37 * hash) + NONCE_FIELD_NUMBER;
-        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-            getNonce());
-      }
-      if (hasBytecode()) {
-        hash = (37 * hash) + BYTECODE_FIELD_NUMBER;
-        hash = (53 * hash) + getBytecode().hashCode();
-      }
-      if (hasAbi()) {
-        hash = (37 * hash) + ABI_FIELD_NUMBER;
-        hash = (53 * hash) + getAbi().hashCode();
-      }
-      if (getArgsCount() > 0) {
-        hash = (37 * hash) + ARGS_FIELD_NUMBER;
-        hash = (53 * hash) + getArgsList().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-
-    @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
-    public static Builder newBuilder(ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-    }
-    @java.lang.Override
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /**
-     * <pre>
-     * DeployRequest is the request to prepare an EVM transaction to deploy a
-     * contract.
-     * </pre>
-     *
-     * Protobuf type {@code bevm.DeployRequest}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:bevm.DeployRequest)
-        ch.epfl.dedis.lib.proto.BEvmProto.DeployRequestOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_DeployRequest_descriptor;
-      }
-
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_DeployRequest_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest.class, ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest.Builder.class);
-      }
-
-      // Construct using ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
-      }
-      @java.lang.Override
-      public Builder clear() {
-        super.clear();
-        gaslimit_ = 0L;
-        bitField0_ = (bitField0_ & ~0x00000001);
-        gasprice_ = 0L;
-        bitField0_ = (bitField0_ & ~0x00000002);
-        amount_ = 0L;
-        bitField0_ = (bitField0_ & ~0x00000004);
-        nonce_ = 0L;
-        bitField0_ = (bitField0_ & ~0x00000008);
-        bytecode_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000010);
-        abi_ = "";
-        bitField0_ = (bitField0_ & ~0x00000020);
-        args_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000040);
-        return this;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_DeployRequest_descriptor;
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest getDefaultInstanceForType() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest.getDefaultInstance();
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest build() {
-        ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest buildPartial() {
-        ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest result = new ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
-        result.gaslimit_ = gaslimit_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
-        }
-        result.gasprice_ = gasprice_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
-          to_bitField0_ |= 0x00000004;
-        }
-        result.amount_ = amount_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
-          to_bitField0_ |= 0x00000008;
-        }
-        result.nonce_ = nonce_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
-          to_bitField0_ |= 0x00000010;
-        }
-        result.bytecode_ = bytecode_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
-          to_bitField0_ |= 0x00000020;
-        }
-        result.abi_ = abi_;
-        if (((bitField0_ & 0x00000040) == 0x00000040)) {
-          args_ = args_.getUnmodifiableView();
-          bitField0_ = (bitField0_ & ~0x00000040);
-        }
-        result.args_ = args_;
-        result.bitField0_ = to_bitField0_;
-        onBuilt();
-        return result;
-      }
-
-      @java.lang.Override
-      public Builder clone() {
-        return (Builder) super.clone();
-      }
-      @java.lang.Override
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.setField(field, value);
-      }
-      @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
-      }
-      @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
-      }
-      @java.lang.Override
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
-      }
-      @java.lang.Override
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
-      }
-      @java.lang.Override
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest) {
-          return mergeFrom((ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest other) {
-        if (other == ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest.getDefaultInstance()) return this;
-        if (other.hasGaslimit()) {
-          setGaslimit(other.getGaslimit());
-        }
-        if (other.hasGasprice()) {
-          setGasprice(other.getGasprice());
-        }
-        if (other.hasAmount()) {
-          setAmount(other.getAmount());
-        }
-        if (other.hasNonce()) {
-          setNonce(other.getNonce());
-        }
-        if (other.hasBytecode()) {
-          setBytecode(other.getBytecode());
-        }
-        if (other.hasAbi()) {
-          bitField0_ |= 0x00000020;
-          abi_ = other.abi_;
-          onChanged();
-        }
-        if (!other.args_.isEmpty()) {
-          if (args_.isEmpty()) {
-            args_ = other.args_;
-            bitField0_ = (bitField0_ & ~0x00000040);
-          } else {
-            ensureArgsIsMutable();
-            args_.addAll(other.args_);
-          }
-          onChanged();
-        }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
-        return this;
-      }
-
-      @java.lang.Override
-      public final boolean isInitialized() {
-        if (!hasGaslimit()) {
-          return false;
-        }
-        if (!hasGasprice()) {
-          return false;
-        }
-        if (!hasAmount()) {
-          return false;
-        }
-        if (!hasNonce()) {
-          return false;
-        }
-        if (!hasBytecode()) {
-          return false;
-        }
-        if (!hasAbi()) {
-          return false;
-        }
-        return true;
-      }
-
-      @java.lang.Override
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-      private int bitField0_;
-
-      private long gaslimit_ ;
-      /**
-       * <code>required uint64 gaslimit = 1;</code>
-       */
-      public boolean hasGaslimit() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <code>required uint64 gaslimit = 1;</code>
-       */
-      public long getGaslimit() {
-        return gaslimit_;
-      }
-      /**
-       * <code>required uint64 gaslimit = 1;</code>
-       */
-      public Builder setGaslimit(long value) {
-        bitField0_ |= 0x00000001;
-        gaslimit_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required uint64 gaslimit = 1;</code>
-       */
-      public Builder clearGaslimit() {
-        bitField0_ = (bitField0_ & ~0x00000001);
-        gaslimit_ = 0L;
-        onChanged();
-        return this;
-      }
-
-      private long gasprice_ ;
-      /**
-       * <code>required uint64 gasprice = 2;</code>
-       */
-      public boolean hasGasprice() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>required uint64 gasprice = 2;</code>
-       */
-      public long getGasprice() {
-        return gasprice_;
-      }
-      /**
-       * <code>required uint64 gasprice = 2;</code>
-       */
-      public Builder setGasprice(long value) {
-        bitField0_ |= 0x00000002;
-        gasprice_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required uint64 gasprice = 2;</code>
-       */
-      public Builder clearGasprice() {
-        bitField0_ = (bitField0_ & ~0x00000002);
-        gasprice_ = 0L;
-        onChanged();
-        return this;
-      }
-
-      private long amount_ ;
-      /**
-       * <code>required uint64 amount = 3;</code>
-       */
-      public boolean hasAmount() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
-      }
-      /**
-       * <code>required uint64 amount = 3;</code>
-       */
-      public long getAmount() {
-        return amount_;
-      }
-      /**
-       * <code>required uint64 amount = 3;</code>
-       */
-      public Builder setAmount(long value) {
-        bitField0_ |= 0x00000004;
-        amount_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required uint64 amount = 3;</code>
-       */
-      public Builder clearAmount() {
-        bitField0_ = (bitField0_ & ~0x00000004);
-        amount_ = 0L;
-        onChanged();
-        return this;
-      }
-
-      private long nonce_ ;
-      /**
-       * <code>required uint64 nonce = 4;</code>
-       */
-      public boolean hasNonce() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
-      }
-      /**
-       * <code>required uint64 nonce = 4;</code>
-       */
-      public long getNonce() {
-        return nonce_;
-      }
-      /**
-       * <code>required uint64 nonce = 4;</code>
-       */
-      public Builder setNonce(long value) {
-        bitField0_ |= 0x00000008;
-        nonce_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required uint64 nonce = 4;</code>
-       */
-      public Builder clearNonce() {
-        bitField0_ = (bitField0_ & ~0x00000008);
-        nonce_ = 0L;
-        onChanged();
-        return this;
-      }
-
-      private com.google.protobuf.ByteString bytecode_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <code>required bytes bytecode = 5;</code>
-       */
-      public boolean hasBytecode() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
-      }
-      /**
-       * <code>required bytes bytecode = 5;</code>
-       */
-      public com.google.protobuf.ByteString getBytecode() {
-        return bytecode_;
-      }
-      /**
-       * <code>required bytes bytecode = 5;</code>
-       */
-      public Builder setBytecode(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000010;
-        bytecode_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required bytes bytecode = 5;</code>
-       */
-      public Builder clearBytecode() {
-        bitField0_ = (bitField0_ & ~0x00000010);
-        bytecode_ = getDefaultInstance().getBytecode();
-        onChanged();
-        return this;
-      }
-
-      private java.lang.Object abi_ = "";
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string abi = 6;</code>
-       */
-      public boolean hasAbi() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string abi = 6;</code>
-       */
-      public java.lang.String getAbi() {
-        java.lang.Object ref = abi_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            abi_ = s;
-          }
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string abi = 6;</code>
-       */
-      public com.google.protobuf.ByteString
-          getAbiBytes() {
-        java.lang.Object ref = abi_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          abi_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string abi = 6;</code>
-       */
-      public Builder setAbi(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000020;
-        abi_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string abi = 6;</code>
-       */
-      public Builder clearAbi() {
-        bitField0_ = (bitField0_ & ~0x00000020);
-        abi_ = getDefaultInstance().getAbi();
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string abi = 6;</code>
-       */
-      public Builder setAbiBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000020;
-        abi_ = value;
-        onChanged();
-        return this;
-      }
-
-      private com.google.protobuf.LazyStringList args_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      private void ensureArgsIsMutable() {
-        if (!((bitField0_ & 0x00000040) == 0x00000040)) {
-          args_ = new com.google.protobuf.LazyStringArrayList(args_);
-          bitField0_ |= 0x00000040;
-         }
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 7;</code>
-       */
-      public com.google.protobuf.ProtocolStringList
-          getArgsList() {
-        return args_.getUnmodifiableView();
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 7;</code>
-       */
-      public int getArgsCount() {
-        return args_.size();
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 7;</code>
-       */
-      public java.lang.String getArgs(int index) {
-        return args_.get(index);
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 7;</code>
-       */
-      public com.google.protobuf.ByteString
-          getArgsBytes(int index) {
-        return args_.getByteString(index);
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 7;</code>
-       */
-      public Builder setArgs(
-          int index, java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureArgsIsMutable();
-        args_.set(index, value);
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 7;</code>
-       */
-      public Builder addArgs(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureArgsIsMutable();
-        args_.add(value);
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 7;</code>
-       */
-      public Builder addAllArgs(
-          java.lang.Iterable<java.lang.String> values) {
-        ensureArgsIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, args_);
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 7;</code>
-       */
-      public Builder clearArgs() {
-        args_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000040);
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 7;</code>
-       */
-      public Builder addArgsBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureArgsIsMutable();
-        args_.add(value);
-        onChanged();
-        return this;
-      }
-      @java.lang.Override
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      @java.lang.Override
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
-
-      // @@protoc_insertion_point(builder_scope:bevm.DeployRequest)
-    }
-
-    // @@protoc_insertion_point(class_scope:bevm.DeployRequest)
-    private static final ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest DEFAULT_INSTANCE;
-    static {
-      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest();
-    }
-
-    public static ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<DeployRequest>
-        PARSER = new com.google.protobuf.AbstractParser<DeployRequest>() {
-      @java.lang.Override
-      public DeployRequest parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new DeployRequest(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<DeployRequest> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<DeployRequest> getParserForType() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public ch.epfl.dedis.lib.proto.BEvmProto.DeployRequest getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
-  }
-
-  public interface TransactionRequestOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:bevm.TransactionRequest)
-      com.google.protobuf.MessageOrBuilder {
-
-    /**
-     * <code>required uint64 gaslimit = 1;</code>
-     */
-    boolean hasGaslimit();
-    /**
-     * <code>required uint64 gaslimit = 1;</code>
-     */
-    long getGaslimit();
-
-    /**
-     * <code>required uint64 gasprice = 2;</code>
-     */
-    boolean hasGasprice();
-    /**
-     * <code>required uint64 gasprice = 2;</code>
-     */
-    long getGasprice();
-
-    /**
-     * <code>required uint64 amount = 3;</code>
-     */
-    boolean hasAmount();
-    /**
-     * <code>required uint64 amount = 3;</code>
-     */
-    long getAmount();
-
-    /**
-     * <code>required bytes contractaddress = 4;</code>
-     */
-    boolean hasContractaddress();
-    /**
-     * <code>required bytes contractaddress = 4;</code>
-     */
-    com.google.protobuf.ByteString getContractaddress();
-
-    /**
-     * <code>required uint64 nonce = 5;</code>
-     */
-    boolean hasNonce();
-    /**
-     * <code>required uint64 nonce = 5;</code>
-     */
-    long getNonce();
-
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string abi = 6;</code>
-     */
-    boolean hasAbi();
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string abi = 6;</code>
-     */
-    java.lang.String getAbi();
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string abi = 6;</code>
-     */
-    com.google.protobuf.ByteString
-        getAbiBytes();
-
-    /**
-     * <code>required string method = 7;</code>
-     */
-    boolean hasMethod();
-    /**
-     * <code>required string method = 7;</code>
-     */
-    java.lang.String getMethod();
-    /**
-     * <code>required string method = 7;</code>
-     */
-    com.google.protobuf.ByteString
-        getMethodBytes();
-
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 8;</code>
-     */
-    java.util.List<java.lang.String>
-        getArgsList();
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 8;</code>
-     */
-    int getArgsCount();
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 8;</code>
-     */
-    java.lang.String getArgs(int index);
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 8;</code>
-     */
-    com.google.protobuf.ByteString
-        getArgsBytes(int index);
-  }
-  /**
-   * <pre>
-   * TransactionRequest is the request to prepare an EVM transaction for a R/W
-   * method execution.
-   * </pre>
-   *
-   * Protobuf type {@code bevm.TransactionRequest}
-   */
-  public  static final class TransactionRequest extends
-      com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:bevm.TransactionRequest)
-      TransactionRequestOrBuilder {
-  private static final long serialVersionUID = 0L;
-    // Use TransactionRequest.newBuilder() to construct.
-    private TransactionRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-      super(builder);
-    }
-    private TransactionRequest() {
-      gaslimit_ = 0L;
-      gasprice_ = 0L;
-      amount_ = 0L;
-      contractaddress_ = com.google.protobuf.ByteString.EMPTY;
-      nonce_ = 0L;
-      abi_ = "";
-      method_ = "";
-      args_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-    }
-
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
-      return this.unknownFields;
-    }
-    private TransactionRequest(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 8: {
-              bitField0_ |= 0x00000001;
-              gaslimit_ = input.readUInt64();
-              break;
-            }
-            case 16: {
-              bitField0_ |= 0x00000002;
-              gasprice_ = input.readUInt64();
-              break;
-            }
-            case 24: {
-              bitField0_ |= 0x00000004;
-              amount_ = input.readUInt64();
-              break;
-            }
-            case 34: {
-              bitField0_ |= 0x00000008;
-              contractaddress_ = input.readBytes();
-              break;
-            }
-            case 40: {
-              bitField0_ |= 0x00000010;
-              nonce_ = input.readUInt64();
-              break;
-            }
-            case 50: {
-              com.google.protobuf.ByteString bs = input.readBytes();
-              bitField0_ |= 0x00000020;
-              abi_ = bs;
-              break;
-            }
-            case 58: {
-              com.google.protobuf.ByteString bs = input.readBytes();
-              bitField0_ |= 0x00000040;
-              method_ = bs;
-              break;
-            }
-            case 66: {
-              com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
-                args_ = new com.google.protobuf.LazyStringArrayList();
-                mutable_bitField0_ |= 0x00000080;
-              }
-              args_.add(bs);
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        if (((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
-          args_ = args_.getUnmodifiableView();
-        }
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_TransactionRequest_descriptor;
-    }
-
-    @java.lang.Override
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_TransactionRequest_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest.class, ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest.Builder.class);
-    }
-
-    private int bitField0_;
-    public static final int GASLIMIT_FIELD_NUMBER = 1;
-    private long gaslimit_;
-    /**
-     * <code>required uint64 gaslimit = 1;</code>
-     */
-    public boolean hasGaslimit() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <code>required uint64 gaslimit = 1;</code>
-     */
-    public long getGaslimit() {
-      return gaslimit_;
-    }
-
-    public static final int GASPRICE_FIELD_NUMBER = 2;
-    private long gasprice_;
-    /**
-     * <code>required uint64 gasprice = 2;</code>
-     */
-    public boolean hasGasprice() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <code>required uint64 gasprice = 2;</code>
-     */
-    public long getGasprice() {
-      return gasprice_;
-    }
-
-    public static final int AMOUNT_FIELD_NUMBER = 3;
-    private long amount_;
-    /**
-     * <code>required uint64 amount = 3;</code>
-     */
-    public boolean hasAmount() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
-    }
-    /**
-     * <code>required uint64 amount = 3;</code>
-     */
-    public long getAmount() {
-      return amount_;
-    }
-
-    public static final int CONTRACTADDRESS_FIELD_NUMBER = 4;
-    private com.google.protobuf.ByteString contractaddress_;
-    /**
-     * <code>required bytes contractaddress = 4;</code>
-     */
-    public boolean hasContractaddress() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
-    }
-    /**
-     * <code>required bytes contractaddress = 4;</code>
-     */
-    public com.google.protobuf.ByteString getContractaddress() {
-      return contractaddress_;
-    }
-
-    public static final int NONCE_FIELD_NUMBER = 5;
-    private long nonce_;
-    /**
-     * <code>required uint64 nonce = 5;</code>
-     */
-    public boolean hasNonce() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
-    }
-    /**
-     * <code>required uint64 nonce = 5;</code>
-     */
-    public long getNonce() {
-      return nonce_;
-    }
-
-    public static final int ABI_FIELD_NUMBER = 6;
-    private volatile java.lang.Object abi_;
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string abi = 6;</code>
-     */
-    public boolean hasAbi() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
-    }
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string abi = 6;</code>
-     */
-    public java.lang.String getAbi() {
-      java.lang.Object ref = abi_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          abi_ = s;
-        }
-        return s;
-      }
-    }
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string abi = 6;</code>
-     */
-    public com.google.protobuf.ByteString
-        getAbiBytes() {
-      java.lang.Object ref = abi_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        abi_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-
-    public static final int METHOD_FIELD_NUMBER = 7;
-    private volatile java.lang.Object method_;
-    /**
-     * <code>required string method = 7;</code>
-     */
-    public boolean hasMethod() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
-    }
-    /**
-     * <code>required string method = 7;</code>
-     */
-    public java.lang.String getMethod() {
-      java.lang.Object ref = method_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          method_ = s;
-        }
-        return s;
-      }
-    }
-    /**
-     * <code>required string method = 7;</code>
-     */
-    public com.google.protobuf.ByteString
-        getMethodBytes() {
-      java.lang.Object ref = method_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        method_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-
-    public static final int ARGS_FIELD_NUMBER = 8;
-    private com.google.protobuf.LazyStringList args_;
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 8;</code>
-     */
-    public com.google.protobuf.ProtocolStringList
-        getArgsList() {
-      return args_;
-    }
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 8;</code>
-     */
-    public int getArgsCount() {
-      return args_.size();
-    }
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 8;</code>
-     */
-    public java.lang.String getArgs(int index) {
-      return args_.get(index);
-    }
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 8;</code>
-     */
-    public com.google.protobuf.ByteString
-        getArgsBytes(int index) {
-      return args_.getByteString(index);
-    }
-
-    private byte memoizedIsInitialized = -1;
-    @java.lang.Override
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      if (!hasGaslimit()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasGasprice()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasAmount()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasContractaddress()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasNonce()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasAbi()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasMethod()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeUInt64(1, gaslimit_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeUInt64(2, gasprice_);
-      }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeUInt64(3, amount_);
-      }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeBytes(4, contractaddress_);
-      }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        output.writeUInt64(5, nonce_);
-      }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, abi_);
-      }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 7, method_);
-      }
-      for (int i = 0; i < args_.size(); i++) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 8, args_.getRaw(i));
-      }
-      unknownFields.writeTo(output);
-    }
-
-    @java.lang.Override
-    public int getSerializedSize() {
-      int size = memoizedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeUInt64Size(1, gaslimit_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeUInt64Size(2, gasprice_);
-      }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeUInt64Size(3, amount_);
-      }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(4, contractaddress_);
-      }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeUInt64Size(5, nonce_);
-      }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, abi_);
-      }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, method_);
-      }
-      {
-        int dataSize = 0;
-        for (int i = 0; i < args_.size(); i++) {
-          dataSize += computeStringSizeNoTag(args_.getRaw(i));
-        }
-        size += dataSize;
-        size += 1 * getArgsList().size();
-      }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
-      return size;
-    }
-
-    @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest)) {
-        return super.equals(obj);
-      }
-      ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest other = (ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest) obj;
-
-      boolean result = true;
-      result = result && (hasGaslimit() == other.hasGaslimit());
-      if (hasGaslimit()) {
-        result = result && (getGaslimit()
-            == other.getGaslimit());
-      }
-      result = result && (hasGasprice() == other.hasGasprice());
-      if (hasGasprice()) {
-        result = result && (getGasprice()
-            == other.getGasprice());
-      }
-      result = result && (hasAmount() == other.hasAmount());
-      if (hasAmount()) {
-        result = result && (getAmount()
-            == other.getAmount());
-      }
-      result = result && (hasContractaddress() == other.hasContractaddress());
-      if (hasContractaddress()) {
-        result = result && getContractaddress()
-            .equals(other.getContractaddress());
-      }
-      result = result && (hasNonce() == other.hasNonce());
-      if (hasNonce()) {
-        result = result && (getNonce()
-            == other.getNonce());
-      }
-      result = result && (hasAbi() == other.hasAbi());
-      if (hasAbi()) {
-        result = result && getAbi()
-            .equals(other.getAbi());
-      }
-      result = result && (hasMethod() == other.hasMethod());
-      if (hasMethod()) {
-        result = result && getMethod()
-            .equals(other.getMethod());
-      }
-      result = result && getArgsList()
-          .equals(other.getArgsList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasGaslimit()) {
-        hash = (37 * hash) + GASLIMIT_FIELD_NUMBER;
-        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-            getGaslimit());
-      }
-      if (hasGasprice()) {
-        hash = (37 * hash) + GASPRICE_FIELD_NUMBER;
-        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-            getGasprice());
-      }
-      if (hasAmount()) {
-        hash = (37 * hash) + AMOUNT_FIELD_NUMBER;
-        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-            getAmount());
-      }
-      if (hasContractaddress()) {
-        hash = (37 * hash) + CONTRACTADDRESS_FIELD_NUMBER;
-        hash = (53 * hash) + getContractaddress().hashCode();
-      }
-      if (hasNonce()) {
-        hash = (37 * hash) + NONCE_FIELD_NUMBER;
-        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-            getNonce());
-      }
-      if (hasAbi()) {
-        hash = (37 * hash) + ABI_FIELD_NUMBER;
-        hash = (53 * hash) + getAbi().hashCode();
-      }
-      if (hasMethod()) {
-        hash = (37 * hash) + METHOD_FIELD_NUMBER;
-        hash = (53 * hash) + getMethod().hashCode();
-      }
-      if (getArgsCount() > 0) {
-        hash = (37 * hash) + ARGS_FIELD_NUMBER;
-        hash = (53 * hash) + getArgsList().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-
-    @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
-    public static Builder newBuilder(ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-    }
-    @java.lang.Override
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /**
-     * <pre>
-     * TransactionRequest is the request to prepare an EVM transaction for a R/W
-     * method execution.
-     * </pre>
-     *
-     * Protobuf type {@code bevm.TransactionRequest}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:bevm.TransactionRequest)
-        ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequestOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_TransactionRequest_descriptor;
-      }
-
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_TransactionRequest_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest.class, ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest.Builder.class);
-      }
-
-      // Construct using ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
-      }
-      @java.lang.Override
-      public Builder clear() {
-        super.clear();
-        gaslimit_ = 0L;
-        bitField0_ = (bitField0_ & ~0x00000001);
-        gasprice_ = 0L;
-        bitField0_ = (bitField0_ & ~0x00000002);
-        amount_ = 0L;
-        bitField0_ = (bitField0_ & ~0x00000004);
-        contractaddress_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000008);
-        nonce_ = 0L;
-        bitField0_ = (bitField0_ & ~0x00000010);
-        abi_ = "";
-        bitField0_ = (bitField0_ & ~0x00000020);
-        method_ = "";
-        bitField0_ = (bitField0_ & ~0x00000040);
-        args_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000080);
-        return this;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_TransactionRequest_descriptor;
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest getDefaultInstanceForType() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest.getDefaultInstance();
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest build() {
-        ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest buildPartial() {
-        ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest result = new ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
-        result.gaslimit_ = gaslimit_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
-        }
-        result.gasprice_ = gasprice_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
-          to_bitField0_ |= 0x00000004;
-        }
-        result.amount_ = amount_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
-          to_bitField0_ |= 0x00000008;
-        }
-        result.contractaddress_ = contractaddress_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
-          to_bitField0_ |= 0x00000010;
-        }
-        result.nonce_ = nonce_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
-          to_bitField0_ |= 0x00000020;
-        }
-        result.abi_ = abi_;
-        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
-          to_bitField0_ |= 0x00000040;
-        }
-        result.method_ = method_;
-        if (((bitField0_ & 0x00000080) == 0x00000080)) {
-          args_ = args_.getUnmodifiableView();
-          bitField0_ = (bitField0_ & ~0x00000080);
-        }
-        result.args_ = args_;
-        result.bitField0_ = to_bitField0_;
-        onBuilt();
-        return result;
-      }
-
-      @java.lang.Override
-      public Builder clone() {
-        return (Builder) super.clone();
-      }
-      @java.lang.Override
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.setField(field, value);
-      }
-      @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
-      }
-      @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
-      }
-      @java.lang.Override
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
-      }
-      @java.lang.Override
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
-      }
-      @java.lang.Override
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest) {
-          return mergeFrom((ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest other) {
-        if (other == ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest.getDefaultInstance()) return this;
-        if (other.hasGaslimit()) {
-          setGaslimit(other.getGaslimit());
-        }
-        if (other.hasGasprice()) {
-          setGasprice(other.getGasprice());
-        }
-        if (other.hasAmount()) {
-          setAmount(other.getAmount());
-        }
-        if (other.hasContractaddress()) {
-          setContractaddress(other.getContractaddress());
-        }
-        if (other.hasNonce()) {
-          setNonce(other.getNonce());
-        }
-        if (other.hasAbi()) {
-          bitField0_ |= 0x00000020;
-          abi_ = other.abi_;
-          onChanged();
-        }
-        if (other.hasMethod()) {
-          bitField0_ |= 0x00000040;
-          method_ = other.method_;
-          onChanged();
-        }
-        if (!other.args_.isEmpty()) {
-          if (args_.isEmpty()) {
-            args_ = other.args_;
-            bitField0_ = (bitField0_ & ~0x00000080);
-          } else {
-            ensureArgsIsMutable();
-            args_.addAll(other.args_);
-          }
-          onChanged();
-        }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
-        return this;
-      }
-
-      @java.lang.Override
-      public final boolean isInitialized() {
-        if (!hasGaslimit()) {
-          return false;
-        }
-        if (!hasGasprice()) {
-          return false;
-        }
-        if (!hasAmount()) {
-          return false;
-        }
-        if (!hasContractaddress()) {
-          return false;
-        }
-        if (!hasNonce()) {
-          return false;
-        }
-        if (!hasAbi()) {
-          return false;
-        }
-        if (!hasMethod()) {
-          return false;
-        }
-        return true;
-      }
-
-      @java.lang.Override
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-      private int bitField0_;
-
-      private long gaslimit_ ;
-      /**
-       * <code>required uint64 gaslimit = 1;</code>
-       */
-      public boolean hasGaslimit() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <code>required uint64 gaslimit = 1;</code>
-       */
-      public long getGaslimit() {
-        return gaslimit_;
-      }
-      /**
-       * <code>required uint64 gaslimit = 1;</code>
-       */
-      public Builder setGaslimit(long value) {
-        bitField0_ |= 0x00000001;
-        gaslimit_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required uint64 gaslimit = 1;</code>
-       */
-      public Builder clearGaslimit() {
-        bitField0_ = (bitField0_ & ~0x00000001);
-        gaslimit_ = 0L;
-        onChanged();
-        return this;
-      }
-
-      private long gasprice_ ;
-      /**
-       * <code>required uint64 gasprice = 2;</code>
-       */
-      public boolean hasGasprice() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>required uint64 gasprice = 2;</code>
-       */
-      public long getGasprice() {
-        return gasprice_;
-      }
-      /**
-       * <code>required uint64 gasprice = 2;</code>
-       */
-      public Builder setGasprice(long value) {
-        bitField0_ |= 0x00000002;
-        gasprice_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required uint64 gasprice = 2;</code>
-       */
-      public Builder clearGasprice() {
-        bitField0_ = (bitField0_ & ~0x00000002);
-        gasprice_ = 0L;
-        onChanged();
-        return this;
-      }
-
-      private long amount_ ;
-      /**
-       * <code>required uint64 amount = 3;</code>
-       */
-      public boolean hasAmount() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
-      }
-      /**
-       * <code>required uint64 amount = 3;</code>
-       */
-      public long getAmount() {
-        return amount_;
-      }
-      /**
-       * <code>required uint64 amount = 3;</code>
-       */
-      public Builder setAmount(long value) {
-        bitField0_ |= 0x00000004;
-        amount_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required uint64 amount = 3;</code>
-       */
-      public Builder clearAmount() {
-        bitField0_ = (bitField0_ & ~0x00000004);
-        amount_ = 0L;
-        onChanged();
-        return this;
-      }
-
-      private com.google.protobuf.ByteString contractaddress_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <code>required bytes contractaddress = 4;</code>
-       */
-      public boolean hasContractaddress() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
-      }
-      /**
-       * <code>required bytes contractaddress = 4;</code>
-       */
-      public com.google.protobuf.ByteString getContractaddress() {
-        return contractaddress_;
-      }
-      /**
-       * <code>required bytes contractaddress = 4;</code>
-       */
-      public Builder setContractaddress(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000008;
-        contractaddress_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required bytes contractaddress = 4;</code>
-       */
-      public Builder clearContractaddress() {
-        bitField0_ = (bitField0_ & ~0x00000008);
-        contractaddress_ = getDefaultInstance().getContractaddress();
-        onChanged();
-        return this;
-      }
-
-      private long nonce_ ;
-      /**
-       * <code>required uint64 nonce = 5;</code>
-       */
-      public boolean hasNonce() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
-      }
-      /**
-       * <code>required uint64 nonce = 5;</code>
-       */
-      public long getNonce() {
-        return nonce_;
-      }
-      /**
-       * <code>required uint64 nonce = 5;</code>
-       */
-      public Builder setNonce(long value) {
-        bitField0_ |= 0x00000010;
-        nonce_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required uint64 nonce = 5;</code>
-       */
-      public Builder clearNonce() {
-        bitField0_ = (bitField0_ & ~0x00000010);
-        nonce_ = 0L;
-        onChanged();
-        return this;
-      }
-
-      private java.lang.Object abi_ = "";
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string abi = 6;</code>
-       */
-      public boolean hasAbi() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string abi = 6;</code>
-       */
-      public java.lang.String getAbi() {
-        java.lang.Object ref = abi_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            abi_ = s;
-          }
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string abi = 6;</code>
-       */
-      public com.google.protobuf.ByteString
-          getAbiBytes() {
-        java.lang.Object ref = abi_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          abi_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string abi = 6;</code>
-       */
-      public Builder setAbi(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000020;
-        abi_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string abi = 6;</code>
-       */
-      public Builder clearAbi() {
-        bitField0_ = (bitField0_ & ~0x00000020);
-        abi_ = getDefaultInstance().getAbi();
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string abi = 6;</code>
-       */
-      public Builder setAbiBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000020;
-        abi_ = value;
-        onChanged();
-        return this;
-      }
-
-      private java.lang.Object method_ = "";
-      /**
-       * <code>required string method = 7;</code>
-       */
-      public boolean hasMethod() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
-      }
-      /**
-       * <code>required string method = 7;</code>
-       */
-      public java.lang.String getMethod() {
-        java.lang.Object ref = method_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            method_ = s;
-          }
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
-      }
-      /**
-       * <code>required string method = 7;</code>
-       */
-      public com.google.protobuf.ByteString
-          getMethodBytes() {
-        java.lang.Object ref = method_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          method_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <code>required string method = 7;</code>
-       */
-      public Builder setMethod(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000040;
-        method_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required string method = 7;</code>
-       */
-      public Builder clearMethod() {
-        bitField0_ = (bitField0_ & ~0x00000040);
-        method_ = getDefaultInstance().getMethod();
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required string method = 7;</code>
-       */
-      public Builder setMethodBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000040;
-        method_ = value;
-        onChanged();
-        return this;
-      }
-
-      private com.google.protobuf.LazyStringList args_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      private void ensureArgsIsMutable() {
-        if (!((bitField0_ & 0x00000080) == 0x00000080)) {
-          args_ = new com.google.protobuf.LazyStringArrayList(args_);
-          bitField0_ |= 0x00000080;
-         }
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 8;</code>
-       */
-      public com.google.protobuf.ProtocolStringList
-          getArgsList() {
-        return args_.getUnmodifiableView();
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 8;</code>
-       */
-      public int getArgsCount() {
-        return args_.size();
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 8;</code>
-       */
-      public java.lang.String getArgs(int index) {
-        return args_.get(index);
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 8;</code>
-       */
-      public com.google.protobuf.ByteString
-          getArgsBytes(int index) {
-        return args_.getByteString(index);
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 8;</code>
-       */
-      public Builder setArgs(
-          int index, java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureArgsIsMutable();
-        args_.set(index, value);
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 8;</code>
-       */
-      public Builder addArgs(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureArgsIsMutable();
-        args_.add(value);
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 8;</code>
-       */
-      public Builder addAllArgs(
-          java.lang.Iterable<java.lang.String> values) {
-        ensureArgsIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, args_);
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 8;</code>
-       */
-      public Builder clearArgs() {
-        args_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000080);
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 8;</code>
-       */
-      public Builder addArgsBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureArgsIsMutable();
-        args_.add(value);
-        onChanged();
-        return this;
-      }
-      @java.lang.Override
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      @java.lang.Override
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
-
-      // @@protoc_insertion_point(builder_scope:bevm.TransactionRequest)
-    }
-
-    // @@protoc_insertion_point(class_scope:bevm.TransactionRequest)
-    private static final ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest DEFAULT_INSTANCE;
-    static {
-      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest();
-    }
-
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<TransactionRequest>
-        PARSER = new com.google.protobuf.AbstractParser<TransactionRequest>() {
-      @java.lang.Override
-      public TransactionRequest parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new TransactionRequest(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<TransactionRequest> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<TransactionRequest> getParserForType() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public ch.epfl.dedis.lib.proto.BEvmProto.TransactionRequest getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
-  }
-
-  public interface TransactionHashResponseOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:bevm.TransactionHashResponse)
-      com.google.protobuf.MessageOrBuilder {
-
-    /**
-     * <code>required bytes transaction = 1;</code>
-     */
-    boolean hasTransaction();
-    /**
-     * <code>required bytes transaction = 1;</code>
-     */
-    com.google.protobuf.ByteString getTransaction();
-
-    /**
-     * <code>required bytes transactionhash = 2;</code>
-     */
-    boolean hasTransactionhash();
-    /**
-     * <code>required bytes transactionhash = 2;</code>
-     */
-    com.google.protobuf.ByteString getTransactionhash();
-  }
-  /**
-   * <pre>
-   * TransactionHashResponse is the response to both DeployRequest and
-   * TransactionRequest, containing the transaction and its hash to sign.
-   * </pre>
-   *
-   * Protobuf type {@code bevm.TransactionHashResponse}
-   */
-  public  static final class TransactionHashResponse extends
-      com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:bevm.TransactionHashResponse)
-      TransactionHashResponseOrBuilder {
-  private static final long serialVersionUID = 0L;
-    // Use TransactionHashResponse.newBuilder() to construct.
-    private TransactionHashResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-      super(builder);
-    }
-    private TransactionHashResponse() {
-      transaction_ = com.google.protobuf.ByteString.EMPTY;
-      transactionhash_ = com.google.protobuf.ByteString.EMPTY;
-    }
-
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
-      return this.unknownFields;
-    }
-    private TransactionHashResponse(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 10: {
-              bitField0_ |= 0x00000001;
-              transaction_ = input.readBytes();
-              break;
-            }
-            case 18: {
-              bitField0_ |= 0x00000002;
-              transactionhash_ = input.readBytes();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_TransactionHashResponse_descriptor;
-    }
-
-    @java.lang.Override
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_TransactionHashResponse_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse.class, ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse.Builder.class);
-    }
-
-    private int bitField0_;
-    public static final int TRANSACTION_FIELD_NUMBER = 1;
-    private com.google.protobuf.ByteString transaction_;
-    /**
-     * <code>required bytes transaction = 1;</code>
-     */
-    public boolean hasTransaction() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <code>required bytes transaction = 1;</code>
-     */
-    public com.google.protobuf.ByteString getTransaction() {
-      return transaction_;
-    }
-
-    public static final int TRANSACTIONHASH_FIELD_NUMBER = 2;
-    private com.google.protobuf.ByteString transactionhash_;
-    /**
-     * <code>required bytes transactionhash = 2;</code>
-     */
-    public boolean hasTransactionhash() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <code>required bytes transactionhash = 2;</code>
-     */
-    public com.google.protobuf.ByteString getTransactionhash() {
-      return transactionhash_;
-    }
-
-    private byte memoizedIsInitialized = -1;
-    @java.lang.Override
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      if (!hasTransaction()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasTransactionhash()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, transaction_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBytes(2, transactionhash_);
-      }
-      unknownFields.writeTo(output);
-    }
-
-    @java.lang.Override
-    public int getSerializedSize() {
-      int size = memoizedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, transaction_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, transactionhash_);
-      }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
-      return size;
-    }
-
-    @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse)) {
-        return super.equals(obj);
-      }
-      ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse other = (ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse) obj;
-
-      boolean result = true;
-      result = result && (hasTransaction() == other.hasTransaction());
-      if (hasTransaction()) {
-        result = result && getTransaction()
-            .equals(other.getTransaction());
-      }
-      result = result && (hasTransactionhash() == other.hasTransactionhash());
-      if (hasTransactionhash()) {
-        result = result && getTransactionhash()
-            .equals(other.getTransactionhash());
-      }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasTransaction()) {
-        hash = (37 * hash) + TRANSACTION_FIELD_NUMBER;
-        hash = (53 * hash) + getTransaction().hashCode();
-      }
-      if (hasTransactionhash()) {
-        hash = (37 * hash) + TRANSACTIONHASH_FIELD_NUMBER;
-        hash = (53 * hash) + getTransactionhash().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-
-    @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
-    public static Builder newBuilder(ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-    }
-    @java.lang.Override
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /**
-     * <pre>
-     * TransactionHashResponse is the response to both DeployRequest and
-     * TransactionRequest, containing the transaction and its hash to sign.
-     * </pre>
-     *
-     * Protobuf type {@code bevm.TransactionHashResponse}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:bevm.TransactionHashResponse)
-        ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponseOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_TransactionHashResponse_descriptor;
-      }
-
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_TransactionHashResponse_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse.class, ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse.Builder.class);
-      }
-
-      // Construct using ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
-      }
-      @java.lang.Override
-      public Builder clear() {
-        super.clear();
-        transaction_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000001);
-        transactionhash_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000002);
-        return this;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_TransactionHashResponse_descriptor;
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse getDefaultInstanceForType() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse.getDefaultInstance();
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse build() {
-        ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse buildPartial() {
-        ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse result = new ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
-        result.transaction_ = transaction_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
-        }
-        result.transactionhash_ = transactionhash_;
-        result.bitField0_ = to_bitField0_;
-        onBuilt();
-        return result;
-      }
-
-      @java.lang.Override
-      public Builder clone() {
-        return (Builder) super.clone();
-      }
-      @java.lang.Override
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.setField(field, value);
-      }
-      @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
-      }
-      @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
-      }
-      @java.lang.Override
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
-      }
-      @java.lang.Override
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
-      }
-      @java.lang.Override
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse) {
-          return mergeFrom((ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse other) {
-        if (other == ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse.getDefaultInstance()) return this;
-        if (other.hasTransaction()) {
-          setTransaction(other.getTransaction());
-        }
-        if (other.hasTransactionhash()) {
-          setTransactionhash(other.getTransactionhash());
-        }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
-        return this;
-      }
-
-      @java.lang.Override
-      public final boolean isInitialized() {
-        if (!hasTransaction()) {
-          return false;
-        }
-        if (!hasTransactionhash()) {
-          return false;
-        }
-        return true;
-      }
-
-      @java.lang.Override
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-      private int bitField0_;
-
-      private com.google.protobuf.ByteString transaction_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <code>required bytes transaction = 1;</code>
-       */
-      public boolean hasTransaction() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <code>required bytes transaction = 1;</code>
-       */
-      public com.google.protobuf.ByteString getTransaction() {
-        return transaction_;
-      }
-      /**
-       * <code>required bytes transaction = 1;</code>
-       */
-      public Builder setTransaction(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000001;
-        transaction_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required bytes transaction = 1;</code>
-       */
-      public Builder clearTransaction() {
-        bitField0_ = (bitField0_ & ~0x00000001);
-        transaction_ = getDefaultInstance().getTransaction();
-        onChanged();
-        return this;
-      }
-
-      private com.google.protobuf.ByteString transactionhash_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <code>required bytes transactionhash = 2;</code>
-       */
-      public boolean hasTransactionhash() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>required bytes transactionhash = 2;</code>
-       */
-      public com.google.protobuf.ByteString getTransactionhash() {
-        return transactionhash_;
-      }
-      /**
-       * <code>required bytes transactionhash = 2;</code>
-       */
-      public Builder setTransactionhash(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000002;
-        transactionhash_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required bytes transactionhash = 2;</code>
-       */
-      public Builder clearTransactionhash() {
-        bitField0_ = (bitField0_ & ~0x00000002);
-        transactionhash_ = getDefaultInstance().getTransactionhash();
-        onChanged();
-        return this;
-      }
-      @java.lang.Override
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      @java.lang.Override
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
-
-      // @@protoc_insertion_point(builder_scope:bevm.TransactionHashResponse)
-    }
-
-    // @@protoc_insertion_point(class_scope:bevm.TransactionHashResponse)
-    private static final ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse DEFAULT_INSTANCE;
-    static {
-      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse();
-    }
-
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<TransactionHashResponse>
-        PARSER = new com.google.protobuf.AbstractParser<TransactionHashResponse>() {
-      @java.lang.Override
-      public TransactionHashResponse parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new TransactionHashResponse(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<TransactionHashResponse> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<TransactionHashResponse> getParserForType() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public ch.epfl.dedis.lib.proto.BEvmProto.TransactionHashResponse getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
-  }
-
-  public interface TransactionFinalizationRequestOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:bevm.TransactionFinalizationRequest)
-      com.google.protobuf.MessageOrBuilder {
-
-    /**
-     * <code>required bytes transaction = 1;</code>
-     */
-    boolean hasTransaction();
-    /**
-     * <code>required bytes transaction = 1;</code>
-     */
-    com.google.protobuf.ByteString getTransaction();
-
-    /**
-     * <code>required bytes signature = 2;</code>
-     */
-    boolean hasSignature();
-    /**
-     * <code>required bytes signature = 2;</code>
-     */
-    com.google.protobuf.ByteString getSignature();
-  }
-  /**
-   * <pre>
-   * TransactionFinalizationRequest is the request to finalize a transaction with
-   * its signature.
-   * </pre>
-   *
-   * Protobuf type {@code bevm.TransactionFinalizationRequest}
-   */
-  public  static final class TransactionFinalizationRequest extends
-      com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:bevm.TransactionFinalizationRequest)
-      TransactionFinalizationRequestOrBuilder {
-  private static final long serialVersionUID = 0L;
-    // Use TransactionFinalizationRequest.newBuilder() to construct.
-    private TransactionFinalizationRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-      super(builder);
-    }
-    private TransactionFinalizationRequest() {
-      transaction_ = com.google.protobuf.ByteString.EMPTY;
-      signature_ = com.google.protobuf.ByteString.EMPTY;
-    }
-
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
-      return this.unknownFields;
-    }
-    private TransactionFinalizationRequest(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 10: {
-              bitField0_ |= 0x00000001;
-              transaction_ = input.readBytes();
-              break;
-            }
-            case 18: {
-              bitField0_ |= 0x00000002;
-              signature_ = input.readBytes();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_TransactionFinalizationRequest_descriptor;
-    }
-
-    @java.lang.Override
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_TransactionFinalizationRequest_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest.class, ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest.Builder.class);
-    }
-
-    private int bitField0_;
-    public static final int TRANSACTION_FIELD_NUMBER = 1;
-    private com.google.protobuf.ByteString transaction_;
-    /**
-     * <code>required bytes transaction = 1;</code>
-     */
-    public boolean hasTransaction() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <code>required bytes transaction = 1;</code>
-     */
-    public com.google.protobuf.ByteString getTransaction() {
-      return transaction_;
-    }
-
-    public static final int SIGNATURE_FIELD_NUMBER = 2;
-    private com.google.protobuf.ByteString signature_;
-    /**
-     * <code>required bytes signature = 2;</code>
-     */
-    public boolean hasSignature() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <code>required bytes signature = 2;</code>
-     */
-    public com.google.protobuf.ByteString getSignature() {
-      return signature_;
-    }
-
-    private byte memoizedIsInitialized = -1;
-    @java.lang.Override
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      if (!hasTransaction()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasSignature()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, transaction_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBytes(2, signature_);
-      }
-      unknownFields.writeTo(output);
-    }
-
-    @java.lang.Override
-    public int getSerializedSize() {
-      int size = memoizedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, transaction_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, signature_);
-      }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
-      return size;
-    }
-
-    @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest)) {
-        return super.equals(obj);
-      }
-      ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest other = (ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest) obj;
-
-      boolean result = true;
-      result = result && (hasTransaction() == other.hasTransaction());
-      if (hasTransaction()) {
-        result = result && getTransaction()
-            .equals(other.getTransaction());
-      }
-      result = result && (hasSignature() == other.hasSignature());
-      if (hasSignature()) {
-        result = result && getSignature()
-            .equals(other.getSignature());
-      }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasTransaction()) {
-        hash = (37 * hash) + TRANSACTION_FIELD_NUMBER;
-        hash = (53 * hash) + getTransaction().hashCode();
-      }
-      if (hasSignature()) {
-        hash = (37 * hash) + SIGNATURE_FIELD_NUMBER;
-        hash = (53 * hash) + getSignature().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-
-    @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
-    public static Builder newBuilder(ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-    }
-    @java.lang.Override
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /**
-     * <pre>
-     * TransactionFinalizationRequest is the request to finalize a transaction with
-     * its signature.
-     * </pre>
-     *
-     * Protobuf type {@code bevm.TransactionFinalizationRequest}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:bevm.TransactionFinalizationRequest)
-        ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequestOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_TransactionFinalizationRequest_descriptor;
-      }
-
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_TransactionFinalizationRequest_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest.class, ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest.Builder.class);
-      }
-
-      // Construct using ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
-      }
-      @java.lang.Override
-      public Builder clear() {
-        super.clear();
-        transaction_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000001);
-        signature_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000002);
-        return this;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_TransactionFinalizationRequest_descriptor;
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest getDefaultInstanceForType() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest.getDefaultInstance();
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest build() {
-        ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest buildPartial() {
-        ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest result = new ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
-        result.transaction_ = transaction_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
-        }
-        result.signature_ = signature_;
-        result.bitField0_ = to_bitField0_;
-        onBuilt();
-        return result;
-      }
-
-      @java.lang.Override
-      public Builder clone() {
-        return (Builder) super.clone();
-      }
-      @java.lang.Override
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.setField(field, value);
-      }
-      @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
-      }
-      @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
-      }
-      @java.lang.Override
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
-      }
-      @java.lang.Override
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
-      }
-      @java.lang.Override
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest) {
-          return mergeFrom((ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest other) {
-        if (other == ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest.getDefaultInstance()) return this;
-        if (other.hasTransaction()) {
-          setTransaction(other.getTransaction());
-        }
-        if (other.hasSignature()) {
-          setSignature(other.getSignature());
-        }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
-        return this;
-      }
-
-      @java.lang.Override
-      public final boolean isInitialized() {
-        if (!hasTransaction()) {
-          return false;
-        }
-        if (!hasSignature()) {
-          return false;
-        }
-        return true;
-      }
-
-      @java.lang.Override
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-      private int bitField0_;
-
-      private com.google.protobuf.ByteString transaction_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <code>required bytes transaction = 1;</code>
-       */
-      public boolean hasTransaction() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <code>required bytes transaction = 1;</code>
-       */
-      public com.google.protobuf.ByteString getTransaction() {
-        return transaction_;
-      }
-      /**
-       * <code>required bytes transaction = 1;</code>
-       */
-      public Builder setTransaction(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000001;
-        transaction_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required bytes transaction = 1;</code>
-       */
-      public Builder clearTransaction() {
-        bitField0_ = (bitField0_ & ~0x00000001);
-        transaction_ = getDefaultInstance().getTransaction();
-        onChanged();
-        return this;
-      }
-
-      private com.google.protobuf.ByteString signature_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <code>required bytes signature = 2;</code>
-       */
-      public boolean hasSignature() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>required bytes signature = 2;</code>
-       */
-      public com.google.protobuf.ByteString getSignature() {
-        return signature_;
-      }
-      /**
-       * <code>required bytes signature = 2;</code>
-       */
-      public Builder setSignature(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000002;
-        signature_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required bytes signature = 2;</code>
-       */
-      public Builder clearSignature() {
-        bitField0_ = (bitField0_ & ~0x00000002);
-        signature_ = getDefaultInstance().getSignature();
-        onChanged();
-        return this;
-      }
-      @java.lang.Override
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      @java.lang.Override
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
-
-      // @@protoc_insertion_point(builder_scope:bevm.TransactionFinalizationRequest)
-    }
-
-    // @@protoc_insertion_point(class_scope:bevm.TransactionFinalizationRequest)
-    private static final ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest DEFAULT_INSTANCE;
-    static {
-      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest();
-    }
-
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<TransactionFinalizationRequest>
-        PARSER = new com.google.protobuf.AbstractParser<TransactionFinalizationRequest>() {
-      @java.lang.Override
-      public TransactionFinalizationRequest parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new TransactionFinalizationRequest(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<TransactionFinalizationRequest> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<TransactionFinalizationRequest> getParserForType() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public ch.epfl.dedis.lib.proto.BEvmProto.TransactionFinalizationRequest getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
-  }
-
-  public interface TransactionResponseOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:bevm.TransactionResponse)
-      com.google.protobuf.MessageOrBuilder {
-
-    /**
-     * <code>required bytes transaction = 1;</code>
-     */
-    boolean hasTransaction();
-    /**
-     * <code>required bytes transaction = 1;</code>
-     */
-    com.google.protobuf.ByteString getTransaction();
-  }
-  /**
-   * <pre>
-   * TransactionResponse is the response to TransactionFinalizationRequest,
-   * containing the signed transaction.
-   * </pre>
-   *
-   * Protobuf type {@code bevm.TransactionResponse}
-   */
-  public  static final class TransactionResponse extends
-      com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:bevm.TransactionResponse)
-      TransactionResponseOrBuilder {
-  private static final long serialVersionUID = 0L;
-    // Use TransactionResponse.newBuilder() to construct.
-    private TransactionResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-      super(builder);
-    }
-    private TransactionResponse() {
-      transaction_ = com.google.protobuf.ByteString.EMPTY;
-    }
-
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
-      return this.unknownFields;
-    }
-    private TransactionResponse(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 10: {
-              bitField0_ |= 0x00000001;
-              transaction_ = input.readBytes();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_TransactionResponse_descriptor;
-    }
-
-    @java.lang.Override
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_TransactionResponse_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse.class, ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse.Builder.class);
-    }
-
-    private int bitField0_;
-    public static final int TRANSACTION_FIELD_NUMBER = 1;
-    private com.google.protobuf.ByteString transaction_;
-    /**
-     * <code>required bytes transaction = 1;</code>
-     */
-    public boolean hasTransaction() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <code>required bytes transaction = 1;</code>
-     */
-    public com.google.protobuf.ByteString getTransaction() {
-      return transaction_;
-    }
-
-    private byte memoizedIsInitialized = -1;
-    @java.lang.Override
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      if (!hasTransaction()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, transaction_);
-      }
-      unknownFields.writeTo(output);
-    }
-
-    @java.lang.Override
-    public int getSerializedSize() {
-      int size = memoizedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, transaction_);
-      }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
-      return size;
-    }
-
-    @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse)) {
-        return super.equals(obj);
-      }
-      ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse other = (ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse) obj;
-
-      boolean result = true;
-      result = result && (hasTransaction() == other.hasTransaction());
-      if (hasTransaction()) {
-        result = result && getTransaction()
-            .equals(other.getTransaction());
-      }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasTransaction()) {
-        hash = (37 * hash) + TRANSACTION_FIELD_NUMBER;
-        hash = (53 * hash) + getTransaction().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-
-    @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
-    public static Builder newBuilder(ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-    }
-    @java.lang.Override
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /**
-     * <pre>
-     * TransactionResponse is the response to TransactionFinalizationRequest,
-     * containing the signed transaction.
-     * </pre>
-     *
-     * Protobuf type {@code bevm.TransactionResponse}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:bevm.TransactionResponse)
-        ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponseOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_TransactionResponse_descriptor;
-      }
-
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_TransactionResponse_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse.class, ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse.Builder.class);
-      }
-
-      // Construct using ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
-      }
-      @java.lang.Override
-      public Builder clear() {
-        super.clear();
-        transaction_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000001);
-        return this;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_TransactionResponse_descriptor;
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse getDefaultInstanceForType() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse.getDefaultInstance();
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse build() {
-        ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse buildPartial() {
-        ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse result = new ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
-        result.transaction_ = transaction_;
-        result.bitField0_ = to_bitField0_;
-        onBuilt();
-        return result;
-      }
-
-      @java.lang.Override
-      public Builder clone() {
-        return (Builder) super.clone();
-      }
-      @java.lang.Override
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.setField(field, value);
-      }
-      @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
-      }
-      @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
-      }
-      @java.lang.Override
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
-      }
-      @java.lang.Override
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
-      }
-      @java.lang.Override
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse) {
-          return mergeFrom((ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse other) {
-        if (other == ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse.getDefaultInstance()) return this;
-        if (other.hasTransaction()) {
-          setTransaction(other.getTransaction());
-        }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
-        return this;
-      }
-
-      @java.lang.Override
-      public final boolean isInitialized() {
-        if (!hasTransaction()) {
-          return false;
-        }
-        return true;
-      }
-
-      @java.lang.Override
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-      private int bitField0_;
-
-      private com.google.protobuf.ByteString transaction_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <code>required bytes transaction = 1;</code>
-       */
-      public boolean hasTransaction() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <code>required bytes transaction = 1;</code>
-       */
-      public com.google.protobuf.ByteString getTransaction() {
-        return transaction_;
-      }
-      /**
-       * <code>required bytes transaction = 1;</code>
-       */
-      public Builder setTransaction(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000001;
-        transaction_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required bytes transaction = 1;</code>
-       */
-      public Builder clearTransaction() {
-        bitField0_ = (bitField0_ & ~0x00000001);
-        transaction_ = getDefaultInstance().getTransaction();
-        onChanged();
-        return this;
-      }
-      @java.lang.Override
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      @java.lang.Override
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
-
-      // @@protoc_insertion_point(builder_scope:bevm.TransactionResponse)
-    }
-
-    // @@protoc_insertion_point(class_scope:bevm.TransactionResponse)
-    private static final ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse DEFAULT_INSTANCE;
-    static {
-      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse();
-    }
-
-    public static ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<TransactionResponse>
-        PARSER = new com.google.protobuf.AbstractParser<TransactionResponse>() {
-      @java.lang.Override
-      public TransactionResponse parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new TransactionResponse(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<TransactionResponse> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<TransactionResponse> getParserForType() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public ch.epfl.dedis.lib.proto.BEvmProto.TransactionResponse getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
-  }
-
-  public interface CallRequestOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:bevm.CallRequest)
+  public interface ViewCallRequestOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:bevm.ViewCallRequest)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -4731,146 +28,63 @@ public final class BEvmProto {
     com.google.protobuf.ByteString getByzcoinid();
 
     /**
-     * <code>required string serverconfig = 2;</code>
-     */
-    boolean hasServerconfig();
-    /**
-     * <code>required string serverconfig = 2;</code>
-     */
-    java.lang.String getServerconfig();
-    /**
-     * <code>required string serverconfig = 2;</code>
-     */
-    com.google.protobuf.ByteString
-        getServerconfigBytes();
-
-    /**
-     * <code>required bytes bevminstanceid = 3;</code>
+     * <code>required bytes bevminstanceid = 2;</code>
      */
     boolean hasBevminstanceid();
     /**
-     * <code>required bytes bevminstanceid = 3;</code>
+     * <code>required bytes bevminstanceid = 2;</code>
      */
     com.google.protobuf.ByteString getBevminstanceid();
 
     /**
-     * <code>required bytes accountaddress = 4;</code>
+     * <code>required bytes accountaddress = 3;</code>
      */
     boolean hasAccountaddress();
     /**
-     * <code>required bytes accountaddress = 4;</code>
+     * <code>required bytes accountaddress = 3;</code>
      */
     com.google.protobuf.ByteString getAccountaddress();
 
     /**
-     * <code>required bytes contractaddress = 5;</code>
+     * <code>required bytes contractaddress = 4;</code>
      */
     boolean hasContractaddress();
     /**
-     * <code>required bytes contractaddress = 5;</code>
+     * <code>required bytes contractaddress = 4;</code>
      */
     com.google.protobuf.ByteString getContractaddress();
 
     /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string abi = 6;</code>
+     * <code>required bytes calldata = 5;</code>
      */
-    boolean hasAbi();
+    boolean hasCalldata();
     /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string abi = 6;</code>
+     * <code>required bytes calldata = 5;</code>
      */
-    java.lang.String getAbi();
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string abi = 6;</code>
-     */
-    com.google.protobuf.ByteString
-        getAbiBytes();
-
-    /**
-     * <code>required string method = 7;</code>
-     */
-    boolean hasMethod();
-    /**
-     * <code>required string method = 7;</code>
-     */
-    java.lang.String getMethod();
-    /**
-     * <code>required string method = 7;</code>
-     */
-    com.google.protobuf.ByteString
-        getMethodBytes();
-
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 8;</code>
-     */
-    java.util.List<java.lang.String>
-        getArgsList();
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 8;</code>
-     */
-    int getArgsCount();
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 8;</code>
-     */
-    java.lang.String getArgs(int index);
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 8;</code>
-     */
-    com.google.protobuf.ByteString
-        getArgsBytes(int index);
+    com.google.protobuf.ByteString getCalldata();
   }
   /**
    * <pre>
-   * CallRequest is a request to execute a view method (read-only).
+   * ViewCallRequest is a request to execute a view method (read-only).
    * </pre>
    *
-   * Protobuf type {@code bevm.CallRequest}
+   * Protobuf type {@code bevm.ViewCallRequest}
    */
-  public  static final class CallRequest extends
+  public  static final class ViewCallRequest extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:bevm.CallRequest)
-      CallRequestOrBuilder {
+      // @@protoc_insertion_point(message_implements:bevm.ViewCallRequest)
+      ViewCallRequestOrBuilder {
   private static final long serialVersionUID = 0L;
-    // Use CallRequest.newBuilder() to construct.
-    private CallRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    // Use ViewCallRequest.newBuilder() to construct.
+    private ViewCallRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private CallRequest() {
+    private ViewCallRequest() {
       byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
-      serverconfig_ = "";
       bevminstanceid_ = com.google.protobuf.ByteString.EMPTY;
       accountaddress_ = com.google.protobuf.ByteString.EMPTY;
       contractaddress_ = com.google.protobuf.ByteString.EMPTY;
-      abi_ = "";
-      method_ = "";
-      args_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      calldata_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -4878,7 +92,7 @@ public final class BEvmProto {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private CallRequest(
+    private ViewCallRequest(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -4903,45 +117,23 @@ public final class BEvmProto {
               break;
             }
             case 18: {
-              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000002;
-              serverconfig_ = bs;
+              bevminstanceid_ = input.readBytes();
               break;
             }
             case 26: {
               bitField0_ |= 0x00000004;
-              bevminstanceid_ = input.readBytes();
+              accountaddress_ = input.readBytes();
               break;
             }
             case 34: {
               bitField0_ |= 0x00000008;
-              accountaddress_ = input.readBytes();
+              contractaddress_ = input.readBytes();
               break;
             }
             case 42: {
               bitField0_ |= 0x00000010;
-              contractaddress_ = input.readBytes();
-              break;
-            }
-            case 50: {
-              com.google.protobuf.ByteString bs = input.readBytes();
-              bitField0_ |= 0x00000020;
-              abi_ = bs;
-              break;
-            }
-            case 58: {
-              com.google.protobuf.ByteString bs = input.readBytes();
-              bitField0_ |= 0x00000040;
-              method_ = bs;
-              break;
-            }
-            case 66: {
-              com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
-                args_ = new com.google.protobuf.LazyStringArrayList();
-                mutable_bitField0_ |= 0x00000080;
-              }
-              args_.add(bs);
+              calldata_ = input.readBytes();
               break;
             }
             default: {
@@ -4959,24 +151,21 @@ public final class BEvmProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
-          args_ = args_.getUnmodifiableView();
-        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_CallRequest_descriptor;
+      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_ViewCallRequest_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_CallRequest_fieldAccessorTable
+      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_ViewCallRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.lib.proto.BEvmProto.CallRequest.class, ch.epfl.dedis.lib.proto.BEvmProto.CallRequest.Builder.class);
+              ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest.class, ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest.Builder.class);
     }
 
     private int bitField0_;
@@ -4995,232 +184,64 @@ public final class BEvmProto {
       return byzcoinid_;
     }
 
-    public static final int SERVERCONFIG_FIELD_NUMBER = 2;
-    private volatile java.lang.Object serverconfig_;
+    public static final int BEVMINSTANCEID_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString bevminstanceid_;
     /**
-     * <code>required string serverconfig = 2;</code>
+     * <code>required bytes bevminstanceid = 2;</code>
      */
-    public boolean hasServerconfig() {
+    public boolean hasBevminstanceid() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>required string serverconfig = 2;</code>
-     */
-    public java.lang.String getServerconfig() {
-      java.lang.Object ref = serverconfig_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          serverconfig_ = s;
-        }
-        return s;
-      }
-    }
-    /**
-     * <code>required string serverconfig = 2;</code>
-     */
-    public com.google.protobuf.ByteString
-        getServerconfigBytes() {
-      java.lang.Object ref = serverconfig_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        serverconfig_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-
-    public static final int BEVMINSTANCEID_FIELD_NUMBER = 3;
-    private com.google.protobuf.ByteString bevminstanceid_;
-    /**
-     * <code>required bytes bevminstanceid = 3;</code>
-     */
-    public boolean hasBevminstanceid() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
-    }
-    /**
-     * <code>required bytes bevminstanceid = 3;</code>
+     * <code>required bytes bevminstanceid = 2;</code>
      */
     public com.google.protobuf.ByteString getBevminstanceid() {
       return bevminstanceid_;
     }
 
-    public static final int ACCOUNTADDRESS_FIELD_NUMBER = 4;
+    public static final int ACCOUNTADDRESS_FIELD_NUMBER = 3;
     private com.google.protobuf.ByteString accountaddress_;
     /**
-     * <code>required bytes accountaddress = 4;</code>
+     * <code>required bytes accountaddress = 3;</code>
      */
     public boolean hasAccountaddress() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
-     * <code>required bytes accountaddress = 4;</code>
+     * <code>required bytes accountaddress = 3;</code>
      */
     public com.google.protobuf.ByteString getAccountaddress() {
       return accountaddress_;
     }
 
-    public static final int CONTRACTADDRESS_FIELD_NUMBER = 5;
+    public static final int CONTRACTADDRESS_FIELD_NUMBER = 4;
     private com.google.protobuf.ByteString contractaddress_;
     /**
-     * <code>required bytes contractaddress = 5;</code>
+     * <code>required bytes contractaddress = 4;</code>
      */
     public boolean hasContractaddress() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
-     * <code>required bytes contractaddress = 5;</code>
+     * <code>required bytes contractaddress = 4;</code>
      */
     public com.google.protobuf.ByteString getContractaddress() {
       return contractaddress_;
     }
 
-    public static final int ABI_FIELD_NUMBER = 6;
-    private volatile java.lang.Object abi_;
+    public static final int CALLDATA_FIELD_NUMBER = 5;
+    private com.google.protobuf.ByteString calldata_;
     /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string abi = 6;</code>
+     * <code>required bytes calldata = 5;</code>
      */
-    public boolean hasAbi() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+    public boolean hasCalldata() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
     }
     /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string abi = 6;</code>
+     * <code>required bytes calldata = 5;</code>
      */
-    public java.lang.String getAbi() {
-      java.lang.Object ref = abi_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          abi_ = s;
-        }
-        return s;
-      }
-    }
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string abi = 6;</code>
-     */
-    public com.google.protobuf.ByteString
-        getAbiBytes() {
-      java.lang.Object ref = abi_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        abi_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-
-    public static final int METHOD_FIELD_NUMBER = 7;
-    private volatile java.lang.Object method_;
-    /**
-     * <code>required string method = 7;</code>
-     */
-    public boolean hasMethod() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
-    }
-    /**
-     * <code>required string method = 7;</code>
-     */
-    public java.lang.String getMethod() {
-      java.lang.Object ref = method_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          method_ = s;
-        }
-        return s;
-      }
-    }
-    /**
-     * <code>required string method = 7;</code>
-     */
-    public com.google.protobuf.ByteString
-        getMethodBytes() {
-      java.lang.Object ref = method_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        method_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-
-    public static final int ARGS_FIELD_NUMBER = 8;
-    private com.google.protobuf.LazyStringList args_;
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 8;</code>
-     */
-    public com.google.protobuf.ProtocolStringList
-        getArgsList() {
-      return args_;
-    }
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 8;</code>
-     */
-    public int getArgsCount() {
-      return args_.size();
-    }
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 8;</code>
-     */
-    public java.lang.String getArgs(int index) {
-      return args_.get(index);
-    }
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>repeated string args = 8;</code>
-     */
-    public com.google.protobuf.ByteString
-        getArgsBytes(int index) {
-      return args_.getByteString(index);
+    public com.google.protobuf.ByteString getCalldata() {
+      return calldata_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -5231,10 +252,6 @@ public final class BEvmProto {
       if (isInitialized == 0) return false;
 
       if (!hasByzcoinid()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasServerconfig()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -5250,11 +267,7 @@ public final class BEvmProto {
         memoizedIsInitialized = 0;
         return false;
       }
-      if (!hasAbi()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasMethod()) {
+      if (!hasCalldata()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -5269,25 +282,16 @@ public final class BEvmProto {
         output.writeBytes(1, byzcoinid_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, serverconfig_);
+        output.writeBytes(2, bevminstanceid_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeBytes(3, bevminstanceid_);
+        output.writeBytes(3, accountaddress_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeBytes(4, accountaddress_);
+        output.writeBytes(4, contractaddress_);
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        output.writeBytes(5, contractaddress_);
-      }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, abi_);
-      }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 7, method_);
-      }
-      for (int i = 0; i < args_.size(); i++) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 8, args_.getRaw(i));
+        output.writeBytes(5, calldata_);
       }
       unknownFields.writeTo(output);
     }
@@ -5303,33 +307,20 @@ public final class BEvmProto {
           .computeBytesSize(1, byzcoinid_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, serverconfig_);
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, bevminstanceid_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(3, bevminstanceid_);
+          .computeBytesSize(3, accountaddress_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(4, accountaddress_);
+          .computeBytesSize(4, contractaddress_);
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(5, contractaddress_);
-      }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, abi_);
-      }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, method_);
-      }
-      {
-        int dataSize = 0;
-        for (int i = 0; i < args_.size(); i++) {
-          dataSize += computeStringSizeNoTag(args_.getRaw(i));
-        }
-        size += dataSize;
-        size += 1 * getArgsList().size();
+          .computeBytesSize(5, calldata_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -5341,21 +332,16 @@ public final class BEvmProto {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof ch.epfl.dedis.lib.proto.BEvmProto.CallRequest)) {
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest)) {
         return super.equals(obj);
       }
-      ch.epfl.dedis.lib.proto.BEvmProto.CallRequest other = (ch.epfl.dedis.lib.proto.BEvmProto.CallRequest) obj;
+      ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest other = (ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest) obj;
 
       boolean result = true;
       result = result && (hasByzcoinid() == other.hasByzcoinid());
       if (hasByzcoinid()) {
         result = result && getByzcoinid()
             .equals(other.getByzcoinid());
-      }
-      result = result && (hasServerconfig() == other.hasServerconfig());
-      if (hasServerconfig()) {
-        result = result && getServerconfig()
-            .equals(other.getServerconfig());
       }
       result = result && (hasBevminstanceid() == other.hasBevminstanceid());
       if (hasBevminstanceid()) {
@@ -5372,18 +358,11 @@ public final class BEvmProto {
         result = result && getContractaddress()
             .equals(other.getContractaddress());
       }
-      result = result && (hasAbi() == other.hasAbi());
-      if (hasAbi()) {
-        result = result && getAbi()
-            .equals(other.getAbi());
+      result = result && (hasCalldata() == other.hasCalldata());
+      if (hasCalldata()) {
+        result = result && getCalldata()
+            .equals(other.getCalldata());
       }
-      result = result && (hasMethod() == other.hasMethod());
-      if (hasMethod()) {
-        result = result && getMethod()
-            .equals(other.getMethod());
-      }
-      result = result && getArgsList()
-          .equals(other.getArgsList());
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -5399,10 +378,6 @@ public final class BEvmProto {
         hash = (37 * hash) + BYZCOINID_FIELD_NUMBER;
         hash = (53 * hash) + getByzcoinid().hashCode();
       }
-      if (hasServerconfig()) {
-        hash = (37 * hash) + SERVERCONFIG_FIELD_NUMBER;
-        hash = (53 * hash) + getServerconfig().hashCode();
-      }
       if (hasBevminstanceid()) {
         hash = (37 * hash) + BEVMINSTANCEID_FIELD_NUMBER;
         hash = (53 * hash) + getBevminstanceid().hashCode();
@@ -5415,86 +390,78 @@ public final class BEvmProto {
         hash = (37 * hash) + CONTRACTADDRESS_FIELD_NUMBER;
         hash = (53 * hash) + getContractaddress().hashCode();
       }
-      if (hasAbi()) {
-        hash = (37 * hash) + ABI_FIELD_NUMBER;
-        hash = (53 * hash) + getAbi().hashCode();
-      }
-      if (hasMethod()) {
-        hash = (37 * hash) + METHOD_FIELD_NUMBER;
-        hash = (53 * hash) + getMethod().hashCode();
-      }
-      if (getArgsCount() > 0) {
-        hash = (37 * hash) + ARGS_FIELD_NUMBER;
-        hash = (53 * hash) + getArgsList().hashCode();
+      if (hasCalldata()) {
+        hash = (37 * hash) + CALLDATA_FIELD_NUMBER;
+        hash = (53 * hash) + getCalldata().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
     }
 
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseFrom(
         java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseFrom(
         java.nio.ByteBuffer data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseFrom(byte[] data)
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseFrom(java.io.InputStream input)
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseDelimitedFrom(java.io.InputStream input)
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseDelimitedFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -5507,7 +474,7 @@ public final class BEvmProto {
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(ch.epfl.dedis.lib.proto.BEvmProto.CallRequest prototype) {
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     @java.lang.Override
@@ -5524,29 +491,29 @@ public final class BEvmProto {
     }
     /**
      * <pre>
-     * CallRequest is a request to execute a view method (read-only).
+     * ViewCallRequest is a request to execute a view method (read-only).
      * </pre>
      *
-     * Protobuf type {@code bevm.CallRequest}
+     * Protobuf type {@code bevm.ViewCallRequest}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:bevm.CallRequest)
-        ch.epfl.dedis.lib.proto.BEvmProto.CallRequestOrBuilder {
+        // @@protoc_insertion_point(builder_implements:bevm.ViewCallRequest)
+        ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequestOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_CallRequest_descriptor;
+        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_ViewCallRequest_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_CallRequest_fieldAccessorTable
+        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_ViewCallRequest_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.lib.proto.BEvmProto.CallRequest.class, ch.epfl.dedis.lib.proto.BEvmProto.CallRequest.Builder.class);
+                ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest.class, ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest.Builder.class);
       }
 
-      // Construct using ch.epfl.dedis.lib.proto.BEvmProto.CallRequest.newBuilder()
+      // Construct using ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest.newBuilder()
       private Builder() {
         maybeForceBuilderInitialization();
       }
@@ -5566,37 +533,31 @@ public final class BEvmProto {
         super.clear();
         byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
-        serverconfig_ = "";
-        bitField0_ = (bitField0_ & ~0x00000002);
         bevminstanceid_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000004);
+        bitField0_ = (bitField0_ & ~0x00000002);
         accountaddress_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000004);
         contractaddress_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        calldata_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000010);
-        abi_ = "";
-        bitField0_ = (bitField0_ & ~0x00000020);
-        method_ = "";
-        bitField0_ = (bitField0_ & ~0x00000040);
-        args_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000080);
         return this;
       }
 
       @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_CallRequest_descriptor;
+        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_ViewCallRequest_descriptor;
       }
 
       @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.CallRequest getDefaultInstanceForType() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.CallRequest.getDefaultInstance();
+      public ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest.getDefaultInstance();
       }
 
       @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.CallRequest build() {
-        ch.epfl.dedis.lib.proto.BEvmProto.CallRequest result = buildPartial();
+      public ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest build() {
+        ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
@@ -5604,8 +565,8 @@ public final class BEvmProto {
       }
 
       @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.CallRequest buildPartial() {
-        ch.epfl.dedis.lib.proto.BEvmProto.CallRequest result = new ch.epfl.dedis.lib.proto.BEvmProto.CallRequest(this);
+      public ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest buildPartial() {
+        ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest result = new ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -5615,32 +576,19 @@ public final class BEvmProto {
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
         }
-        result.serverconfig_ = serverconfig_;
+        result.bevminstanceid_ = bevminstanceid_;
         if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
           to_bitField0_ |= 0x00000004;
         }
-        result.bevminstanceid_ = bevminstanceid_;
+        result.accountaddress_ = accountaddress_;
         if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
           to_bitField0_ |= 0x00000008;
         }
-        result.accountaddress_ = accountaddress_;
+        result.contractaddress_ = contractaddress_;
         if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
           to_bitField0_ |= 0x00000010;
         }
-        result.contractaddress_ = contractaddress_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
-          to_bitField0_ |= 0x00000020;
-        }
-        result.abi_ = abi_;
-        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
-          to_bitField0_ |= 0x00000040;
-        }
-        result.method_ = method_;
-        if (((bitField0_ & 0x00000080) == 0x00000080)) {
-          args_ = args_.getUnmodifiableView();
-          bitField0_ = (bitField0_ & ~0x00000080);
-        }
-        result.args_ = args_;
+        result.calldata_ = calldata_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -5680,23 +628,18 @@ public final class BEvmProto {
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof ch.epfl.dedis.lib.proto.BEvmProto.CallRequest) {
-          return mergeFrom((ch.epfl.dedis.lib.proto.BEvmProto.CallRequest)other);
+        if (other instanceof ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(ch.epfl.dedis.lib.proto.BEvmProto.CallRequest other) {
-        if (other == ch.epfl.dedis.lib.proto.BEvmProto.CallRequest.getDefaultInstance()) return this;
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest other) {
+        if (other == ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest.getDefaultInstance()) return this;
         if (other.hasByzcoinid()) {
           setByzcoinid(other.getByzcoinid());
-        }
-        if (other.hasServerconfig()) {
-          bitField0_ |= 0x00000002;
-          serverconfig_ = other.serverconfig_;
-          onChanged();
         }
         if (other.hasBevminstanceid()) {
           setBevminstanceid(other.getBevminstanceid());
@@ -5707,25 +650,8 @@ public final class BEvmProto {
         if (other.hasContractaddress()) {
           setContractaddress(other.getContractaddress());
         }
-        if (other.hasAbi()) {
-          bitField0_ |= 0x00000020;
-          abi_ = other.abi_;
-          onChanged();
-        }
-        if (other.hasMethod()) {
-          bitField0_ |= 0x00000040;
-          method_ = other.method_;
-          onChanged();
-        }
-        if (!other.args_.isEmpty()) {
-          if (args_.isEmpty()) {
-            args_ = other.args_;
-            bitField0_ = (bitField0_ & ~0x00000080);
-          } else {
-            ensureArgsIsMutable();
-            args_.addAll(other.args_);
-          }
-          onChanged();
+        if (other.hasCalldata()) {
+          setCalldata(other.getCalldata());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -5737,9 +663,6 @@ public final class BEvmProto {
         if (!hasByzcoinid()) {
           return false;
         }
-        if (!hasServerconfig()) {
-          return false;
-        }
         if (!hasBevminstanceid()) {
           return false;
         }
@@ -5749,10 +672,7 @@ public final class BEvmProto {
         if (!hasContractaddress()) {
           return false;
         }
-        if (!hasAbi()) {
-          return false;
-        }
-        if (!hasMethod()) {
+        if (!hasCalldata()) {
           return false;
         }
         return true;
@@ -5763,11 +683,11 @@ public final class BEvmProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        ch.epfl.dedis.lib.proto.BEvmProto.CallRequest parsedMessage = null;
+        ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (ch.epfl.dedis.lib.proto.BEvmProto.CallRequest) e.getUnfinishedMessage();
+          parsedMessage = (ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -5813,112 +733,36 @@ public final class BEvmProto {
         return this;
       }
 
-      private java.lang.Object serverconfig_ = "";
+      private com.google.protobuf.ByteString bevminstanceid_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required string serverconfig = 2;</code>
+       * <code>required bytes bevminstanceid = 2;</code>
        */
-      public boolean hasServerconfig() {
+      public boolean hasBevminstanceid() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>required string serverconfig = 2;</code>
-       */
-      public java.lang.String getServerconfig() {
-        java.lang.Object ref = serverconfig_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            serverconfig_ = s;
-          }
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
-      }
-      /**
-       * <code>required string serverconfig = 2;</code>
-       */
-      public com.google.protobuf.ByteString
-          getServerconfigBytes() {
-        java.lang.Object ref = serverconfig_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          serverconfig_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <code>required string serverconfig = 2;</code>
-       */
-      public Builder setServerconfig(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000002;
-        serverconfig_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required string serverconfig = 2;</code>
-       */
-      public Builder clearServerconfig() {
-        bitField0_ = (bitField0_ & ~0x00000002);
-        serverconfig_ = getDefaultInstance().getServerconfig();
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required string serverconfig = 2;</code>
-       */
-      public Builder setServerconfigBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000002;
-        serverconfig_ = value;
-        onChanged();
-        return this;
-      }
-
-      private com.google.protobuf.ByteString bevminstanceid_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <code>required bytes bevminstanceid = 3;</code>
-       */
-      public boolean hasBevminstanceid() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
-      }
-      /**
-       * <code>required bytes bevminstanceid = 3;</code>
+       * <code>required bytes bevminstanceid = 2;</code>
        */
       public com.google.protobuf.ByteString getBevminstanceid() {
         return bevminstanceid_;
       }
       /**
-       * <code>required bytes bevminstanceid = 3;</code>
+       * <code>required bytes bevminstanceid = 2;</code>
        */
       public Builder setBevminstanceid(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000004;
+  bitField0_ |= 0x00000002;
         bevminstanceid_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required bytes bevminstanceid = 3;</code>
+       * <code>required bytes bevminstanceid = 2;</code>
        */
       public Builder clearBevminstanceid() {
-        bitField0_ = (bitField0_ & ~0x00000004);
+        bitField0_ = (bitField0_ & ~0x00000002);
         bevminstanceid_ = getDefaultInstance().getBevminstanceid();
         onChanged();
         return this;
@@ -5926,34 +770,34 @@ public final class BEvmProto {
 
       private com.google.protobuf.ByteString accountaddress_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required bytes accountaddress = 4;</code>
+       * <code>required bytes accountaddress = 3;</code>
        */
       public boolean hasAccountaddress() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
-       * <code>required bytes accountaddress = 4;</code>
+       * <code>required bytes accountaddress = 3;</code>
        */
       public com.google.protobuf.ByteString getAccountaddress() {
         return accountaddress_;
       }
       /**
-       * <code>required bytes accountaddress = 4;</code>
+       * <code>required bytes accountaddress = 3;</code>
        */
       public Builder setAccountaddress(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000008;
+  bitField0_ |= 0x00000004;
         accountaddress_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required bytes accountaddress = 4;</code>
+       * <code>required bytes accountaddress = 3;</code>
        */
       public Builder clearAccountaddress() {
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000004);
         accountaddress_ = getDefaultInstance().getAccountaddress();
         onChanged();
         return this;
@@ -5961,340 +805,70 @@ public final class BEvmProto {
 
       private com.google.protobuf.ByteString contractaddress_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required bytes contractaddress = 5;</code>
+       * <code>required bytes contractaddress = 4;</code>
        */
       public boolean hasContractaddress() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
-       * <code>required bytes contractaddress = 5;</code>
+       * <code>required bytes contractaddress = 4;</code>
        */
       public com.google.protobuf.ByteString getContractaddress() {
         return contractaddress_;
       }
       /**
-       * <code>required bytes contractaddress = 5;</code>
+       * <code>required bytes contractaddress = 4;</code>
        */
       public Builder setContractaddress(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000010;
+  bitField0_ |= 0x00000008;
         contractaddress_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required bytes contractaddress = 5;</code>
+       * <code>required bytes contractaddress = 4;</code>
        */
       public Builder clearContractaddress() {
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000008);
         contractaddress_ = getDefaultInstance().getContractaddress();
         onChanged();
         return this;
       }
 
-      private java.lang.Object abi_ = "";
+      private com.google.protobuf.ByteString calldata_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string abi = 6;</code>
+       * <code>required bytes calldata = 5;</code>
        */
-      public boolean hasAbi() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+      public boolean hasCalldata() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
       }
       /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string abi = 6;</code>
+       * <code>required bytes calldata = 5;</code>
        */
-      public java.lang.String getAbi() {
-        java.lang.Object ref = abi_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            abi_ = s;
-          }
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
+      public com.google.protobuf.ByteString getCalldata() {
+        return calldata_;
       }
       /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string abi = 6;</code>
+       * <code>required bytes calldata = 5;</code>
        */
-      public com.google.protobuf.ByteString
-          getAbiBytes() {
-        java.lang.Object ref = abi_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          abi_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string abi = 6;</code>
-       */
-      public Builder setAbi(
-          java.lang.String value) {
+      public Builder setCalldata(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000020;
-        abi_ = value;
+  bitField0_ |= 0x00000010;
+        calldata_ = value;
         onChanged();
         return this;
       }
       /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string abi = 6;</code>
+       * <code>required bytes calldata = 5;</code>
        */
-      public Builder clearAbi() {
-        bitField0_ = (bitField0_ & ~0x00000020);
-        abi_ = getDefaultInstance().getAbi();
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string abi = 6;</code>
-       */
-      public Builder setAbiBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000020;
-        abi_ = value;
-        onChanged();
-        return this;
-      }
-
-      private java.lang.Object method_ = "";
-      /**
-       * <code>required string method = 7;</code>
-       */
-      public boolean hasMethod() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
-      }
-      /**
-       * <code>required string method = 7;</code>
-       */
-      public java.lang.String getMethod() {
-        java.lang.Object ref = method_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            method_ = s;
-          }
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
-      }
-      /**
-       * <code>required string method = 7;</code>
-       */
-      public com.google.protobuf.ByteString
-          getMethodBytes() {
-        java.lang.Object ref = method_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          method_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <code>required string method = 7;</code>
-       */
-      public Builder setMethod(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000040;
-        method_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required string method = 7;</code>
-       */
-      public Builder clearMethod() {
-        bitField0_ = (bitField0_ & ~0x00000040);
-        method_ = getDefaultInstance().getMethod();
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required string method = 7;</code>
-       */
-      public Builder setMethodBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000040;
-        method_ = value;
-        onChanged();
-        return this;
-      }
-
-      private com.google.protobuf.LazyStringList args_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      private void ensureArgsIsMutable() {
-        if (!((bitField0_ & 0x00000080) == 0x00000080)) {
-          args_ = new com.google.protobuf.LazyStringArrayList(args_);
-          bitField0_ |= 0x00000080;
-         }
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 8;</code>
-       */
-      public com.google.protobuf.ProtocolStringList
-          getArgsList() {
-        return args_.getUnmodifiableView();
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 8;</code>
-       */
-      public int getArgsCount() {
-        return args_.size();
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 8;</code>
-       */
-      public java.lang.String getArgs(int index) {
-        return args_.get(index);
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 8;</code>
-       */
-      public com.google.protobuf.ByteString
-          getArgsBytes(int index) {
-        return args_.getByteString(index);
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 8;</code>
-       */
-      public Builder setArgs(
-          int index, java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureArgsIsMutable();
-        args_.set(index, value);
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 8;</code>
-       */
-      public Builder addArgs(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureArgsIsMutable();
-        args_.add(value);
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 8;</code>
-       */
-      public Builder addAllArgs(
-          java.lang.Iterable<java.lang.String> values) {
-        ensureArgsIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, args_);
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 8;</code>
-       */
-      public Builder clearArgs() {
-        args_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000080);
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>repeated string args = 8;</code>
-       */
-      public Builder addArgsBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureArgsIsMutable();
-        args_.add(value);
+      public Builder clearCalldata() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        calldata_ = getDefaultInstance().getCalldata();
         onChanged();
         return this;
       }
@@ -6311,94 +885,78 @@ public final class BEvmProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:bevm.CallRequest)
+      // @@protoc_insertion_point(builder_scope:bevm.ViewCallRequest)
     }
 
-    // @@protoc_insertion_point(class_scope:bevm.CallRequest)
-    private static final ch.epfl.dedis.lib.proto.BEvmProto.CallRequest DEFAULT_INSTANCE;
+    // @@protoc_insertion_point(class_scope:bevm.ViewCallRequest)
+    private static final ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.BEvmProto.CallRequest();
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest();
     }
 
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallRequest getDefaultInstance() {
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<CallRequest>
-        PARSER = new com.google.protobuf.AbstractParser<CallRequest>() {
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<ViewCallRequest>
+        PARSER = new com.google.protobuf.AbstractParser<ViewCallRequest>() {
       @java.lang.Override
-      public CallRequest parsePartialFrom(
+      public ViewCallRequest parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CallRequest(input, extensionRegistry);
+        return new ViewCallRequest(input, extensionRegistry);
       }
     };
 
-    public static com.google.protobuf.Parser<CallRequest> parser() {
+    public static com.google.protobuf.Parser<ViewCallRequest> parser() {
       return PARSER;
     }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<CallRequest> getParserForType() {
+    public com.google.protobuf.Parser<ViewCallRequest> getParserForType() {
       return PARSER;
     }
 
     @java.lang.Override
-    public ch.epfl.dedis.lib.proto.BEvmProto.CallRequest getDefaultInstanceForType() {
+    public ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
   }
 
-  public interface CallResponseOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:bevm.CallResponse)
+  public interface ViewCallResponseOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:bevm.ViewCallResponse)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string result = 1;</code>
+     * <code>required bytes result = 1;</code>
      */
     boolean hasResult();
     /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string result = 1;</code>
+     * <code>required bytes result = 1;</code>
      */
-    java.lang.String getResult();
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string result = 1;</code>
-     */
-    com.google.protobuf.ByteString
-        getResultBytes();
+    com.google.protobuf.ByteString getResult();
   }
   /**
    * <pre>
-   * CallResponse is the response to CallRequest, containing the method response.
+   * ViewCallResponse is the response to ViewCallRequest, containing the method
+   * response.
    * </pre>
    *
-   * Protobuf type {@code bevm.CallResponse}
+   * Protobuf type {@code bevm.ViewCallResponse}
    */
-  public  static final class CallResponse extends
+  public  static final class ViewCallResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:bevm.CallResponse)
-      CallResponseOrBuilder {
+      // @@protoc_insertion_point(message_implements:bevm.ViewCallResponse)
+      ViewCallResponseOrBuilder {
   private static final long serialVersionUID = 0L;
-    // Use CallResponse.newBuilder() to construct.
-    private CallResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    // Use ViewCallResponse.newBuilder() to construct.
+    private ViewCallResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private CallResponse() {
-      result_ = "";
+    private ViewCallResponse() {
+      result_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -6406,7 +964,7 @@ public final class BEvmProto {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private CallResponse(
+    private ViewCallResponse(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -6426,9 +984,8 @@ public final class BEvmProto {
               done = true;
               break;
             case 10: {
-              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
-              result_ = bs;
+              result_ = input.readBytes();
               break;
             }
             default: {
@@ -6452,70 +1009,31 @@ public final class BEvmProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_CallResponse_descriptor;
+      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_ViewCallResponse_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_CallResponse_fieldAccessorTable
+      return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_ViewCallResponse_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.lib.proto.BEvmProto.CallResponse.class, ch.epfl.dedis.lib.proto.BEvmProto.CallResponse.Builder.class);
+              ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse.class, ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse.Builder.class);
     }
 
     private int bitField0_;
     public static final int RESULT_FIELD_NUMBER = 1;
-    private volatile java.lang.Object result_;
+    private com.google.protobuf.ByteString result_;
     /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string result = 1;</code>
+     * <code>required bytes result = 1;</code>
      */
     public boolean hasResult() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string result = 1;</code>
+     * <code>required bytes result = 1;</code>
      */
-    public java.lang.String getResult() {
-      java.lang.Object ref = result_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          result_ = s;
-        }
-        return s;
-      }
-    }
-    /**
-     * <pre>
-     * JSON-encoded
-     * </pre>
-     *
-     * <code>required string result = 1;</code>
-     */
-    public com.google.protobuf.ByteString
-        getResultBytes() {
-      java.lang.Object ref = result_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        result_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
+    public com.google.protobuf.ByteString getResult() {
+      return result_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -6537,7 +1055,7 @@ public final class BEvmProto {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, result_);
+        output.writeBytes(1, result_);
       }
       unknownFields.writeTo(output);
     }
@@ -6549,7 +1067,8 @@ public final class BEvmProto {
 
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, result_);
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, result_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -6561,10 +1080,10 @@ public final class BEvmProto {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof ch.epfl.dedis.lib.proto.BEvmProto.CallResponse)) {
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse)) {
         return super.equals(obj);
       }
-      ch.epfl.dedis.lib.proto.BEvmProto.CallResponse other = (ch.epfl.dedis.lib.proto.BEvmProto.CallResponse) obj;
+      ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse other = (ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse) obj;
 
       boolean result = true;
       result = result && (hasResult() == other.hasResult());
@@ -6592,69 +1111,69 @@ public final class BEvmProto {
       return hash;
     }
 
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseFrom(
         java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseFrom(
         java.nio.ByteBuffer data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseFrom(byte[] data)
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseFrom(java.io.InputStream input)
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseDelimitedFrom(java.io.InputStream input)
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseDelimitedFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parseFrom(
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -6667,7 +1186,7 @@ public final class BEvmProto {
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(ch.epfl.dedis.lib.proto.BEvmProto.CallResponse prototype) {
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     @java.lang.Override
@@ -6684,29 +1203,30 @@ public final class BEvmProto {
     }
     /**
      * <pre>
-     * CallResponse is the response to CallRequest, containing the method response.
+     * ViewCallResponse is the response to ViewCallRequest, containing the method
+     * response.
      * </pre>
      *
-     * Protobuf type {@code bevm.CallResponse}
+     * Protobuf type {@code bevm.ViewCallResponse}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:bevm.CallResponse)
-        ch.epfl.dedis.lib.proto.BEvmProto.CallResponseOrBuilder {
+        // @@protoc_insertion_point(builder_implements:bevm.ViewCallResponse)
+        ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponseOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_CallResponse_descriptor;
+        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_ViewCallResponse_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_CallResponse_fieldAccessorTable
+        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_ViewCallResponse_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.lib.proto.BEvmProto.CallResponse.class, ch.epfl.dedis.lib.proto.BEvmProto.CallResponse.Builder.class);
+                ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse.class, ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse.Builder.class);
       }
 
-      // Construct using ch.epfl.dedis.lib.proto.BEvmProto.CallResponse.newBuilder()
+      // Construct using ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse.newBuilder()
       private Builder() {
         maybeForceBuilderInitialization();
       }
@@ -6724,7 +1244,7 @@ public final class BEvmProto {
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        result_ = "";
+        result_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
         return this;
       }
@@ -6732,17 +1252,17 @@ public final class BEvmProto {
       @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_CallResponse_descriptor;
+        return ch.epfl.dedis.lib.proto.BEvmProto.internal_static_bevm_ViewCallResponse_descriptor;
       }
 
       @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.CallResponse getDefaultInstanceForType() {
-        return ch.epfl.dedis.lib.proto.BEvmProto.CallResponse.getDefaultInstance();
+      public ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse.getDefaultInstance();
       }
 
       @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.CallResponse build() {
-        ch.epfl.dedis.lib.proto.BEvmProto.CallResponse result = buildPartial();
+      public ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse build() {
+        ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
@@ -6750,8 +1270,8 @@ public final class BEvmProto {
       }
 
       @java.lang.Override
-      public ch.epfl.dedis.lib.proto.BEvmProto.CallResponse buildPartial() {
-        ch.epfl.dedis.lib.proto.BEvmProto.CallResponse result = new ch.epfl.dedis.lib.proto.BEvmProto.CallResponse(this);
+      public ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse buildPartial() {
+        ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse result = new ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -6797,20 +1317,18 @@ public final class BEvmProto {
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof ch.epfl.dedis.lib.proto.BEvmProto.CallResponse) {
-          return mergeFrom((ch.epfl.dedis.lib.proto.BEvmProto.CallResponse)other);
+        if (other instanceof ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(ch.epfl.dedis.lib.proto.BEvmProto.CallResponse other) {
-        if (other == ch.epfl.dedis.lib.proto.BEvmProto.CallResponse.getDefaultInstance()) return this;
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse other) {
+        if (other == ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse.getDefaultInstance()) return this;
         if (other.hasResult()) {
-          bitField0_ |= 0x00000001;
-          result_ = other.result_;
-          onChanged();
+          setResult(other.getResult());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -6830,11 +1348,11 @@ public final class BEvmProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        ch.epfl.dedis.lib.proto.BEvmProto.CallResponse parsedMessage = null;
+        ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (ch.epfl.dedis.lib.proto.BEvmProto.CallResponse) e.getUnfinishedMessage();
+          parsedMessage = (ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -6845,67 +1363,23 @@ public final class BEvmProto {
       }
       private int bitField0_;
 
-      private java.lang.Object result_ = "";
+      private com.google.protobuf.ByteString result_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string result = 1;</code>
+       * <code>required bytes result = 1;</code>
        */
       public boolean hasResult() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string result = 1;</code>
+       * <code>required bytes result = 1;</code>
        */
-      public java.lang.String getResult() {
-        java.lang.Object ref = result_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            result_ = s;
-          }
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
+      public com.google.protobuf.ByteString getResult() {
+        return result_;
       }
       /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string result = 1;</code>
+       * <code>required bytes result = 1;</code>
        */
-      public com.google.protobuf.ByteString
-          getResultBytes() {
-        java.lang.Object ref = result_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          result_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string result = 1;</code>
-       */
-      public Builder setResult(
-          java.lang.String value) {
+      public Builder setResult(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -6915,32 +1389,11 @@ public final class BEvmProto {
         return this;
       }
       /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string result = 1;</code>
+       * <code>required bytes result = 1;</code>
        */
       public Builder clearResult() {
         bitField0_ = (bitField0_ & ~0x00000001);
         result_ = getDefaultInstance().getResult();
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * JSON-encoded
-       * </pre>
-       *
-       * <code>required string result = 1;</code>
-       */
-      public Builder setResultBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000001;
-        result_ = value;
         onChanged();
         return this;
       }
@@ -6957,81 +1410,56 @@ public final class BEvmProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:bevm.CallResponse)
+      // @@protoc_insertion_point(builder_scope:bevm.ViewCallResponse)
     }
 
-    // @@protoc_insertion_point(class_scope:bevm.CallResponse)
-    private static final ch.epfl.dedis.lib.proto.BEvmProto.CallResponse DEFAULT_INSTANCE;
+    // @@protoc_insertion_point(class_scope:bevm.ViewCallResponse)
+    private static final ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.BEvmProto.CallResponse();
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse();
     }
 
-    public static ch.epfl.dedis.lib.proto.BEvmProto.CallResponse getDefaultInstance() {
+    public static ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<CallResponse>
-        PARSER = new com.google.protobuf.AbstractParser<CallResponse>() {
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<ViewCallResponse>
+        PARSER = new com.google.protobuf.AbstractParser<ViewCallResponse>() {
       @java.lang.Override
-      public CallResponse parsePartialFrom(
+      public ViewCallResponse parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CallResponse(input, extensionRegistry);
+        return new ViewCallResponse(input, extensionRegistry);
       }
     };
 
-    public static com.google.protobuf.Parser<CallResponse> parser() {
+    public static com.google.protobuf.Parser<ViewCallResponse> parser() {
       return PARSER;
     }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<CallResponse> getParserForType() {
+    public com.google.protobuf.Parser<ViewCallResponse> getParserForType() {
       return PARSER;
     }
 
     @java.lang.Override
-    public ch.epfl.dedis.lib.proto.BEvmProto.CallResponse getDefaultInstanceForType() {
+    public ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_bevm_DeployRequest_descriptor;
+    internal_static_bevm_ViewCallRequest_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_bevm_DeployRequest_fieldAccessorTable;
+      internal_static_bevm_ViewCallRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_bevm_TransactionRequest_descriptor;
+    internal_static_bevm_ViewCallResponse_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_bevm_TransactionRequest_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_bevm_TransactionHashResponse_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_bevm_TransactionHashResponse_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_bevm_TransactionFinalizationRequest_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_bevm_TransactionFinalizationRequest_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_bevm_TransactionResponse_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_bevm_TransactionResponse_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_bevm_CallRequest_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_bevm_CallRequest_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_bevm_CallResponse_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_bevm_CallResponse_fieldAccessorTable;
+      internal_static_bevm_ViewCallResponse_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -7041,25 +1469,12 @@ public final class BEvmProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\nbevm.proto\022\004bevm\"\177\n\rDeployRequest\022\020\n\010g" +
-      "aslimit\030\001 \002(\004\022\020\n\010gasprice\030\002 \002(\004\022\016\n\006amoun" +
-      "t\030\003 \002(\004\022\r\n\005nonce\030\004 \002(\004\022\020\n\010bytecode\030\005 \002(\014" +
-      "\022\013\n\003abi\030\006 \002(\t\022\014\n\004args\030\007 \003(\t\"\233\001\n\022Transact" +
-      "ionRequest\022\020\n\010gaslimit\030\001 \002(\004\022\020\n\010gasprice" +
-      "\030\002 \002(\004\022\016\n\006amount\030\003 \002(\004\022\027\n\017contractaddres" +
-      "s\030\004 \002(\014\022\r\n\005nonce\030\005 \002(\004\022\013\n\003abi\030\006 \002(\t\022\016\n\006m" +
-      "ethod\030\007 \002(\t\022\014\n\004args\030\010 \003(\t\"G\n\027Transaction" +
-      "HashResponse\022\023\n\013transaction\030\001 \002(\014\022\027\n\017tra" +
-      "nsactionhash\030\002 \002(\014\"H\n\036TransactionFinaliz" +
-      "ationRequest\022\023\n\013transaction\030\001 \002(\014\022\021\n\tsig" +
-      "nature\030\002 \002(\014\"*\n\023TransactionResponse\022\023\n\013t" +
-      "ransaction\030\001 \002(\014\"\252\001\n\013CallRequest\022\021\n\tbyzc" +
-      "oinid\030\001 \002(\014\022\024\n\014serverconfig\030\002 \002(\t\022\026\n\016bev" +
-      "minstanceid\030\003 \002(\014\022\026\n\016accountaddress\030\004 \002(" +
-      "\014\022\027\n\017contractaddress\030\005 \002(\014\022\013\n\003abi\030\006 \002(\t\022" +
-      "\016\n\006method\030\007 \002(\t\022\014\n\004args\030\010 \003(\t\"\036\n\014CallRes" +
-      "ponse\022\016\n\006result\030\001 \002(\tB$\n\027ch.epfl.dedis.l" +
-      "ib.protoB\tBEvmProto"
+      "\n\nbevm.proto\022\004bevm\"\177\n\017ViewCallRequest\022\021\n" +
+      "\tbyzcoinid\030\001 \002(\014\022\026\n\016bevminstanceid\030\002 \002(\014" +
+      "\022\026\n\016accountaddress\030\003 \002(\014\022\027\n\017contractaddr" +
+      "ess\030\004 \002(\014\022\020\n\010calldata\030\005 \002(\014\"\"\n\020ViewCallR" +
+      "esponse\022\016\n\006result\030\001 \002(\014B$\n\027ch.epfl.dedis" +
+      ".lib.protoB\tBEvmProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -7073,47 +1488,17 @@ public final class BEvmProto {
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         }, assigner);
-    internal_static_bevm_DeployRequest_descriptor =
+    internal_static_bevm_ViewCallRequest_descriptor =
       getDescriptor().getMessageTypes().get(0);
-    internal_static_bevm_DeployRequest_fieldAccessorTable = new
+    internal_static_bevm_ViewCallRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_bevm_DeployRequest_descriptor,
-        new java.lang.String[] { "Gaslimit", "Gasprice", "Amount", "Nonce", "Bytecode", "Abi", "Args", });
-    internal_static_bevm_TransactionRequest_descriptor =
+        internal_static_bevm_ViewCallRequest_descriptor,
+        new java.lang.String[] { "Byzcoinid", "Bevminstanceid", "Accountaddress", "Contractaddress", "Calldata", });
+    internal_static_bevm_ViewCallResponse_descriptor =
       getDescriptor().getMessageTypes().get(1);
-    internal_static_bevm_TransactionRequest_fieldAccessorTable = new
+    internal_static_bevm_ViewCallResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_bevm_TransactionRequest_descriptor,
-        new java.lang.String[] { "Gaslimit", "Gasprice", "Amount", "Contractaddress", "Nonce", "Abi", "Method", "Args", });
-    internal_static_bevm_TransactionHashResponse_descriptor =
-      getDescriptor().getMessageTypes().get(2);
-    internal_static_bevm_TransactionHashResponse_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_bevm_TransactionHashResponse_descriptor,
-        new java.lang.String[] { "Transaction", "Transactionhash", });
-    internal_static_bevm_TransactionFinalizationRequest_descriptor =
-      getDescriptor().getMessageTypes().get(3);
-    internal_static_bevm_TransactionFinalizationRequest_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_bevm_TransactionFinalizationRequest_descriptor,
-        new java.lang.String[] { "Transaction", "Signature", });
-    internal_static_bevm_TransactionResponse_descriptor =
-      getDescriptor().getMessageTypes().get(4);
-    internal_static_bevm_TransactionResponse_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_bevm_TransactionResponse_descriptor,
-        new java.lang.String[] { "Transaction", });
-    internal_static_bevm_CallRequest_descriptor =
-      getDescriptor().getMessageTypes().get(5);
-    internal_static_bevm_CallRequest_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_bevm_CallRequest_descriptor,
-        new java.lang.String[] { "Byzcoinid", "Serverconfig", "Bevminstanceid", "Accountaddress", "Contractaddress", "Abi", "Method", "Args", });
-    internal_static_bevm_CallResponse_descriptor =
-      getDescriptor().getMessageTypes().get(6);
-    internal_static_bevm_CallResponse_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_bevm_CallResponse_descriptor,
+        internal_static_bevm_ViewCallResponse_descriptor,
         new java.lang.String[] { "Result", });
   }
 

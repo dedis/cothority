@@ -2,6 +2,7 @@ package bevm
 
 import (
 	"crypto/ecdsa"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math/big"
@@ -365,17 +366,10 @@ func (client *Client) Call(account *EvmAccount,
 	// timestamp in ByzCoin is in [ns], whereas in EVM it is in [s]
 	evmTs := timestamp / 1e9
 
-	// Instantiate a new EVM
-	evm := vm.NewEVM(getContext(evmTs), stateDb, getChainConfig(),
-		getVMConfig())
-
-	// Perform the call (1 Ether should be enough for everyone [tm]...)
-	ret, _, err := evm.Call(vm.AccountRef(account.Address),
-		contractInstance.Address, callData, uint64(1*WeiPerEther),
-		big.NewInt(0))
+	ret, err := CallEVM(account.Address, contractInstance.Address, callData,
+		stateDb, evmTs)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to execute EVM view "+
-			"method: %v", err)
+		return nil, xerrors.Errorf("failed to call EVM: %v", err)
 	}
 
 	// Unpack the result
@@ -386,6 +380,30 @@ func (client *Client) Call(account *EvmAccount,
 	}
 
 	return result, nil
+}
+
+// CallEVM performs a low-level call (contract view method call, without state
+// change) on the EVM, using ABI packed data, ethereum addresses, a stateDB and
+// a timestamp representing `now`.
+func CallEVM(accountAddress common.Address, contractAddress common.Address,
+	callData []byte, stateDb *state.StateDB, ts int64) ([]byte, error) {
+	log.Lvlf2(">>> Call EVM %v → %v [%v]", accountAddress.Hex(),
+		contractAddress.Hex(), hex.EncodeToString(callData))
+	defer log.Lvlf2("<<< Call EVM %v → %v [%v]", accountAddress.Hex(),
+		contractAddress.Hex(), hex.EncodeToString(callData))
+
+	// Instantiate a new EVM
+	evm := vm.NewEVM(getContext(ts), stateDb, getChainConfig(),
+		getVMConfig())
+
+	// Perform the call (1 Ether should be enough for everyone [tm]...)
+	ret, _, err := evm.Call(vm.AccountRef(accountAddress), contractAddress,
+		callData, uint64(1*WeiPerEther), big.NewInt(0))
+	if err != nil {
+		return nil, xerrors.Errorf("failed to execute EVM call: %v ", err)
+	}
+
+	return ret, nil
 }
 
 // CreditAccount credits the given Ethereum address with the given amount
@@ -409,7 +427,7 @@ func (client *Client) GetAccountBalance(address common.Address) (
 	*big.Int, error) {
 	stateDb, err := getEvmDb(client.bcClient, client.instanceID)
 	if err != nil {
-		return nil, xerrors.Errorf("failed toretrieve EVM state: %v", err)
+		return nil, xerrors.Errorf("failed to retrieve EVM state: %v", err)
 	}
 
 	balance := stateDb.GetBalance(address)
@@ -422,94 +440,20 @@ func (client *Client) GetAccountBalance(address common.Address) (
 // ---------------------------------------------------------------------------
 // Service methods
 
-// PrepareDeployTx sends a request to deploy an EVM contract. Returns an EVM
-// transaction and its hash to be signed by the caller.
-func (client *Client) PrepareDeployTx(dst *network.ServerIdentity,
-	gasLimit uint64, gasPrice uint64, amount uint64, nonce uint64,
-	bytecode []byte, abi string,
-	args ...string) (*TransactionHashResponse, error) {
-	request := &DeployRequest{
-		GasLimit: gasLimit,
-		GasPrice: gasPrice,
-		Amount:   amount,
-		Nonce:    nonce,
-		Bytecode: bytecode,
-		Abi:      abi,
-		Args:     args,
-	}
-	response := &TransactionHashResponse{}
-
-	err := client.Client.SendProtobuf(dst, request, response)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, err
-}
-
-// PrepareTransactionTx sends a request to execute a Transaction (R/W method)
-// on a previously deployed EVM contract instance. Returns an EVM transaction
-// and its hash to be signed by the caller.
-func (client *Client) PrepareTransactionTx(dst *network.ServerIdentity,
-	gasLimit uint64, gasPrice uint64, amount uint64,
-	contractAddress []byte, nonce uint64, abi string,
-	method string, args ...string) (*TransactionHashResponse, error) {
-	request := &TransactionRequest{
-		GasLimit:        gasLimit,
-		GasPrice:        gasPrice,
-		Amount:          amount,
-		ContractAddress: contractAddress,
-		Nonce:           nonce,
-		Abi:             abi,
-		Method:          method,
-		Args:            args,
-	}
-	response := &TransactionHashResponse{}
-
-	err := client.Client.SendProtobuf(dst, request, response)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, err
-}
-
-// FinalizeTx sends a request to finalize a previously initiated transaction
-// (deployment of contract or execution of transaction). Returns a signed EVM
-// transaction, ready to be sent to ByzCoin.
-func (client *Client) FinalizeTx(dst *network.ServerIdentity,
-	tx []byte, signature []byte) (*TransactionResponse, error) {
-	request := &TransactionFinalizationRequest{
-		Transaction: tx,
-		Signature:   signature,
-	}
-	response := &TransactionResponse{}
-
-	err := client.Client.SendProtobuf(dst, request, response)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, err
-}
-
-// PerformCall sends a request to execute a Call (R-only method, "view method")
-// on a previously deployed EVM contract instance. Returns the call response.
-func (client *Client) PerformCall(dst *network.ServerIdentity, byzcoinID []byte,
-	serverConfig string, bevmInstanceID byzcoin.InstanceID,
-	accountAddress []byte, contractAddress []byte, abi string,
-	method string, args ...string) (*CallResponse, error) {
-	request := &CallRequest{
+// viewCall sends a request to a conode to execute a read-only, "view method"
+// call on a previously deployed EVM contract instance. Returns the call
+// response.
+func (client *Client) viewCall(dst *network.ServerIdentity, byzcoinID []byte,
+	bevmInstanceID byzcoin.InstanceID, accountAddress []byte,
+	contractAddress []byte, callData []byte) (*ViewCallResponse, error) {
+	request := &ViewCallRequest{
 		ByzCoinID:       byzcoinID,
-		ServerConfig:    serverConfig,
 		BEvmInstanceID:  bevmInstanceID[:],
 		AccountAddress:  accountAddress,
 		ContractAddress: contractAddress,
-		Abi:             abi,
-		Method:          method,
-		Args:            args,
+		CallData:        callData,
 	}
-	response := &CallResponse{}
+	response := &ViewCallResponse{}
 
 	err := client.Client.SendProtobuf(dst, request, response)
 	if err != nil {
@@ -756,7 +700,7 @@ func (account EvmAccount) signAndMarshalTx(tx *types.Transaction) (
 	return signedBuffer, nil
 }
 
-// Retrieve a read-only EVM state database from ByzCoin
+// Retrieve a read-only EVM state database backed by a ByzCoin client
 func getEvmDb(bcClient *byzcoin.Client, instID byzcoin.InstanceID) (
 	*state.StateDB, error) {
 	// Retrieve the proof of the Byzcoin instance
@@ -788,7 +732,46 @@ func getEvmDb(bcClient *byzcoin.Client, instID byzcoin.InstanceID) (
 
 	db := state.NewDatabase(byzDb)
 
-	return state.New(bs.RootHash, db)
+	stateDb, err := state.New(bs.RootHash, db)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to create new EVM db: %v", err)
+	}
+
+	return stateDb, nil
+}
+
+// Retrieve a read-only EVM state database backed by a StateTrie
+func getEvmDbRst(rst byzcoin.ReadOnlyStateTrie, bevmID byzcoin.InstanceID) (
+	*state.StateDB, error) {
+	// Retrieve BEvm instance
+	value, _, _, _, err := rst.GetValues(bevmID[:])
+	if err != nil {
+		return nil, xerrors.Errorf("failed to retrieve BEvm instance %v: %v",
+			bevmID, err)
+	}
+
+	// Retrieve BEvm state
+	var bs State
+	err = protobuf.Decode(value, &bs)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to decode BEvm instance state: %v",
+			err)
+	}
+
+	// Retrieve EVM stateDB
+	byzDb, err := NewStateTrieByzDatabase(bevmID, rst)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to create stateTrie-backed database "+
+			"for BEvm: %v", err)
+	}
+
+	db := state.NewDatabase(byzDb)
+	stateDb, err := state.New(bs.RootHash, db)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to create new EVM db: %v", err)
+	}
+
+	return stateDb, nil
 }
 
 // Invoke a method on a ByzCoin EVM instance
