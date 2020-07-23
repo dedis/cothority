@@ -623,7 +623,9 @@ func (bc *bcNotifications) informBlock(block *skipchain.SkipBlock, txs TxResults
 	bc.Lock()
 	defer bc.Unlock()
 	for _, x := range bc.blockListeners {
-		x <- notif
+		go func(wc waitChannel) {
+			wc <- notif
+		}(x)
 	}
 }
 

@@ -379,13 +379,20 @@ func (s *Service) prepareTxResponse(req *AddTxRequest, tx *TxResult) (*AddTxResp
 // error value to find out if an error has occured. The caller must also check
 // AddTxResponse.Error even if the error return value is nil.
 func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
+	s.closedMutex.Lock()
+	if s.closed {
+		s.closedMutex.Unlock()
+		return nil, xerrors.New("node is closed")
+	}
+	s.closedMutex.Unlock()
+
 	if len(req.Transaction.Instructions) == 0 {
 		return nil, xerrors.New("no transactions to add")
 	}
 
 	gen := s.db().GetByID(req.SkipchainID)
 	if gen == nil || gen.Index != 0 {
-		return nil, xerrors.New("skipchain ID is does not exist")
+		return nil, xerrors.New("skipchain ID does not exist")
 	}
 
 	latest, err := s.db().GetLatest(gen)
@@ -1349,12 +1356,24 @@ func (s *Service) catchupAll() error {
 
 		cl := skipchain.NewClient()
 		// Get the latest block known by the Cothority.
-		reply, err := cl.GetUpdateChain(sb.Roster, sb.Hash)
-		if err != nil {
+		var reply *skipchain.GetUpdateChainReply
+		for i, node := range sb.Roster.List {
+			cl.UseNode(i)
+			replyTmp, err := cl.GetUpdateChain(sb.Roster, sb.Hash)
+			if err != nil {
+				log.Warn("couldn't get update from", node)
+				continue
+			}
+			if reply == nil || len(replyTmp.Update) > len(reply.Update) {
+				reply = replyTmp
+			}
+		}
+
+		if reply == nil {
 			// Might be that the other nodes are not yet up,
 			// so just continue with the other chains.
 			// Call to s.catchup will probably also fail, so skip it.
-			log.Errorf("couldn't get update chain: %+v", err)
+			log.Error("couldn't get a new latest block")
 			continue
 		}
 
@@ -1362,7 +1381,9 @@ func (s *Service) catchupAll() error {
 			return xerrors.New("no block found in chain update")
 		}
 
-		s.catchUp(reply.Update[len(reply.Update)-1])
+		sb = reply.Update[len(reply.Update)-1]
+		log.Lvl2("Catching up with latest block:", sb.Index)
+		s.catchUp(sb)
 	}
 	return nil
 }

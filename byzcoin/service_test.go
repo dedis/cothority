@@ -287,6 +287,7 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 		// Wait for tasks to finish.
 		time.Sleep(blockInterval)
 	}
+	s.waitPropagation(t, 0)
 }
 
 func TestService_AddTransaction_WrongNode(t *testing.T) {
@@ -987,6 +988,7 @@ func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) (P
 func sendTransactionWithCounter(t *testing.T, s *ser, client int, kind string, wait int, counter uint64) (Proof, []byte, *AddTxResponse, error, error) {
 	tx, err := createOneClientTxWithCounter(s.darc.GetBaseID(), kind, s.value, s.signer, counter)
 	require.NoError(t, err)
+	key := tx.Instructions[0].Hash()
 	ser := s.services[client]
 	var resp *AddTxResponse
 	resp, err = ser.AddTransaction(&AddTxRequest{
@@ -1004,7 +1006,7 @@ func sendTransactionWithCounter(t *testing.T, s *ser, client int, kind string, w
 	rep, err2 := ser.GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      s.genesis.SkipChainID(),
-		Key:     tx.Instructions[0].Hash(),
+		Key:     key,
 	})
 
 	var proof Proof
@@ -1012,7 +1014,7 @@ func sendTransactionWithCounter(t *testing.T, s *ser, client int, kind string, w
 		proof = rep.Proof
 	}
 
-	return proof, tx.Instructions[0].Hash(), resp, err, err2
+	return proof, key, resp, err, err2
 }
 
 func (s *ser) sendInstructions(t *testing.T, wait int,
@@ -1846,8 +1848,10 @@ func TestService_SetConfigRosterReplace(t *testing.T) {
 		ctx, _ := createConfigTxWithCounter(t, testInterval, *goodRoster, defaultMaxBlockSize, s, counter)
 		counter++
 		cl := NewClient(s.genesis.SkipChainID(), *goodRoster)
+		require.NoError(t, cl.UseNode(1))
 		resp, err := cl.AddTransactionAndWait(ctx, 10)
 		transactionOK(t, resp, err)
+		s.waitPropagation(t, -1)
 
 		log.Lvl1("Removing", goodRoster.List[0])
 		goodRoster = onet.NewRoster(goodRoster.List[1:])
@@ -1855,6 +1859,7 @@ func TestService_SetConfigRosterReplace(t *testing.T) {
 		counter++
 		resp, err = cl.AddTransactionAndWait(ctx, 10)
 		transactionOK(t, resp, err)
+		s.waitPropagation(t, -1)
 	}
 }
 
@@ -2757,12 +2762,7 @@ func (s *ser) sendTx(t *testing.T, ctx ClientTransaction) {
 }
 
 func (s *ser) sendTxTo(t *testing.T, ctx ClientTransaction, idx int) {
-	resp, err := s.services[idx].AddTransaction(&AddTxRequest{
-		Version:     CurrentVersion,
-		SkipchainID: s.genesis.SkipChainID(),
-		Transaction: ctx,
-	})
-	transactionOK(t, resp, err)
+	s.sendTxToAndWait(t, ctx, idx, 0)
 }
 
 func (s *ser) sendTxAndWait(t *testing.T, ctx ClientTransaction, wait int) {
@@ -2777,6 +2777,13 @@ func (s *ser) sendTxToAndWait(t *testing.T, ctx ClientTransaction, idx int, wait
 		InclusionWait: wait,
 	})
 	transactionOK(t, resp, err)
+}
+
+func (s *ser) sendDummyTx(t *testing.T, node int, counter uint64, wait int) {
+	tx1, err := createOneClientTxWithCounter(s.darc.GetBaseID(),
+		dummyContract, s.value, s.signer, counter)
+	require.NoError(t, err)
+	s.sendTxToAndWait(t, tx1, node, wait)
 }
 
 // caller gives us a darc, and we try to make an evolution request.
