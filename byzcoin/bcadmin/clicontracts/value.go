@@ -54,6 +54,9 @@ func ValueSpawn(c *cli.Context) error {
 	}
 
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
+	if err != nil {
+		return fmt.Errorf("couldn't get signer counters: %v", err)
+	}
 
 	spawn := byzcoin.Spawn{
 		ContractID: contracts.ContractValueID,
@@ -121,11 +124,6 @@ func ValueInvokeUpdate(c *cli.Context) error {
 		return err
 	}
 
-	dstr := c.String("darc")
-	if dstr == "" {
-		dstr = cfg.AdminDarc.GetIdentityString()
-	}
-
 	var signer *darc.Signer
 
 	sstr := c.String("sign")
@@ -139,6 +137,9 @@ func ValueInvokeUpdate(c *cli.Context) error {
 	}
 
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
+	if err != nil {
+		return fmt.Errorf("couldn't get signer counters: %v", err)
+	}
 
 	invoke := byzcoin.Invoke{
 		ContractID: contracts.ContractValueID,
@@ -251,11 +252,6 @@ func ValueDelete(c *cli.Context) error {
 		return err
 	}
 
-	dstr := c.String("darc")
-	if dstr == "" {
-		dstr = cfg.AdminDarc.GetIdentityString()
-	}
-
 	var signer *darc.Signer
 
 	sstr := c.String("sign")
@@ -269,14 +265,17 @@ func ValueDelete(c *cli.Context) error {
 	}
 
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
+	if err != nil {
+		return fmt.Errorf("couldn't get signer counters: %v", err)
+	}
 
-	delete := byzcoin.Delete{
+	delInst := byzcoin.Delete{
 		ContractID: contracts.ContractValueID,
 	}
 
 	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
 		InstanceID:    byzcoin.NewInstanceID([]byte(instIDBuf)),
-		Delete:        &delete,
+		Delete:        &delInst,
 		SignerCounter: []uint64{counters.Counters[0] + 1},
 	})
 	if err != nil {

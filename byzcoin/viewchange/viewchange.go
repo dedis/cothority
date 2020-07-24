@@ -374,7 +374,9 @@ func NewNewViewReq(old *onet.Roster, proofs []InitReq) (*NewViewReq, error) {
 // Hash computes the digest of the request.
 func (req NewViewReq) Hash() []byte {
 	h := sha256.New()
-	h.Write(req.Roster.ID[:])
+	id, err := req.Roster.GetID()
+	log.ErrFatal(err)
+	h.Write(id[:])
 	for _, p := range req.Proof {
 		h.Write(p.Hash())
 	}

@@ -23,10 +23,7 @@ func StringToDarcID(id string) ([]byte, error) {
 	if id == "" {
 		return nil, xerrors.New("no string given")
 	}
-	if strings.HasPrefix(id, "darc:") {
-		id = id[5:]
-	}
-	return hex.DecodeString(id)
+	return hex.DecodeString(strings.TrimPrefix(id, "darc:"))
 }
 
 // StringToEd25519Buf converts the string representation of an ed25519 key to a
@@ -35,10 +32,7 @@ func StringToEd25519Buf(pub string) ([]byte, error) {
 	if pub == "" {
 		return nil, xerrors.New("no string given")
 	}
-	if strings.HasPrefix(pub, "ed25519:") {
-		pub = pub[8:]
-	}
-	return hex.DecodeString(pub)
+	return hex.DecodeString(strings.TrimPrefix(pub, "ed25519:"))
 }
 
 // GetDarcByString returns a DARC given its ID as a string

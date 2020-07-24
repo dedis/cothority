@@ -2,6 +2,7 @@ package clicontracts
 
 import (
 	"encoding/hex"
+	"fmt"
 
 	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3"
@@ -44,6 +45,9 @@ func NameSpawn(c *cli.Context) error {
 	}
 
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
+	if err != nil {
+		return fmt.Errorf("couldn't get signer counters: %v", err)
+	}
 
 	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
 		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
@@ -52,6 +56,9 @@ func NameSpawn(c *cli.Context) error {
 		},
 		SignerCounter: []uint64{counters.Counters[0] + 1},
 	})
+	if err != nil {
+		return fmt.Errorf("couldn't create transaction: %v", err)
+	}
 
 	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {

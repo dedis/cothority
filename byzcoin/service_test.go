@@ -1666,7 +1666,9 @@ func TestService_SetConfigRosterKeepLeader(t *testing.T) {
 		log.Lvl2("Verifying the correct roster is in place")
 		latest, err := s.service().db().GetLatestByID(s.genesis.Hash)
 		require.NoError(t, err)
-		require.True(t, latest.Roster.ID.Equal(rosterR.ID), "roster has not been updated")
+		equals, err := latest.Roster.Equal(rosterR)
+		require.NoError(t, err)
+		require.True(t, equals, "roster has not been updated")
 	}
 }
 
@@ -1685,7 +1687,9 @@ func TestService_SetConfigRosterNewLeader(t *testing.T) {
 		log.Lvl2("Verifying the correct roster is in place")
 		latest, err := s.service().db().GetLatestByID(s.genesis.Hash)
 		require.NoError(t, err)
-		require.True(t, latest.Roster.ID.Equal(rosterR.ID), "roster has not been updated")
+		equals, err := latest.Roster.Equal(rosterR)
+		require.NoError(t, err)
+		require.True(t, equals, "roster has not been updated")
 	}
 }
 
@@ -1737,7 +1741,9 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 		log.Lvl2("Verifying the correct roster is in place")
 		latest, err := s.service().db().GetLatestByID(s.genesis.Hash)
 		require.NoError(t, err)
-		require.True(t, latest.Roster.ID.Equal(rosterR.ID), "roster has not been updated")
+		equals, err := latest.Roster.Equal(rosterR)
+		require.NoError(t, err)
+		require.True(t, equals, "roster has not been updated")
 		// Get latest genesis darc and verify the 'view_change' rule is updated
 		st, err := s.service().GetReadOnlyStateTrie(s.genesis.Hash)
 		require.NoError(t, err)

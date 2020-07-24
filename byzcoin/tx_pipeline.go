@@ -381,8 +381,8 @@ func (p *txPipeline) processTxs(initialState *txProcessorState) {
 		interval := p.processor.GetInterval()
 		return time.After(interval)
 	}
+	p.wg.Add(1)
 	go func() {
-		p.wg.Add(1)
 		defer p.wg.Done()
 		intervalChan := getInterval()
 		var txHashes [][]byte
@@ -444,8 +444,8 @@ func (p *txPipeline) processTxs(initialState *txProcessorState) {
 				var inState *txProcessorState
 				currentState, inState = proposeInputState(currentState)
 
+				p.wg.Add(1)
 				go func(state *txProcessorState) {
-					p.wg.Add(1)
 					defer p.wg.Done()
 					if state != nil {
 						// NOTE: ProposeBlock might block for a long time,
@@ -476,7 +476,7 @@ func (p *txPipeline) processTxs(initialState *txProcessorState) {
 				}
 				txh := tx.Instructions.HashWithSignatures()
 				for _, txHash := range txHashes {
-					if bytes.Compare(txHash, txh) == 0 {
+					if bytes.Equal(txHash, txh) {
 						log.Lvl2("Got a duplicate transaction, ignoring it")
 						continue leaderLoop
 					}

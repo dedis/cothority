@@ -116,12 +116,6 @@ func (s *stateChangeStorage) setMaxSize(size int) {
 	s.maxSize = size
 }
 
-// setMaxNbrBlock enables the cleaning of state changes belonging
-// to blocks with an old index.
-func (s *stateChangeStorage) setMaxNbrBlock(nbr int) {
-	s.maxNbrBlock = nbr
-}
-
 // calculateSize reads the entries in the database and sums up their
 // sizes
 func (s *stateChangeStorage) calculateSize() error {
@@ -179,7 +173,7 @@ func (s *stateChangeStorage) cleanBySize() error {
 		// loop until enough blocks have been cleaned
 		for size > thres {
 			// Each pair at this level is a bucket assigned to a skipchain
-			err := b.ForEach(func(scid, v []byte) error {
+			err := b.ForEach(func(scid, _ []byte) error {
 				scb := b.Bucket(scid)
 				if scb == nil {
 					return nil
@@ -189,7 +183,7 @@ func (s *stateChangeStorage) cleanBySize() error {
 				oldestIndex := int64(-1)
 				var idx int64
 				c := scb.Cursor()
-				k, v := c.First()
+				k, _ := c.First()
 				for k != nil {
 					buf := bytes.NewBuffer(k[prefixLength+versionLength:])
 
@@ -203,11 +197,11 @@ func (s *stateChangeStorage) cleanBySize() error {
 					}
 
 					// go to the next instance
-					k, v = c.Seek(s.keyOfLast(k[:prefixLength]))
+					k, _ = c.Seek(s.keyOfLast(k[:prefixLength]))
 				}
 
 				// ... and we clean it
-				k, v = c.First()
+				k, v := c.First()
 				for k != nil {
 					buf := bytes.NewBuffer(k[prefixLength+versionLength:])
 
