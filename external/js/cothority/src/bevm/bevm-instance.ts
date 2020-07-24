@@ -337,8 +337,6 @@ export class BEvmInstance extends Instance {
      * the actual cothority configuration, the BEvm ID as well as the ByzCoin
      * ID that contains it must be provided.
      *
-     * @param byzcoinId         ByzCoin ID
-     * @param bevmInstanceId    BEvm instance ID
      * @param account           EVM account
      * @param contract          EVM contract
      * @param instanceIndex     Index of the deployed smart contract instance
@@ -351,9 +349,7 @@ export class BEvmInstance extends Instance {
      *
      * See `deploy()` for a description of `args`.
      */
-    async call(byzcoinId: Buffer,
-               bevmInstanceId: Buffer,
-               account: EvmAccount,
+    async call(account: EvmAccount,
                contract: EvmContract,
                instanceIndex: number,
                method: string,
@@ -365,8 +361,8 @@ export class BEvmInstance extends Instance {
         const callData = Buffer.concat([methodID, encodedArgs]);
 
         const response = await this.bevmRPC.viewCall(
-            byzcoinId,
-            bevmInstanceId,
+            this.byzcoinRPC.genesisID,
+            this.id,
             account.address,
             contract.addresses[instanceIndex],
             callData);

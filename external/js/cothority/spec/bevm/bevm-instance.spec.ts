@@ -116,8 +116,6 @@ ateMutability":"nonpayable","type":"constructor"}]
         // ... + 10) = 100 - (10 * 11 / 2)
         const expectedRemainingCandies = new BN(100 - (10 * 11 / 2));
         const [remainingCandies] = await bevmInstance.call(
-            byzcoinRPC.genesisID,
-            bevmInstance.id,
             account,
             contract,
             0,
@@ -157,8 +155,6 @@ ateMutability":"nonpayable","type":"constructor"}]
 
         // Retrieve number of remaining candies
         const [remainingCandies] = await bevmInstance.call(
-            byzcoinRPC.genesisID,
-            bevmInstance.id,
             account,
             contract,
             0,
