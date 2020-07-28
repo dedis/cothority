@@ -1,6 +1,6 @@
 # Version management
 
-For the latest version of the conodes, please use 
+For the latest version of the conodes, please use
 https://github.com/c4dt/byzcoin, which provides a continuous release of valid
  conodes.
 
@@ -23,29 +23,45 @@ A minor-version increase should be done for a new stable functionality that
  will be kept backward-compatible.
 A patch-version is mostly an irregular release whenever somebody thinks it's
  important to have the latest code available.
- 
+
 It is good to announce a release on the DEDIS/engineer slack channel.
 This allows others to know that a new release is about to happen and propose
 eventual changes.
 
-As the cothority depends on the kyber package, it's currently a bit akward to
- update the package-version:
-1. update the kyber-version in `kyber/package.json` and push to master
-2. publish the new kyber-npm using `kyber/publish.sh`
-3. update the kyber-dependency in `cothority/package.json` and the cothority
--version, which has to be the same as the kyber-version, push to master
-4. publish the new cothority-npm using `cothority/publish.sh`
-5. use an annotated tag on the latest commit with - this should be signed
- with your gpg-key 
+`@dedis/kyber` and `@dedis/cothority` can evolve independently, and they
+consequently each have their own version and are published separately. However,
+since cothority depends on kyber, kyber has to be published first if they are
+both to be updated.
+
+To publish a new release of `@dedis/kyber`:
+1. update the kyber-version in `kyber/package.json`, commit and push to master
+1. publish the new kyber-npm using `kyber/publish.sh`
+1. create a signed and annotated tag on the latest commit (adjust with the
+   updated version):
 ```
-git tag -s v3.4.6
-git push origin v3.4.6
+git tag -s kyber-js-v3.4.6
+git push --tags origin
+```
+
+To publish a new release of `@dedis/cothority`:
+1. update the cothority-version and (if needed) the kyber dependency version in
+   `cothority/package.json`, commit and push to master
+1. publish the new cothority-npm using `cothority/publish.sh`
+1. create a signed and annotated tag on the latest commit (adjust with the
+   updated version):
+```
+git tag -s cothority-js-v3.4.6
+git push --tags origin
 ```
 
 ## Development releases
 
-Every merged PR will create a development release, which is named:
+Every merged PR will create development releases, which are named:
 
+```
+@dedis/kyber-major.minor.patch+1-pYYMM.DDHH.MMSS.0
+```
+and:
 ```
 @dedis/cothority-major.minor.patch+1-pYYMM.DDHH.MMSS.0
 ```
