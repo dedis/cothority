@@ -107,6 +107,10 @@ func NewPropagationFunc(c propagationContext, name string, f PropagationStore, t
 			return 0, errors.New("we're not in the roster")
 		}
 		// Make a star (tree with height 1)
+		// TODO: it would be nice to search for a nice method to convert a
+		// list of nodes, a minimum branching-factor,
+		// and the maximum number of failing nodes into an optimal tree where
+		// most of the nodes appear more than once.
 		tree := rooted.GenerateNaryTree(len(el.List))
 		if tree == nil {
 			return 0, errors.New("Didn't find root in tree")

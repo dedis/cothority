@@ -469,6 +469,9 @@ func TestService_AddTransaction_Parallel(t *testing.T) {
 
 // Test that a contract have access to the ByzCoin protocol version.
 func TestService_AddTransactionVersion(t *testing.T) {
+	testNoUpgradeBlockVersion = true
+	defer func() { testNoUpgradeBlockVersion = false }()
+
 	s := newSerWithVersion(t, 1, testInterval, 4, disableViewChange, 0)
 	defer s.local.CloseAll()
 
@@ -486,7 +489,9 @@ func TestService_AddTransactionVersion(t *testing.T) {
 	require.NoError(t, err)
 
 	// Upgrade the chain with a special block.
+	testNoUpgradeBlockVersion = false
 	_, err = s.service().createUpgradeVersionBlock(s.genesis.Hash, 1)
+	testNoUpgradeBlockVersion = true
 	require.NoError(t, err)
 
 	// Send another tx this time for the version 1 of the ByzCoin protocol.
@@ -574,6 +579,7 @@ func TestService_AutomaticVersionUpgrade(t *testing.T) {
 
 		header, err := decodeBlockHeader(&proof.Proof.Latest)
 		require.NoError(t, err)
+
 		if header.Version == CurrentVersion {
 			close(closing)
 			wg.Wait()
@@ -827,18 +833,16 @@ func waitInclusion(t *testing.T, client int) {
 	// transactions to end up in two blocks.
 	log.Lvl1("Create transaction and don't wait")
 	counter++
-	{
-		tx, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, counter)
-		require.NoError(t, err)
-		ser := s.services[client]
-		resp, err := ser.AddTransaction(&AddTxRequest{
-			Version:       CurrentVersion,
-			SkipchainID:   s.genesis.SkipChainID(),
-			Transaction:   tx,
-			InclusionWait: 0,
-		})
-		transactionOK(t, resp, err)
-	}
+	tx, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, counter)
+	require.NoError(t, err)
+	ser := s.services[client]
+	resp, err := ser.AddTransaction(&AddTxRequest{
+		Version:       CurrentVersion,
+		SkipchainID:   s.genesis.SkipChainID(),
+		Transaction:   tx,
+		InclusionWait: 0,
+	})
+	transactionOK(t, resp, err)
 
 	log.Lvl1("Create correct transaction and wait")
 	counter++
@@ -1594,58 +1598,6 @@ func TestService_SetConfig(t *testing.T) {
 	require.Equal(t, blocksize, newBlocksize)
 }
 
-func TestService_SetConfigInterval(t *testing.T) {
-	defer log.SetShowTime(log.ShowTime())
-	log.SetShowTime(true)
-	s := newSer(t, 1, testInterval)
-	defer s.local.CloseAll()
-
-	// Wait for a block completion to start the interval check
-	// to prevent the first one to be included in the setup block
-	ctx, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer)
-	require.NoError(t, err)
-	s.sendTxAndWait(t, ctx, 10)
-
-	intervals := []time.Duration{
-		2 * time.Second,
-		5 * time.Second,
-		10 * time.Second,
-		20 * time.Second,
-	}
-	if testing.Short() {
-		intervals = intervals[0:2]
-	}
-
-	counter := 2
-	for _, interval := range intervals {
-		// The next block should now be in the range of testInterval.
-		log.Lvl1("Setting interval to", interval)
-		ctx, _ := createConfigTxWithCounter(t, interval, *s.roster, defaultMaxBlockSize, s, counter)
-		counter++
-		// The wait argument here is also used in case no block is received, so
-		// it means: at most 10*blockInterval, or after 10 blocks, whichever comes
-		// first. Putting it to 1 doesn't work, because the actual blockInterval
-		// is bigger, due to dedis/cothority#1409
-		s.sendTxAndWait(t, ctx, 10)
-
-		// We send an extra transaction first because the new interval is only loaded after a delay
-		// caused by the pipeline feature, i.e., the new interval is only used after an existing wait-interval
-		// is finished and not immediately after receiving the new configuration.
-		dummyCtx, _ := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, uint64(counter))
-		counter++
-		s.sendTxAndWait(t, dummyCtx, 10)
-
-		start := time.Now()
-
-		dummyCtx, _ = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, uint64(counter))
-		counter++
-		s.sendTxAndWait(t, dummyCtx, 10)
-
-		dur := time.Since(start)
-		require.InDelta(t, dur, interval, float64(1*time.Second))
-	}
-}
-
 func TestService_SetConfigRosterKeepLeader(t *testing.T) {
 	n := 6
 	if testing.Short() {
@@ -1821,6 +1773,7 @@ func TestService_SetConfigRosterSwitchNodes(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.Contains(t, resp.Error, "new leader must be in previous roster")
+	s.waitPropagation(t, 0)
 
 	log.Lvl1("Allow new nodes at the end", newRoster.List)
 	goodRoster := onet.NewRoster(s.roster.List)
@@ -1832,6 +1785,7 @@ func TestService_SetConfigRosterSwitchNodes(t *testing.T) {
 		counter++
 		s.sendTxAndWait(t, ctx, 10)
 	}
+	s.waitPropagation(t, 0)
 }
 
 // Replaces all nodes from the previous roster with new nodes
@@ -2183,9 +2137,7 @@ func TestService_DownloadState(t *testing.T) {
 //   1. what if a leader fails and wants to catch up
 //   2. if the catchupFetchDBEntries = 1, it fails
 func TestService_DownloadStateRunning(t *testing.T) {
-
-	// Disabled because it is flaky. See issue.
-	t.Skip("https://github.com/dedis/cothority/issues/2129")
+	t.Skip("Disabled because deleteDBs does something strange - bitrot :(")
 
 	cda := catchupDownloadAll
 	defer func() {

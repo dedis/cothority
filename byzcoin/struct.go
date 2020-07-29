@@ -661,7 +661,7 @@ func (c ChainConfig) sanityCheck(old *ChainConfig) error {
 		return xerrors.New("need at least 3 nodes to have a majority")
 	}
 	if old != nil {
-		return cothority.ErrorOrNil(old.checkNewRoster(c.Roster), "roster check: %v")
+		return cothority.ErrorOrNil(old.checkNewRoster(c.Roster), "roster check")
 	}
 	return nil
 }

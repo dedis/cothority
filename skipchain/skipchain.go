@@ -1638,7 +1638,6 @@ func (s *Service) propagateForwardLinkHandler(msg network.Message) error {
 		return xerrors.Errorf("error while storing forward-link and new block"+
 			": %v", err)
 	}
-
 	return nil
 }
 

@@ -320,7 +320,8 @@ public class ByzCoinRPCTest {
                 () -> bc.setBlockInterval(Duration.ofMillis(4999), admins, counters.getCounters(), 10)
         );
         logger.info("Setting interval to 5 seconds");
-        bc.setBlockInterval(Duration.ofMillis(5000), admins, counters.getCounters(), 10);
+        Duration newInterval = Duration.ofMillis(5000);
+        bc.setBlockInterval(newInterval, admins, counters.getCounters(), 10);
 
         // we need to make one dummy transaction before timing the block interval because there is a delay
         // for the new block interval to take effect
@@ -330,10 +331,9 @@ public class ByzCoinRPCTest {
         Instant now = Instant.now();
         counters.increment();
         bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, counters.head(), 10);
-        // check if the interval has changed (but doesn't check the interval is exactly the one requested)
-        // because it's too sensible for a precise test. There is an undetermined time after the block is
-        // created and the wait returns that cannot be quantity.
-        assertTrue(Duration.between(now, Instant.now()).toMillis() > BLOCK_INTERVAL.toMillis() + 500);
+        // check if the interval has changed - as there is no method to update the configuration, create a new RPC...
+        ByzCoinRPC newBC = ByzCoinRPC.fromByzCoin(testInstanceController.getRoster(), bc.getGenesisBlock().getSkipchainId());
+        assertEquals(newBC.getConfig().getBlockInterval(), newInterval);
 
 
         // Need to set the blockInterval back manually, else it will complain.

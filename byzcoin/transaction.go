@@ -9,7 +9,6 @@ import (
 	"hash"
 	"regexp"
 	"strings"
-	"sync"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin/trie"
@@ -116,6 +115,14 @@ func (ctx *ClientTransaction) SignWith(signers ...darc.Signer) error {
 		}
 	}
 	return nil
+}
+
+// Clone creates a deep clone of the ClientTransaction - mostly used in the
+// tests.
+func (ctx *ClientTransaction) Clone() ClientTransaction {
+	newCtx := ClientTransaction{}
+	newCtx.Instructions = append(newCtx.Instructions, ctx.Instructions...)
+	return newCtx
 }
 
 // NewClientTransaction creates a transaction compatible with the version passed
@@ -712,66 +719,5 @@ func (sc StateAction) String() string {
 		return "GenerateInstruction"
 	default:
 		return "Invalid stateChange"
-	}
-}
-
-const defaultMaxBufferSize = 1000
-
-// txBuffer is thread-safe data structure that store client transactions.
-type txBuffer struct {
-	sync.Mutex
-	txsMap map[string][]ClientTransaction
-}
-
-func newTxBuffer() txBuffer {
-	return txBuffer{
-		txsMap: make(map[string][]ClientTransaction),
-	}
-}
-
-func (r *txBuffer) take(key string, max int) []ClientTransaction {
-	r.Lock()
-	defer r.Unlock()
-
-	txs, ok := r.txsMap[key]
-	if !ok {
-		return []ClientTransaction{}
-	}
-
-	out := len(txs)
-	if max >= 0 && out > max {
-		// Take only up to the maximum required transactions.
-		out = max
-	}
-
-	ret := make([]ClientTransaction, out)
-	copy(ret, txs)
-
-	if out == max {
-		// Keep the overflow for the next collection.
-		r.txsMap[key] = txs[max:]
-	} else {
-		delete(r.txsMap, key)
-	}
-
-	return ret
-}
-
-func (r *txBuffer) add(key string, newTx ClientTransaction) {
-	r.Lock()
-	defer r.Unlock()
-
-	if txs, ok := r.txsMap[key]; !ok {
-		r.txsMap[key] = []ClientTransaction{newTx}
-	} else {
-		if len(txs) >= defaultMaxBufferSize {
-			// Drop transactions if the buffer is full. We cannot drop earlier
-			// transactions because an attacker could send multiple ones to
-			// replace legit transactions.
-			return
-		}
-
-		txs = append(txs, newTx)
-		r.txsMap[key] = txs
 	}
 }
