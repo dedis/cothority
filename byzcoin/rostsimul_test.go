@@ -19,11 +19,13 @@ func TestNewROSTSimul(t *testing.T) {
 	require.True(t, strings.HasPrefix(string(coin.Name[:]), name))
 
 	_, ver, cid, _, err := rs.GetValues(coinID[:])
+	require.NoError(t, err)
 	require.Equal(t, uint64(0), ver)
 	require.Equal(t, "coin", cid)
 
 	require.NoError(t, rs.SetCoin(coinID, 2*value))
 	coin, err = rs.GetCoin(coinID)
+	require.NoError(t, err)
 	require.Equal(t, 2*value, coin.Value)
 
 	_, _, err = rs.WithdrawCoin(coinID, value)

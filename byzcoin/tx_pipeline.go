@@ -118,13 +118,13 @@ leaderLoop:
 		if p.newVersion > 0 {
 			newBlock <- &proposedTransactions{newVersion: p.newVersion,
 				sst: currentState.sst}
-			if (len(currentState.txs)) > 0 {
-				txs := make([]ClientTransaction, len(currentState.txs))
-				for i, txRes := range currentState.txs {
-					txs[i] = txRes.ClientTransaction
-				}
-				p.txQueue = append(txs, p.txQueue...)
+			// This will be mostly a no-op in case there are no transactions
+			// waiting...
+			txs := make([]ClientTransaction, len(currentState.txs))
+			for i, txRes := range currentState.txs {
+				txs[i] = txRes.ClientTransaction
 			}
+			p.txQueue = append(txs, p.txQueue...)
 			continue
 		}
 

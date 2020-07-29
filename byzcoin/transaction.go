@@ -121,9 +121,7 @@ func (ctx *ClientTransaction) SignWith(signers ...darc.Signer) error {
 // tests.
 func (ctx *ClientTransaction) Clone() ClientTransaction {
 	newCtx := ClientTransaction{}
-	for _, inst := range ctx.Instructions {
-		newCtx.Instructions = append(newCtx.Instructions, inst)
-	}
+	newCtx.Instructions = append(newCtx.Instructions, ctx.Instructions...)
 	return newCtx
 }
 

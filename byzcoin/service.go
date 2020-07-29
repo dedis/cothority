@@ -1970,10 +1970,12 @@ func loadBlockInfo(st ReadOnlyStateTrie) (time.Duration, int, error) {
 func (s *Service) startTxPipeline(scID skipchain.SkipBlockID) chan struct{} {
 	latest, err := s.db().GetLatestByID(scID)
 	if err != nil {
-		log.Errorf("Error while searching for %x", scID[:])
-		log.Error("DB is in bad state and cannot find skipchain anymore."+
-			" This function should never be called on a skipchain that does not exist.", err)
-		panic("DB is in bad state and cannot find skipchain anymore.")
+		log.Panicf("Fatal error while searching for skipchain %x: %+v\n"+
+			"DB is in bad state and cannot find skipchain anymore."+
+			" This function should never be called on a skipchain that does"+
+			" not exist. DB is in bad state and cannot find skipchain"+
+			" anymore.",
+			scID[:], err)
 	}
 
 	pipeline := newTxPipeline(s, latest)
@@ -2692,28 +2694,30 @@ func (s *Service) startViewChange(gen skipchain.SkipBlockID,
 	log.Lvlf2("Starting a view-change by putting our own request"+
 		": %+v", req)
 	s.viewChangeMan.addReq(req)
-	if tx != nil {
-		cl := onet.NewClient(cothority.Suite, ServiceName)
-		buf, err := protobuf.Encode(&AddTxRequest{
-			Version:       CurrentVersion,
-			SkipchainID:   latest.SkipChainID(),
-			Transaction:   *tx,
-			InclusionWait: 0,
-			Flags:         1,
-		})
-		if err != nil {
-			return fmt.Errorf("couldn't encode request: %v", err)
-		}
-		for _, si := range latest.Roster.List[1:] {
-			go func(si *network.ServerIdentity) {
-				log.Lvl2(s.ServerIdentity(), "sending addTxRequest to", si)
-				_, err := cl.Send(si, "AddTxRequest", buf)
-				if err != nil {
-					log.Error(s.ServerIdentity(), "couldn't send transaction to",
-						si, err)
-				}
-			}(si)
-		}
+
+	if tx == nil {
+		return nil
+	}
+	cl := onet.NewClient(cothority.Suite, ServiceName)
+	buf, err := protobuf.Encode(&AddTxRequest{
+		Version:       CurrentVersion,
+		SkipchainID:   latest.SkipChainID(),
+		Transaction:   *tx,
+		InclusionWait: 0,
+		Flags:         1,
+	})
+	if err != nil {
+		return fmt.Errorf("couldn't encode request: %v", err)
+	}
+	for _, si := range latest.Roster.List[1:] {
+		go func(si *network.ServerIdentity) {
+			log.Lvl2(s.ServerIdentity(), "sending addTxRequest to", si)
+			_, err := cl.Send(si, "AddTxRequest", buf)
+			if err != nil {
+				log.Error(s.ServerIdentity(), "couldn't send transaction to",
+					si, err)
+			}
+		}(si)
 	}
 	return nil
 }
