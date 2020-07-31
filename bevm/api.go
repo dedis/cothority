@@ -87,96 +87,19 @@ func (contractInstance EvmContractInstance) getAbi() abi.ABI {
 }
 
 func unpackResult(contractAbi abi.ABI, methodName string,
-	resultBytes []byte) (interface{}, error) {
+	resultBytes []byte) ([]interface{}, error) {
 	methodAbi, ok := contractAbi.Methods[methodName]
 	if !ok {
 		return nil, xerrors.Errorf("method \"%s\" does not exist for "+
 			"this contract", methodName)
 	}
 
-	return unpackData(contractAbi, methodName, resultBytes, methodAbi.Outputs)
-}
-
-func unpackData(contractAbi abi.ABI, objectName string,
-	dataBytes []byte, args abi.Arguments) (interface{}, error) {
-
-	switch len(args) {
-	case 0:
-		return nil, nil
-
-	case 1:
-		// Create a pointer to the desired type
-		result := reflect.New(args[0].Type.Type)
-
-		err := contractAbi.Unpack(result.Interface(),
-			objectName, dataBytes)
-		if err != nil {
-			return nil, xerrors.Errorf("failed to unpack single "+
-				"element of EVM data: %v", err)
-		}
-
-		// Dereference the result pointer
-		return result.Elem().Interface(), nil
-
-	default:
-		// Abi.Unpack() on multiple values supports a struct or array/slice as
-		// structure into which the result is stored. Struct is cleaner, but it
-		// does not support unnamed outputs ("or purely underscored"). If this
-		// is needed, an array implementation, commented out, follows.
-
-		// Build a struct naming the fields after the outputs
-		var fields []reflect.StructField
-		for _, output := range args {
-			// Adapt names to what Abi.Unpack() does
-			name := abi.ToCamelCase(output.Name)
-
-			fields = append(fields, reflect.StructField{
-				Name: name,
-				Type: output.Type.Type,
-			})
-		}
-
-		structType := reflect.StructOf(fields)
-		s := reflect.New(structType)
-
-		err := contractAbi.Unpack(s.Interface(),
-			objectName, dataBytes)
-		if err != nil {
-			return nil, xerrors.Errorf("failed to unpack multiple "+
-				"elements of EVM data: %v", err)
-		}
-
-		// Dereference the result pointer
-		return s.Elem().Interface(), nil
-
-		// // Build an array of interface{}
-		// var empty interface{}
-		// arrType := reflect.ArrayOf(len(abiOutputs),
-		// 	reflect.ValueOf(&empty).Type().Elem())
-		// result := reflect.New(arrType)
-
-		// // Create a value of the desired type for each output
-		// for i, output := range abiOutputs {
-		// 	val := reflect.New(output.Type.Type)
-		// 	result.Elem().Index(i).Set(val)
-		// }
-
-		// err := contractInstance.Parent.Abi.Unpack(result.Interface(),
-		// 	method, resultBytes)
-		// if err != nil {
-		// 	return nil, xerrors.Errorf("unpacking multiple result: %v", err)
-		// }
-
-		// for i := range abiOutputs {
-		// 	val := result.Elem().Index(i)
-		// 	// Need to dereference values twice:
-		// 	// val is interface{}, *val is *type, **val is type
-		// 	val.Set(val.Elem().Elem())
-		// }
-
-		// // Dereference the result pointer
-		// return result.Elem().Interface(), nil
+	result, err := methodAbi.Outputs.UnpackValues(resultBytes)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to unpack result data: %v", err)
 	}
+
+	return result, nil
 }
 
 // ---------------------------------------------------------------------------
@@ -343,7 +266,7 @@ func (client *Client) Transaction(gasLimit uint64, gasPrice uint64,
 // on the EVM
 func (client *Client) Call(account *EvmAccount,
 	contractInstance *EvmContractInstance,
-	method string, args ...interface{}) (interface{}, error) {
+	method string, args ...interface{}) ([]interface{}, error) {
 	log.Lvlf2(">>> EVM view method '%s()' on %s", method, contractInstance)
 	defer log.Lvlf2("<<< EVM view method '%s()' on %s",
 		method, contractInstance)
@@ -611,43 +534,27 @@ func decodeEvmArray(abiType string, abi abi.Argument, arg interface{}) (
 // EncodeEvmReturnValue encodes the return value of an EVM call to JSON.
 // This can be useful for command-line tools or calls serialized over the
 // network.
-func EncodeEvmReturnValue(returnValue interface{},
+func EncodeEvmReturnValue(returnValue []interface{},
 	outputs abi.Arguments) (string, error) {
 	var jsonReturnValue []byte
 	var err error
 
-	if len(outputs) == 1 {
-		abiType := outputs[0].Type.String()
-		encodedReturnValue, err := encodeEvmValue(abiType, returnValue)
+	if len(returnValue) != len(outputs) {
+		return "", xerrors.Errorf("received slice of length %v, expected "+
+			"to be of length %v", len(returnValue), len(outputs))
+	}
+
+	encodedReturnValue := make([]interface{}, len(outputs))
+	for i, output := range outputs {
+		abiType := output.Type.String()
+		encodedReturnValue[i], err = encodeEvmValue(abiType,
+			returnValue[i])
 		if err != nil {
 			return "", xerrors.Errorf("failed to encode EVM value: %v", err)
 		}
-
-		jsonReturnValue, err = json.Marshal(encodedReturnValue)
-	} else {
-		returnValueSlice, ok := returnValue.([]interface{})
-		if !ok {
-			return "", xerrors.Errorf("received return value of type: %v, "+
-				"expected to be a slice", reflect.TypeOf(returnValue))
-		}
-		if len(returnValueSlice) != len(outputs) {
-			return "", xerrors.Errorf("received slice of length %v, expected "+
-				"to be of length %v", len(returnValueSlice), len(outputs))
-		}
-
-		encodedReturnValue := make([]interface{}, len(outputs))
-		for i, output := range outputs {
-			abiType := output.Type.String()
-			encodedReturnValue[i], err = encodeEvmValue(abiType,
-				returnValueSlice[i])
-			if err != nil {
-				return "", xerrors.Errorf("failed to encode EVM value: %v", err)
-			}
-		}
-
-		jsonReturnValue, err = json.Marshal(encodedReturnValue)
 	}
 
+	jsonReturnValue, err = json.Marshal(encodedReturnValue)
 	if err != nil {
 		return "", xerrors.Errorf("failed to encode return value to JSON: %v",
 			err)

@@ -158,11 +158,16 @@ func MakeBevmAttr(rst byzcoin.ReadOnlyStateTrie,
 				"method result: %v (is the contract address valid?)", err)
 		}
 
-		errorMsg, ok := result.(string)
+		if len(result) != 1 {
+			return xerrors.Errorf("EVM validation view method returned %v "+
+				"values, expected 1", len(result))
+		}
+
+		errorMsg, ok := result[0].(string)
 		if !ok {
 			return xerrors.Errorf("EVM validation view method did not return "+
-				"expected type: %+v (%+v)", result,
-				reflect.TypeOf(result))
+				"expected type: %+v (%+v)", result[0],
+				reflect.TypeOf(result[0]))
 		}
 
 		if errorMsg != "" {

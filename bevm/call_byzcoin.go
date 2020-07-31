@@ -1,6 +1,8 @@
 package bevm
 
 import (
+	"reflect"
+
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -135,7 +137,7 @@ func eventByID(eventsAbi abi.ABI, eventID common.Hash) *abi.Event {
 }
 
 func unpackEvent(contractAbi abi.ABI, eventID common.Hash,
-	eventBytes []byte) (string, interface{}, error) {
+	eventBytes []byte) (string, []interface{}, error) {
 
 	event := eventByID(contractAbi, eventID)
 	if event == nil {
@@ -143,98 +145,164 @@ func unpackEvent(contractAbi abi.ABI, eventID common.Hash,
 		return "", nil, nil
 	}
 
-	eventData, err := unpackData(contractAbi, event.Name, eventBytes,
-		event.Inputs)
+	eventData, err := event.Inputs.UnpackValues(eventBytes)
+	if err != nil {
+		return "", nil, xerrors.Errorf("failed to unpack event data: %v", err)
+	}
 
 	return event.Name, eventData, err
 }
 
-func convertArgs(eventArgs []struct {
-	Name  string
-	Value []byte
-}) byzcoin.Arguments {
+func get32Byte(eventArg interface{}) ([32]byte, error) {
+	value, ok := eventArg.([32]byte)
+	if !ok {
+		return [32]byte{}, xerrors.Errorf("received type %v, expected "+
+			"[32]byte", reflect.TypeOf(eventArg))
+	}
+
+	return value, nil
+}
+
+func getString(eventArg interface{}) (string, error) {
+	value, ok := eventArg.(string)
+	if !ok {
+		return "", xerrors.Errorf("received type %v, expected "+
+			"string", reflect.TypeOf(eventArg))
+	}
+
+	return value, nil
+}
+
+func getArgs(eventArg interface{}) (byzcoin.Arguments, error) {
+	value, ok := eventArg.([]struct {
+		Name  string
+		Value []byte
+	})
+	if !ok {
+		return nil, xerrors.Errorf("received type %v, expected "+
+			"[]struct{Name string, Value []byte}", reflect.TypeOf(eventArg))
+	}
+
 	args := byzcoin.Arguments{}
 
-	for _, arg := range eventArgs {
+	for _, arg := range value {
 		args = append(args, arg)
 	}
 
-	return args
+	return args, nil
 }
 
-func getInstrForEvent(name string, iface interface{}) (
+func getInstrForEvent(name string, eventData []interface{}) (
 	*byzcoin.Instruction, error) {
 	var instr *byzcoin.Instruction
 
 	switch name {
 	case byzcoinSpawnEvent:
-		event, ok := iface.(struct {
-			InstanceID [32]byte
-			ContractID string
-			Args       []struct {
-				Name  string
-				Value []byte
-			}
-		})
-		if !ok {
-			return nil, xerrors.Errorf("failed to cast 'spawn' event")
+		if len(eventData) != 3 {
+			return nil, xerrors.Errorf("invalid data for 'spawn' event: "+
+				"got %d values, expected 3", len(eventData))
 		}
 
-		if !evmSpawnableContracts[event.ContractID] {
+		instanceID, err := get32Byte(eventData[0])
+		if err != nil {
+			return nil, xerrors.Errorf("invalid instanceID for 'spawn' event: "+
+				"%v", err)
+		}
+
+		contractID, err := getString(eventData[1])
+		if err != nil {
+			return nil, xerrors.Errorf("invalid contractID for 'spawn' event: "+
+				"%v", err)
+		}
+
+		args, err := getArgs(eventData[2])
+		if err != nil {
+			return nil, xerrors.Errorf("invalid args for 'spawn' event: "+
+				"%v", err)
+		}
+
+		if !evmSpawnableContracts[contractID] {
 			return nil, xerrors.Errorf("contract '%s' has not been "+
 				"whitelisted to be spawned by an EVM contract",
-				event.ContractID)
+				contractID)
 		}
 
 		instr = &byzcoin.Instruction{
-			InstanceID: event.InstanceID,
+			InstanceID: instanceID,
 			Spawn: &byzcoin.Spawn{
-				ContractID: event.ContractID,
-				Args:       convertArgs(event.Args),
+				ContractID: contractID,
+				Args:       args,
 			},
 		}
 
 	case byzcoinInvokeEvent:
-		event, ok := iface.(struct {
-			InstanceID [32]byte
-			ContractID string
-			Command    string
-			Args       []struct {
-				Name  string
-				Value []byte
-			}
-		})
-		if !ok {
-			return nil, xerrors.Errorf("failed to cast 'invoke' event")
+		if len(eventData) != 4 {
+			return nil, xerrors.Errorf("invalid data for 'invoke' event: "+
+				"got %d values, expected 4", len(eventData))
+		}
+
+		instanceID, err := get32Byte(eventData[0])
+		if err != nil {
+			return nil, xerrors.Errorf("invalid instanceID for 'invoke' event: "+
+				"%v", err)
+		}
+
+		contractID, err := getString(eventData[1])
+		if err != nil {
+			return nil, xerrors.Errorf("invalid contractID for 'invoke' event: "+
+				"%v", err)
+		}
+
+		command, err := getString(eventData[2])
+		if err != nil {
+			return nil, xerrors.Errorf("invalid command for 'invoke' event: "+
+				"%v", err)
+		}
+
+		args, err := getArgs(eventData[3])
+		if err != nil {
+			return nil, xerrors.Errorf("invalid args for 'invoke' event: "+
+				"%v", err)
 		}
 
 		instr = &byzcoin.Instruction{
-			InstanceID: event.InstanceID,
+			InstanceID: instanceID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: event.ContractID,
-				Command:    event.Command,
-				Args:       convertArgs(event.Args),
+				ContractID: contractID,
+				Command:    command,
+				Args:       args,
 			},
 		}
 
 	case byzcoinDeleteEvent:
-		event, ok := iface.(struct {
-			InstanceID [32]byte
-			ContractID string
-			Args       []struct {
-				Name  string
-				Value []byte
-			}
-		})
-		if !ok {
-			return nil, xerrors.Errorf("failed to cast 'delete' event")
+		if len(eventData) != 3 {
+			return nil, xerrors.Errorf("invalid data for 'delete' event: "+
+				"got %d values, expected 3", len(eventData))
+		}
+
+		instanceID, err := get32Byte(eventData[0])
+		if err != nil {
+			return nil, xerrors.Errorf("invalid instanceID for 'delete' event: "+
+				"%v", err)
+		}
+
+		contractID, err := getString(eventData[1])
+		if err != nil {
+			return nil, xerrors.Errorf("invalid contractID for 'delete' event: "+
+				"%v", err)
+		}
+
+		args, err := getArgs(eventData[2])
+		if err != nil {
+			return nil, xerrors.Errorf("invalid args for 'delete' event: "+
+				"%v", err)
 		}
 
 		instr = &byzcoin.Instruction{
-			InstanceID: event.InstanceID,
+			InstanceID: instanceID,
 			Delete: &byzcoin.Delete{
-				ContractID: event.ContractID,
-				Args:       convertArgs(event.Args),
+				ContractID: contractID,
+				Args:       args,
 			},
 		}
 
