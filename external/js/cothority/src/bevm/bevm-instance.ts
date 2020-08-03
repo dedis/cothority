@@ -11,9 +11,10 @@ import Log from "../log";
 
 import { BEvmRPC } from "./bevm-rpc";
 
-import abi from "ethereumjs-abi";
 import { Transaction } from "ethereumjs-tx";
 import * as rlp from "rlp";
+
+import { Interface, Result } from "@ethersproject/abi";
 
 /**
  * Ethereum account
@@ -252,10 +253,10 @@ export class BEvmInstance extends Instance {
                  contract: EvmContract,
                  args?: any[],
                  wait?: number) {
-        const entry = contract.methodAbi.get("");
-        const types = entry.inputs.map((arg: any) => arg.type);
-        const encodedArgs = abi.rawEncode(types, args);
-        const callData = Buffer.concat([contract.bytecode, encodedArgs]);
+        const abiIface = new Interface(contract.abiJson);
+        const encodedArgs = abiIface.encodeDeploy(args);
+        const encodedArgsBuf = Buffer.from(encodedArgs.substring(2), "hex");
+        const callData = Buffer.concat([contract.bytecode, encodedArgsBuf]);
 
         const ethTx = new Transaction({
             data: callData,
@@ -305,12 +306,13 @@ export class BEvmInstance extends Instance {
                       wait?: number) {
         const entry = contract.methodAbi.get(method);
         const types = entry.inputs.map((arg: any) => arg.type);
-        const encodedArgs = abi.rawEncode(types, args);
-        const methodID = abi.methodID(method, types);
-        const callData = Buffer.concat([methodID, encodedArgs]);
+        const abiIface = new Interface(contract.abiJson);
+        const fragment = `${method}(${types.join(",")})`;
+        const callData = abiIface.encodeFunctionData(fragment, args);
+        const callDataBuf = Buffer.from(callData.substring(2), "hex");
 
         const ethTx = new Transaction({
-            data: callData,
+            data: callDataBuf,
             gasLimit,
             gasPrice,
             nonce: account.nonce,
@@ -353,22 +355,22 @@ export class BEvmInstance extends Instance {
                contract: EvmContract,
                instanceIndex: number,
                method: string,
-               args?: any[]): Promise<any[]> {
+               args?: any[]): Promise<Result> {
         const entry = contract.methodAbi.get(method);
         const types = entry.inputs.map((arg: any) => arg.type);
-        const encodedArgs = abi.rawEncode(types, args);
-        const methodID = abi.methodID(method, types);
-        const callData = Buffer.concat([methodID, encodedArgs]);
+        const abiIface = new Interface(contract.abiJson);
+        const fragment = `${method}(${types.join(",")})`;
+        const callData = abiIface.encodeFunctionData(fragment, args);
+        const callDataBuf = Buffer.from(callData.substring(2), "hex");
 
         const response = await this.bevmRPC.viewCall(
             this.byzcoinRPC.genesisID,
             this.id,
             account.address,
             contract.addresses[instanceIndex],
-            callData);
+            callDataBuf);
 
-        const outTypes = entry.outputs.map((arg: any) => arg.type);
-        const decodedResult = abi.rawDecode(outTypes, response.result);
+        const decodedResult = abiIface.decodeFunctionResult(fragment, response.result);
 
         return decodedResult;
     }
