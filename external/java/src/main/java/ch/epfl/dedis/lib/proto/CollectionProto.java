@@ -893,7 +893,7 @@ public final class CollectionProto {
        * <code>required .collection.Children children = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.CollectionProto.Children, ch.epfl.dedis.lib.proto.CollectionProto.Children.Builder, ch.epfl.dedis.lib.proto.CollectionProto.ChildrenOrBuilder> 
+          ch.epfl.dedis.lib.proto.CollectionProto.Children, ch.epfl.dedis.lib.proto.CollectionProto.Children.Builder, ch.epfl.dedis.lib.proto.CollectionProto.ChildrenOrBuilder>
           getChildrenFieldBuilder() {
         if (childrenBuilder_ == null) {
           childrenBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -2266,7 +2266,7 @@ public final class CollectionProto {
        * <code>required .collection.Dump left = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.CollectionProto.Dump, ch.epfl.dedis.lib.proto.CollectionProto.Dump.Builder, ch.epfl.dedis.lib.proto.CollectionProto.DumpOrBuilder> 
+          ch.epfl.dedis.lib.proto.CollectionProto.Dump, ch.epfl.dedis.lib.proto.CollectionProto.Dump.Builder, ch.epfl.dedis.lib.proto.CollectionProto.DumpOrBuilder>
           getLeftFieldBuilder() {
         if (leftBuilder_ == null) {
           leftBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -2384,7 +2384,7 @@ public final class CollectionProto {
        * <code>required .collection.Dump right = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.CollectionProto.Dump, ch.epfl.dedis.lib.proto.CollectionProto.Dump.Builder, ch.epfl.dedis.lib.proto.CollectionProto.DumpOrBuilder> 
+          ch.epfl.dedis.lib.proto.CollectionProto.Dump, ch.epfl.dedis.lib.proto.CollectionProto.Dump.Builder, ch.epfl.dedis.lib.proto.CollectionProto.DumpOrBuilder>
           getRightFieldBuilder() {
         if (rightBuilder_ == null) {
           rightBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -2502,7 +2502,7 @@ public final class CollectionProto {
      *
      * <code>repeated .collection.Step steps = 3;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.CollectionProto.Step> 
+    java.util.List<ch.epfl.dedis.lib.proto.CollectionProto.Step>
         getStepsList();
     /**
      * <pre>
@@ -2527,7 +2527,7 @@ public final class CollectionProto {
      *
      * <code>repeated .collection.Step steps = 3;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.CollectionProto.StepOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.CollectionProto.StepOrBuilder>
         getStepsOrBuilderList();
     /**
      * <pre>
@@ -2722,7 +2722,7 @@ public final class CollectionProto {
      *
      * <code>repeated .collection.Step steps = 3;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.CollectionProto.StepOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.CollectionProto.StepOrBuilder>
         getStepsOrBuilderList() {
       return steps_;
     }
@@ -3146,7 +3146,7 @@ public final class CollectionProto {
               stepsBuilder_ = null;
               steps_ = other.steps_;
               bitField0_ = (bitField0_ & ~0x00000004);
-              stepsBuilder_ = 
+              stepsBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getStepsFieldBuilder() : null;
             } else {
@@ -3390,7 +3390,7 @@ public final class CollectionProto {
        * <code>required .collection.Dump root = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.CollectionProto.Dump, ch.epfl.dedis.lib.proto.CollectionProto.Dump.Builder, ch.epfl.dedis.lib.proto.CollectionProto.DumpOrBuilder> 
+          ch.epfl.dedis.lib.proto.CollectionProto.Dump, ch.epfl.dedis.lib.proto.CollectionProto.Dump.Builder, ch.epfl.dedis.lib.proto.CollectionProto.DumpOrBuilder>
           getRootFieldBuilder() {
         if (rootBuilder_ == null) {
           rootBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -3658,7 +3658,7 @@ public final class CollectionProto {
        *
        * <code>repeated .collection.Step steps = 3;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.CollectionProto.StepOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.CollectionProto.StepOrBuilder>
            getStepsOrBuilderList() {
         if (stepsBuilder_ != null) {
           return stepsBuilder_.getMessageOrBuilderList();
@@ -3696,12 +3696,12 @@ public final class CollectionProto {
        *
        * <code>repeated .collection.Step steps = 3;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.CollectionProto.Step.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.CollectionProto.Step.Builder>
            getStepsBuilderList() {
         return getStepsFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.CollectionProto.Step, ch.epfl.dedis.lib.proto.CollectionProto.Step.Builder, ch.epfl.dedis.lib.proto.CollectionProto.StepOrBuilder> 
+          ch.epfl.dedis.lib.proto.CollectionProto.Step, ch.epfl.dedis.lib.proto.CollectionProto.Step.Builder, ch.epfl.dedis.lib.proto.CollectionProto.StepOrBuilder>
           getStepsFieldBuilder() {
         if (stepsBuilder_ == null) {
           stepsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -3769,22 +3769,22 @@ public final class CollectionProto {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_collection_Dump_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_collection_Dump_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_collection_Children_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_collection_Children_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_collection_Step_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_collection_Step_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_collection_Proof_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_collection_Proof_fieldAccessorTable;
 

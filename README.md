@@ -183,14 +183,14 @@ If we look at the cothority from a purely networking point of view, we can
 describe it as follows:
 
 ```ascii art
-              +-----------------+                 
-              |CLI, JavaScript, | Frontend        
-              |Java             |                 
-+-------------+-----------------+                 
+              +-----------------+
+              |CLI, JavaScript, | Frontend
+              |Java             |
++-------------+-----------------+
 | Conode,     | Services        | Client to Conode
-| Simulations |-----------------+                 
+| Simulations |-----------------+
 |             | Protocols       | Conode to Conode
-+-------------+-----------------+                 
++-------------+-----------------+
 ```
 
 ### Command Line Interfaces

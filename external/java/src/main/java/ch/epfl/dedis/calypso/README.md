@@ -9,7 +9,7 @@ Given a document with a text `secret` that needs to be put on ByzCoin, the follo
 
 1. create a symmetric key and encrypt the `secret` using this symmetric key
 2. encrypt the symmetric using the Long Term Secret public key
-3. send the encrypted `secret` and the encrypted symmetric key to ByzCoin, together with a list of access control rules 
+3. send the encrypted `secret` and the encrypted symmetric key to ByzCoin, together with a list of access control rules
 
 Now the document is stored on ByzCoin and is ready to be read by anybody being in the list of access control rules.
 Supposing the reader has the `InstanceID` of the `WriteInstance`, he can do the following:
@@ -21,7 +21,7 @@ Supposing the reader has the `InstanceID` of the `WriteInstance`, he can do the 
 
 ## Setup
 
-First of all a new `CalypsoRPC` has to be created, to set up the _Long Term Secret_ that will encrypt and decrypt the 
+First of all a new `CalypsoRPC` has to be created, to set up the _Long Term Secret_ that will encrypt and decrypt the
 symmetric key.
 
 ## Write, Read, and DecryptKey
@@ -40,8 +40,8 @@ Three basic structures are used to work with Calypso:
 3. `DecryptKey`
    - Once a `ReadInstance` has been created in ByzCoin, it can be used to get the symmetric key by sending a proof of
    the `WriteInstance` and the `ReadInstance` to Calypso, which will verify the proofs, and if successful, send back the
-   decrypted symmetric key (in fact it re-encrypts it to the reader). 
-   
+   decrypted symmetric key (in fact it re-encrypts it to the reader).
+
 ## Document and Encryption
 
 As an example encryption two java classes, `Document` and `Encryption`, are written to give a simple

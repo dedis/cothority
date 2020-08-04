@@ -10,7 +10,7 @@ Important changes in latest versions
 
 160627 - 0.9.1
 	- Changed onet.Context from interface to structure
-	
+
 160622 - 0.9.0
 	- Renamed network.Entity -> network.ServerIdentity
 	- Renamed network.EntityList -> network.Roster

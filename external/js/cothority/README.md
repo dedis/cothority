@@ -19,7 +19,7 @@ import {DarcInstance} from "@dedis/cothority/byzcoin/contracts"
 ```
 
 Do not import directly from files within the subfolders, as they can be moved
- or renamed at any time, while the index files will always be correct. 
+ or renamed at any time, while the index files will always be correct.
 So the previous line should not be written as:
 
 ```typescript
@@ -42,7 +42,7 @@ cd cothority/external/js/cothority
 npm install
 ```
 
-You should be able to run the tests with 
+You should be able to run the tests with
 ```
 npm run test
 ```
@@ -52,7 +52,7 @@ To run the tests, be sure to have docker installed and `make docker` executed fr
 ### Protobuf generation
 
 To add a new protobuf file to the library, simply place your `*.proto` file
-somewhere in `lib/protobuf/build/models` and then run 
+somewhere in `lib/protobuf/build/models` and then run
 ```
 npm run protobuf
 ```
@@ -105,7 +105,7 @@ course for NodeJS, you will always get a [Buffer](https://nodejs.org/api/buffer.
 
 ## Use of a development version from an external app
 
-The simplest way to use a cothority development version in an app and being able to 
+The simplest way to use a cothority development version in an app and being able to
 add debug-lines and change the code is to add the following to your
 `tsconfig.json`:
 

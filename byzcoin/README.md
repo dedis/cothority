@@ -154,7 +154,7 @@ but if they do not create the same output StateChanges, the cothority might not
 be able to reach the threshold of agreeing conodes in order to commit the
 transactions onto the ByzCoin. If one conode is creating differing contract outputs
 (for example, it is cheating), it's output will not be integrated into the
-global shared state. **In particular, be careful not to use maps in your contract's 
+global shared state. **In particular, be careful not to use maps in your contract's
 data, as maps in go are not deterministic**.
 
 ## From Client to the Trie

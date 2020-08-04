@@ -1,7 +1,7 @@
 **What this PR does**
 
 *See commit message*
-This PR 
+This PR
 
 ---
 

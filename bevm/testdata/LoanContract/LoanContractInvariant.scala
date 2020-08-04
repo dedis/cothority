@@ -37,11 +37,10 @@ object LoanContractInvariant {
     val expected2: List[State] = List(WaitingForData, WaitingForLender, WaitingForPayback, Default)
     val rStates = visitedStates.reverse
 
-    visitedStates.contains(WaitingForData) && 
+    visitedStates.contains(WaitingForData) &&
     visitedStates.head == currentState && (
       isPrefix(rStates, expected1) ||
       isPrefix(rStates, expected2)
     )
   }
 }
-

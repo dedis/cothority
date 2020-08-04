@@ -128,7 +128,7 @@ public final class DarcProto {
      *
      * <code>repeated .darc.Signature signatures = 6;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Signature> 
+    java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Signature>
         getSignaturesList();
     /**
      * <pre>
@@ -159,7 +159,7 @@ public final class DarcProto {
      *
      * <code>repeated .darc.Signature signatures = 6;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder>
         getSignaturesOrBuilderList();
     /**
      * <pre>
@@ -182,7 +182,7 @@ public final class DarcProto {
      *
      * <code>repeated .darc.Darc verificationdarcs = 7;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Darc> 
+    java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Darc>
         getVerificationdarcsList();
     /**
      * <pre>
@@ -213,7 +213,7 @@ public final class DarcProto {
      *
      * <code>repeated .darc.Darc verificationdarcs = 7;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.DarcOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.DarcOrBuilder>
         getVerificationdarcsOrBuilderList();
     /**
      * <pre>
@@ -524,7 +524,7 @@ public final class DarcProto {
      *
      * <code>repeated .darc.Signature signatures = 6;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder>
         getSignaturesOrBuilderList() {
       return signatures_;
     }
@@ -589,7 +589,7 @@ public final class DarcProto {
      *
      * <code>repeated .darc.Darc verificationdarcs = 7;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.DarcOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.DarcOrBuilder>
         getVerificationdarcsOrBuilderList() {
       return verificationdarcs_;
     }
@@ -1140,7 +1140,7 @@ public final class DarcProto {
               signaturesBuilder_ = null;
               signatures_ = other.signatures_;
               bitField0_ = (bitField0_ & ~0x00000020);
-              signaturesBuilder_ = 
+              signaturesBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getSignaturesFieldBuilder() : null;
             } else {
@@ -1166,7 +1166,7 @@ public final class DarcProto {
               verificationdarcsBuilder_ = null;
               verificationdarcs_ = other.verificationdarcs_;
               bitField0_ = (bitField0_ & ~0x00000040);
-              verificationdarcsBuilder_ = 
+              verificationdarcsBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getVerificationdarcsFieldBuilder() : null;
             } else {
@@ -1587,7 +1587,7 @@ public final class DarcProto {
        * <code>required .darc.Rules rules = 5;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.Rules, ch.epfl.dedis.lib.proto.DarcProto.Rules.Builder, ch.epfl.dedis.lib.proto.DarcProto.RulesOrBuilder> 
+          ch.epfl.dedis.lib.proto.DarcProto.Rules, ch.epfl.dedis.lib.proto.DarcProto.Rules.Builder, ch.epfl.dedis.lib.proto.DarcProto.RulesOrBuilder>
           getRulesFieldBuilder() {
         if (rulesBuilder_ == null) {
           rulesBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -1885,7 +1885,7 @@ public final class DarcProto {
        *
        * <code>repeated .darc.Signature signatures = 6;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder>
            getSignaturesOrBuilderList() {
         if (signaturesBuilder_ != null) {
           return signaturesBuilder_.getMessageOrBuilderList();
@@ -1929,12 +1929,12 @@ public final class DarcProto {
        *
        * <code>repeated .darc.Signature signatures = 6;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Signature.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Signature.Builder>
            getSignaturesBuilderList() {
         return getSignaturesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.Signature, ch.epfl.dedis.lib.proto.DarcProto.Signature.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder> 
+          ch.epfl.dedis.lib.proto.DarcProto.Signature, ch.epfl.dedis.lib.proto.DarcProto.Signature.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder>
           getSignaturesFieldBuilder() {
         if (signaturesBuilder_ == null) {
           signaturesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -2233,7 +2233,7 @@ public final class DarcProto {
        *
        * <code>repeated .darc.Darc verificationdarcs = 7;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.DarcOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.DarcOrBuilder>
            getVerificationdarcsOrBuilderList() {
         if (verificationdarcsBuilder_ != null) {
           return verificationdarcsBuilder_.getMessageOrBuilderList();
@@ -2277,12 +2277,12 @@ public final class DarcProto {
        *
        * <code>repeated .darc.Darc verificationdarcs = 7;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Darc.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Darc.Builder>
            getVerificationdarcsBuilderList() {
         return getVerificationdarcsFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.Darc, ch.epfl.dedis.lib.proto.DarcProto.Darc.Builder, ch.epfl.dedis.lib.proto.DarcProto.DarcOrBuilder> 
+          ch.epfl.dedis.lib.proto.DarcProto.Darc, ch.epfl.dedis.lib.proto.DarcProto.Darc.Builder, ch.epfl.dedis.lib.proto.DarcProto.DarcOrBuilder>
           getVerificationdarcsFieldBuilder() {
         if (verificationdarcsBuilder_ == null) {
           verificationdarcsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -3445,7 +3445,7 @@ public final class DarcProto {
        * <code>optional .darc.IdentityDarc darc = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc, ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityDarcOrBuilder> 
+          ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc, ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityDarcOrBuilder>
           getDarcFieldBuilder() {
         if (darcBuilder_ == null) {
           darcBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -3599,7 +3599,7 @@ public final class DarcProto {
        * <code>optional .darc.IdentityEd25519 ed25519 = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519, ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519OrBuilder> 
+          ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519, ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519OrBuilder>
           getEd25519FieldBuilder() {
         if (ed25519Builder_ == null) {
           ed25519Builder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -3753,7 +3753,7 @@ public final class DarcProto {
        * <code>optional .darc.IdentityX509EC x509ec = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC, ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityX509ECOrBuilder> 
+          ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC, ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityX509ECOrBuilder>
           getX509EcFieldBuilder() {
         if (x509EcBuilder_ == null) {
           x509EcBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -3907,7 +3907,7 @@ public final class DarcProto {
        * <code>optional .darc.IdentityProxy proxy = 4;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy, ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityProxyOrBuilder> 
+          ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy, ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityProxyOrBuilder>
           getProxyFieldBuilder() {
         if (proxyBuilder_ == null) {
           proxyBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -4061,7 +4061,7 @@ public final class DarcProto {
        * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract, ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContractOrBuilder> 
+          ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract, ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContractOrBuilder>
           getEvmcontractFieldBuilder() {
         if (evmcontractBuilder_ == null) {
           evmcontractBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -5305,7 +5305,7 @@ public final class DarcProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -5321,7 +5321,7 @@ public final class DarcProto {
         getDataBytes() {
       java.lang.Object ref = data_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         data_ = b;
@@ -5737,7 +5737,7 @@ public final class DarcProto {
           getDataBytes() {
         java.lang.Object ref = data_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           data_ = b;
@@ -7746,7 +7746,7 @@ public final class DarcProto {
        * <code>required .darc.Identity signer = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> 
+          ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>
           getSignerFieldBuilder() {
         if (signerBuilder_ == null) {
           signerBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -8658,7 +8658,7 @@ public final class DarcProto {
        * <code>optional .darc.SignerEd25519 ed25519 = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519, ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519OrBuilder> 
+          ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519, ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519OrBuilder>
           getEd25519FieldBuilder() {
         if (ed25519Builder_ == null) {
           ed25519Builder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -8776,7 +8776,7 @@ public final class DarcProto {
        * <code>optional .darc.SignerX509EC x509ec = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC, ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignerX509ECOrBuilder> 
+          ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC, ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignerX509ECOrBuilder>
           getX509EcFieldBuilder() {
         if (x509EcBuilder_ == null) {
           x509EcBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -8894,7 +8894,7 @@ public final class DarcProto {
        * <code>optional .darc.SignerProxy proxy = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.SignerProxy, ch.epfl.dedis.lib.proto.DarcProto.SignerProxy.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignerProxyOrBuilder> 
+          ch.epfl.dedis.lib.proto.DarcProto.SignerProxy, ch.epfl.dedis.lib.proto.DarcProto.SignerProxy.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignerProxyOrBuilder>
           getProxyFieldBuilder() {
         if (proxyBuilder_ == null) {
           proxyBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -9012,7 +9012,7 @@ public final class DarcProto {
        * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract, ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContractOrBuilder> 
+          ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract, ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContractOrBuilder>
           getEvmcontractFieldBuilder() {
         if (evmcontractBuilder_ == null) {
           evmcontractBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -10355,7 +10355,7 @@ public final class DarcProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -10371,7 +10371,7 @@ public final class DarcProto {
         getDataBytes() {
       java.lang.Object ref = data_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         data_ = b;
@@ -10787,7 +10787,7 @@ public final class DarcProto {
           getDataBytes() {
         java.lang.Object ref = data_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           data_ = b;
@@ -11513,7 +11513,7 @@ public final class DarcProto {
     /**
      * <code>repeated .darc.Identity identities = 4;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity> 
+    java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity>
         getIdentitiesList();
     /**
      * <code>repeated .darc.Identity identities = 4;</code>
@@ -11526,7 +11526,7 @@ public final class DarcProto {
     /**
      * <code>repeated .darc.Identity identities = 4;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>
         getIdentitiesOrBuilderList();
     /**
      * <code>repeated .darc.Identity identities = 4;</code>
@@ -11698,7 +11698,7 @@ public final class DarcProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -11714,7 +11714,7 @@ public final class DarcProto {
         getActionBytes() {
       java.lang.Object ref = action_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         action_ = b;
@@ -11750,7 +11750,7 @@ public final class DarcProto {
     /**
      * <code>repeated .darc.Identity identities = 4;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>
         getIdentitiesOrBuilderList() {
       return identities_;
     }
@@ -12226,7 +12226,7 @@ public final class DarcProto {
               identitiesBuilder_ = null;
               identities_ = other.identities_;
               bitField0_ = (bitField0_ & ~0x00000008);
-              identitiesBuilder_ = 
+              identitiesBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getIdentitiesFieldBuilder() : null;
             } else {
@@ -12354,7 +12354,7 @@ public final class DarcProto {
           getActionBytes() {
         java.lang.Object ref = action_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           action_ = b;
@@ -12629,7 +12629,7 @@ public final class DarcProto {
       /**
        * <code>repeated .darc.Identity identities = 4;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>
            getIdentitiesOrBuilderList() {
         if (identitiesBuilder_ != null) {
           return identitiesBuilder_.getMessageOrBuilderList();
@@ -12655,12 +12655,12 @@ public final class DarcProto {
       /**
        * <code>repeated .darc.Identity identities = 4;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder>
            getIdentitiesBuilderList() {
         return getIdentitiesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> 
+          ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>
           getIdentitiesFieldBuilder() {
         if (identitiesBuilder_ == null) {
           identitiesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -12805,7 +12805,7 @@ public final class DarcProto {
     /**
      * <code>repeated .darc.Rule list = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Rule> 
+    java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Rule>
         getListList();
     /**
      * <code>repeated .darc.Rule list = 1;</code>
@@ -12818,7 +12818,7 @@ public final class DarcProto {
     /**
      * <code>repeated .darc.Rule list = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.RuleOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.RuleOrBuilder>
         getListOrBuilderList();
     /**
      * <code>repeated .darc.Rule list = 1;</code>
@@ -12925,7 +12925,7 @@ public final class DarcProto {
     /**
      * <code>repeated .darc.Rule list = 1;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.RuleOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.RuleOrBuilder>
         getListOrBuilderList() {
       return list_;
     }
@@ -13264,7 +13264,7 @@ public final class DarcProto {
               listBuilder_ = null;
               list_ = other.list_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              listBuilder_ = 
+              listBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getListFieldBuilder() : null;
             } else {
@@ -13502,7 +13502,7 @@ public final class DarcProto {
       /**
        * <code>repeated .darc.Rule list = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.RuleOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.RuleOrBuilder>
            getListOrBuilderList() {
         if (listBuilder_ != null) {
           return listBuilder_.getMessageOrBuilderList();
@@ -13528,12 +13528,12 @@ public final class DarcProto {
       /**
        * <code>repeated .darc.Rule list = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Rule.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Rule.Builder>
            getListBuilderList() {
         return getListFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.Rule, ch.epfl.dedis.lib.proto.DarcProto.Rule.Builder, ch.epfl.dedis.lib.proto.DarcProto.RuleOrBuilder> 
+          ch.epfl.dedis.lib.proto.DarcProto.Rule, ch.epfl.dedis.lib.proto.DarcProto.Rule.Builder, ch.epfl.dedis.lib.proto.DarcProto.RuleOrBuilder>
           getListFieldBuilder() {
         if (listBuilder_ == null) {
           listBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -13731,7 +13731,7 @@ public final class DarcProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -13747,7 +13747,7 @@ public final class DarcProto {
         getActionBytes() {
       java.lang.Object ref = action_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         action_ = b;
@@ -14162,7 +14162,7 @@ public final class DarcProto {
           getActionBytes() {
         java.lang.Object ref = action_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           action_ = b;
@@ -14296,82 +14296,82 @@ public final class DarcProto {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_darc_Darc_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_darc_Darc_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_darc_Identity_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_darc_Identity_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_darc_IdentityEd25519_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_darc_IdentityEd25519_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_darc_IdentityX509EC_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_darc_IdentityX509EC_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_darc_IdentityProxy_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_darc_IdentityProxy_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_darc_IdentityDarc_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_darc_IdentityDarc_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_darc_IdentityEvmContract_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_darc_IdentityEvmContract_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_darc_Signature_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_darc_Signature_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_darc_Signer_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_darc_Signer_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_darc_SignerEd25519_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_darc_SignerEd25519_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_darc_SignerX509EC_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_darc_SignerX509EC_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_darc_SignerProxy_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_darc_SignerProxy_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_darc_SignerEvmContract_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_darc_SignerEvmContract_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_darc_Request_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_darc_Request_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_darc_Rules_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_darc_Rules_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_darc_Rule_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_darc_Rule_fieldAccessorTable;
 

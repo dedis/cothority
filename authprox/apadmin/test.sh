@@ -13,7 +13,7 @@ export BC_WAIT=true
 main(){
 	build $APPDIR/../../byzcoin/bcadmin
 	build $APPDIR/../../eventlog/el
-	
+
 	startTest
 	buildConode go.dedis.ch/cothority/v3/byzcoin go.dedis.ch/cothority/v3/authprox
 

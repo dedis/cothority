@@ -32,7 +32,7 @@ testContractWriteSpawn() {
     testOK runCA authorize co3/private.toml $bcID
     # Creat LTS and save the public key
     runCA0 dkg start --instid "$LTS_ID" -x > key.pub
-    
+
     PUB_KEY=`cat key.pub`
     matchOK $PUB_KEY ^[0-9a-f]{64}$
 
@@ -41,7 +41,7 @@ testContractWriteSpawn() {
 
     # Add the missing Calypso rule
     testOK runBA darc rule -rule spawn:calypsoWrite -darc $ID -sign $KEY -identity $KEY
-    
+
     OUTRES=`runCA0 contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --secret "aabbccdd" --key "$PUB_KEY"`
 
     matchOK "$OUTRES" "^Spawned a new write instance. Its instance id is:
@@ -111,13 +111,13 @@ testContractWriteGet() {
     testOK runCA authorize co3/private.toml $bcID
     # Creat LTS and save the public key
     runCA0 dkg start --instid "$LTS_ID" -x > key.pub
-    
+
     PUB_KEY=`cat key.pub`
     matchOK $PUB_KEY ^[0-9a-f]{64}$
 
     # Add the missing Calypso rule
     testOK runBA darc rule -rule spawn:calypsoWrite -darc $ID -sign $KEY -identity $KEY
-    
+
     # Using a non hex encoded secret should fail
     testOK runCA0 contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID"\
                         --secret "aabbccddeeff0011" --key "$PUB_KEY"\
@@ -139,7 +139,7 @@ testContractWriteGet() {
 -- E: [0-9a-f]{64}
 -- F: [0-9a-f]{64}
 -- C: [0-9a-f]{64}
--- ExtraData: 
+-- ExtraData:
 -- LTSID: [0-9a-f]{64}
 -- Cost: .*$"
 
@@ -161,7 +161,7 @@ testContractWriteGet() {
 -- E: [0-9a-f]{64}
 -- F: [0-9a-f]{64}
 -- C: [0-9a-f]{64}
--- ExtraData: 
+-- ExtraData:
 -- LTSID: [0-9a-f]{64}
 -- Cost: .*$"
 
@@ -175,13 +175,13 @@ testContractWriteGet() {
     OUTRES=`runCA0 contract write get --instid $WRITE_ID`
 
     matchOK "$OUTRES" "^- Write:
--- Data: 
+-- Data:
 -- U: [0-9a-f]{64}
 -- Ubar: [0-9a-f]{64}
 -- E: [0-9a-f]{64}
 -- F: [0-9a-f]{64}
 -- C: [0-9a-f]{64}
--- ExtraData: 
+-- ExtraData:
 -- LTSID: [0-9a-f]{64}
 -- Cost: .*$"
 
@@ -203,7 +203,7 @@ testContractWriteGet() {
 -- E: [0-9a-f]{64}
 -- F: [0-9a-f]{64}
 -- C: [0-9a-f]{64}
--- ExtraData: 
+-- ExtraData:
 -- LTSID: [0-9a-f]{64}
 -- Cost: .*$"
 
@@ -212,7 +212,7 @@ testContractWriteGet() {
     OUTRES=`runCA0 contract write get --instid $WRITE_ID --export`
 
     testGrep "Should be encrypted - from STDIN" echo "$OUTRES"
-    
+
     # Provide both --data and --extraData.
     runCA0 contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID"\
                     --secret "aabbccddeeff0011" --key "$PUB_KEY"\
@@ -247,7 +247,7 @@ testContractWriteGet() {
     OUTRES=`runCA0 contract write get --instid $WRITE_ID`
 
     matchOK "$OUTRES" "^- Write:
--- Data: 
+-- Data:
 -- U: [0-9a-f]{64}
 -- Ubar: [0-9a-f]{64}
 -- E: [0-9a-f]{64}

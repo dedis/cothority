@@ -12,7 +12,7 @@ I : (                               main.main:  86) - Master ID in hex: 39df9bb2
 To see the current status of the master chain:
 
 ```
-$ ./evoting-admin -show -roster leader.toml -id 39df9bb2cd69f8471c2a175bd7e947e83e31606326f11cd3aa377b3c391ee1dc 
+$ ./evoting-admin -show -roster leader.toml -id 39df9bb2cd69f8471c2a175bd7e947e83e31606326f11cd3aa377b3c391ee1dc
  Admins: [0 1 2 3 4 5 6]
  Roster: [tls://localhost:7002 tls://localhost:7004 tls://localhost:7006]
     Key: 0d75f6903e7fbcb5e8623c942f707e4d36fbfbfdefdd7ae8b50633d0ed86a3a2

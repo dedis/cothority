@@ -32,7 +32,7 @@ Here is the config data:
                 --blockInterval 7s\
                 --maxBlockSize 5000000\
                 --darcContractIDs darc,darc2,darc3`
-    
+
     matchOK "$OUTRES" "^Config contract updated! \(instance ID is [a-f0-9]{64}\)
 Here is the config data:
 - ChainConfig:

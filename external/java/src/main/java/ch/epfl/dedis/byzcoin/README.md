@@ -21,4 +21,3 @@ two methods exist in a `DarcInstance` object:
 
 - `spawnDarc` to create another darc that will be able to receive instructions
 - `spawnInstance` to create a general instance of type `ContractId`, where the original darc needs a rule "spawn:ContractId"
-

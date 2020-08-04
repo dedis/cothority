@@ -158,7 +158,7 @@ public final class PoPProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -174,7 +174,7 @@ public final class PoPProto {
         getLocationBytes() {
       java.lang.Object ref = location_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         location_ = b;
@@ -609,7 +609,7 @@ public final class PoPProto {
           getLocationBytes() {
         java.lang.Object ref = location_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           location_ = b;
@@ -759,7 +759,7 @@ public final class PoPProto {
        * <code>optional .onet.Roster roster = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder> 
+          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder>
           getRosterFieldBuilder() {
         if (rosterBuilder_ == null) {
           rosterBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -941,7 +941,7 @@ public final class PoPProto {
      *
      * <code>repeated .pop.ShortDesc parties = 5;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.PoPProto.ShortDesc> 
+    java.util.List<ch.epfl.dedis.lib.proto.PoPProto.ShortDesc>
         getPartiesList();
     /**
      * <pre>
@@ -966,7 +966,7 @@ public final class PoPProto {
      *
      * <code>repeated .pop.ShortDesc parties = 5;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.PoPProto.ShortDescOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.PoPProto.ShortDescOrBuilder>
         getPartiesOrBuilderList();
     /**
      * <pre>
@@ -1125,7 +1125,7 @@ public final class PoPProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -1145,7 +1145,7 @@ public final class PoPProto {
         getNameBytes() {
       java.lang.Object ref = name_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         name_ = b;
@@ -1181,7 +1181,7 @@ public final class PoPProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -1202,7 +1202,7 @@ public final class PoPProto {
         getDatetimeBytes() {
       java.lang.Object ref = datetime_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         datetime_ = b;
@@ -1236,7 +1236,7 @@ public final class PoPProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -1256,7 +1256,7 @@ public final class PoPProto {
         getLocationBytes() {
       java.lang.Object ref = location_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         location_ = b;
@@ -1318,7 +1318,7 @@ public final class PoPProto {
      *
      * <code>repeated .pop.ShortDesc parties = 5;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.PoPProto.ShortDescOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.PoPProto.ShortDescOrBuilder>
         getPartiesOrBuilderList() {
       return parties_;
     }
@@ -1801,7 +1801,7 @@ public final class PoPProto {
               partiesBuilder_ = null;
               parties_ = other.parties_;
               bitField0_ = (bitField0_ & ~0x00000010);
-              partiesBuilder_ = 
+              partiesBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getPartiesFieldBuilder() : null;
             } else {
@@ -1901,7 +1901,7 @@ public final class PoPProto {
           getNameBytes() {
         java.lang.Object ref = name_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           name_ = b;
@@ -2004,7 +2004,7 @@ public final class PoPProto {
           getDatetimeBytes() {
         java.lang.Object ref = datetime_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           datetime_ = b;
@@ -2107,7 +2107,7 @@ public final class PoPProto {
           getLocationBytes() {
         java.lang.Object ref = location_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           location_ = b;
@@ -2305,7 +2305,7 @@ public final class PoPProto {
        * <code>optional .onet.Roster roster = 4;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder> 
+          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder>
           getRosterFieldBuilder() {
         if (rosterBuilder_ == null) {
           rosterBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -2573,7 +2573,7 @@ public final class PoPProto {
        *
        * <code>repeated .pop.ShortDesc parties = 5;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.PoPProto.ShortDescOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.PoPProto.ShortDescOrBuilder>
            getPartiesOrBuilderList() {
         if (partiesBuilder_ != null) {
           return partiesBuilder_.getMessageOrBuilderList();
@@ -2611,12 +2611,12 @@ public final class PoPProto {
        *
        * <code>repeated .pop.ShortDesc parties = 5;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.PoPProto.ShortDesc.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.PoPProto.ShortDesc.Builder>
            getPartiesBuilderList() {
         return getPartiesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.PoPProto.ShortDesc, ch.epfl.dedis.lib.proto.PoPProto.ShortDesc.Builder, ch.epfl.dedis.lib.proto.PoPProto.ShortDescOrBuilder> 
+          ch.epfl.dedis.lib.proto.PoPProto.ShortDesc, ch.epfl.dedis.lib.proto.PoPProto.ShortDesc.Builder, ch.epfl.dedis.lib.proto.PoPProto.ShortDescOrBuilder>
           getPartiesFieldBuilder() {
         if (partiesBuilder_ == null) {
           partiesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -3578,7 +3578,7 @@ public final class PoPProto {
        * <code>optional .pop.PopDesc desc = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.PoPProto.PopDesc, ch.epfl.dedis.lib.proto.PoPProto.PopDesc.Builder, ch.epfl.dedis.lib.proto.PoPProto.PopDescOrBuilder> 
+          ch.epfl.dedis.lib.proto.PoPProto.PopDesc, ch.epfl.dedis.lib.proto.PoPProto.PopDesc.Builder, ch.epfl.dedis.lib.proto.PoPProto.PopDescOrBuilder>
           getDescFieldBuilder() {
         if (descBuilder_ == null) {
           descBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -6005,7 +6005,7 @@ public final class PoPProto {
        * <code>optional .pop.FinalStatement final = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.PoPProto.FinalStatement, ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.Builder, ch.epfl.dedis.lib.proto.PoPProto.FinalStatementOrBuilder> 
+          ch.epfl.dedis.lib.proto.PoPProto.FinalStatement, ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.Builder, ch.epfl.dedis.lib.proto.PoPProto.FinalStatementOrBuilder>
           getFinalFieldBuilder() {
         if (finalBuilder_ == null) {
           finalBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -7007,7 +7007,7 @@ public final class PoPProto {
        * <code>optional .pop.FinalStatement final = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.PoPProto.FinalStatement, ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.Builder, ch.epfl.dedis.lib.proto.PoPProto.FinalStatementOrBuilder> 
+          ch.epfl.dedis.lib.proto.PoPProto.FinalStatement, ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.Builder, ch.epfl.dedis.lib.proto.PoPProto.FinalStatementOrBuilder>
           getFinalFieldBuilder() {
         if (finalBuilder_ == null) {
           finalBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -7206,7 +7206,7 @@ public final class PoPProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -7222,7 +7222,7 @@ public final class PoPProto {
         getPinBytes() {
       java.lang.Object ref = pin_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         pin_ = b;
@@ -7639,7 +7639,7 @@ public final class PoPProto {
           getPinBytes() {
         java.lang.Object ref = pin_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           pin_ = b;
@@ -8404,7 +8404,7 @@ public final class PoPProto {
        * <code>optional .pop.PopDesc desc = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.PoPProto.PopDesc, ch.epfl.dedis.lib.proto.PoPProto.PopDesc.Builder, ch.epfl.dedis.lib.proto.PoPProto.PopDescOrBuilder> 
+          ch.epfl.dedis.lib.proto.PoPProto.PopDesc, ch.epfl.dedis.lib.proto.PoPProto.PopDesc.Builder, ch.epfl.dedis.lib.proto.PoPProto.PopDescOrBuilder>
           getDescFieldBuilder() {
         if (descBuilder_ == null) {
           descBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -10380,7 +10380,7 @@ public final class PoPProto {
        * <code>optional .pop.FinalStatement final = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.PoPProto.FinalStatement, ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.Builder, ch.epfl.dedis.lib.proto.PoPProto.FinalStatementOrBuilder> 
+          ch.epfl.dedis.lib.proto.PoPProto.FinalStatement, ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.Builder, ch.epfl.dedis.lib.proto.PoPProto.FinalStatementOrBuilder>
           getFinalFieldBuilder() {
         if (finalBuilder_ == null) {
           finalBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -12107,7 +12107,7 @@ public final class PoPProto {
     /**
      * <code>repeated .pop.PopDesc proposals = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.PoPProto.PopDesc> 
+    java.util.List<ch.epfl.dedis.lib.proto.PoPProto.PopDesc>
         getProposalsList();
     /**
      * <code>repeated .pop.PopDesc proposals = 1;</code>
@@ -12120,7 +12120,7 @@ public final class PoPProto {
     /**
      * <code>repeated .pop.PopDesc proposals = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.PoPProto.PopDescOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.PoPProto.PopDescOrBuilder>
         getProposalsOrBuilderList();
     /**
      * <code>repeated .pop.PopDesc proposals = 1;</code>
@@ -12227,7 +12227,7 @@ public final class PoPProto {
     /**
      * <code>repeated .pop.PopDesc proposals = 1;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.PoPProto.PopDescOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.PoPProto.PopDescOrBuilder>
         getProposalsOrBuilderList() {
       return proposals_;
     }
@@ -12566,7 +12566,7 @@ public final class PoPProto {
               proposalsBuilder_ = null;
               proposals_ = other.proposals_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              proposalsBuilder_ = 
+              proposalsBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getProposalsFieldBuilder() : null;
             } else {
@@ -12804,7 +12804,7 @@ public final class PoPProto {
       /**
        * <code>repeated .pop.PopDesc proposals = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.PoPProto.PopDescOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.PoPProto.PopDescOrBuilder>
            getProposalsOrBuilderList() {
         if (proposalsBuilder_ != null) {
           return proposalsBuilder_.getMessageOrBuilderList();
@@ -12830,12 +12830,12 @@ public final class PoPProto {
       /**
        * <code>repeated .pop.PopDesc proposals = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.PoPProto.PopDesc.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.PoPProto.PopDesc.Builder>
            getProposalsBuilderList() {
         return getProposalsFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.PoPProto.PopDesc, ch.epfl.dedis.lib.proto.PoPProto.PopDesc.Builder, ch.epfl.dedis.lib.proto.PoPProto.PopDescOrBuilder> 
+          ch.epfl.dedis.lib.proto.PoPProto.PopDesc, ch.epfl.dedis.lib.proto.PoPProto.PopDesc.Builder, ch.epfl.dedis.lib.proto.PoPProto.PopDescOrBuilder>
           getProposalsFieldBuilder() {
         if (proposalsBuilder_ == null) {
           proposalsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -15452,7 +15452,7 @@ public final class PoPProto {
           java.lang.String, ch.epfl.dedis.lib.proto.PoPProto.FinalStatement> defaultEntry =
               com.google.protobuf.MapEntry
               .<java.lang.String, ch.epfl.dedis.lib.proto.PoPProto.FinalStatement>newDefaultInstance(
-                  ch.epfl.dedis.lib.proto.PoPProto.internal_static_pop_GetFinalStatementsReply_FinalstatementsEntry_descriptor, 
+                  ch.epfl.dedis.lib.proto.PoPProto.internal_static_pop_GetFinalStatementsReply_FinalstatementsEntry_descriptor,
                   com.google.protobuf.WireFormat.FieldType.STRING,
                   "",
                   com.google.protobuf.WireFormat.FieldType.MESSAGE,
@@ -19000,7 +19000,7 @@ public final class PoPProto {
        * <code>required .darc.Signer signer = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.Signer, ch.epfl.dedis.lib.proto.DarcProto.Signer.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignerOrBuilder> 
+          ch.epfl.dedis.lib.proto.DarcProto.Signer, ch.epfl.dedis.lib.proto.DarcProto.Signer.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignerOrBuilder>
           getSignerFieldBuilder() {
         if (signerBuilder_ == null) {
           signerBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -20582,7 +20582,7 @@ public final class PoPProto {
        * <code>required .darc.Signer signer = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.Signer, ch.epfl.dedis.lib.proto.DarcProto.Signer.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignerOrBuilder> 
+          ch.epfl.dedis.lib.proto.DarcProto.Signer, ch.epfl.dedis.lib.proto.DarcProto.Signer.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignerOrBuilder>
           getSignerFieldBuilder() {
         if (signerBuilder_ == null) {
           signerBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -24184,7 +24184,7 @@ public final class PoPProto {
        * <code>optional .pop.FinalStatement finalstatement = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.PoPProto.FinalStatement, ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.Builder, ch.epfl.dedis.lib.proto.PoPProto.FinalStatementOrBuilder> 
+          ch.epfl.dedis.lib.proto.PoPProto.FinalStatement, ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.Builder, ch.epfl.dedis.lib.proto.PoPProto.FinalStatementOrBuilder>
           getFinalstatementFieldBuilder() {
         if (finalstatementBuilder_ == null) {
           finalstatementBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -24412,182 +24412,182 @@ public final class PoPProto {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_ShortDesc_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_ShortDesc_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_PopDesc_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_PopDesc_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_FinalStatement_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_FinalStatement_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_CheckConfig_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_CheckConfig_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_CheckConfigReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_CheckConfigReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_MergeConfig_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_MergeConfig_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_MergeConfigReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_MergeConfigReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_PinRequest_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_PinRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_StoreConfig_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_StoreConfig_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_StoreConfigReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_StoreConfigReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_FinalizeRequest_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_FinalizeRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_FinalizeResponse_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_FinalizeResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_FetchRequest_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_FetchRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_MergeRequest_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_MergeRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_GetProposals_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_GetProposals_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_GetProposalsReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_GetProposalsReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_VerifyLink_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_VerifyLink_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_VerifyLinkReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_VerifyLinkReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_GetLink_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_GetLink_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_GetLinkReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_GetLinkReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_GetFinalStatements_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_GetFinalStatements_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_GetFinalStatementsReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_GetFinalStatementsReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_GetFinalStatementsReply_FinalstatementsEntry_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_GetFinalStatementsReply_FinalstatementsEntry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_StoreInstanceID_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_StoreInstanceID_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_StoreInstanceIDReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_StoreInstanceIDReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_GetInstanceID_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_GetInstanceID_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_GetInstanceIDReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_GetInstanceIDReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_StoreSigner_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_StoreSigner_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_StoreSignerReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_StoreSignerReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_GetSigner_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_GetSigner_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_GetSignerReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_GetSignerReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_StoreKeys_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_StoreKeys_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_StoreKeysReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_StoreKeysReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_GetKeys_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_GetKeys_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_GetKeysReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_GetKeysReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_PopPartyInstance_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_PopPartyInstance_fieldAccessorTable;
 

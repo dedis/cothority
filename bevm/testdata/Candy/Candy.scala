@@ -36,4 +36,3 @@ case class Candy(
     initialCandies - eatenCandies == remainingCandies
   }
 }
-

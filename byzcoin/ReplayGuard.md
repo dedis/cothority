@@ -41,4 +41,4 @@ ClientTransaction {
 We assume that the private keys are not shared between clients. So the clients
 can easily predict what their counters will be without querying ByzCoin all the
 time for the latest value of their counter. But if a client forgets its
-counter, it can use the `GetSignerCounters` API to get the counters. 
+counter, it can use the `GetSignerCounters` API to get the counters.

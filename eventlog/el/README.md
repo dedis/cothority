@@ -21,12 +21,12 @@ configuration directory. To use a custom configuration directory use the
 `-config $dir`. You will give the public key to the ByzCoin administrator who
 will use the "bcadmin darc rule" command to give your private key the right to
 make new event logs (add "spawn:eventlog" and "invoke:eventlog.log" rules to a
-Darc). We will not cover how to configure ByzCoin, more information can be 
+Darc). We will not cover how to configure ByzCoin, more information can be
 found in the [bcadmin documentation](../../byzcoin/bcadmin/README.md).
 
 The ByzCoin admin will give you a ByzCoin config file, which you will use with
 the -bc argument, or you can set the BC environment variable to the name of the
-ByzCoin config file. He/she will also give you a DarcID to use. 
+ByzCoin config file. He/she will also give you a DarcID to use.
 
 Assuming ByzCoin is configured with the correct permissions, you can now make
 the event log like this:
