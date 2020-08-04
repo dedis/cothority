@@ -39,6 +39,10 @@ jobs:
       name: "protobuf"
       language: minimal
       script: make test_proto
+    - name: pre-commit
+      language: python
+      install: pip install pre-commit
+      script: pre-commit run --all-files --verbose --show-diff-on-failure
     - <<: *language_go_1_13
       script:
         - make -C conode verify
