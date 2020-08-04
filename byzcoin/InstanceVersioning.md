@@ -57,7 +57,7 @@ block, which can be the beginning when no DB is available.
 
 This feature needs a size control as the space taken will grow with the skipchain and
 that's why you can specify the size of the cache or the maximum number of blocks that
-need to be kept. When a size is specified, the storage will look for the oldest 
+need to be kept. When a size is specified, the storage will look for the oldest
 elements and delete them until a threshold is reached. Note that if state
 changes has been added unsorted, it will remove the oldest version of the instance
 that contains the oldest element to prevent holes. When a maximum number of blocks

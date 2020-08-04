@@ -49,4 +49,3 @@ contract Verify {
 
     // Private functions
 }
-

@@ -15,4 +15,3 @@ external/js/kyber/dist/*    -diff -merge
 external/js/kyber/dist/*    linguist-generated=true
 external/js/kyber/doc/*     -diff -merge
 external/js/kyber/doc/*     linguist-generated=true
-

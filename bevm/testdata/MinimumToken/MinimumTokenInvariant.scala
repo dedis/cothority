@@ -43,10 +43,10 @@ object MinimumTokenInvariant {
 
   @ghost
   def contractInvariant(contract: MinimumToken): Boolean = {
-    distinctAddresses(contract.participants) && 
+    distinctAddresses(contract.participants) &&
     sumBalances(contract.participants, contract.balanceOf) == contract.total &&
-    forall((x: Address) => 
-      (contract.balanceOf(x) != Uint256.ZERO) ==> 
+    forall((x: Address) =>
+      (contract.balanceOf(x) != Uint256.ZERO) ==>
       contract.participants.contains(x)
     )
   }
@@ -66,7 +66,7 @@ object MinimumTokenInvariant {
 
     assert(
       participants match {
-        case Cons(x, xs) if (x == to) => 
+        case Cons(x, xs) if (x == to) =>
           (
             sumBalances(participants, b1)                     ==| trivial |:
             sumBalances(xs, b1) + b1(x)                       ==| balancesUnchangedLemma(to, newBalance, xs, balances) |:
@@ -113,8 +113,8 @@ object MinimumTokenInvariant {
     assert((
       sumBalances(participants, balanceOf)                                             ==| balancesUpdatedLemma(participants, b1, to, b1(to) + amount) |:
       sumBalances(participants, b1) - b1(to) + (b1(to) + amount)                       ==| trivial |:
-      sumBalances(participants, b1) + amount                                           ==| 
-        (balancesUpdatedLemma(participants, b0, from, b0(from) - amount) && 
+      sumBalances(participants, b1) + amount                                           ==|
+        (balancesUpdatedLemma(participants, b0, from, b0(from) - amount) &&
         sumBalances(participants, b1) == sumBalances(participants, b0) - b0(from) + (b0(from) - amount))
         |:
       sumBalances(participants, b0) - b0(from) + (b0(from) - amount) + amount         ==| ((b0(from) - amount) + amount == b0(from)) |:

@@ -735,7 +735,7 @@ public final class PersonhoodService {
        * <code>optional .personhood_service.Party newparty = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.PersonhoodService.Party, ch.epfl.dedis.lib.proto.PersonhoodService.Party.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.PartyOrBuilder> 
+          ch.epfl.dedis.lib.proto.PersonhoodService.Party, ch.epfl.dedis.lib.proto.PersonhoodService.Party.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.PartyOrBuilder>
           getNewpartyFieldBuilder() {
         if (newpartyBuilder_ == null) {
           newpartyBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -885,7 +885,7 @@ public final class PersonhoodService {
        * <code>optional .personhood_service.PartyDelete partydelete = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.PersonhoodService.PartyDelete, ch.epfl.dedis.lib.proto.PersonhoodService.PartyDelete.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.PartyDeleteOrBuilder> 
+          ch.epfl.dedis.lib.proto.PersonhoodService.PartyDelete, ch.epfl.dedis.lib.proto.PersonhoodService.PartyDelete.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.PartyDeleteOrBuilder>
           getPartydeleteFieldBuilder() {
         if (partydeleteBuilder_ == null) {
           partydeleteBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -1683,7 +1683,7 @@ public final class PersonhoodService {
        * <code>required .darc.Identity identity = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> 
+          ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>
           getIdentityFieldBuilder() {
         if (identityBuilder_ == null) {
           identityBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -1790,7 +1790,7 @@ public final class PersonhoodService {
     /**
      * <code>repeated .personhood_service.Party parties = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.Party> 
+    java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.Party>
         getPartiesList();
     /**
      * <code>repeated .personhood_service.Party parties = 1;</code>
@@ -1803,7 +1803,7 @@ public final class PersonhoodService {
     /**
      * <code>repeated .personhood_service.Party parties = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.PartyOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.PartyOrBuilder>
         getPartiesOrBuilderList();
     /**
      * <code>repeated .personhood_service.Party parties = 1;</code>
@@ -1911,7 +1911,7 @@ public final class PersonhoodService {
     /**
      * <code>repeated .personhood_service.Party parties = 1;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.PartyOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.PartyOrBuilder>
         getPartiesOrBuilderList() {
       return parties_;
     }
@@ -2251,7 +2251,7 @@ public final class PersonhoodService {
               partiesBuilder_ = null;
               parties_ = other.parties_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              partiesBuilder_ = 
+              partiesBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getPartiesFieldBuilder() : null;
             } else {
@@ -2489,7 +2489,7 @@ public final class PersonhoodService {
       /**
        * <code>repeated .personhood_service.Party parties = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.PartyOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.PartyOrBuilder>
            getPartiesOrBuilderList() {
         if (partiesBuilder_ != null) {
           return partiesBuilder_.getMessageOrBuilderList();
@@ -2515,12 +2515,12 @@ public final class PersonhoodService {
       /**
        * <code>repeated .personhood_service.Party parties = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.Party.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.Party.Builder>
            getPartiesBuilderList() {
         return getPartiesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.PersonhoodService.Party, ch.epfl.dedis.lib.proto.PersonhoodService.Party.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.PartyOrBuilder> 
+          ch.epfl.dedis.lib.proto.PersonhoodService.Party, ch.epfl.dedis.lib.proto.PersonhoodService.Party.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.PartyOrBuilder>
           getPartiesFieldBuilder() {
         if (partiesBuilder_ == null) {
           partiesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -3376,7 +3376,7 @@ public final class PersonhoodService {
        * <code>required .onet.Roster roster = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder> 
+          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder>
           getRosterFieldBuilder() {
         if (rosterBuilder_ == null) {
           rosterBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -4300,7 +4300,7 @@ public final class PersonhoodService {
        * <code>optional .personhood.RoPaSci newropasci = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.Personhood.RoPaSci, ch.epfl.dedis.lib.proto.Personhood.RoPaSci.Builder, ch.epfl.dedis.lib.proto.Personhood.RoPaSciOrBuilder> 
+          ch.epfl.dedis.lib.proto.Personhood.RoPaSci, ch.epfl.dedis.lib.proto.Personhood.RoPaSci.Builder, ch.epfl.dedis.lib.proto.Personhood.RoPaSciOrBuilder>
           getNewropasciFieldBuilder() {
         if (newropasciBuilder_ == null) {
           newropasciBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -4504,7 +4504,7 @@ public final class PersonhoodService {
        * <code>optional .personhood.RoPaSci lock = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.Personhood.RoPaSci, ch.epfl.dedis.lib.proto.Personhood.RoPaSci.Builder, ch.epfl.dedis.lib.proto.Personhood.RoPaSciOrBuilder> 
+          ch.epfl.dedis.lib.proto.Personhood.RoPaSci, ch.epfl.dedis.lib.proto.Personhood.RoPaSci.Builder, ch.epfl.dedis.lib.proto.Personhood.RoPaSciOrBuilder>
           getLockFieldBuilder() {
         if (lockBuilder_ == null) {
           lockBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -4576,7 +4576,7 @@ public final class PersonhoodService {
     /**
      * <code>repeated .personhood.RoPaSci ropascis = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.Personhood.RoPaSci> 
+    java.util.List<ch.epfl.dedis.lib.proto.Personhood.RoPaSci>
         getRopascisList();
     /**
      * <code>repeated .personhood.RoPaSci ropascis = 1;</code>
@@ -4589,7 +4589,7 @@ public final class PersonhoodService {
     /**
      * <code>repeated .personhood.RoPaSci ropascis = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.RoPaSciOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.RoPaSciOrBuilder>
         getRopascisOrBuilderList();
     /**
      * <code>repeated .personhood.RoPaSci ropascis = 1;</code>
@@ -4697,7 +4697,7 @@ public final class PersonhoodService {
     /**
      * <code>repeated .personhood.RoPaSci ropascis = 1;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.RoPaSciOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.RoPaSciOrBuilder>
         getRopascisOrBuilderList() {
       return ropascis_;
     }
@@ -5037,7 +5037,7 @@ public final class PersonhoodService {
               ropascisBuilder_ = null;
               ropascis_ = other.ropascis_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              ropascisBuilder_ = 
+              ropascisBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getRopascisFieldBuilder() : null;
             } else {
@@ -5275,7 +5275,7 @@ public final class PersonhoodService {
       /**
        * <code>repeated .personhood.RoPaSci ropascis = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.RoPaSciOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.RoPaSciOrBuilder>
            getRopascisOrBuilderList() {
         if (ropascisBuilder_ != null) {
           return ropascisBuilder_.getMessageOrBuilderList();
@@ -5301,12 +5301,12 @@ public final class PersonhoodService {
       /**
        * <code>repeated .personhood.RoPaSci ropascis = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.Personhood.RoPaSci.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.Personhood.RoPaSci.Builder>
            getRopascisBuilderList() {
         return getRopascisFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.Personhood.RoPaSci, ch.epfl.dedis.lib.proto.Personhood.RoPaSci.Builder, ch.epfl.dedis.lib.proto.Personhood.RoPaSciOrBuilder> 
+          ch.epfl.dedis.lib.proto.Personhood.RoPaSci, ch.epfl.dedis.lib.proto.Personhood.RoPaSci.Builder, ch.epfl.dedis.lib.proto.Personhood.RoPaSciOrBuilder>
           getRopascisFieldBuilder() {
         if (ropascisBuilder_ == null) {
           ropascisBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -5490,7 +5490,7 @@ public final class PersonhoodService {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -5506,7 +5506,7 @@ public final class PersonhoodService {
         getReplyBytes() {
       java.lang.Object ref = reply_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         reply_ = b;
@@ -5875,7 +5875,7 @@ public final class PersonhoodService {
           getReplyBytes() {
         java.lang.Object ref = reply_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           reply_ = b;
@@ -6905,7 +6905,7 @@ public final class PersonhoodService {
        * <code>optional .personhood_service.PollStruct newpoll = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.PersonhoodService.PollStruct, ch.epfl.dedis.lib.proto.PersonhoodService.PollStruct.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.PollStructOrBuilder> 
+          ch.epfl.dedis.lib.proto.PersonhoodService.PollStruct, ch.epfl.dedis.lib.proto.PersonhoodService.PollStruct.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.PollStructOrBuilder>
           getNewpollFieldBuilder() {
         if (newpollBuilder_ == null) {
           newpollBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -7023,7 +7023,7 @@ public final class PersonhoodService {
        * <code>optional .personhood_service.PollList list = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.PersonhoodService.PollList, ch.epfl.dedis.lib.proto.PersonhoodService.PollList.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.PollListOrBuilder> 
+          ch.epfl.dedis.lib.proto.PersonhoodService.PollList, ch.epfl.dedis.lib.proto.PersonhoodService.PollList.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.PollListOrBuilder>
           getListFieldBuilder() {
         if (listBuilder_ == null) {
           listBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -7141,7 +7141,7 @@ public final class PersonhoodService {
        * <code>optional .personhood_service.PollAnswer answer = 4;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.PersonhoodService.PollAnswer, ch.epfl.dedis.lib.proto.PersonhoodService.PollAnswer.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.PollAnswerOrBuilder> 
+          ch.epfl.dedis.lib.proto.PersonhoodService.PollAnswer, ch.epfl.dedis.lib.proto.PersonhoodService.PollAnswer.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.PollAnswerOrBuilder>
           getAnswerFieldBuilder() {
         if (answerBuilder_ == null) {
           answerBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -7259,7 +7259,7 @@ public final class PersonhoodService {
        * <code>optional .personhood_service.PollDelete delete = 5;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.PersonhoodService.PollDelete, ch.epfl.dedis.lib.proto.PersonhoodService.PollDelete.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.PollDeleteOrBuilder> 
+          ch.epfl.dedis.lib.proto.PersonhoodService.PollDelete, ch.epfl.dedis.lib.proto.PersonhoodService.PollDelete.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.PollDeleteOrBuilder>
           getDeleteFieldBuilder() {
         if (deleteBuilder_ == null) {
           deleteBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -8026,7 +8026,7 @@ public final class PersonhoodService {
        * <code>required .darc.Identity identity = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> 
+          ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>
           getIdentityFieldBuilder() {
         if (identityBuilder_ == null) {
           identityBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -9622,7 +9622,7 @@ public final class PersonhoodService {
     /**
      * <code>repeated .personhood_service.PollChoice chosen = 6;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.PollChoice> 
+    java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.PollChoice>
         getChosenList();
     /**
      * <code>repeated .personhood_service.PollChoice chosen = 6;</code>
@@ -9635,7 +9635,7 @@ public final class PersonhoodService {
     /**
      * <code>repeated .personhood_service.PollChoice chosen = 6;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.PollChoiceOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.PollChoiceOrBuilder>
         getChosenOrBuilderList();
     /**
      * <code>repeated .personhood_service.PollChoice chosen = 6;</code>
@@ -9817,7 +9817,7 @@ public final class PersonhoodService {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -9833,7 +9833,7 @@ public final class PersonhoodService {
         getTitleBytes() {
       java.lang.Object ref = title_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         title_ = b;
@@ -9859,7 +9859,7 @@ public final class PersonhoodService {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -9875,7 +9875,7 @@ public final class PersonhoodService {
         getDescriptionBytes() {
       java.lang.Object ref = description_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         description_ = b;
@@ -9925,7 +9925,7 @@ public final class PersonhoodService {
     /**
      * <code>repeated .personhood_service.PollChoice chosen = 6;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.PollChoiceOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.PollChoiceOrBuilder>
         getChosenOrBuilderList() {
       return chosen_;
     }
@@ -10414,7 +10414,7 @@ public final class PersonhoodService {
               chosenBuilder_ = null;
               chosen_ = other.chosen_;
               bitField0_ = (bitField0_ & ~0x00000020);
-              chosenBuilder_ = 
+              chosenBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getChosenFieldBuilder() : null;
             } else {
@@ -10567,7 +10567,7 @@ public final class PersonhoodService {
           getTitleBytes() {
         java.lang.Object ref = title_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           title_ = b;
@@ -10643,7 +10643,7 @@ public final class PersonhoodService {
           getDescriptionBytes() {
         java.lang.Object ref = description_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           description_ = b;
@@ -10976,7 +10976,7 @@ public final class PersonhoodService {
       /**
        * <code>repeated .personhood_service.PollChoice chosen = 6;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.PollChoiceOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.PollChoiceOrBuilder>
            getChosenOrBuilderList() {
         if (chosenBuilder_ != null) {
           return chosenBuilder_.getMessageOrBuilderList();
@@ -11002,12 +11002,12 @@ public final class PersonhoodService {
       /**
        * <code>repeated .personhood_service.PollChoice chosen = 6;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.PollChoice.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.PollChoice.Builder>
            getChosenBuilderList() {
         return getChosenFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.PersonhoodService.PollChoice, ch.epfl.dedis.lib.proto.PersonhoodService.PollChoice.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.PollChoiceOrBuilder> 
+          ch.epfl.dedis.lib.proto.PersonhoodService.PollChoice, ch.epfl.dedis.lib.proto.PersonhoodService.PollChoice.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.PollChoiceOrBuilder>
           getChosenFieldBuilder() {
         if (chosenBuilder_ == null) {
           chosenBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -11697,7 +11697,7 @@ public final class PersonhoodService {
     /**
      * <code>repeated .personhood_service.PollStruct polls = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.PollStruct> 
+    java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.PollStruct>
         getPollsList();
     /**
      * <code>repeated .personhood_service.PollStruct polls = 1;</code>
@@ -11710,7 +11710,7 @@ public final class PersonhoodService {
     /**
      * <code>repeated .personhood_service.PollStruct polls = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.PollStructOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.PollStructOrBuilder>
         getPollsOrBuilderList();
     /**
      * <code>repeated .personhood_service.PollStruct polls = 1;</code>
@@ -11819,7 +11819,7 @@ public final class PersonhoodService {
     /**
      * <code>repeated .personhood_service.PollStruct polls = 1;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.PollStructOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.PollStructOrBuilder>
         getPollsOrBuilderList() {
       return polls_;
     }
@@ -12160,7 +12160,7 @@ public final class PersonhoodService {
               pollsBuilder_ = null;
               polls_ = other.polls_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              pollsBuilder_ = 
+              pollsBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getPollsFieldBuilder() : null;
             } else {
@@ -12398,7 +12398,7 @@ public final class PersonhoodService {
       /**
        * <code>repeated .personhood_service.PollStruct polls = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.PollStructOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.PollStructOrBuilder>
            getPollsOrBuilderList() {
         if (pollsBuilder_ != null) {
           return pollsBuilder_.getMessageOrBuilderList();
@@ -12424,12 +12424,12 @@ public final class PersonhoodService {
       /**
        * <code>repeated .personhood_service.PollStruct polls = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.PollStruct.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.PollStruct.Builder>
            getPollsBuilderList() {
         return getPollsFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.PersonhoodService.PollStruct, ch.epfl.dedis.lib.proto.PersonhoodService.PollStruct.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.PollStructOrBuilder> 
+          ch.epfl.dedis.lib.proto.PersonhoodService.PollStruct, ch.epfl.dedis.lib.proto.PersonhoodService.PollStruct.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.PollStructOrBuilder>
           getPollsFieldBuilder() {
         if (pollsBuilder_ == null) {
           pollsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -12922,7 +12922,7 @@ public final class PersonhoodService {
     /**
      * <code>repeated .personhood_service.Capability capabilities = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.Capability> 
+    java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.Capability>
         getCapabilitiesList();
     /**
      * <code>repeated .personhood_service.Capability capabilities = 1;</code>
@@ -12935,7 +12935,7 @@ public final class PersonhoodService {
     /**
      * <code>repeated .personhood_service.Capability capabilities = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.CapabilityOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.CapabilityOrBuilder>
         getCapabilitiesOrBuilderList();
     /**
      * <code>repeated .personhood_service.Capability capabilities = 1;</code>
@@ -13049,7 +13049,7 @@ public final class PersonhoodService {
     /**
      * <code>repeated .personhood_service.Capability capabilities = 1;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.CapabilityOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.CapabilityOrBuilder>
         getCapabilitiesOrBuilderList() {
       return capabilities_;
     }
@@ -13395,7 +13395,7 @@ public final class PersonhoodService {
               capabilitiesBuilder_ = null;
               capabilities_ = other.capabilities_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              capabilitiesBuilder_ = 
+              capabilitiesBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getCapabilitiesFieldBuilder() : null;
             } else {
@@ -13633,7 +13633,7 @@ public final class PersonhoodService {
       /**
        * <code>repeated .personhood_service.Capability capabilities = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.CapabilityOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.CapabilityOrBuilder>
            getCapabilitiesOrBuilderList() {
         if (capabilitiesBuilder_ != null) {
           return capabilitiesBuilder_.getMessageOrBuilderList();
@@ -13659,12 +13659,12 @@ public final class PersonhoodService {
       /**
        * <code>repeated .personhood_service.Capability capabilities = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.Capability.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.Capability.Builder>
            getCapabilitiesBuilderList() {
         return getCapabilitiesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.PersonhoodService.Capability, ch.epfl.dedis.lib.proto.PersonhoodService.Capability.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.CapabilityOrBuilder> 
+          ch.epfl.dedis.lib.proto.PersonhoodService.Capability, ch.epfl.dedis.lib.proto.PersonhoodService.Capability.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.CapabilityOrBuilder>
           getCapabilitiesFieldBuilder() {
         if (capabilitiesBuilder_ == null) {
           capabilitiesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -13862,7 +13862,7 @@ public final class PersonhoodService {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -13878,7 +13878,7 @@ public final class PersonhoodService {
         getEndpointBytes() {
       java.lang.Object ref = endpoint_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         endpoint_ = b;
@@ -14293,7 +14293,7 @@ public final class PersonhoodService {
           getEndpointBytes() {
         java.lang.Object ref = endpoint_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           endpoint_ = b;
@@ -14664,7 +14664,7 @@ public final class PersonhoodService {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -14680,7 +14680,7 @@ public final class PersonhoodService {
         getLocationBytes() {
       java.lang.Object ref = location_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         location_ = b;
@@ -15335,7 +15335,7 @@ public final class PersonhoodService {
        * <code>optional .personhood.CredentialStruct credential = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.Personhood.CredentialStruct, ch.epfl.dedis.lib.proto.Personhood.CredentialStruct.Builder, ch.epfl.dedis.lib.proto.Personhood.CredentialStructOrBuilder> 
+          ch.epfl.dedis.lib.proto.Personhood.CredentialStruct, ch.epfl.dedis.lib.proto.Personhood.CredentialStruct.Builder, ch.epfl.dedis.lib.proto.Personhood.CredentialStructOrBuilder>
           getCredentialFieldBuilder() {
         if (credentialBuilder_ == null) {
           credentialBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -15379,7 +15379,7 @@ public final class PersonhoodService {
           getLocationBytes() {
         java.lang.Object ref = location_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           location_ = b;
@@ -16135,7 +16135,7 @@ public final class PersonhoodService {
        * <code>optional .personhood_service.UserLocation userlocation = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.PersonhoodService.UserLocation, ch.epfl.dedis.lib.proto.PersonhoodService.UserLocation.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.UserLocationOrBuilder> 
+          ch.epfl.dedis.lib.proto.PersonhoodService.UserLocation, ch.epfl.dedis.lib.proto.PersonhoodService.UserLocation.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.UserLocationOrBuilder>
           getUserlocationFieldBuilder() {
         if (userlocationBuilder_ == null) {
           userlocationBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -16239,7 +16239,7 @@ public final class PersonhoodService {
     /**
      * <code>repeated .personhood_service.UserLocation users = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.UserLocation> 
+    java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.UserLocation>
         getUsersList();
     /**
      * <code>repeated .personhood_service.UserLocation users = 1;</code>
@@ -16252,7 +16252,7 @@ public final class PersonhoodService {
     /**
      * <code>repeated .personhood_service.UserLocation users = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.UserLocationOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.UserLocationOrBuilder>
         getUsersOrBuilderList();
     /**
      * <code>repeated .personhood_service.UserLocation users = 1;</code>
@@ -16359,7 +16359,7 @@ public final class PersonhoodService {
     /**
      * <code>repeated .personhood_service.UserLocation users = 1;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.UserLocationOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.UserLocationOrBuilder>
         getUsersOrBuilderList() {
       return users_;
     }
@@ -16698,7 +16698,7 @@ public final class PersonhoodService {
               usersBuilder_ = null;
               users_ = other.users_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              usersBuilder_ = 
+              usersBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getUsersFieldBuilder() : null;
             } else {
@@ -16936,7 +16936,7 @@ public final class PersonhoodService {
       /**
        * <code>repeated .personhood_service.UserLocation users = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.UserLocationOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.UserLocationOrBuilder>
            getUsersOrBuilderList() {
         if (usersBuilder_ != null) {
           return usersBuilder_.getMessageOrBuilderList();
@@ -16962,12 +16962,12 @@ public final class PersonhoodService {
       /**
        * <code>repeated .personhood_service.UserLocation users = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.UserLocation.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.UserLocation.Builder>
            getUsersBuilderList() {
         return getUsersFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.PersonhoodService.UserLocation, ch.epfl.dedis.lib.proto.PersonhoodService.UserLocation.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.UserLocationOrBuilder> 
+          ch.epfl.dedis.lib.proto.PersonhoodService.UserLocation, ch.epfl.dedis.lib.proto.PersonhoodService.UserLocation.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.UserLocationOrBuilder>
           getUsersFieldBuilder() {
         if (usersBuilder_ == null) {
           usersBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -17604,7 +17604,7 @@ public final class PersonhoodService {
        * <code>optional .personhood_service.ChallengeCandidate update = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.PersonhoodService.ChallengeCandidate, ch.epfl.dedis.lib.proto.PersonhoodService.ChallengeCandidate.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.ChallengeCandidateOrBuilder> 
+          ch.epfl.dedis.lib.proto.PersonhoodService.ChallengeCandidate, ch.epfl.dedis.lib.proto.PersonhoodService.ChallengeCandidate.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.ChallengeCandidateOrBuilder>
           getUpdateFieldBuilder() {
         if (updateBuilder_ == null) {
           updateBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -18390,7 +18390,7 @@ public final class PersonhoodService {
     /**
      * <code>repeated .personhood_service.ChallengeCandidate list = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.ChallengeCandidate> 
+    java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.ChallengeCandidate>
         getListList();
     /**
      * <code>repeated .personhood_service.ChallengeCandidate list = 1;</code>
@@ -18403,7 +18403,7 @@ public final class PersonhoodService {
     /**
      * <code>repeated .personhood_service.ChallengeCandidate list = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.ChallengeCandidateOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.ChallengeCandidateOrBuilder>
         getListOrBuilderList();
     /**
      * <code>repeated .personhood_service.ChallengeCandidate list = 1;</code>
@@ -18511,7 +18511,7 @@ public final class PersonhoodService {
     /**
      * <code>repeated .personhood_service.ChallengeCandidate list = 1;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.ChallengeCandidateOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.ChallengeCandidateOrBuilder>
         getListOrBuilderList() {
       return list_;
     }
@@ -18851,7 +18851,7 @@ public final class PersonhoodService {
               listBuilder_ = null;
               list_ = other.list_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              listBuilder_ = 
+              listBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getListFieldBuilder() : null;
             } else {
@@ -19089,7 +19089,7 @@ public final class PersonhoodService {
       /**
        * <code>repeated .personhood_service.ChallengeCandidate list = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.ChallengeCandidateOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.PersonhoodService.ChallengeCandidateOrBuilder>
            getListOrBuilderList() {
         if (listBuilder_ != null) {
           return listBuilder_.getMessageOrBuilderList();
@@ -19115,12 +19115,12 @@ public final class PersonhoodService {
       /**
        * <code>repeated .personhood_service.ChallengeCandidate list = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.ChallengeCandidate.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.PersonhoodService.ChallengeCandidate.Builder>
            getListBuilderList() {
         return getListFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.PersonhoodService.ChallengeCandidate, ch.epfl.dedis.lib.proto.PersonhoodService.ChallengeCandidate.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.ChallengeCandidateOrBuilder> 
+          ch.epfl.dedis.lib.proto.PersonhoodService.ChallengeCandidate, ch.epfl.dedis.lib.proto.PersonhoodService.ChallengeCandidate.Builder, ch.epfl.dedis.lib.proto.PersonhoodService.ChallengeCandidateOrBuilder>
           getListFieldBuilder() {
         if (listBuilder_ == null) {
           listBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -21290,137 +21290,137 @@ public final class PersonhoodService {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_PartyList_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_PartyList_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_PartyDelete_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_PartyDelete_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_PartyListResponse_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_PartyListResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_Party_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_Party_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_RoPaSciList_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_RoPaSciList_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_RoPaSciListResponse_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_RoPaSciListResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_StringReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_StringReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_Poll_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_Poll_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_PollDelete_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_PollDelete_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_PollList_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_PollList_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_PollAnswer_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_PollAnswer_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_PollStruct_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_PollStruct_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_PollChoice_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_PollChoice_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_PollResponse_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_PollResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_Capabilities_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_Capabilities_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_CapabilitiesResponse_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_CapabilitiesResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_Capability_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_Capability_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_UserLocation_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_UserLocation_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_Meetup_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_Meetup_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_MeetupResponse_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_MeetupResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_Challenge_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_Challenge_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_ChallengeCandidate_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_ChallengeCandidate_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_ChallengeReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_ChallengeReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_GetAdminDarcIDs_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_GetAdminDarcIDs_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_GetAdminDarcIDsReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_GetAdminDarcIDsReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_SetAdminDarcIDs_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_SetAdminDarcIDs_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_SetAdminDarcIDsReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_SetAdminDarcIDsReply_fieldAccessorTable;
 

@@ -87,4 +87,3 @@ contract CallByzcoin {
 
     // Private functions
 }
-

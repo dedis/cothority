@@ -310,7 +310,7 @@ public class ByzCoinRPCTest {
     @Test
     void updateInterval() throws Exception {
         logger.info("test-start: updateInterval");
-		
+
         // Get the counter for the admin and increment it
         SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
         counters.increment();

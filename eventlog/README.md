@@ -77,8 +77,8 @@ general overview. Please see the [Java docs](https://www.javadoc.io/doc/ch.epfl.
 for more information.
 
 ```java
-// Create the eventlog instance. It expects a ByzCoin RPC, 
-// the darc ID that has the "spawn:eventlog" rule, a list of 
+// Create the eventlog instance. It expects a ByzCoin RPC,
+// the darc ID that has the "spawn:eventlog" rule, a list of
 // signers that are authorized to in the "spawn:eventlog" rule
 // and the counters (used for preventing replay attacks).
 // You can get the counters using bcRPC.getSignerCounters.

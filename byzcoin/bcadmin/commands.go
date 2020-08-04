@@ -48,22 +48,22 @@ var cmds = cli.Commands{
 		// UsageText should be used instead, but its not working:
 		// see https://github.com/urfave/cli/issues/592
 		Description: `
-   bcadmin [--export] contract CONTRACT { 
-                               spawn  --bc <byzcoin config> 
+   bcadmin [--export] contract CONTRACT {
+                               spawn  --bc <byzcoin config>
                                       [--<arg name> <arg value>, ...]
-                                      [--darc <darc id>] 
+                                      [--darc <darc id>]
                                       [--sign <pub key>],
                                invoke <command>
                                       --bc <byzcoin config>
                                       --instid, i <instance ID>
                                       [--<arg name> <arg value>, ...]
-                                      [--darc <darc id>] 
+                                      [--darc <darc id>]
                                       [--sign <pub key>],
                                get    --bc <byzcoin config>
                                       --instid, i <instance ID>,
                                delete --bc <byzcoin config>
                                       --instid, i <instance ID>
-                                      [--sign <pub key>]     
+                                      [--sign <pub key>]
                              }
    CONTRACT   {value,deferred,config}`,
 		Subcommands: cli.Commands{

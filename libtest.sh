@@ -333,7 +333,7 @@ build(){
   local out=$( pwd )/$app
   if [ ! -e $app -o "$CLEANBUILD" ]; then
     testOut "Building $app"
-    ( 
+    (
       cd $builddir
       if ! go build -o $out $TAGS *.go; then
         fail "Couldn't build $builddir"
@@ -421,7 +421,7 @@ runCoBG(){
     # This makes `pkill conode` not outputting errors here
     disown
   done
-  
+
   local allStarted=0
   # wait for conodes to start but maximum 10 seconds
   for (( k=0; k < 20 && allStarted == 0; k++ )) do
@@ -430,7 +430,7 @@ runCoBG(){
 
     for nb in "$@"; do
       local port="$(( $BASE_PORT + $nb * 2 + 1 ))"
-      
+
       if ! (echo >"/dev/tcp/localhost/$port") &>/dev/null; then
         allStarted=0
       fi

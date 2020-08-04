@@ -37,7 +37,7 @@ testContractReadSpawn() {
 
     # Add the Calypso rule "spawn:calypsoWrite"
     testOK runBA darc rule -rule spawn:calypsoWrite -darc $ID -sign $KEY -identity $KEY
-    
+
     OUTRES=`runCA0 contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --secret "aabbccddeeff0011" --key "$PUB_KEY"`
     WRITE_ID=`echo "$OUTRES" | sed -n '2p'` # must be at the second line
 

@@ -124,4 +124,3 @@ public class SignerX509ECTest extends SignerX509EC {
         }
     }
 }
-

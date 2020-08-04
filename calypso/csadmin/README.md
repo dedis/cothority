@@ -14,10 +14,10 @@ In this scenario we assume the following:
 - A roster has been created and has a ByzcoinID \<byzcoin id>
 - There is a writer user, which has the key \<writer id>
 - There is a reader user, which has the key \<reader id>
-- There is a document darc \<doc darc>, which is has the following rules:  
-    `spawn:calypsoWrite - <writer id>`  
+- There is a document darc \<doc darc>, which is has the following rules:
+    `spawn:calypsoWrite - <writer id>`
     `spawn:calypsoRead - <reader id>`
-- The default admin darc has the rule:   
+- The default admin darc has the rule:
 `spawn:longTermSecret - <admin id>`
 
 Refer to `cothority/byzcoin/bcadmin` to learn how to set up this environment.
@@ -39,7 +39,7 @@ the private key file of the node. A ByzcoinID that has not been authorized by (a
 majority of) the nodes won't be able to perform requests for the Calypso
 service.
 
-The following command must be executed from the localhost of each node: 
+The following command must be executed from the localhost of each node:
 
 ```bash
 $ csadmin authorize <private.toml> <byzcoin id>
@@ -52,7 +52,7 @@ contract as read from byzcoin:
 
 ```bash
 $ csadmin contract lts spawn # uses the default admin darc and key
-> Spawned new LTS contract. Its instance id is: 
+> Spawned new LTS contract. Its instance id is:
 > <lts instance id>
 $ csadmin dkg info --bc bc-*.cfg --instid <lts instance id>
 ```

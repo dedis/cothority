@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Usage: 
+# Usage:
 #   ./test [options]
 # Options:
 #   -b   re-builds bcadmin package
@@ -274,7 +274,7 @@ testRoster(){
 # skipchain, we have to bypass this authorization process and allow a local
 # service be able to send requests on the same local linked conode. This process
 # is handled with the `StoreSkipBlockInternal` method, and this is what this
-# method checks. 
+# method checks.
 # Note: this test relies on the `scmgr` and the ability to create/update Byzcoin
 testLinkPermission() {
   rm -f config/*
@@ -295,7 +295,7 @@ testLinkPermission() {
   $SCMGR_APP link add co2/private.toml
   $SCMGR_APP link add co3/private.toml
   testOK runBA create --roster public.toml --interval .5s
-  testOK runBA darc rule -rule spawn:xxx -identity ed25519:aef 
+  testOK runBA darc rule -rule spawn:xxx -identity ed25519:aef
 }
 
 
@@ -324,7 +324,7 @@ testAddDarc(){
   # checks the --shortPrint option
   OUTRES=$(runBA0 darc add --shortPrint)
   matchOK "$OUTRES" "darc:[0-9a-f]{64}
-\[ed25519:[0-9a-f]{64}\]" 
+\[ed25519:[0-9a-f]{64}\]"
 }
 
 testDarcAddDeferred() {
@@ -375,7 +375,7 @@ testDarcAddRuleMinimum(){
   KEY=`cat ./darc_key.txt`
   testOK runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id darc:A -id darc:B -id darc:C -id darc:D --minimum 1
   testFGrep "test:contract - \"((darc:A)) | ((darc:B)) | ((darc:C)) | ((darc:D))\"" runBA0 darc show --darc "$ID"
-  
+
   # with a minimum
   testOK runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id darc:A -id darc:B -id darc:C -id darc:D --minimum 2 -replace
   testFGrep "test:contract - \"((darc:A) & (darc:B)) | ((darc:A) & (darc:C)) | ((darc:A) & (darc:D)) | ((darc:B) & (darc:C)) | ((darc:B) & (darc:D)) | ((darc:C) & (darc:D))\"" runBA0 darc show --darc "$ID"
@@ -521,7 +521,7 @@ testResolveiid() {
   eval $SED
   [ -z "$BC" ] && exit 1
 
-  testOK runBA0 contract name spawn 
+  testOK runBA0 contract name spawn
 
   # Add the rules
   testOK runBA darc add -out_id ./darc_id.txt -out_key ./darc_key.txt -unrestricted
@@ -565,4 +565,3 @@ testInstructionGet() {
 }
 
 main
-

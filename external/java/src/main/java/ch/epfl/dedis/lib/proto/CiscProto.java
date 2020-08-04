@@ -769,7 +769,7 @@ public final class CiscProto {
        * <code>optional .cisc.Data latest = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.CiscProto.Data, ch.epfl.dedis.lib.proto.CiscProto.Data.Builder, ch.epfl.dedis.lib.proto.CiscProto.DataOrBuilder> 
+          ch.epfl.dedis.lib.proto.CiscProto.Data, ch.epfl.dedis.lib.proto.CiscProto.Data.Builder, ch.epfl.dedis.lib.proto.CiscProto.DataOrBuilder>
           getLatestFieldBuilder() {
         if (latestBuilder_ == null) {
           latestBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -887,7 +887,7 @@ public final class CiscProto {
        * <code>optional .cisc.Data proposed = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.CiscProto.Data, ch.epfl.dedis.lib.proto.CiscProto.Data.Builder, ch.epfl.dedis.lib.proto.CiscProto.DataOrBuilder> 
+          ch.epfl.dedis.lib.proto.CiscProto.Data, ch.epfl.dedis.lib.proto.CiscProto.Data.Builder, ch.epfl.dedis.lib.proto.CiscProto.DataOrBuilder>
           getProposedFieldBuilder() {
         if (proposedBuilder_ == null) {
           proposedBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -1005,7 +1005,7 @@ public final class CiscProto {
        * <code>optional .skipchain.SkipBlock latestskipblock = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>
           getLatestskipblockFieldBuilder() {
         if (latestskipblockBuilder_ == null) {
           latestskipblockBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -1468,7 +1468,7 @@ public final class CiscProto {
           java.lang.String, ch.epfl.dedis.lib.proto.CiscProto.Device> defaultEntry =
               com.google.protobuf.MapEntry
               .<java.lang.String, ch.epfl.dedis.lib.proto.CiscProto.Device>newDefaultInstance(
-                  ch.epfl.dedis.lib.proto.CiscProto.internal_static_cisc_Data_DeviceEntry_descriptor, 
+                  ch.epfl.dedis.lib.proto.CiscProto.internal_static_cisc_Data_DeviceEntry_descriptor,
                   com.google.protobuf.WireFormat.FieldType.STRING,
                   "",
                   com.google.protobuf.WireFormat.FieldType.MESSAGE,
@@ -1560,7 +1560,7 @@ public final class CiscProto {
           java.lang.String, java.lang.String> defaultEntry =
               com.google.protobuf.MapEntry
               .<java.lang.String, java.lang.String>newDefaultInstance(
-                  ch.epfl.dedis.lib.proto.CiscProto.internal_static_cisc_Data_StorageEntry_descriptor, 
+                  ch.epfl.dedis.lib.proto.CiscProto.internal_static_cisc_Data_StorageEntry_descriptor,
                   com.google.protobuf.WireFormat.FieldType.STRING,
                   "",
                   com.google.protobuf.WireFormat.FieldType.STRING,
@@ -1685,7 +1685,7 @@ public final class CiscProto {
           java.lang.String, com.google.protobuf.ByteString> defaultEntry =
               com.google.protobuf.MapEntry
               .<java.lang.String, com.google.protobuf.ByteString>newDefaultInstance(
-                  ch.epfl.dedis.lib.proto.CiscProto.internal_static_cisc_Data_VotesEntry_descriptor, 
+                  ch.epfl.dedis.lib.proto.CiscProto.internal_static_cisc_Data_VotesEntry_descriptor,
                   com.google.protobuf.WireFormat.FieldType.STRING,
                   "",
                   com.google.protobuf.WireFormat.FieldType.BYTES,
@@ -2764,7 +2764,7 @@ public final class CiscProto {
        * <code>optional .onet.Roster roster = 4;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder> 
+          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder>
           getRosterFieldBuilder() {
         if (rosterBuilder_ == null) {
           rosterBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -3681,7 +3681,7 @@ public final class CiscProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -3697,7 +3697,7 @@ public final class CiscProto {
         getPinBytes() {
       java.lang.Object ref = pin_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         pin_ = b;
@@ -4112,7 +4112,7 @@ public final class CiscProto {
           getPinBytes() {
         java.lang.Object ref = pin_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           pin_ = b;
@@ -5053,7 +5053,7 @@ public final class CiscProto {
        * <code>optional .pop.FinalStatement final = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.PoPProto.FinalStatement, ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.Builder, ch.epfl.dedis.lib.proto.PoPProto.FinalStatementOrBuilder> 
+          ch.epfl.dedis.lib.proto.PoPProto.FinalStatement, ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.Builder, ch.epfl.dedis.lib.proto.PoPProto.FinalStatementOrBuilder>
           getFinalFieldBuilder() {
         if (finalBuilder_ == null) {
           finalBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -6178,7 +6178,7 @@ public final class CiscProto {
        * <code>optional .cisc.Data data = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.CiscProto.Data, ch.epfl.dedis.lib.proto.CiscProto.Data.Builder, ch.epfl.dedis.lib.proto.CiscProto.DataOrBuilder> 
+          ch.epfl.dedis.lib.proto.CiscProto.Data, ch.epfl.dedis.lib.proto.CiscProto.Data.Builder, ch.epfl.dedis.lib.proto.CiscProto.DataOrBuilder>
           getDataFieldBuilder() {
         if (dataBuilder_ == null) {
           dataBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -7017,7 +7017,7 @@ public final class CiscProto {
        * <code>optional .skipchain.SkipBlock genesis = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>
           getGenesisFieldBuilder() {
         if (genesisBuilder_ == null) {
           genesisBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -8176,7 +8176,7 @@ public final class CiscProto {
        * <code>optional .cisc.Data data = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.CiscProto.Data, ch.epfl.dedis.lib.proto.CiscProto.Data.Builder, ch.epfl.dedis.lib.proto.CiscProto.DataOrBuilder> 
+          ch.epfl.dedis.lib.proto.CiscProto.Data, ch.epfl.dedis.lib.proto.CiscProto.Data.Builder, ch.epfl.dedis.lib.proto.CiscProto.DataOrBuilder>
           getDataFieldBuilder() {
         if (dataBuilder_ == null) {
           dataBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -8911,7 +8911,7 @@ public final class CiscProto {
        * <code>optional .cisc.Data propose = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.CiscProto.Data, ch.epfl.dedis.lib.proto.CiscProto.Data.Builder, ch.epfl.dedis.lib.proto.CiscProto.DataOrBuilder> 
+          ch.epfl.dedis.lib.proto.CiscProto.Data, ch.epfl.dedis.lib.proto.CiscProto.Data.Builder, ch.epfl.dedis.lib.proto.CiscProto.DataOrBuilder>
           getProposeFieldBuilder() {
         if (proposeBuilder_ == null) {
           proposeBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -10070,7 +10070,7 @@ public final class CiscProto {
        * <code>optional .cisc.Data propose = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.CiscProto.Data, ch.epfl.dedis.lib.proto.CiscProto.Data.Builder, ch.epfl.dedis.lib.proto.CiscProto.DataOrBuilder> 
+          ch.epfl.dedis.lib.proto.CiscProto.Data, ch.epfl.dedis.lib.proto.CiscProto.Data.Builder, ch.epfl.dedis.lib.proto.CiscProto.DataOrBuilder>
           getProposeFieldBuilder() {
         if (proposeBuilder_ == null) {
           proposeBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -10298,7 +10298,7 @@ public final class CiscProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -10314,7 +10314,7 @@ public final class CiscProto {
         getSignerBytes() {
       java.lang.Object ref = signer_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         signer_ = b;
@@ -10797,7 +10797,7 @@ public final class CiscProto {
           getSignerBytes() {
         java.lang.Object ref = signer_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           signer_ = b;
@@ -11502,7 +11502,7 @@ public final class CiscProto {
        * <code>optional .skipchain.SkipBlock data = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>
           getDataFieldBuilder() {
         if (dataBuilder_ == null) {
           dataBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -11752,7 +11752,7 @@ public final class CiscProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -11768,7 +11768,7 @@ public final class CiscProto {
         getTagBytes() {
       java.lang.Object ref = tag_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         tag_ = b;
@@ -11794,7 +11794,7 @@ public final class CiscProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -11810,7 +11810,7 @@ public final class CiscProto {
         getPubstrBytes() {
       java.lang.Object ref = pubstr_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         pubstr_ = b;
@@ -12330,7 +12330,7 @@ public final class CiscProto {
        * <code>optional .cisc.IDBlock idblock = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.CiscProto.IDBlock, ch.epfl.dedis.lib.proto.CiscProto.IDBlock.Builder, ch.epfl.dedis.lib.proto.CiscProto.IDBlockOrBuilder> 
+          ch.epfl.dedis.lib.proto.CiscProto.IDBlock, ch.epfl.dedis.lib.proto.CiscProto.IDBlock.Builder, ch.epfl.dedis.lib.proto.CiscProto.IDBlockOrBuilder>
           getIdblockFieldBuilder() {
         if (idblockBuilder_ == null) {
           idblockBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -12374,7 +12374,7 @@ public final class CiscProto {
           getTagBytes() {
         java.lang.Object ref = tag_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           tag_ = b;
@@ -12450,7 +12450,7 @@ public final class CiscProto {
           getPubstrBytes() {
         java.lang.Object ref = pubstr_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           pubstr_ = b;
@@ -13215,7 +13215,7 @@ public final class CiscProto {
        * <code>optional .skipchain.SkipBlock latest = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>
           getLatestFieldBuilder() {
         if (latestBuilder_ == null) {
           latestBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -13906,102 +13906,102 @@ public final class CiscProto {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_cisc_IDBlock_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_cisc_IDBlock_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_cisc_Data_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_cisc_Data_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_cisc_Data_DeviceEntry_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_cisc_Data_DeviceEntry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_cisc_Data_StorageEntry_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_cisc_Data_StorageEntry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_cisc_Data_VotesEntry_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_cisc_Data_VotesEntry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_cisc_Device_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_cisc_Device_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_cisc_PinRequest_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_cisc_PinRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_cisc_StoreKeys_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_cisc_StoreKeys_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_cisc_CreateIdentity_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_cisc_CreateIdentity_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_cisc_CreateIdentityReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_cisc_CreateIdentityReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_cisc_DataUpdate_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_cisc_DataUpdate_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_cisc_DataUpdateReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_cisc_DataUpdateReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_cisc_ProposeSend_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_cisc_ProposeSend_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_cisc_ProposeUpdate_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_cisc_ProposeUpdate_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_cisc_ProposeUpdateReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_cisc_ProposeUpdateReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_cisc_ProposeVote_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_cisc_ProposeVote_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_cisc_ProposeVoteReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_cisc_ProposeVoteReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_cisc_PropagateIdentity_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_cisc_PropagateIdentity_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_cisc_UpdateSkipBlock_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_cisc_UpdateSkipBlock_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_cisc_Authenticate_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_cisc_Authenticate_fieldAccessorTable;
 

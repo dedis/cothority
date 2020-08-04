@@ -605,7 +605,7 @@ public final class StatusProto {
           java.lang.String, ch.epfl.dedis.lib.proto.OnetProto.Status> defaultEntry =
               com.google.protobuf.MapEntry
               .<java.lang.String, ch.epfl.dedis.lib.proto.OnetProto.Status>newDefaultInstance(
-                  ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_Response_StatusEntry_descriptor, 
+                  ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_Response_StatusEntry_descriptor,
                   com.google.protobuf.WireFormat.FieldType.STRING,
                   "",
                   com.google.protobuf.WireFormat.FieldType.MESSAGE,
@@ -1312,7 +1312,7 @@ public final class StatusProto {
        * <code>optional .network.ServerIdentity serveridentity = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
+          ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder>
           getServeridentityFieldBuilder() {
         if (serveridentityBuilder_ == null) {
           serveridentityBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -1411,7 +1411,7 @@ public final class StatusProto {
     /**
      * <code>repeated .network.ServerIdentity list = 4;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> 
+    java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity>
         getListList();
     /**
      * <code>repeated .network.ServerIdentity list = 4;</code>
@@ -1424,7 +1424,7 @@ public final class StatusProto {
     /**
      * <code>repeated .network.ServerIdentity list = 4;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder>
         getListOrBuilderList();
     /**
      * <code>repeated .network.ServerIdentity list = 4;</code>
@@ -1617,7 +1617,7 @@ public final class StatusProto {
     /**
      * <code>repeated .network.ServerIdentity list = 4;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder>
         getListOrBuilderList() {
       return list_;
     }
@@ -2096,7 +2096,7 @@ public final class StatusProto {
               listBuilder_ = null;
               list_ = other.list_;
               bitField0_ = (bitField0_ & ~0x00000008);
-              listBuilder_ = 
+              listBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getListFieldBuilder() : null;
             } else {
@@ -2445,7 +2445,7 @@ public final class StatusProto {
       /**
        * <code>repeated .network.ServerIdentity list = 4;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder>
            getListOrBuilderList() {
         if (listBuilder_ != null) {
           return listBuilder_.getMessageOrBuilderList();
@@ -2471,12 +2471,12 @@ public final class StatusProto {
       /**
        * <code>repeated .network.ServerIdentity list = 4;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder>
            getListBuilderList() {
         return getListFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
+          ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder>
           getListFieldBuilder() {
         if (listBuilder_ == null) {
           listBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -2584,7 +2584,7 @@ public final class StatusProto {
     /**
      * <code>repeated .network.ServerIdentity nodes = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> 
+    java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity>
         getNodesList();
     /**
      * <code>repeated .network.ServerIdentity nodes = 1;</code>
@@ -2597,7 +2597,7 @@ public final class StatusProto {
     /**
      * <code>repeated .network.ServerIdentity nodes = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder>
         getNodesOrBuilderList();
     /**
      * <code>repeated .network.ServerIdentity nodes = 1;</code>
@@ -2705,7 +2705,7 @@ public final class StatusProto {
     /**
      * <code>repeated .network.ServerIdentity nodes = 1;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder>
         getNodesOrBuilderList() {
       return nodes_;
     }
@@ -3045,7 +3045,7 @@ public final class StatusProto {
               nodesBuilder_ = null;
               nodes_ = other.nodes_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              nodesBuilder_ = 
+              nodesBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getNodesFieldBuilder() : null;
             } else {
@@ -3283,7 +3283,7 @@ public final class StatusProto {
       /**
        * <code>repeated .network.ServerIdentity nodes = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder>
            getNodesOrBuilderList() {
         if (nodesBuilder_ != null) {
           return nodesBuilder_.getMessageOrBuilderList();
@@ -3309,12 +3309,12 @@ public final class StatusProto {
       /**
        * <code>repeated .network.ServerIdentity nodes = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder>
            getNodesBuilderList() {
         return getNodesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
+          ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder>
           getNodesFieldBuilder() {
         if (nodesBuilder_ == null) {
           nodesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -3382,27 +3382,27 @@ public final class StatusProto {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_status_Request_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_status_Request_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_status_Response_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_status_Response_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_status_Response_StatusEntry_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_status_Response_StatusEntry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_status_CheckConnectivity_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_status_CheckConnectivity_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_status_CheckConnectivityReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_status_CheckConnectivityReply_fieldAccessorTable;
 

@@ -11,4 +11,3 @@ for filename in $PROTO_PATH/*.java; do
 	sed -i.bak 's/\.PARSER/.parser()/g' $filename
 	rm ${filename}.bak
 done
-
