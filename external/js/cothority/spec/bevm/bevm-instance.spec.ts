@@ -1,5 +1,6 @@
-import BN from "bn.js";
 import Long from "long";
+
+import { BigNumber } from "@ethersproject/bignumber";
 
 // For debugging
 // import Log from "../../src/log";
@@ -67,6 +68,8 @@ ateMutability":"nonpayable","type":"constructor"}]
     }, 30 * 1000);
 
     it("should successfully deploy and interact with a contract", async () => {
+        // NOTE: Make sure the account privKey is different for each test, to
+        // avoid issues with nonces
         const privKey = Buffer.from(
             "c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3",
             "hex");
@@ -114,7 +117,7 @@ ateMutability":"nonpayable","type":"constructor"}]
 
         // Retrieve number of remaining candies, which should be 100 - (1 + 2 +
         // ... + 10) = 100 - (10 * 11 / 2)
-        const expectedRemainingCandies = new BN(100 - (10 * 11 / 2));
+        const expectedRemainingCandies = BigNumber.from(100 - (10 * 11 / 2));
         const [remainingCandies] = await bevmInstance.call(
             account,
             contract,
@@ -126,6 +129,8 @@ ateMutability":"nonpayable","type":"constructor"}]
     }, 60000); // Extend Jasmine default timeout interval to 1 minute
 
     it("should successfully handle large numbers", async () => {
+        // NOTE: Make sure the account privKey is different for each test, to
+        // avoid issues with nonces
         const privKey = Buffer.from(
             "d87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3",
             "hex");
@@ -140,7 +145,7 @@ ateMutability":"nonpayable","type":"constructor"}]
         )).toBeResolved();
 
         // 2^128
-        const nbCandies = new BN("340282366920938463463374607431768211456");
+        const nbCandies = BigNumber.from("340282366920938463463374607431768211456");
 
         // Deploy a Candy contract
         await expectAsync(bevmInstance.deploy(
@@ -162,5 +167,100 @@ ateMutability":"nonpayable","type":"constructor"}]
         );
 
         expect(remainingCandies.eq(nbCandies)).toBe(true);
+    }, 60000); // Extend Jasmine default timeout interval to 1 minute
+
+    it("should handle ABIv2", async () => {
+        // Test code:
+        //
+        // pragma experimental ABIEncoderV2;
+        // pragma solidity ^0.5.0;
+        //
+        // contract ABIv2 {
+        //     struct S {
+        //         uint256 v1;
+        //         uint256 v2;
+        //     }
+        //
+        //     function squares(uint256 limit) public view returns (S[] memory) {
+        //         S[] memory result = new S[](limit);
+        //
+        //         for (uint256 i = 0; i < limit; i++) {
+        //             S memory s = S(i, i * i);
+        //             result[i] = s;
+        //         }
+        //
+        //         return result;
+        //     }
+        // }
+
+        const abiV2Bytecode = Buffer.from(`
+608060405234801561001057600080fd5b506102e4806100206000396000f3fe60806040523480\
+1561001057600080fd5b506004361061002b5760003560e01c80631d1d15d414610030575b6000\
+80fd5b61004a60048036036100459190810190610148565b610060565b60405161005791906102\
+25565b60405180910390f35b606080826040519080825280602002602001820160405280156100\
+9d57816020015b61008a6100ff565b8152602001906001900390816100825790505b5090506000\
+8090505b838110156100f5576100b6610119565b60405180604001604052808381526020018384\
+028152509050808383815181106100dc57fe5b6020026020010181905250508080600101915050\
+6100a6565b5080915050919050565b604051806040016040528060008152602001600081525090\
+565b604051806040016040528060008152602001600081525090565b6000813590506101428161\
+028a565b92915050565b60006020828403121561015a57600080fd5b6000610168848285016101\
+33565b91505092915050565b600061017d83836101e7565b60408301905092915050565b600061\
+019482610257565b61019e818561026f565b93506101a983610247565b8060005b838110156101\
+da5781516101c18882610171565b97506101cc83610262565b9250506001810190506101ad565b\
+5085935050505092915050565b6040820160008201516101fd6000850182610216565b50602082\
+01516102106020850182610216565b50505050565b61021f81610280565b82525050565b600060\
+2082019050818103600083015261023f8184610189565b905092915050565b6000819050602082\
+019050919050565b600081519050919050565b6000602082019050919050565b60008282526020\
+8201905092915050565b6000819050919050565b61029381610280565b811461029e57600080fd\
+5b5056fea365627a7a72315820381504cadc97d1a39d5aeddd0d1fb4dab2f25e091ddab0f5e5c3\
+edecac2207db6c6578706572696d656e74616cf564736fcgrigis@icc4dt-lpc-01
+`.trim(), "hex");
+        const abiV2Abi = `
+[{"constant":true,"inputs":[{"internalType":"uint256","name":"limit","type":"u\
+int256"}],"name":"squares","outputs":[{"components":[{"internalType":"uint256"\
+,"name":"v1","type":"uint256"},{"internalType":"uint256","name":"v2","type":"u\
+int256"}],"internalType":"struct ABIv2.S[]","name":"","type":"tuple[]"}],"paya\
+ble":false,"stateMutability":"view","type":"function"}]
+`.trim();
+
+        // NOTE: Make sure the account privKey is different for each test, to
+        // avoid issues with nonces
+        const privKey = Buffer.from(
+            "e87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3",
+            "hex");
+        const account = new EvmAccount("test", privKey);
+        const contract = new EvmContract("ABIv2", abiV2Bytecode, abiV2Abi);
+
+        // Credit an account so that we can perform actions
+        await expectAsync(bevmInstance.creditAccount(
+            [admin],
+            account,
+            WEI_PER_ETHER.mul(5),
+        )).toBeResolved();
+
+        // Deploy an ABIv2 contract
+        await expectAsync(bevmInstance.deploy(
+            [admin],
+            1e7,
+            1,
+            0,
+            account,
+            contract,
+        )).toBeResolved();
+
+        // Retrieve first ten squares
+        const [result] = await bevmInstance.call(
+            account,
+            contract,
+            0,
+            "squares",
+            [10],
+        );
+
+        expect(result.length).toEqual(10);
+
+        result.forEach((s: any) => {
+            expect(s.v2.eq(s.v1.mul(s.v1))).toBe(true);
+        });
     }, 60000); // Extend Jasmine default timeout interval to 1 minute
 });
