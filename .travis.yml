@@ -42,6 +42,11 @@ jobs:
       script: make test_proto
     - name: pre-commit
       language: python
+      python: "3.6"
+      before_install:
+        - gimme 1.14
+        - . ${HOME}/.gimme/envs/go1.14.env
+        - GO111MODULE=off go get -u golang.org/x/lint/golint
       install: pip install pre-commit
       script: pre-commit run --all-files --verbose --show-diff-on-failure
     - <<: *language_go_1_13
