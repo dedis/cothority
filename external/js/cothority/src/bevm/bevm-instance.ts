@@ -114,12 +114,16 @@ export class EvmContract {
      * Create a new EVM contract
      *
      * @param name      Contract name
-     * @param bytecode  Contract bytecode
+     * @param bytecode  Contract bytecode; pass `undefined` if the contract
+     *                  does not need deploying
      * @param abiJson   Contract ABI (JSON-encoded)
-     * @param addresses Array of deployed contract instances; should normally not be specified
+     * @param addresses Array of existing (already deployed) contract
+     *                  instances; if not provided, the contract will need to
+     *                  deploy instances before exeuting transactions or
+     *                  view method calls
      */
     constructor(readonly name: string,
-                readonly bytecode: Buffer,
+                readonly bytecode: Buffer = Buffer.from(""),
                 readonly abiJson: string,
                 readonly addresses: Buffer[] = []) {
         this.methodAbi = new Map();
