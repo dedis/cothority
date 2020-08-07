@@ -353,6 +353,10 @@ export class BEvmInstance extends Instance {
                       method: string,
                       args: any[] = [],
                       wait?: number) {
+        if (instanceIndex >= contract.addresses.length) {
+            throw Error(`instance ${instanceIndex} does not exist`);
+        }
+
         const callData = contract.encodeCallData(method, ...args);
 
         const ethTx = new Transaction({
@@ -400,6 +404,10 @@ export class BEvmInstance extends Instance {
                instanceIndex: number,
                method: string,
                args: any[] = []): Promise<Result> {
+        if (instanceIndex >= contract.addresses.length) {
+            throw Error(`instance ${instanceIndex} does not exist`);
+        }
+
         const callData = contract.encodeCallData(method, ...args);
 
         const response = await this.bevmRPC.viewCall(
