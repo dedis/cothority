@@ -108,19 +108,23 @@ export class EvmContract {
         return address;
     }
 
-    readonly methodAbi: Map<string, any>;
+    private methodAbi: Map<string, any>;
 
     /**
      * Create a new EVM contract
      *
      * @param name      Contract name
-     * @param bytecode  Contract bytecode
+     * @param bytecode  Contract bytecode; pass `undefined` if the contract
+     *                  does not need deploying
      * @param abiJson   Contract ABI (JSON-encoded)
-     * @param addresses Array of deployed contract instances; should normally not be specified
+     * @param addresses Array of existing (already deployed) contract
+     *                  instances; if not provided, the contract will need to
+     *                  deploy instances before exeuting transactions or
+     *                  view method calls
      */
     constructor(readonly name: string,
-                readonly bytecode: Buffer,
-                readonly abiJson: string,
+                private bytecode: Buffer = Buffer.from(""),
+                private abiJson: string,
                 readonly addresses: Buffer[] = []) {
         this.methodAbi = new Map();
 
@@ -140,7 +144,43 @@ export class EvmContract {
             });
     }
 
-    createNewAddress(account: EvmAccount) {
+    encodeDeployData(...args: any[]): Buffer {
+        if (this.bytecode.length === 0) {
+            throw Error("This contract cannot be deployed (no provided bytecode)");
+        }
+
+        const abiIface = new Interface(this.abiJson);
+        const encodedArgs = abiIface.encodeDeploy(args);
+        const encodedArgsBuf = Buffer.from(encodedArgs.substring(2), "hex");
+        const callDataBuf = Buffer.concat([this.bytecode, encodedArgsBuf]);
+
+        return callDataBuf;
+    }
+
+    encodeCallData(method: string, ...args: any[]): Buffer {
+        const abiIface = new Interface(this.abiJson);
+        const fragment = this.getMethodFragment(method);
+        const callData = abiIface.encodeFunctionData(fragment, args);
+        const callDataBuf = Buffer.from(callData.substring(2), "hex");
+
+        return callDataBuf;
+    }
+
+    decodeCallResult(method: string, result: Buffer): Result {
+        const abiIface = new Interface(this.abiJson);
+        const fragment = this.getMethodFragment(method);
+        const decodedResult = abiIface.decodeFunctionResult(fragment, result);
+
+        return decodedResult;
+    }
+
+    /**
+     * Add a new instance to this conctract, with the address determine by the
+     * provided account.
+     *
+     * @param account Account that spawned the instance
+     */
+    addNewInstance(account: EvmAccount) {
         const newAddress = EvmContract.computeAddress(account.address, account.nonce);
         this.addresses.push(newAddress);
     }
@@ -152,6 +192,18 @@ export class EvmContract {
             bytecode: this.bytecode.toString("hex"),
             name: this.name,
         };
+    }
+
+    private getMethodFragment(method: string): string {
+        const entry = this.methodAbi.get(method);
+        if (entry === undefined) {
+            throw Error(`Method "${method}" does not exist in the ABI`);
+        }
+
+        const types = entry.inputs.map((arg: any) => arg.type);
+        const fragment = `${method}(${types.join(",")})`;
+
+        return fragment;
     }
 }
 
@@ -251,12 +303,9 @@ export class BEvmInstance extends Instance {
                  amount: number,
                  account: EvmAccount,
                  contract: EvmContract,
-                 args?: any[],
+                 args: any[] = [],
                  wait?: number) {
-        const abiIface = new Interface(contract.abiJson);
-        const encodedArgs = abiIface.encodeDeploy(args);
-        const encodedArgsBuf = Buffer.from(encodedArgs.substring(2), "hex");
-        const callData = Buffer.concat([contract.bytecode, encodedArgsBuf]);
+        const callData = contract.encodeDeployData(...args);
 
         const ethTx = new Transaction({
             data: callData,
@@ -274,7 +323,7 @@ export class BEvmInstance extends Instance {
             ],
             signers, wait);
 
-        contract.createNewAddress(account);
+        contract.addNewInstance(account);
         account.incNonce();
     }
 
@@ -302,17 +351,16 @@ export class BEvmInstance extends Instance {
                       contract: EvmContract,
                       instanceIndex: number,
                       method: string,
-                      args?: any[],
+                      args: any[] = [],
                       wait?: number) {
-        const entry = contract.methodAbi.get(method);
-        const types = entry.inputs.map((arg: any) => arg.type);
-        const abiIface = new Interface(contract.abiJson);
-        const fragment = `${method}(${types.join(",")})`;
-        const callData = abiIface.encodeFunctionData(fragment, args);
-        const callDataBuf = Buffer.from(callData.substring(2), "hex");
+        if (instanceIndex >= contract.addresses.length) {
+            throw Error(`instance ${instanceIndex} does not exist`);
+        }
+
+        const callData = contract.encodeCallData(method, ...args);
 
         const ethTx = new Transaction({
-            data: callDataBuf,
+            data: callData,
             gasLimit,
             gasPrice,
             nonce: account.nonce,
@@ -355,22 +403,21 @@ export class BEvmInstance extends Instance {
                contract: EvmContract,
                instanceIndex: number,
                method: string,
-               args?: any[]): Promise<Result> {
-        const entry = contract.methodAbi.get(method);
-        const types = entry.inputs.map((arg: any) => arg.type);
-        const abiIface = new Interface(contract.abiJson);
-        const fragment = `${method}(${types.join(",")})`;
-        const callData = abiIface.encodeFunctionData(fragment, args);
-        const callDataBuf = Buffer.from(callData.substring(2), "hex");
+               args: any[] = []): Promise<Result> {
+        if (instanceIndex >= contract.addresses.length) {
+            throw Error(`instance ${instanceIndex} does not exist`);
+        }
+
+        const callData = contract.encodeCallData(method, ...args);
 
         const response = await this.bevmRPC.viewCall(
             this.byzcoinRPC.genesisID,
             this.id,
             account.address,
             contract.addresses[instanceIndex],
-            callDataBuf);
+            callData);
 
-        const decodedResult = abiIface.decodeFunctionResult(fragment, response.result);
+        const decodedResult = contract.decodeCallResult(method, response.result);
 
         return decodedResult;
     }
