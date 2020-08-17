@@ -1,6 +1,8 @@
 // For debugging
 // import Log from "../../src/log";
 
+import { BigNumber } from "@ethersproject/bignumber";
+
 import { EvmAccount, EvmContract } from "../../src/bevm";
 
 describe("EvmContract", () => {
@@ -36,15 +38,13 @@ ateMutability":"nonpayable","type":"constructor"}]
 
         const account = new EvmAccount("test", privKey);
         const contract = new EvmContract("candy", candyBytecode, candyAbi);
-        // Constructor, 1 transaction, 1 view method
-        expect(contract.methodAbi.size).toBe(3);
 
-        contract.createNewAddress(account);
+        contract.addNewInstance(account);
         expect(contract.addresses.length).toBe(1);
         expect(contract.addresses[0]).toEqual(expectedContractAddress);
 
         account.incNonce();
-        contract.createNewAddress(account);
+        contract.addNewInstance(account);
         expect(contract.addresses.length).toBe(2);
         expect(contract.addresses[0]).toEqual(expectedContractAddress);
         expect(contract.addresses[1]).not.toEqual(expectedContractAddress);
@@ -56,10 +56,72 @@ ateMutability":"nonpayable","type":"constructor"}]
         const ser = contract.serialize();
         const contract2 = EvmContract.deserialize(ser);
 
-        expect(contract.name).toEqual(contract2.name);
-        expect(contract.bytecode).toEqual(contract2.bytecode);
-        expect(contract.abiJson).toEqual(contract2.abiJson);
-        expect(contract.methodAbi).toEqual(contract2.methodAbi);
-        expect(contract.addresses).toEqual(contract2.addresses);
+        expect(contract).toEqual(contract2);
+    });
+
+    it("should correctly encode deploy data", () => {
+        const contract = new EvmContract("candy", candyBytecode, candyAbi);
+
+        const expectedDeployData = Buffer.concat([
+            candyBytecode,
+            // Encoded arguments for uint256 100
+            Buffer.from(
+                "0000000000000000000000000000000000000000000000000000000000000064",
+                "hex"),
+        ]);
+        const deployData = contract.encodeDeployData(100);
+
+        expect(deployData).toEqual(expectedDeployData);
+    });
+
+    it("should fail to encode deploy data when no bytecode", () => {
+        const noByteCode = new EvmContract("test", undefined, candyAbi);
+
+        expect(() => noByteCode.encodeDeployData()).
+            toThrowError(/cannot be deployed/);
+    });
+
+    it("should fail to encode or decode with nonexistent method names", () => {
+        const contract = new EvmContract("candy", undefined, candyAbi);
+
+        // Invalid method names
+        expect(() => contract.encodeCallData("XYZZY")).
+            toThrowError(/does not exist/);
+        expect(() => contract.decodeCallResult("XYZZY", Buffer.from(""))).
+            toThrowError(/does not exist/);
+    });
+
+    it("should correctly encode call data", () => {
+        const contract = new EvmContract("candy", undefined, candyAbi);
+
+        // eatCandy(100)
+        let expectedCallData = Buffer.from(
+            "a1ff2f520000000000000000000000000000000000000000000000000000000000000064",
+            "hex");
+        let callData = contract.encodeCallData("eatCandy", 100);
+
+        expect(callData).toEqual(expectedCallData);
+
+        // getRemainingCandies()
+        expectedCallData = Buffer.from(
+            "ea319f28",
+            "hex");
+        callData = contract.encodeCallData("getRemainingCandies");
+
+        expect(callData).toEqual(expectedCallData);
+    });
+
+    it("should correctly decode call result", () => {
+        const contract = new EvmContract("candy", undefined, candyAbi);
+
+        // 42 as an uint256 value
+        const encodedCallResult = Buffer.from(
+            "000000000000000000000000000000000000000000000000000000000000002a",
+            "hex");
+        const expectedCallResult = BigNumber.from(42);
+        const [callResult] = contract.decodeCallResult(
+            "getRemainingCandies", encodedCallResult);
+
+        expect(callResult.eq(expectedCallResult)).toBe(true);
     });
 });
