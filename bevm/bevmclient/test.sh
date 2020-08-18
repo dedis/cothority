@@ -122,7 +122,7 @@ testBevmInteraction(){
         '"100"'
 
     # Check Candy balance
-    testGrep '"100"' runBevmClient call \
+    testGrep '["100"]' runBevmClient call \
         --sign "${BEVM_USER}" \
         getRemainingCandies
 
@@ -133,7 +133,7 @@ testBevmInteraction(){
         '"58"'
 
     # Check Candy balance
-    testGrep '"42"' runBevmClient call \
+    testGrep '["42"]' runBevmClient call \
         --sign "${BEVM_USER}" \
         getRemainingCandies
 

@@ -150,10 +150,11 @@ func Test_InvokeCandyContract(t *testing.T) {
 	require.NoError(t, err)
 
 	// Get initial candy balance
-	candyBalance, err := bevmClient.Call(
+	result, err := bevmClient.Call(
 		a, candyInstance, "getRemainingCandies")
 	require.NoError(t, err)
-	require.Equal(t, candySupply, candyBalance)
+	require.Equal(t, len(result), 1)
+	require.Equal(t, candySupply, result[0])
 
 	// Eat 10 candies
 	_, err = bevmClient.Transaction(
@@ -164,10 +165,11 @@ func Test_InvokeCandyContract(t *testing.T) {
 
 	// Get remaining candies
 	expectedCandyBalance := big.NewInt(90)
-	candyBalance, err = bevmClient.Call(
+	result, err = bevmClient.Call(
 		a, candyInstance, "getRemainingCandies")
 	require.NoError(t, err)
-	require.Equal(t, expectedCandyBalance, candyBalance)
+	require.Equal(t, len(result), 1)
+	require.Equal(t, expectedCandyBalance, result[0])
 }
 
 func Test_Time(t *testing.T) {
@@ -205,9 +207,11 @@ func Test_Time(t *testing.T) {
 	now := time.Now().Unix()
 
 	// Retrieve stored time
-	storedTime, err := bevmClient.Call(
+	result, err := bevmClient.Call(
 		a, timeTestInstance, "getStoredTime")
 	require.NoError(t, err)
+	require.Equal(t, len(result), 1)
+	storedTime := result[0]
 	// Unitialized -- 0
 	assertBigInt0(t, storedTime.(*big.Int))
 
@@ -218,20 +222,80 @@ func Test_Time(t *testing.T) {
 	require.NoError(t, err)
 
 	// Retrieve stored time
-	storedTime, err = bevmClient.Call(
+	result, err = bevmClient.Call(
 		a, timeTestInstance, "getStoredTime")
 	require.NoError(t, err)
+	require.Equal(t, len(result), 1)
+	storedTime = result[0]
 	// Should be within 5 sec of `now`
 	require.GreaterOrEqual(t, now+5, storedTime.(*big.Int).Int64())
 	require.GreaterOrEqual(t, storedTime.(*big.Int).Int64(), now)
 
 	// Retrieve current time
-	currentTime, err := bevmClient.Call(
+	result, err = bevmClient.Call(
 		a, timeTestInstance, "getCurrentTime")
 	require.NoError(t, err)
+	require.Equal(t, len(result), 1)
+	currentTime := result[0]
 	// Should be within 5 sec of `now`
 	require.GreaterOrEqual(t, now+5, currentTime.(*big.Int).Int64())
 	require.GreaterOrEqual(t, currentTime.(*big.Int).Int64(), now)
+}
+
+// Check that ABIv2 is supported
+func Test_ABIv2(t *testing.T) {
+	// Create a new ledger and prepare for proper closing
+	bct := newBCTest(t)
+	defer bct.Close()
+
+	// Spawn a new BEvm instance
+	instanceID, err := NewBEvm(bct.cl, bct.signer, bct.gDarc)
+	require.NoError(t, err)
+
+	// Create a new BEvm client
+	bevmClient, err := NewClient(bct.cl, bct.signer, instanceID)
+	require.NoError(t, err)
+
+	// Initialize an account
+	a, err := NewEvmAccount(testPrivateKeys[0])
+	require.NoError(t, err)
+
+	// Credit the account
+	_, err = bevmClient.CreditAccount(big.NewInt(5*WeiPerEther), a.Address)
+	require.NoError(t, err)
+
+	// Deploy an ABIv2 contract
+	contract, err := NewEvmContract(
+		"ABIv2",
+		getContractData(t, "ABIv2", "abi"),
+		getContractData(t, "ABIv2", "bin"))
+	require.NoError(t, err)
+	_, contractInstance, err := bevmClient.Deploy(
+		txParams.GasLimit, txParams.GasPrice, 0, a, contract)
+	require.NoError(t, err)
+
+	// Retrieve first n squares
+	n := 10
+	result, err := bevmClient.Call(
+		a, contractInstance, "squares", big.NewInt(int64(n)))
+	require.NoError(t, err)
+
+	// There is a single result...
+	require.Equal(t, len(result), 1)
+	// ...of the expected structure...
+	squares, ok := result[0].([]struct {
+		V1 *big.Int
+		V2 *big.Int
+	})
+	require.True(t, ok, "received unexpected structure")
+	// ...of the expected size...
+	require.Len(t, squares, n)
+
+	/// ...with the expected content
+	for _, s := range squares {
+		expectedSquare := big.NewInt(0).Mul(s.V1, s.V1)
+		require.Zero(t, s.V2.Cmp(expectedSquare))
+	}
 }
 
 func Test_InvokeTokenContract(t *testing.T) {
@@ -270,21 +334,25 @@ func Test_InvokeTokenContract(t *testing.T) {
 	require.NoError(t, err)
 
 	// Retrieve the total supply
-	supply, err := bevmClient.Call(
+	result, err := bevmClient.Call(
 		a, erc20Instance, "totalSupply")
 	require.NoError(t, err)
+	require.Equal(t, len(result), 1)
+	supply := result[0]
 
 	// A's initial balance should be the total supply, as he is the owner
-	balance, err := bevmClient.Call(
+	result, err = bevmClient.Call(
 		a, erc20Instance, "balanceOf", a.Address)
 	require.NoError(t, err)
-	require.Equal(t, supply, balance)
+	require.Equal(t, len(result), 1)
+	require.Equal(t, supply, result[0])
 
 	// B's initial balance should be empty
-	balance, err = bevmClient.Call(
+	result, err = bevmClient.Call(
 		a, erc20Instance, "balanceOf", b.Address)
 	require.NoError(t, err)
-	assertBigInt0(t, balance.(*big.Int))
+	require.Equal(t, len(result), 1)
+	assertBigInt0(t, result[0].(*big.Int))
 
 	// Transfer 100 tokens from A to B
 	_, err = bevmClient.Transaction(
@@ -296,15 +364,17 @@ func Test_InvokeTokenContract(t *testing.T) {
 	newA := new(big.Int).Sub(supply.(*big.Int), big.NewInt(100))
 	newB := big.NewInt(100)
 
-	balance, err = bevmClient.Call(
+	result, err = bevmClient.Call(
 		a, erc20Instance, "balanceOf", a.Address)
 	require.NoError(t, err)
-	require.Equal(t, newA, balance)
+	require.Equal(t, len(result), 1)
+	require.Equal(t, newA, result[0])
 
-	balance, err = bevmClient.Call(
+	result, err = bevmClient.Call(
 		a, erc20Instance, "balanceOf", b.Address)
 	require.NoError(t, err)
-	require.Equal(t, newB, balance)
+	require.Equal(t, len(result), 1)
+	require.Equal(t, newB, result[0])
 
 	// Try to transfer 101 tokens from B to A; this should be rejected by the EVM
 	_, err = bevmClient.Transaction(
@@ -313,15 +383,17 @@ func Test_InvokeTokenContract(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check that the balances have not changed
-	balance, err = bevmClient.Call(
+	result, err = bevmClient.Call(
 		a, erc20Instance, "balanceOf", a.Address)
 	require.NoError(t, err)
-	require.Equal(t, newA, balance)
+	require.Equal(t, len(result), 1)
+	require.Equal(t, newA, result[0])
 
-	balance, err = bevmClient.Call(
+	result, err = bevmClient.Call(
 		a, erc20Instance, "balanceOf", b.Address)
 	require.NoError(t, err)
-	require.Equal(t, newB, balance)
+	require.Equal(t, len(result), 1)
+	require.Equal(t, newB, result[0])
 }
 
 func Test_InvokeLoanContract(t *testing.T) {
@@ -393,7 +465,8 @@ func Test_InvokeLoanContract(t *testing.T) {
 		result, err := bevmClient.Call(
 			from, erc20Instance, "balanceOf", address)
 		require.NoError(t, err)
-		tokenBalance = result.(*big.Int)
+		require.Equal(t, len(result), 1)
+		tokenBalance = result[0].(*big.Int)
 		balance, err = bevmClient.GetAccountBalance(address)
 		require.NoError(t, err)
 		return

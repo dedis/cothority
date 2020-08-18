@@ -1,0 +1,1 @@
+[{"constant":true,"inputs":[{"name":"limit","type":"uint256"}],"name":"squares","outputs":[{"components":[{"name":"v1","type":"uint256"},{"name":"v2","type":"uint256"}],"name":"","type":"tuple[]"}],"payable":false,"stateMutability":"view","type":"function"}]
