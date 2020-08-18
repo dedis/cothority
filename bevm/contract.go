@@ -438,7 +438,7 @@ func handleLogs(inst byzcoin.Instruction, rst byzcoin.ReadOnlyStateTrie,
 		// See https://solidity.readthedocs.io/en/v0.5.3/abi-spec.html#events
 		eventID := logEntry.Topics[0]
 
-		eventName, eventIface, err := unpackEvent(eventsAbi, eventID,
+		eventName, eventData, err := unpackEvent(eventsAbi, eventID,
 			logEntry.Data)
 		if err != nil {
 			return nil, xerrors.Errorf("failed to unpack EVM "+
@@ -452,7 +452,7 @@ func handleLogs(inst byzcoin.Instruction, rst byzcoin.ReadOnlyStateTrie,
 		}
 
 		// Build the instruction from the event
-		instr, err := getInstrForEvent(eventName, eventIface)
+		instr, err := getInstrForEvent(eventName, eventData)
 		if err != nil {
 			return nil, xerrors.Errorf("failed to build instruction "+
 				"for EVM event: %v", err)
