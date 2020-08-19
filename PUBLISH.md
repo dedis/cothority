@@ -22,7 +22,7 @@ As we don't plan to have any big changes, the major-version is probably stuck
 A minor-version increase should be done for a new stable functionality that
  will be kept backward-compatible.
 A patch-version is mostly an irregular release whenever somebody thinks it's
- important to have the latest code available.
+ important to have the latest code available (use `npm version patch`).
 
 It is good to announce a release on the DEDIS/engineer slack channel.
 This allows others to know that a new release is about to happen and propose

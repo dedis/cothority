@@ -1,10 +1,73 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.2.0
     hooks:
-    -   id: trailing-whitespace
-    -   id: end-of-file-fixer
-      # -   id: check-yaml
-    -   id: check-added-large-files
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        exclude: ^helm-chart/
+      - id: check-json
+      - id: check-added-large-files
+
+#   - repo: https://github.com/golangci/golangci-lint
+#     rev: v1.30.0
+#     hooks:
+#       - id: golangci-lint
+
+#   - repo: git://github.com/awebdeveloper/pre-commit-tslint/
+#     rev: ''  # Use the sha or tag you want to point at
+#     hooks:
+#       - id: tslint
+#         additional_dependencies: ['tslint@5.0.0']
+
+  - repo: https://github.com/tekwizely/pre-commit-golang
+    rev: master
+    hooks:
+    #
+    # Go Build
+    #
+      - id: go-build-mod
+#     - id: go-build-pkg
+#     - id: go-build-repo-mod
+#     - id: go-build-repo-pkg
+    #
+    # Go Test
+    #
+#     - id: go-test-mod
+#     - id: go-test-pkg
+#     - id: go-test-repo-mod
+#     - id: go-test-repo-pkg
+    #
+    # Go Vet
+    #
+#     - id: go-vet
+      - id: go-vet-mod
+#     - id: go-vet-pkg
+#     - id: go-vet-repo-mod
+#     - id: go-vet-repo-pkg
+    #
+    # Formatters
+    #
+      - id: go-fmt
+#     - id: go-imports # replaces go-fmt
+#     - id: go-returns # replaces go-imports & go-fmt
+    #
+    # Style Checkers
+    #
+      - id: go-lint
+        exclude: ^(calypso/protocol/ocs_struct.go|calypso/protocol/onchain_test.go)$
+#     - id: go-critic
+    #
+    # GolangCI-Lint
+    # - Fast Multi-Linter
+    # - Can be configured to replace MOST other hooks
+    # - Supports repo config file for configuration
+    # - https://github.com/golangci/golangci-lint
+    #
+#     - id: golangci-lint
+#     - id: golangci-lint-mod
+#     - id: golangci-lint-pkg
+#     - id: golangci-lint-repo-mod
+#     - id: golangci-lint-repo-pkg
