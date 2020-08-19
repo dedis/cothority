@@ -56,7 +56,7 @@ we will include your conode in the DEDIS-cothority.
 - 512MB of RAM and 1GB of disk-space
 - a public IP-address and two open ports
 
-## Network communication 
+## Network communication
 
 Two distinct communication schemes need to be configured:
 
@@ -115,7 +115,7 @@ location / {
       proxy_http_version 1.1;
 
       proxy_set_header Upgrade $http_upgrade;
-      proxy_set_header Connection "upgrade";		
+      proxy_set_header Connection "upgrade";
 
       proxy_pass "http://localhost:7771/";
    }
@@ -178,11 +178,11 @@ $ cd conode
 $ go install ./conode
 ```
 
-Then, you can launch the interactive setup configuration by running 
+Then, you can launch the interactive setup configuration by running
 
 ```bash
 $ conode setup
-``` 
+```
 
 Once done, the configuration files (the public.toml and private.toml) are saved
 in the default location or in the one specified during the interactive setup.
@@ -298,7 +298,7 @@ logs. It will be restarted on the next boot as well. To stop it, you can use
 with `docker ps -a`).
 
 Pro tip: you can use the following options for docker in order to gracefully
-handle the logs and prevent a disk saturation: 
+handle the logs and prevent a disk saturation:
 `--log-opt max-size=10m --log-opt max-file=4 --log-opt compress=true`
 
 If you have systemd, you can simply copy the `conode.service` file and add it to
@@ -330,7 +330,7 @@ will run 5 conodes and save their files in the tmp directory with verbosity of
 
 ## Backups
 
-There are two important files to backup: 
+There are two important files to backup:
 
 - The `private.toml` file containing the
 conode's configuration along with its private key, and
@@ -524,7 +524,7 @@ $ sudo cp /etc/nginx/site-available/default /etc/nginx/site-available/example.co
 $ sudo vim /etc/nginx/site-available/example.com
 > *update for the domain and location we created (do not need to setup ssl yet)*
 # Disable the default host
-$ sudo rm /etc/nginx/sites-enabled/default 
+$ sudo rm /etc/nginx/sites-enabled/default
 # Activate our new virtual host
 $ sudo ln -s /etc/nginx/sites-available/example.com /etc/nginx/sites-enabled/
 $ sudo service nginx reload
@@ -563,7 +563,7 @@ server {
       proxy_http_version 1.1;
 
       proxy_set_header Upgrade $http_upgrade;
-      proxy_set_header Connection "upgrade";		
+      proxy_set_header Connection "upgrade";
 
       proxy_pass "http://localhost:7771/";
    }
@@ -589,7 +589,7 @@ $ sudo vim /etc/nginx/site-available/swisscloud.cothority.net
 		proxy_http_version 1.1;
 
 		proxy_set_header Upgrade $http_upgrade;
-		proxy_set_header Connection "upgrade";		
+		proxy_set_header Connection "upgrade";
 
 		proxy_pass "http://localhost:7771/";
 	}

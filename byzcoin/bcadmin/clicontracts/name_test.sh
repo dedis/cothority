@@ -31,7 +31,7 @@ tesNameInvokeAdd() {
 
     OUTRES=`runBA0 contract name spawn`
     matchOK "$OUTRES" "^Spawned a new namne contract. Its instance id is:
-[0-9a-f]{64}"    
+[0-9a-f]{64}"
 
     # Add the spawn:value rule
     testOK runBA darc add -out_id ./darc_id.txt -out_key ./darc_key.txt -unrestricted
@@ -75,7 +75,7 @@ tesNameInvokeAdd() {
 [0-9a-f]{64}$"
 
     # Let's add multiple instances
-    
+
     # We create a second value instance
     OUTRES=`runBA0 contract value spawn --value "Hi there" --darc "$ID" --sign "$KEY"`
     VALUE_INSTANCE_ID2=$( echo "$OUTRES" | grep -A 1 "instance id" | sed -n 2p )
@@ -121,7 +121,7 @@ testNameInvokeRemove() {
 }
 
 # Rely on:
-# - bcadmin contract name spawn 
+# - bcadmin contract name spawn
 # - bcadmin contract value spawn
 testNameGet() {
     # In this test we

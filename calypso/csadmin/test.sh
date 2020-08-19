@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Usage: 
+# Usage:
 #   ./test [options]
 # Options:
 #   -b   re-builds bcadmin package
@@ -103,7 +103,7 @@ testDkgStart(){
     testFail runCA dkg start --instid aef123
     # good --instid but this byzcoin has not been authorised
     testFail runCA dkg start --instid "$LTS_ID"
-    
+
     # let's make it pass with `csadmin authorize`
     bcID=$( ls config/bc-* | sed -e "s/.*bc-\(.*\).cfg/\1/" )
     testOK runCA authorize co1/private.toml $bcID
@@ -144,18 +144,18 @@ testReencrypt(){
     OUTRES=`runCA0 contract lts spawn --darc "$ID" --sign "$KEY"`
     LTS_ID=`echo "$OUTRES" | sed -n '2p'` # must be at the second line
     matchOK $LTS_ID ^[0-9a-f]{64}$
-    
+
     # Authorize nodes
     bcID=$( ls config/bc-* | sed -e "s/.*bc-\(.*\).cfg/\1/" )
     testOK runCA authorize co1/private.toml $bcID
     testOK runCA authorize co2/private.toml $bcID
     testOK runCA authorize co3/private.toml $bcID
-    
+
     # Creat LTS and save the public key
     runCA0 dkg start --instid "$LTS_ID" -x > key.pub
     PUB_KEY=`cat key.pub`
     matchOK $PUB_KEY ^[0-9a-f]{64}$
-    
+
     # Spawn write
     OUTRES=`runCA0 contract write spawn --darc "$ID" --sign "$KEY"\
                     --instid "$LTS_ID" --secret "aabbccddeeff0011" --key "$PUB_KEY"`
@@ -212,18 +212,18 @@ testDecrypt(){
     OUTRES=`runCA0 contract lts spawn --darc "$ID" --sign "$KEY"`
     LTS_ID=`echo "$OUTRES" | sed -n '2p'` # must be at the second line
     matchOK $LTS_ID ^[0-9a-f]{64}$
-    
+
     # Authorize nodes
     bcID=$( ls config/bc-* | sed -e "s/.*bc-\(.*\).cfg/\1/" )
     testOK runCA authorize co1/private.toml $bcID
     testOK runCA authorize co2/private.toml $bcID
     testOK runCA authorize co3/private.toml $bcID
-    
+
     # Creat LTS and save the public key
     runCA0 dkg start --instid "$LTS_ID" -x > key.pub
     PUB_KEY=`cat key.pub`
     matchOK $PUB_KEY ^[0-9a-f]{64}$
-    
+
     # Spawn write
     OUTRES=`runCA0 contract write spawn --darc "$ID" --sign "$KEY" \
                     --instid "$LTS_ID" --secret "aabbccddeeff0011" --key "$PUB_KEY"`
@@ -285,7 +285,7 @@ aabbccddeeff0011"
     # should fail with the key used to sign
     OUTRES=`runCA decrypt --key config/key-$KEY.cfg < reply.bin`
     testNGrep "aabbccddeeff0011" echo "$OUTRES"
-    
+
     # should now work with the newly created key
     OUTRES=`runCA0 decrypt --key config/key-$NEW_KEY.cfg < reply.bin`
     matchOK "$OUTRES" "Key decrypted:

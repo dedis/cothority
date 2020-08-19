@@ -5,13 +5,13 @@ Skipchain
 
 # Skipchain implementation
 
-> Skipchains are authenticated data structures that combine ideas from 
+> Skipchains are authenticated data structures that combine ideas from
 > blockchains and skiplists. Skipchains enable clients
-> to securely traverse the timeline in both forward and backward directions 
-> and to efficiently traverse short or long distances by employing 
-> multi-hop links. Backward links are cryptographic hashes of past blocks, 
-> as in regular blockchains. Forward links are cryptographic signatures of 
-> future blocks, which are added retroactively when the target block appears 
+> to securely traverse the timeline in both forward and backward directions
+> and to efficiently traverse short or long distances by employing
+> multi-hop links. Backward links are cryptographic hashes of past blocks,
+> as in regular blockchains. Forward links are cryptographic signatures of
+> future blocks, which are added retroactively when the target block appears
 > [1](https://www.usenix.org/system/files/conference/usenixsecurity17/sec17-nikitin.pdf).
 
 This skipchain implementation is based upon the Chainiac-paper
@@ -25,7 +25,7 @@ underlying data-structure for storing blocks.
 - [caypso](../calypso) - a fully decentralized framework for auditable access control
 on protected resources.
 - [eventlog](../eventlog) - an auditable and secure logging service for byzcoin.
-- [RandHound](https://github.com/dedis/paper_17_randomness) - a service that produce 
+- [RandHound](https://github.com/dedis/paper_17_randomness) - a service that produce
 verifiable random numbers and store them on a blockchain for later proofs.
 
 The novelties of skipchains are the following:
@@ -86,7 +86,7 @@ struct {
 
 	// Dynamic part that is updated afterward and not used
 	// to compute the hash:
-  
+
 	// ForwardLink will be calculated once future SkipBlocks are
 	// available
 	ForwardLink []*ForwardLink
@@ -103,7 +103,7 @@ struct {
 **Height**
 
 When the `BaseHeight` value is greater than 1, the height is computed deterministically.
-In this case, the height of a skipblock is computed at its creation and is based on `MaxHeight`, 
+In this case, the height of a skipblock is computed at its creation and is based on `MaxHeight`,
 `BaseHeight`, and the `index` of the block.
 
 This value determines how many elements the `ForwardLinks` and `BackwardLinks` arrays
@@ -123,12 +123,12 @@ where the value should not be greater than `MaxHeight`.
 
 
 As an example, here is the list of blocks and their associated heigths with
-`BaseHeight = 3` and `MaxHeight = 4`: 
+`BaseHeight = 3` and `MaxHeight = 4`:
 
 ```
 
 Block index  1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28..
-Block height 1   1   2   1   1   2   1   1   3   1   1   2   1   1   2   1   1   3   1   1   2   1   1   2   1   1   4   1..    
+Block height 1   1   2   1   1   2   1   1   3   1   1   2   1   1   2   1   1   3   1   1   2   1   1   2   1   1   4   1..
 
 ```
 

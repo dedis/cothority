@@ -74,7 +74,7 @@ a == 4 { sub(/\/\/.*/, "", $2)
 
 function print_field( optional, typ, name, ind ){
 	packed = ""
-	
+
 	if ( typ in tr )
 		typ = tr[typ]
 	if ( name ~ /bytes/ ){
@@ -112,7 +112,6 @@ function print_field( optional, typ, name, ind ){
 	if ( mn[typ] ) {
 		typ=mn[typ]
 	}
-	
+
 	print sprintf("  %s %s %s = %d%s;", optional, typ, tolower(name), ind, packed )
 }
-

@@ -89,4 +89,3 @@ class RosterTest {
         assertEquals("http://localhost:7771", roster.getNodes().get(0).getWebsockAddress().toString());
     }
 }
-

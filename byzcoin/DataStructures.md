@@ -7,7 +7,7 @@ Data Structures
 # Data Structures
 
 This document gives an overview of the basic data structures used in ByzCoin.
-Here is a summary: 
+Here is a summary:
 
 - A [ClientTransaction](#clienttransaction) is sent by a client to one or more
 nodes and holds one or more Instructions.
@@ -97,7 +97,7 @@ instructions to the corresponding contracts and/or objects. Each call to a
 contract/object will return 0 or more `StateChange` elements that define how to update the
 state of the trie.
 
-ByzCoin will take care that instructions respect the following rules. 
+ByzCoin will take care that instructions respect the following rules.
 *This might be too restrictive*:
 - Spawn: only Create-Actions
 - Invoke: only Update-Action on the invoked object

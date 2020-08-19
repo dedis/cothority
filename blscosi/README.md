@@ -40,16 +40,16 @@ the leader is failing, the protocol restarts using another leader. At the
 moment, however, we only handle leaf and sub-leader failure.
 
 ## Implementation
-The protocol has three messages: 
+The protocol has three messages:
 - Announcement which is sent from the root down the tree and announce the
-proposal. 
+proposal.
 - Response which is sent back up to the root, containing the final aggregated
 signature, then used by the root to sign the proposal.
 - Refusal which is sent back to subleader to let them know the leaf has
 failed the verification.
 
-The protocol uses four files: 
-- `struct.go` defines the messages sent around and the protocol constants.  
+The protocol uses four files:
+- `struct.go` defines the messages sent around and the protocol constants.
 - `protocol.go` defines the root node behavior.
 - `sub_protocol.go` defines non-root nodes behavior.
 - `gen_tree.go` contains the function that generates trees.

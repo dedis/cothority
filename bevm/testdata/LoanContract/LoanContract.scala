@@ -12,7 +12,7 @@ import LoanContractInvariant._
 
 /************************************************
 **  See report for a detail explanation of the
-**  contract 
+**  contract
 *************************************************/
 
 sealed trait State
@@ -115,12 +115,12 @@ sealed case class LoanContract (
 
             // Transfer all the guarantee to the lender
             var balance = tokenContractAddress.balanceOf(addr)
-            
+
             tokenContractAddress.transfer(lender, balance)
             ghost {
                 visitedStates = Default :: visitedStates
             }
-            
+
             currentState = Default
         }
     } ensuring { _ =>

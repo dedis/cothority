@@ -25,4 +25,3 @@ case class ERC20Token(var s: BigInt) extends ContractInterface {
         res => old(this).addr == this.addr
     }
 }
-

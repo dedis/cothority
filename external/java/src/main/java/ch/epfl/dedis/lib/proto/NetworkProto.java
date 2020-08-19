@@ -30,7 +30,7 @@ public final class NetworkProto {
     /**
      * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity> 
+    java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity>
         getServiceIdentitiesList();
     /**
      * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
@@ -43,7 +43,7 @@ public final class NetworkProto {
     /**
      * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentityOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentityOrBuilder>
         getServiceIdentitiesOrBuilderList();
     /**
      * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
@@ -261,7 +261,7 @@ public final class NetworkProto {
     /**
      * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentityOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentityOrBuilder>
         getServiceIdentitiesOrBuilderList() {
       return serviceIdentities_;
     }
@@ -316,7 +316,7 @@ public final class NetworkProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -332,7 +332,7 @@ public final class NetworkProto {
         getAddressBytes() {
       java.lang.Object ref = address_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         address_ = b;
@@ -358,7 +358,7 @@ public final class NetworkProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -374,7 +374,7 @@ public final class NetworkProto {
         getDescriptionBytes() {
       java.lang.Object ref = description_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         description_ = b;
@@ -410,7 +410,7 @@ public final class NetworkProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -431,7 +431,7 @@ public final class NetworkProto {
         getUrlBytes() {
       java.lang.Object ref = url_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         url_ = b;
@@ -880,7 +880,7 @@ public final class NetworkProto {
               serviceIdentitiesBuilder_ = null;
               serviceIdentities_ = other.serviceIdentities_;
               bitField0_ = (bitField0_ & ~0x00000002);
-              serviceIdentitiesBuilder_ = 
+              serviceIdentitiesBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getServiceIdentitiesFieldBuilder() : null;
             } else {
@@ -1183,7 +1183,7 @@ public final class NetworkProto {
       /**
        * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentityOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentityOrBuilder>
            getServiceIdentitiesOrBuilderList() {
         if (serviceIdentitiesBuilder_ != null) {
           return serviceIdentitiesBuilder_.getMessageOrBuilderList();
@@ -1209,12 +1209,12 @@ public final class NetworkProto {
       /**
        * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.Builder>
            getServiceIdentitiesBuilderList() {
         return getServiceIdentitiesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentityOrBuilder> 
+          ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentityOrBuilder>
           getServiceIdentitiesFieldBuilder() {
         if (serviceIdentitiesBuilder_ == null) {
           serviceIdentitiesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -1294,7 +1294,7 @@ public final class NetworkProto {
           getAddressBytes() {
         java.lang.Object ref = address_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           address_ = b;
@@ -1370,7 +1370,7 @@ public final class NetworkProto {
           getDescriptionBytes() {
         java.lang.Object ref = description_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           description_ = b;
@@ -1461,7 +1461,7 @@ public final class NetworkProto {
           getUrlBytes() {
         java.lang.Object ref = url_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           url_ = b;
@@ -1722,7 +1722,7 @@ public final class NetworkProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -1738,7 +1738,7 @@ public final class NetworkProto {
         getNameBytes() {
       java.lang.Object ref = name_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         name_ = b;
@@ -1764,7 +1764,7 @@ public final class NetworkProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -1780,7 +1780,7 @@ public final class NetworkProto {
         getSuiteBytes() {
       java.lang.Object ref = suite_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         suite_ = b;
@@ -2224,7 +2224,7 @@ public final class NetworkProto {
           getNameBytes() {
         java.lang.Object ref = name_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           name_ = b;
@@ -2300,7 +2300,7 @@ public final class NetworkProto {
           getSuiteBytes() {
         java.lang.Object ref = suite_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           suite_ = b;
@@ -2434,12 +2434,12 @@ public final class NetworkProto {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_network_ServerIdentity_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_network_ServerIdentity_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_network_ServiceIdentity_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_network_ServiceIdentity_fieldAccessorTable;
 

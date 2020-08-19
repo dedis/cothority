@@ -970,7 +970,7 @@ public final class Personhood {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -986,7 +986,7 @@ public final class Personhood {
         getDescriptionBytes() {
       java.lang.Object ref = description_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         description_ = b;
@@ -1710,7 +1710,7 @@ public final class Personhood {
           getDescriptionBytes() {
         java.lang.Object ref = description_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           description_ = b;
@@ -1860,7 +1860,7 @@ public final class Personhood {
        * <code>required .byzcoin.Coin stake = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder> 
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder>
           getStakeFieldBuilder() {
         if (stakeBuilder_ == null) {
           stakeBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -2171,7 +2171,7 @@ public final class Personhood {
     /**
      * <code>repeated .personhood.Credential credentials = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.Personhood.Credential> 
+    java.util.List<ch.epfl.dedis.lib.proto.Personhood.Credential>
         getCredentialsList();
     /**
      * <code>repeated .personhood.Credential credentials = 1;</code>
@@ -2184,7 +2184,7 @@ public final class Personhood {
     /**
      * <code>repeated .personhood.Credential credentials = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.CredentialOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.CredentialOrBuilder>
         getCredentialsOrBuilderList();
     /**
      * <code>repeated .personhood.Credential credentials = 1;</code>
@@ -2291,7 +2291,7 @@ public final class Personhood {
     /**
      * <code>repeated .personhood.Credential credentials = 1;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.CredentialOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.CredentialOrBuilder>
         getCredentialsOrBuilderList() {
       return credentials_;
     }
@@ -2630,7 +2630,7 @@ public final class Personhood {
               credentialsBuilder_ = null;
               credentials_ = other.credentials_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              credentialsBuilder_ = 
+              credentialsBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getCredentialsFieldBuilder() : null;
             } else {
@@ -2868,7 +2868,7 @@ public final class Personhood {
       /**
        * <code>repeated .personhood.Credential credentials = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.CredentialOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.CredentialOrBuilder>
            getCredentialsOrBuilderList() {
         if (credentialsBuilder_ != null) {
           return credentialsBuilder_.getMessageOrBuilderList();
@@ -2894,12 +2894,12 @@ public final class Personhood {
       /**
        * <code>repeated .personhood.Credential credentials = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.Personhood.Credential.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.Personhood.Credential.Builder>
            getCredentialsBuilderList() {
         return getCredentialsFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.Personhood.Credential, ch.epfl.dedis.lib.proto.Personhood.Credential.Builder, ch.epfl.dedis.lib.proto.Personhood.CredentialOrBuilder> 
+          ch.epfl.dedis.lib.proto.Personhood.Credential, ch.epfl.dedis.lib.proto.Personhood.Credential.Builder, ch.epfl.dedis.lib.proto.Personhood.CredentialOrBuilder>
           getCredentialsFieldBuilder() {
         if (credentialsBuilder_ == null) {
           credentialsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -2986,7 +2986,7 @@ public final class Personhood {
     /**
      * <code>repeated .personhood.Attribute attributes = 2;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.Personhood.Attribute> 
+    java.util.List<ch.epfl.dedis.lib.proto.Personhood.Attribute>
         getAttributesList();
     /**
      * <code>repeated .personhood.Attribute attributes = 2;</code>
@@ -2999,7 +2999,7 @@ public final class Personhood {
     /**
      * <code>repeated .personhood.Attribute attributes = 2;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.AttributeOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.AttributeOrBuilder>
         getAttributesOrBuilderList();
     /**
      * <code>repeated .personhood.Attribute attributes = 2;</code>
@@ -3119,7 +3119,7 @@ public final class Personhood {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -3135,7 +3135,7 @@ public final class Personhood {
         getNameBytes() {
       java.lang.Object ref = name_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         name_ = b;
@@ -3156,7 +3156,7 @@ public final class Personhood {
     /**
      * <code>repeated .personhood.Attribute attributes = 2;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.AttributeOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.AttributeOrBuilder>
         getAttributesOrBuilderList() {
       return attributes_;
     }
@@ -3527,7 +3527,7 @@ public final class Personhood {
               attributesBuilder_ = null;
               attributes_ = other.attributes_;
               bitField0_ = (bitField0_ & ~0x00000002);
-              attributesBuilder_ = 
+              attributesBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getAttributesFieldBuilder() : null;
             } else {
@@ -3604,7 +3604,7 @@ public final class Personhood {
           getNameBytes() {
         java.lang.Object ref = name_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           name_ = b;
@@ -3844,7 +3844,7 @@ public final class Personhood {
       /**
        * <code>repeated .personhood.Attribute attributes = 2;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.AttributeOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.AttributeOrBuilder>
            getAttributesOrBuilderList() {
         if (attributesBuilder_ != null) {
           return attributesBuilder_.getMessageOrBuilderList();
@@ -3870,12 +3870,12 @@ public final class Personhood {
       /**
        * <code>repeated .personhood.Attribute attributes = 2;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.Personhood.Attribute.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.Personhood.Attribute.Builder>
            getAttributesBuilderList() {
         return getAttributesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.Personhood.Attribute, ch.epfl.dedis.lib.proto.Personhood.Attribute.Builder, ch.epfl.dedis.lib.proto.Personhood.AttributeOrBuilder> 
+          ch.epfl.dedis.lib.proto.Personhood.Attribute, ch.epfl.dedis.lib.proto.Personhood.Attribute.Builder, ch.epfl.dedis.lib.proto.Personhood.AttributeOrBuilder>
           getAttributesFieldBuilder() {
         if (attributesBuilder_ == null) {
           attributesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -4073,7 +4073,7 @@ public final class Personhood {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -4089,7 +4089,7 @@ public final class Personhood {
         getNameBytes() {
       java.lang.Object ref = name_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         name_ = b;
@@ -4504,7 +4504,7 @@ public final class Personhood {
           getNameBytes() {
         java.lang.Object ref = name_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           name_ = b;
@@ -5927,7 +5927,7 @@ public final class Personhood {
        * <code>required .byzcoin.Coin costdarc = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder> 
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder>
           getCostdarcFieldBuilder() {
         if (costdarcBuilder_ == null) {
           costdarcBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -6045,7 +6045,7 @@ public final class Personhood {
        * <code>required .byzcoin.Coin costcoin = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder> 
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder>
           getCostcoinFieldBuilder() {
         if (costcoinBuilder_ == null) {
           costcoinBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -6163,7 +6163,7 @@ public final class Personhood {
        * <code>required .byzcoin.Coin costcredential = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder> 
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder>
           getCostcredentialFieldBuilder() {
         if (costcredentialBuilder_ == null) {
           costcredentialBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -6281,7 +6281,7 @@ public final class Personhood {
        * <code>required .byzcoin.Coin costparty = 4;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder> 
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder>
           getCostpartyFieldBuilder() {
         if (costpartyBuilder_ == null) {
           costpartyBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -6434,7 +6434,7 @@ public final class Personhood {
        * <code>optional .byzcoin.Coin costropasci = 6;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder> 
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder>
           getCostropasciFieldBuilder() {
         if (costropasciBuilder_ == null) {
           costropasciBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -6552,7 +6552,7 @@ public final class Personhood {
        * <code>optional .byzcoin.Coin costcwrite = 7;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder> 
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder>
           getCostcwriteFieldBuilder() {
         if (costcwriteBuilder_ == null) {
           costcwriteBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -6670,7 +6670,7 @@ public final class Personhood {
        * <code>optional .byzcoin.Coin costcread = 8;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder> 
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder>
           getCostcreadFieldBuilder() {
         if (costcreadBuilder_ == null) {
           costcreadBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -6788,7 +6788,7 @@ public final class Personhood {
        * <code>optional .byzcoin.Coin costvalue = 9;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder> 
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder>
           getCostvalueFieldBuilder() {
         if (costvalueBuilder_ == null) {
           costvalueBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -6997,7 +6997,7 @@ public final class Personhood {
      *
      * <code>repeated .personhood.LRSTag miners = 6;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.Personhood.LRSTag> 
+    java.util.List<ch.epfl.dedis.lib.proto.Personhood.LRSTag>
         getMinersList();
     /**
      * <pre>
@@ -7025,7 +7025,7 @@ public final class Personhood {
      *
      * <code>repeated .personhood.LRSTag miners = 6;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.LRSTagOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.LRSTagOrBuilder>
         getMinersOrBuilderList();
     /**
      * <pre>
@@ -7442,7 +7442,7 @@ public final class Personhood {
      *
      * <code>repeated .personhood.LRSTag miners = 6;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.LRSTagOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.LRSTagOrBuilder>
         getMinersOrBuilderList() {
       return miners_;
     }
@@ -8114,7 +8114,7 @@ public final class Personhood {
               minersBuilder_ = null;
               miners_ = other.miners_;
               bitField0_ = (bitField0_ & ~0x00000020);
-              minersBuilder_ = 
+              minersBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getMinersFieldBuilder() : null;
             } else {
@@ -8580,7 +8580,7 @@ public final class Personhood {
        * <code>required .personhood.PopDesc description = 4;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.Personhood.PopDesc, ch.epfl.dedis.lib.proto.Personhood.PopDesc.Builder, ch.epfl.dedis.lib.proto.Personhood.PopDescOrBuilder> 
+          ch.epfl.dedis.lib.proto.Personhood.PopDesc, ch.epfl.dedis.lib.proto.Personhood.PopDesc.Builder, ch.epfl.dedis.lib.proto.Personhood.PopDescOrBuilder>
           getDescriptionFieldBuilder() {
         if (descriptionBuilder_ == null) {
           descriptionBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -8734,7 +8734,7 @@ public final class Personhood {
        * <code>required .personhood.Attendees attendees = 5;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.Personhood.Attendees, ch.epfl.dedis.lib.proto.Personhood.Attendees.Builder, ch.epfl.dedis.lib.proto.Personhood.AttendeesOrBuilder> 
+          ch.epfl.dedis.lib.proto.Personhood.Attendees, ch.epfl.dedis.lib.proto.Personhood.Attendees.Builder, ch.epfl.dedis.lib.proto.Personhood.AttendeesOrBuilder>
           getAttendeesFieldBuilder() {
         if (attendeesBuilder_ == null) {
           attendeesBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -9017,7 +9017,7 @@ public final class Personhood {
        *
        * <code>repeated .personhood.LRSTag miners = 6;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.LRSTagOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.LRSTagOrBuilder>
            getMinersOrBuilderList() {
         if (minersBuilder_ != null) {
           return minersBuilder_.getMessageOrBuilderList();
@@ -9058,12 +9058,12 @@ public final class Personhood {
        *
        * <code>repeated .personhood.LRSTag miners = 6;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.Personhood.LRSTag.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.Personhood.LRSTag.Builder>
            getMinersBuilderList() {
         return getMinersFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.Personhood.LRSTag, ch.epfl.dedis.lib.proto.Personhood.LRSTag.Builder, ch.epfl.dedis.lib.proto.Personhood.LRSTagOrBuilder> 
+          ch.epfl.dedis.lib.proto.Personhood.LRSTag, ch.epfl.dedis.lib.proto.Personhood.LRSTag.Builder, ch.epfl.dedis.lib.proto.Personhood.LRSTagOrBuilder>
           getMinersFieldBuilder() {
         if (minersBuilder_ == null) {
           minersBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -9513,7 +9513,7 @@ public final class Personhood {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -9533,7 +9533,7 @@ public final class Personhood {
         getNameBytes() {
       java.lang.Object ref = name_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         name_ = b;
@@ -9567,7 +9567,7 @@ public final class Personhood {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -9587,7 +9587,7 @@ public final class Personhood {
         getPurposeBytes() {
       java.lang.Object ref = purpose_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         purpose_ = b;
@@ -9644,7 +9644,7 @@ public final class Personhood {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -9664,7 +9664,7 @@ public final class Personhood {
         getLocationBytes() {
       java.lang.Object ref = location_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         location_ = b;
@@ -10143,7 +10143,7 @@ public final class Personhood {
           getNameBytes() {
         java.lang.Object ref = name_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           name_ = b;
@@ -10243,7 +10243,7 @@ public final class Personhood {
           getPurposeBytes() {
         java.lang.Object ref = purpose_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           purpose_ = b;
@@ -10391,7 +10391,7 @@ public final class Personhood {
           getLocationBytes() {
         java.lang.Object ref = location_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           location_ = b;
@@ -11245,7 +11245,7 @@ public final class Personhood {
        * <code>optional .personhood.PopDesc desc = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.Personhood.PopDesc, ch.epfl.dedis.lib.proto.Personhood.PopDesc.Builder, ch.epfl.dedis.lib.proto.Personhood.PopDescOrBuilder> 
+          ch.epfl.dedis.lib.proto.Personhood.PopDesc, ch.epfl.dedis.lib.proto.Personhood.PopDesc.Builder, ch.epfl.dedis.lib.proto.Personhood.PopDescOrBuilder>
           getDescFieldBuilder() {
         if (descBuilder_ == null) {
           descBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -11399,7 +11399,7 @@ public final class Personhood {
        * <code>required .personhood.Attendees attendees = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.Personhood.Attendees, ch.epfl.dedis.lib.proto.Personhood.Attendees.Builder, ch.epfl.dedis.lib.proto.Personhood.AttendeesOrBuilder> 
+          ch.epfl.dedis.lib.proto.Personhood.Attendees, ch.epfl.dedis.lib.proto.Personhood.Attendees.Builder, ch.epfl.dedis.lib.proto.Personhood.AttendeesOrBuilder>
           getAttendeesFieldBuilder() {
         if (attendeesBuilder_ == null) {
           attendeesBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -12566,57 +12566,57 @@ public final class Personhood {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_RoPaSci_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_RoPaSci_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_RoPaSciStruct_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_RoPaSciStruct_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_CredentialStruct_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_CredentialStruct_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_Credential_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_Credential_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_Attribute_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_Attribute_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_SpawnerStruct_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_SpawnerStruct_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_PopPartyStruct_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_PopPartyStruct_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_PopDesc_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_PopDesc_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_FinalStatement_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_FinalStatement_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_Attendees_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_Attendees_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_LRSTag_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_LRSTag_fieldAccessorTable;
 

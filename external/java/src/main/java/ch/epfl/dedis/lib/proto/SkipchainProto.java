@@ -746,7 +746,7 @@ public final class SkipchainProto {
        * <code>required .skipchain.SkipBlock newBlock = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>
           getNewBlockFieldBuilder() {
         if (newBlockBuilder_ == null) {
           newBlockBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -1514,7 +1514,7 @@ public final class SkipchainProto {
        * <code>optional .skipchain.SkipBlock previous = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>
           getPreviousFieldBuilder() {
         if (previousBuilder_ == null) {
           previousBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -1632,7 +1632,7 @@ public final class SkipchainProto {
        * <code>required .skipchain.SkipBlock latest = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>
           getLatestFieldBuilder() {
         if (latestBuilder_ == null) {
           latestBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -3858,7 +3858,7 @@ public final class SkipchainProto {
     /**
      * <code>repeated .skipchain.ForwardLink links = 2;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink> 
+    java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink>
         getLinksList();
     /**
      * <code>repeated .skipchain.ForwardLink links = 2;</code>
@@ -3871,7 +3871,7 @@ public final class SkipchainProto {
     /**
      * <code>repeated .skipchain.ForwardLink links = 2;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder>
         getLinksOrBuilderList();
     /**
      * <code>repeated .skipchain.ForwardLink links = 2;</code>
@@ -4014,7 +4014,7 @@ public final class SkipchainProto {
     /**
      * <code>repeated .skipchain.ForwardLink links = 2;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder>
         getLinksOrBuilderList() {
       return links_;
     }
@@ -4398,7 +4398,7 @@ public final class SkipchainProto {
               linksBuilder_ = null;
               links_ = other.links_;
               bitField0_ = (bitField0_ & ~0x00000002);
-              linksBuilder_ = 
+              linksBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getLinksFieldBuilder() : null;
             } else {
@@ -4552,7 +4552,7 @@ public final class SkipchainProto {
        * <code>required .skipchain.SkipBlock skipblock = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>
           getSkipblockFieldBuilder() {
         if (skipblockBuilder_ == null) {
           skipblockBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -4760,7 +4760,7 @@ public final class SkipchainProto {
       /**
        * <code>repeated .skipchain.ForwardLink links = 2;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder>
            getLinksOrBuilderList() {
         if (linksBuilder_ != null) {
           return linksBuilder_.getMessageOrBuilderList();
@@ -4786,12 +4786,12 @@ public final class SkipchainProto {
       /**
        * <code>repeated .skipchain.ForwardLink links = 2;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink.Builder>
            getLinksBuilderList() {
         return getLinksFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink, ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder> 
+          ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink, ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder>
           getLinksFieldBuilder() {
         if (linksBuilder_ == null) {
           linksBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -5428,7 +5428,7 @@ public final class SkipchainProto {
      *
      * <code>repeated .skipchain.SkipBlock update = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock> 
+    java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock>
         getUpdateList();
     /**
      * <pre>
@@ -5456,7 +5456,7 @@ public final class SkipchainProto {
      *
      * <code>repeated .skipchain.SkipBlock update = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>
         getUpdateOrBuilderList();
     /**
      * <pre>
@@ -5579,7 +5579,7 @@ public final class SkipchainProto {
      *
      * <code>repeated .skipchain.SkipBlock update = 1;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>
         getUpdateOrBuilderList() {
       return update_;
     }
@@ -5934,7 +5934,7 @@ public final class SkipchainProto {
               updateBuilder_ = null;
               update_ = other.update_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              updateBuilder_ = 
+              updateBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getUpdateFieldBuilder() : null;
             } else {
@@ -6247,7 +6247,7 @@ public final class SkipchainProto {
        *
        * <code>repeated .skipchain.SkipBlock update = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>
            getUpdateOrBuilderList() {
         if (updateBuilder_ != null) {
           return updateBuilder_.getMessageOrBuilderList();
@@ -6288,12 +6288,12 @@ public final class SkipchainProto {
        *
        * <code>repeated .skipchain.SkipBlock update = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder>
            getUpdateBuilderList() {
         return getUpdateFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>
           getUpdateFieldBuilder() {
         if (updateBuilder_ == null) {
           updateBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -6468,7 +6468,7 @@ public final class SkipchainProto {
     /**
      * <code>repeated .skipchain.ForwardLink forward = 11;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink> 
+    java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink>
         getForwardList();
     /**
      * <code>repeated .skipchain.ForwardLink forward = 11;</code>
@@ -6481,7 +6481,7 @@ public final class SkipchainProto {
     /**
      * <code>repeated .skipchain.ForwardLink forward = 11;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder>
         getForwardOrBuilderList();
     /**
      * <code>repeated .skipchain.ForwardLink forward = 11;</code>
@@ -6864,7 +6864,7 @@ public final class SkipchainProto {
     /**
      * <code>repeated .skipchain.ForwardLink forward = 11;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder>
         getForwardOrBuilderList() {
       return forward_;
     }
@@ -7590,7 +7590,7 @@ public final class SkipchainProto {
               forwardBuilder_ = null;
               forward_ = other.forward_;
               bitField0_ = (bitField0_ & ~0x00000400);
-              forwardBuilder_ = 
+              forwardBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getForwardFieldBuilder() : null;
             } else {
@@ -8113,7 +8113,7 @@ public final class SkipchainProto {
        * <code>required .onet.Roster roster = 9;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder> 
+          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder>
           getRosterFieldBuilder() {
         if (rosterBuilder_ == null) {
           rosterBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -8356,7 +8356,7 @@ public final class SkipchainProto {
       /**
        * <code>repeated .skipchain.ForwardLink forward = 11;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder>
            getForwardOrBuilderList() {
         if (forwardBuilder_ != null) {
           return forwardBuilder_.getMessageOrBuilderList();
@@ -8382,12 +8382,12 @@ public final class SkipchainProto {
       /**
        * <code>repeated .skipchain.ForwardLink forward = 11;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink.Builder>
            getForwardBuilderList() {
         return getForwardFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink, ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder> 
+          ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink, ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder>
           getForwardFieldBuilder() {
         if (forwardBuilder_ == null) {
           forwardBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -9372,7 +9372,7 @@ public final class SkipchainProto {
        * <code>optional .onet.Roster newRoster = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder> 
+          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder>
           getNewRosterFieldBuilder() {
         if (newRosterBuilder_ == null) {
           newRosterBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -9490,7 +9490,7 @@ public final class SkipchainProto {
        * <code>required .skipchain.ByzcoinSig signature = 4;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.SkipchainProto.ByzcoinSig, ch.epfl.dedis.lib.proto.SkipchainProto.ByzcoinSig.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.ByzcoinSigOrBuilder> 
+          ch.epfl.dedis.lib.proto.SkipchainProto.ByzcoinSig, ch.epfl.dedis.lib.proto.SkipchainProto.ByzcoinSig.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.ByzcoinSigOrBuilder>
           getSignatureFieldBuilder() {
         if (signatureBuilder_ == null) {
           signatureBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -11390,72 +11390,72 @@ public final class SkipchainProto {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_skipchain_StoreSkipBlock_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_skipchain_StoreSkipBlock_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_skipchain_StoreSkipBlockReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_skipchain_StoreSkipBlockReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_skipchain_GetAllSkipChainIDs_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_skipchain_GetAllSkipChainIDs_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_skipchain_GetAllSkipChainIDsReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_skipchain_GetAllSkipChainIDsReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_skipchain_GetSingleBlock_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_skipchain_GetSingleBlock_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_skipchain_GetSingleBlockByIndex_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_skipchain_GetSingleBlockByIndex_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_skipchain_GetSingleBlockByIndexReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_skipchain_GetSingleBlockByIndexReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_skipchain_GetUpdateChain_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_skipchain_GetUpdateChain_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_skipchain_GetUpdateChainReply_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_skipchain_GetUpdateChainReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_skipchain_SkipBlock_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_skipchain_SkipBlock_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_skipchain_ForwardLink_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_skipchain_ForwardLink_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_skipchain_ByzcoinSig_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_skipchain_ByzcoinSig_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_skipchain_SchnorrSig_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_skipchain_SchnorrSig_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_skipchain_Exception_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_skipchain_Exception_fieldAccessorTable;
 

@@ -80,7 +80,7 @@ testDeferredInvoke() {
     OUTRES=`runBA0 contract -x value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA0 contract deferred spawn --darc "$ID" --sign "$KEY"`
 
     # We know the instance ID is the next line after "Spawned new deferred contract..."
-    DEFERRED_INSTANCE_ID=`echo "$OUTRES" | sed -n ' 
+    DEFERRED_INSTANCE_ID=`echo "$OUTRES" | sed -n '
         /Spawned a new deferred contract/ {
             n
             p
@@ -89,7 +89,7 @@ testDeferredInvoke() {
 
     # We know the array conaining the hash to sign is the second line after
     # "- Instruction hashes:" and we remove the "--- " prefix.
-    HASH=`echo "$OUTRES" | sed -n ' 
+    HASH=`echo "$OUTRES" | sed -n '
         /- Instruction hashes:/ {
             n
             n
@@ -97,7 +97,7 @@ testDeferredInvoke() {
             p
         }'`
     matchOK "$HASH" ^[0-9a-f]{64}$
-    
+
     testOK runBA contract deferred invoke addProof --instid "$DEFERRED_INSTANCE_ID" --hash "$HASH" --instrIdx 0 --sign "$KEY" --darc "$ID"
 
     testOK runBA contract deferred invoke execProposedTx --instid "$DEFERRED_INSTANCE_ID" --sign "$KEY"
@@ -126,7 +126,7 @@ testDeferredGet() {
     OUTRES=`runBA0 contract -x value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA0 contract deferred spawn --darc "$ID" --sign "$KEY"`
 
     # We know the instance ID is the next line after "Spawned new deferred contract..."
-    DEFERRED_INSTANCE_ID=`echo "$OUTRES" | sed -n ' 
+    DEFERRED_INSTANCE_ID=`echo "$OUTRES" | sed -n '
         /Spawned a new deferred contract/ {
             n
             p
@@ -135,7 +135,7 @@ testDeferredGet() {
 
     # We know the array containing the hash to sign is the second line after
     # "- Instruction hashes:" and we remove the "--- " prefix.
-    HASH=`echo "$OUTRES" | sed -n ' 
+    HASH=`echo "$OUTRES" | sed -n '
         /- Instruction hashes:/ {
             n
             n
@@ -167,7 +167,7 @@ testDeferredGet() {
 --- [0-9a-f]{64}
 - Max num execution: 1
 - Exec results: $"
-    
+
     testOK runBA contract deferred invoke addProof --instid "$DEFERRED_INSTANCE_ID" --hash "$HASH" --instrIdx 0 --sign "$KEY" --darc "$ID"
 
     # Since we performed an addProof, the result should now contrain a new
@@ -220,7 +220,7 @@ testDeferredDel() {
     OUTRES=`runBA0 contract -x value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA0 contract deferred spawn --darc "$ID" --sign "$KEY"`
 
     # We know the instance ID is the next line after "Spawned new deferred contract..."
-    DEFERRED_INSTANCE_ID=`echo "$OUTRES" | sed -n ' 
+    DEFERRED_INSTANCE_ID=`echo "$OUTRES" | sed -n '
         /Spawned a new deferred contract/ {
             n
             p
@@ -229,10 +229,10 @@ testDeferredDel() {
 
     # We should be able to get the created deferred instance
     testOK runBA contract deferred get --instid $DEFERRED_INSTANCE_ID
-    
+
     # We delete the instance
     testOK runBA contract deferred delete --instid $DEFERRED_INSTANCE_ID --darc "$ID" --sign "$KEY"
-    
+
     # Now we shouldn't be able to get it back
     testFail runBA contract deferred get --instid $DEFERRED_INSTANCE_ID
 
@@ -266,7 +266,7 @@ testDeferredInvokeDeferred() {
     OUTRES=`runBA0 contract -x value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA0 contract deferred spawn --darc "$ID" --sign "$KEY"`
 
     # We know the instance ID is the next line after "Spawned new deferred contract..."
-    DEFERRED_INSTANCE_ID=`echo "$OUTRES" | sed -n ' 
+    DEFERRED_INSTANCE_ID=`echo "$OUTRES" | sed -n '
         /Spawned a new deferred contract/ {
             n
             p
@@ -275,7 +275,7 @@ testDeferredInvokeDeferred() {
 
     # We know the array conaining the hash to sign is the second line after
     # "- Instruction hashes:" and we remove the "--- " prefix.
-    HASH=`echo "$OUTRES" | sed -n ' 
+    HASH=`echo "$OUTRES" | sed -n '
         /- Instruction hashes:/ {
             n
             n
@@ -283,7 +283,7 @@ testDeferredInvokeDeferred() {
             p
         }'`
     matchOK "$HASH" ^[0-9a-f]{64}$
-    
+
     # Now we create a new deferred contract that performs an addProof on the
     # first deferred contract
     OUTRES2=`runBA0 contract -x deferred invoke addProof --instid "$DEFERRED_INSTANCE_ID" --hash "$HASH"\
@@ -291,7 +291,7 @@ testDeferredInvokeDeferred() {
                                                    runBA0 contract deferred spawn --darc "$ID" --sign "$KEY"`
 
     # We know the instance ID is the next line after "Spawned new deferred contract..."
-    DEFERRED_INSTANCE_ID_2=`echo "$OUTRES2" | sed -n ' 
+    DEFERRED_INSTANCE_ID_2=`echo "$OUTRES2" | sed -n '
         /Spawned a new deferred contract/ {
             n
             p
@@ -300,7 +300,7 @@ testDeferredInvokeDeferred() {
 
     # We know the array conaining the hash to sign is the second line after
     # "- Instruction hashes:" and we remove the "--- " prefix.
-    HASH2=`echo "$OUTRES2" | sed -n ' 
+    HASH2=`echo "$OUTRES2" | sed -n '
         /- Instruction hashes:/ {
             n
             n
@@ -314,7 +314,7 @@ testDeferredInvokeDeferred() {
     testOK runBA contract deferred invoke addProof --instid "$DEFERRED_INSTANCE_ID_2" --hash "$HASH2"\
                                                    --instrIdx 0 --sign "$KEY" --darc "$ID"
     testOK runBA contract deferred invoke execProposedTx --instid "$DEFERRED_INSTANCE_ID_2" --sign "$KEY" --darc "$ID"
-    
+
     runBA contract deferred get --instid "$DEFERRED_INSTANCE_ID"
     testOK runBA contract deferred invoke execProposedTx --instid "$DEFERRED_INSTANCE_ID" --sign "$KEY" --darc "$ID"
 }

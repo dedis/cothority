@@ -32,7 +32,7 @@ testEventLog(){
 	runGrepSed "export BC=" "" ./bcadmin -c . create --roster public.toml --interval .5s
 	eval "$SED"
 	[ -z "$BC" ] && exit 1
-	
+
 	KEY=$(./el -c . key)
 
 	./bcadmin debug counters bc*cfg key*cfg
@@ -43,7 +43,7 @@ testEventLog(){
 	runGrepSed "export EL=" "" $el create -sign "$KEY"
 	eval "$SED"
 	[ -z "$EL" ] && exit 1
-	
+
 	##### testing phase
 	testOK $el log -t 'test' -c 'abc' -w 10 -sign "$KEY"
 	testOK $el log -c 'def' -w 10 -sign "$KEY"

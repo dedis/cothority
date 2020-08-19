@@ -30,7 +30,7 @@ public final class OnetProto {
     /**
      * <code>repeated .network.ServerIdentity list = 2;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> 
+    java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity>
         getListList();
     /**
      * <code>repeated .network.ServerIdentity list = 2;</code>
@@ -43,7 +43,7 @@ public final class OnetProto {
     /**
      * <code>repeated .network.ServerIdentity list = 2;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder>
         getListOrBuilderList();
     /**
      * <code>repeated .network.ServerIdentity list = 2;</code>
@@ -183,7 +183,7 @@ public final class OnetProto {
     /**
      * <code>repeated .network.ServerIdentity list = 2;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder>
         getListOrBuilderList() {
       return list_;
     }
@@ -586,7 +586,7 @@ public final class OnetProto {
               listBuilder_ = null;
               list_ = other.list_;
               bitField0_ = (bitField0_ & ~0x00000002);
-              listBuilder_ = 
+              listBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getListFieldBuilder() : null;
             } else {
@@ -865,7 +865,7 @@ public final class OnetProto {
       /**
        * <code>repeated .network.ServerIdentity list = 2;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder>
            getListOrBuilderList() {
         if (listBuilder_ != null) {
           return listBuilder_.getMessageOrBuilderList();
@@ -891,12 +891,12 @@ public final class OnetProto {
       /**
        * <code>repeated .network.ServerIdentity list = 2;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder>
            getListBuilderList() {
         return getListFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
+          ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder>
           getListFieldBuilder() {
         if (listBuilder_ == null) {
           listBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -1137,7 +1137,7 @@ public final class OnetProto {
           java.lang.String, java.lang.String> defaultEntry =
               com.google.protobuf.MapEntry
               .<java.lang.String, java.lang.String>newDefaultInstance(
-                  ch.epfl.dedis.lib.proto.OnetProto.internal_static_onet_Status_FieldEntry_descriptor, 
+                  ch.epfl.dedis.lib.proto.OnetProto.internal_static_onet_Status_FieldEntry_descriptor,
                   com.google.protobuf.WireFormat.FieldType.STRING,
                   "",
                   com.google.protobuf.WireFormat.FieldType.STRING,
@@ -1721,17 +1721,17 @@ public final class OnetProto {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_onet_Roster_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_onet_Roster_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_onet_Status_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_onet_Status_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_onet_Status_FieldEntry_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_onet_Status_FieldEntry_fieldAccessorTable;
 

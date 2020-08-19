@@ -44,7 +44,7 @@ check() {
             SED=gsed
         else
             warn="WARNING: Detecting you are on mac but didn't find the 'gsed' "
-            warn+="utility. Default 'sed' version of mac is not likely to work " 
+            warn+="utility. Default 'sed' version of mac is not likely to work "
             warn+="here. You can install 'gsed' with 'brew install gnu-sed'."
             echo $warn
         fi
@@ -136,14 +136,14 @@ insert() {
     # $end_toc. We ensure there is a correct and single pair of opening/closing
     # delimiters.
     S=$(awk -v start="^$start_toc$" -v end="^$end_toc$" 'BEGIN { status=-1; start_c=0; end_c=0 }
-        { if ($0 ~ start && start_c > 0) { 
+        { if ($0 ~ start && start_c > 0) {
             start_c+=1; status=10; exit
           }
           if ($0 ~ start) {
               start_c+=1
           }
-          if (start_c == 1 && $0 ~ end) { 
-              end_c+=1; status=0 
+          if (start_c == 1 && $0 ~ end) {
+              end_c+=1; status=0
           }
           if (start_c == 0 && $0 ~ end) {
               status=11; exit
@@ -151,29 +151,29 @@ insert() {
           if (end_c > 1 ) {
               status=12; exit
           }
-        } END { 
+        } END {
             if (start_c == 1 && end_c == 0) {
                 status=13
             }
             print status }' $1)
-    
+
     # If the status S is >=10, that means something went bad and we must abort.
-    if [ $S -ge 10 ]; then 
+    if [ $S -ge 10 ]; then
         echo "got an error while checking the opening/closing tags:"
 
         case $S in
-            10)      
+            10)
                 echo " - found more than 1 opening tag. Please fix that"
                 ;;
-            11)      
+            11)
                 echo " - found a closing tag before an opening one. Please fix that"
                 ;;
             12)
                 echo " - found more than 1 closing tag. Please fix that"
-                ;; 
+                ;;
             13)
                 echo " - found only an opening tag. Please fix that"
-                ;; 
+                ;;
         esac
         exit 1
     fi
