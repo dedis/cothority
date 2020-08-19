@@ -91,5 +91,7 @@ export function addJSON(json: INamespace): void {
         }
     }
 
-    root.add(temp);
+    for (const nested of temp.nestedArray) {
+        root.add(nested);
+    }
 }
