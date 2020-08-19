@@ -133,3 +133,43 @@ Every debug-function has also a -*f*-function: `Lvl1` and `Lvlf1`, `Lvl2` and
 `Lvlf2`..., `Print` and `Printf`, `Fatal` and `Fatalf`, `Error` and `Errorf`.
 
 The format-functions work like `fmt.Printf`.
+
+## Pre-commit
+
+As of August 2020, we use the [pre-commit](https://pre-commit.com/) framework
+ to make sure the code is up-to-date with regard to formatting and linting.
+After installation, you can launch this locally with
+
+```bash
+pre-commit
+```
+
+This will make sure that all changed files pass our linting- and formatting
+ preferences.
+
+# Licenses
+
+Cothority is an Open Source program with many contributors (listed in the AUTHORS
+files), so we actively seek contributions (help on the Cothority users list,
+documentation, source code, ideas, …).  All contributions help us make a
+better product.
+
+All contributions without an explicit copyright statement or a CLAI/CLAC (see below)
+are assumed to be covered under a AGPL 2-Clause license as described in the
+file LICENSE.
+
+Developers who have contributed significant changes to the Cothority code must sign
+a Contributor License Agreement (CLAI), eventually also a CLAC if they work for
+a corporation. Together they guarantee them the right to use the code they have
+developed, and also ensures that EPFL/DEDIS (and thus the Cothority project) has the
+rights to the code.
+By signing the CLAI/CLAC, your contributions are eligible to be integrated into the
+Cothority source code.
+Having the CLAI/CLAC signed is essential for the Cothority project to maintain a
+clean copyright and guarantees that Cothority and your source code will always remain
+Free Software (Open Source).
+Providing that your contribution is accepted by the Cothority project, your signed
+CLAI/CLAC also permits EPFL/DEDIS to submit your contribution for use in other
+EPFL/DEDIS-projects.
+
+The Contributor License Agreements are in the [CLAI] and [CLAC]-file.
