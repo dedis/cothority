@@ -1,12 +1,12 @@
 _:
-  - &language_go_1_13
-    name: "go 1.13"
-    language: go
-    go: "1.13.x"
   - &language_go_1_14
     name: "go 1.14"
     language: go
     go: "1.14.x"
+  - &language_go_1_15
+    name: "go 1.15"
+    language: go
+    go: "1.15.x"
   - &language_js
     language: node_js
     node_js: "lts/*"
@@ -14,8 +14,8 @@ _:
   - &gen_link_kyber
     pushd external/js/kyber && npm ci && npm run link && popd
   - &get_go
-    - gimme 1.13
-    - . $HOME/.gimme/envs/go1.13.env
+    - gimme 1.14
+    - . $HOME/.gimme/envs/go1.14.env
 
   - &stage_build_go
     script:
@@ -44,16 +44,16 @@ jobs:
       language: python
       python: "3.6"
       before_install:
-        - gimme 1.14
-        - . ${HOME}/.gimme/envs/go1.14.env
+        - gimme 1.15
+        - . ${HOME}/.gimme/envs/go1.15.env
         - GO111MODULE=off go get -u golang.org/x/lint/golint
       install: pip install pre-commit
       script: pre-commit run --all-files --verbose --show-diff-on-failure
-    - <<: *language_go_1_13
+    - <<: *language_go_1_14
       script:
         - make -C conode verify
         - GO111MODULE=on make test_{fmt,lint}
-    - <<: *language_go_1_14
+    - <<: *language_go_1_15
       script:
         - make -C conode verify
         - GO111MODULE=on make test_{fmt,lint}
@@ -73,10 +73,10 @@ jobs:
     - stage: build
       <<:
         - *stage_build_go
-        - *language_go_1_13
+        - *language_go_1_14
     - <<:
         - *stage_build_go
-        - *language_go_1_14
+        - *language_go_1_15
 
     - name: "js > kyber"
       <<: *language_js
@@ -94,7 +94,7 @@ jobs:
         - npm run build
 
     - stage: test
-      <<: *language_go_1_14
+      <<: *language_go_1_15
       script: GO111MODULE=on make test_goveralls
     - name: "java"
       language: java
