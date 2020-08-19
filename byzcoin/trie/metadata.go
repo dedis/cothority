@@ -30,7 +30,7 @@ func (t *Trie) SetMetadata(key []byte, val []byte) error {
 // transaction.
 func (t *Trie) SetMetadataWithBucket(key []byte, val []byte, b Bucket) error {
 	if len(key) > metaMaxLen {
-		return xerrors.New("key must be " + string(metaMaxLen) + " bytes or shorter")
+		return xerrors.Errorf("key must be %v bytes or shorter", metaMaxLen)
 	}
 	if isIllegalKey(key) {
 		return xerrors.New("the key is illegal, it cannot be \"" + entryKey + "\" or \"" + nonceKey + "\"")
@@ -81,7 +81,7 @@ func (t *Trie) DeleteMetadata(key []byte) error {
 // transaction.
 func (t *Trie) DeleteMetadataWithBucket(key []byte, b Bucket) error {
 	if len(key) > metaMaxLen {
-		return xerrors.New("key must be " + string(metaMaxLen) + " bytes or shorter")
+		return xerrors.Errorf("key must be %v bytes or shorter", metaMaxLen)
 	}
 	if isIllegalKey(key) {
 		return xerrors.New("the key is illegal, it cannot be \"" + entryKey + "\" or \"" + nonceKey + "\"")
