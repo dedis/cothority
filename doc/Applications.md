@@ -17,8 +17,6 @@ The currently elected applications in the cothority are:
 - [Status Report](../status/README.md) reports the status of a node
 - [Calypso](../calypso/README.md) hides data on a blockchain and adds
 an access control to it
-- [Proof of Personhood](../pop/README.md) create a PoP party to distribute unique
-cryptographic tokens to physical people
 - [E-voting](../evoting/README.md) run an election by storing votes on a blockchain,
 then having a cothority shuffling them and decrypting the votes.
 - [Eventlog](../eventlog/README.md) is an event logging system built on top of ByzCoin.
