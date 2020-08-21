@@ -52,7 +52,6 @@ func TestViewChange_Basic3(t *testing.T) {
 //     - calculating the timeouts when asking for a signature
 //     - the time to wait to propagate to children
 // So it's using the `SetPropagationTimeout` to tweak it a bit.
-// But it's a bi...
 func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration) {
 	rw := time.Duration(3)
 	s := newSerN(t, 1, interval, nHosts, rw)
