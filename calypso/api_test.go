@@ -260,12 +260,13 @@ func TestClient_ReadBatch(t *testing.T) {
 	//require.NotNil(t, err)
 
 	// Make sure you can actually decrypt
-	require.True(t, batchReply.IIDValid[0])
-	require.True(t, batchReply.IIDValid[1])
-	rp1, err := calypsoClient.WaitProof(batchReply.IIDBatch[0].ID, 0, nil)
+	require.True(t, batchReply.Replies[0].Valid)
+	require.True(t, batchReply.Replies[1].Valid)
+	rp1, err := calypsoClient.WaitProof(batchReply.Replies[0].ID, 0, nil)
 	require.Nil(t, err)
-	rp2, err := calypsoClient.WaitProof(batchReply.IIDBatch[1].ID, 0, nil)
+	rp2, err := calypsoClient.WaitProof(batchReply.Replies[1].ID, 0, nil)
 	require.Nil(t, err)
+
 	dk1, err := calypsoClient.DecryptKey(&DecryptKey{Read: *rp1, Write: *prWr1})
 	require.Nil(t, err)
 	require.True(t, dk1.X.Equal(calypsoClient.ltsReply.X))
@@ -281,4 +282,14 @@ func TestClient_ReadBatch(t *testing.T) {
 		dk2.Cs, dk2.XhatEnc, reader.Ed25519.Secret)
 	require.Nil(t, err)
 	require.Equal(t, key2, keyCopy2)
+
+	dkb := &DKBatch{DK: []DecryptKey{{Read: *rp1, Write: *prWr1}, {Read: *rp2, Write: *prWr2}}}
+	dkreply, err := calypsoClient.DecryptKeyBatch(dkb)
+	require.Nil(t, err)
+	kc1, err := DecodeKey(cothority.Suite, calypsoClient.ltsReply.X, dkreply.DKBReply[0].Cs, dkreply.DKBReply[0].XhatEnc, reader.Ed25519.Secret)
+	require.Nil(t, err)
+	require.Equal(t, key1, kc1)
+	kc2, err := DecodeKey(cothority.Suite, calypsoClient.ltsReply.X, dkreply.DKBReply[1].Cs, dkreply.DKBReply[1].XhatEnc, reader.Ed25519.Secret)
+	require.Nil(t, err)
+	require.Equal(t, key2, kc2)
 }

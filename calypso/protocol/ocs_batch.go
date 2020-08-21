@@ -7,6 +7,7 @@ paper-draft about onchain-secrets (called BlockMage).
 
 import (
 	"crypto/sha256"
+	"errors"
 	"sync"
 	"time"
 
@@ -26,13 +27,14 @@ func init() {
 // DKG and U must be initialized by the caller.
 type OCSBatch struct {
 	*onet.TreeNodeInstance
+	Shared      map[int]*dkgprotocol.SharedSecret
 	RcInput     map[int]RCInput
 	Threshold   int // How many replies are needed to re-create the secret
 	Verify      VerifyBatchRequest
 	Reencrypted chan bool
 	Failures    map[int]int
 
-	replies  map[int][]RCReply
+	replies  map[int][]*RCReply
 	timeout  *time.Timer
 	doneOnce sync.Once
 	isDone   map[int]bool
@@ -44,6 +46,10 @@ func NewOCSBatch(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		TreeNodeInstance: n,
 		Reencrypted:      make(chan bool, 1),
 		Threshold:        len(n.Roster().List) - (len(n.Roster().List)-1)/3,
+		Failures:         make(map[int]int),
+		replies:          make(map[int][]*RCReply),
+		isDone:           make(map[int]bool),
+		Uis:              make(map[int][]*share.PubShare),
 	}
 	err := o.RegisterHandlers(o.rcBatch, o.rcBatchReply)
 	if err != nil {
@@ -55,32 +61,34 @@ func NewOCSBatch(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 // Start asks all children to reply with a shared reencryption
 func (o *OCSBatch) Start() error {
 	log.Lvl3("Starting Protocol")
-	var rcb RCBatch
+	rcb := RCBatch{RC: make(map[int]*RCData)}
 	for idx, rci := range o.RcInput {
-		if rci.U != nil {
-			rc := RCData{Idx: idx, Shared: rci.Shared, U: rci.U, Xc: rci.Xc}
-			if len(rci.VerificationData) > 0 {
-				rc.VerificationData = &rci.VerificationData
-			}
-			if o.Verify != nil {
-				if !o.Verify(&rc) {
-					log.Errorf("Refused to reencrypt")
-					continue
-				}
-			}
-			rcb.RC = append(rcb.RC, rc)
+		//rc := RCData{Idx: idx, Shared: rci.Shared, U: rci.U, Xc: rci.Xc}
+		//rc := &RCData{Shared: rci.Shared, U: rci.U, Xc: rci.Xc}
+		rc := &RCData{U: rci.U, Xc: rci.Xc}
+		if len(rci.VerificationData) > 0 {
+			rc.VerificationData = &rci.VerificationData
 		}
+		if o.Verify != nil {
+			//if !o.Verify(&rc) {
+			if !o.Verify(rc) {
+				log.Errorf("Refused to reencrypt")
+				o.isDone[idx] = true
+				continue
+			}
+		}
+		//rcb.RC = append(rcb.RC, rc)
+		rcb.RC[idx] = rc
 	}
 	o.timeout = time.AfterFunc(5*time.Minute, func() {
 		log.Lvl1("OCSBatch protocol timeout")
 		o.finish(false)
 	})
-	_ = o.Broadcast(rcb)
-	//errs := o.Broadcast(rc)
-	//if len(errs) > (len(o.Roster().List)-1)/3 {
-	//log.Errorf("Some nodes failed with error(s) %v", errs)
-	//return errors.New("too many nodes failed in broadcast")
-	//}
+	errs := o.Broadcast(&rcb)
+	if len(errs) > (len(o.Roster().List)-1)/3 {
+		log.Errorf("Some nodes failed with error(s) %v", errs)
+		return errors.New("too many nodes failed in broadcast")
+	}
 	return nil
 }
 
@@ -90,14 +98,19 @@ func (o *OCSBatch) rcBatch(rcb structRCBatch) error {
 	log.Lvl3(o.Name() + ": starting reencrypt")
 	defer o.Done()
 
-	sz := len(rcb.RC)
-	replies := make([]RCReply, sz)
-	for i, rc := range rcb.RC {
-		replies[i].Idx = rc.Idx
-		ui := o.getUI(rc.U, rc.Xc, rc.Shared)
+	replies := make(map[int]*RCReply)
+	//for _, rc := range rcb.RC {
+	for idx, rc := range rcb.RC {
+		//log.Infof("CEYHUN BATCH (%d) - U is %s", idx, rc.U)
+		//ui := o.getUI(rc.U, rc.Xc, rc.Shared)
+		shd := o.Shared[idx]
+		ui := o.getUI(rc.U, rc.Xc, shd)
 		if o.Verify != nil {
-			if !o.Verify(&rc) {
+			//if !o.Verify(&rc) {
+			if !o.Verify(rc) {
 				log.Lvl2(o.ServerIdentity(), "refused to reencrypt")
+				//replies[rc.Idx] = &RCReply{}
+				replies[idx] = &RCReply{}
 				continue
 			}
 		}
@@ -109,16 +122,24 @@ func (o *OCSBatch) rcBatch(rcb structRCBatch) error {
 		uiHat.MarshalTo(hash)
 		hiHat.MarshalTo(hash)
 		ei := cothority.Suite.Scalar().SetBytes(hash.Sum(nil))
-		replies[i].Ui = ui
-		replies[i].Ei = ei
-		replies[i].Fi = cothority.Suite.Scalar().Add(si, cothority.Suite.Scalar().Mul(ei, rc.Shared.V))
+		//replies[rc.Idx] = &RCReply{
+		replies[idx] = &RCReply{
+			Ui: ui,
+			Ei: ei,
+			Fi: cothority.Suite.Scalar().Add(si, cothority.Suite.Scalar().Mul(ei, shd.V)),
+			//Fi: cothority.Suite.Scalar().Add(si, cothority.Suite.Scalar().Mul(ei, rc.Shared.V)),
+		}
+		//log.Infof("CEYHUN BATCH (%d): %s %s", idx, ui.V.String(), ei.String())
+		//replies[i].Ui = ui
+		//replies[i].Ei = ei
+		//replies[i].Fi = cothority.Suite.Scalar().Add(si, cothority.Suite.Scalar().Mul(ei, rc.Shared.V))
 	}
 	return o.SendToParent(&RCBReply{RCR: replies})
 }
 
 func (o *OCSBatch) rcBatchReply(rcbr structRCBReply) error {
-	for _, rcr := range rcbr.RCR {
-		idx := rcr.Idx
+	for idx, rcr := range rcbr.RCR {
+		//idx := rcr.Idx
 		if rcr.Ui == nil {
 			log.Lvl2("Node", rcbr.ServerIdentity, "refused to reply for", idx)
 			o.Failures[idx] = o.Failures[idx] + 1
@@ -133,7 +154,9 @@ func (o *OCSBatch) rcBatchReply(rcbr structRCBReply) error {
 			if len(o.replies[idx]) >= int(o.Threshold-1) {
 				rci := o.RcInput[idx]
 				uiList := make([]*share.PubShare, len(o.List()))
-				uiList[0] = o.getUI(rci.U, rci.Xc, rci.Shared)
+				uiList[0] = o.getUI(rci.U, rci.Xc, o.Shared[idx])
+				//uiList[0] = o.getUI(rci.U, rci.Xc, rci.Shared)
+				//log.Info("CEYHUN BATCH ROOT:", uiList[0].V.String())
 
 				for _, r := range o.replies[idx] {
 					ufi := cothority.Suite.Point().Mul(r.Fi, cothority.Suite.Point().Add(rci.U, rci.Xc))

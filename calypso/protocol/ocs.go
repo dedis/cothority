@@ -127,6 +127,7 @@ func (o *OCS) reencrypt(r structReencrypt) error {
 	uiHat.MarshalTo(hash)
 	hiHat.MarshalTo(hash)
 	ei := cothority.Suite.Scalar().SetBytes(hash.Sum(nil))
+	//log.Info("CEYHUN:", ui.V.String(), ei.String())
 
 	return o.SendToParent(&ReencryptReply{
 		Ui: ui,
@@ -154,6 +155,7 @@ func (o *OCS) reencryptReply(rr structReencryptReply) error {
 		o.Uis = make([]*share.PubShare, len(o.List()))
 		var err error
 		o.Uis[0], err = o.getUI(o.U, o.Xc)
+		//log.Info("CEYHUN ROOT:", o.Uis[0].V.String())
 		if err != nil {
 			return err
 		}

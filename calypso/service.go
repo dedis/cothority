@@ -65,6 +65,10 @@ type vData struct {
 	Signature *darc.Signature
 }
 
+type ltsData struct {
+	Data map[int][]byte
+}
+
 // CreateLTS takes as input a roster with a list of all nodes that should
 // participate in the DKG. Every node will store its private key and wait
 // for decryption requests.
@@ -204,11 +208,14 @@ func (s *Service) DecryptKeyBatch(dkb *DKBatch) (reply *DKBatchReply, err error)
 	reply.DKBReply = make([]DecryptKeyReply, len(dkb.DK))
 	log.Lvl2("Re-encrypt the key to the public key of the reader")
 	var roster *onet.Roster
-	var read Read
-	var write Write
+	//var ltsid []byte
 	rcInput := make(map[int]protocol.RCInput)
+	ltsidMap := make(map[int][]byte)
+	sharedMap := make(map[int]*dkgprotocol.SharedSecret)
 
 	for i, dkr := range dkb.DK {
+		var read Read
+		var write Write
 		if err := dkr.Read.ContractValue(cothority.Suite, ContractReadID, &read); err != nil {
 			log.Errorf("didn't get a read instance: " + err.Error())
 			continue
@@ -251,7 +258,8 @@ func (s *Service) DecryptKeyBatch(dkb *DKBatch) (reply *DKBatchReply, err error)
 			VerificationData: vd,
 		}
 		s.storage.Lock()
-		rci.Shared = s.storage.Shared[string(write.LTSID)]
+		//rci.Shared = s.storage.Shared[string(write.LTSID)]
+		sharedMap[i] = s.storage.Shared[string(write.LTSID)]
 		pp := s.storage.Polys[string(write.LTSID)]
 		reply.DKBReply[i].X = s.storage.Shared[string(write.LTSID)].X.Clone()
 		var commits []kyber.Point
@@ -261,6 +269,7 @@ func (s *Service) DecryptKeyBatch(dkb *DKBatch) (reply *DKBatchReply, err error)
 		rci.Poly = share.NewPubPoly(s.Suite(), pp.B.Clone(), commits)
 		s.storage.Unlock()
 		rcInput[i] = rci
+		ltsidMap[i] = write.LTSID
 		reply.DKBReply[i].Cs = write.Cs
 	}
 
@@ -274,9 +283,15 @@ func (s *Service) DecryptKeyBatch(dkb *DKBatch) (reply *DKBatchReply, err error)
 		return nil, err
 	}
 	ocsBatchProto := pi.(*protocol.OCSBatch)
+	ocsBatchProto.Shared = sharedMap
 	ocsBatchProto.RcInput = rcInput
 	log.Lvl3("Starting reencryption protocol")
-	ocsBatchProto.SetConfig(&onet.GenericConfig{Data: write.LTSID})
+	buf, err := protobuf.Encode(&ltsData{Data: ltsidMap})
+	if err != nil {
+		log.Errorf("Protobuf encode failed for config data: %v", err)
+		return nil, err
+	}
+	ocsBatchProto.SetConfig(&onet.GenericConfig{Data: buf})
 	err = ocsBatchProto.Start()
 	if err != nil {
 		return nil, err
@@ -350,11 +365,24 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		ocs.Verify = s.verifyReencryption
 		return ocs, nil
 	case protocol.NameOCSBatch:
+		var data ltsData
 		pi, err := protocol.NewOCSBatch(tn)
 		if err != nil {
 			return nil, err
 		}
+		err = protobuf.DecodeWithConstructors(conf.Data, &data, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			log.Errorf("Cannot decode config data: %v", err)
+			return nil, err
+		}
+		shdMap := make(map[int]*dkgprotocol.SharedSecret)
+		for idx, data := range data.Data {
+			s.storage.Lock()
+			shdMap[idx] = s.storage.Shared[string(data)]
+			s.storage.Unlock()
+		}
 		ocsBatchProto := pi.(*protocol.OCSBatch)
+		ocsBatchProto.Shared = shdMap
 		ocsBatchProto.Verify = s.verifyBatchReencryption
 		return ocsBatchProto, nil
 	}
@@ -437,7 +465,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
-	if err := s.RegisterHandlers(s.CreateLTS, s.DecryptKey, s.SharedPublic); err != nil {
+	if err := s.RegisterHandlers(s.CreateLTS, s.DecryptKey, s.DecryptKeyBatch, s.SharedPublic); err != nil {
 		return nil, errors.New("couldn't register messages")
 	}
 	byzcoin.RegisterContract(c, ContractWriteID, s.ContractWrite)
