@@ -199,6 +199,105 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	return
 }
 
+func (s *Service) DecryptKeyBatch(dkb *DKBatch) (reply *DKBatchReply, err error) {
+	reply = &DKBatchReply{}
+	reply.DKBReply = make([]DecryptKeyReply, len(dkb.DK))
+	log.Lvl2("Re-encrypt the key to the public key of the reader")
+	var roster *onet.Roster
+	var read Read
+	var write Write
+	rcInput := make(map[int]protocol.RCInput)
+
+	for i, dkr := range dkb.DK {
+		if err := dkr.Read.ContractValue(cothority.Suite, ContractReadID, &read); err != nil {
+			log.Errorf("didn't get a read instance: " + err.Error())
+			continue
+		}
+		if err := dkr.Write.ContractValue(cothority.Suite, ContractWriteID, &write); err != nil {
+			log.Errorf("didn't get a write instance: " + err.Error())
+			continue
+		}
+		if !read.Write.Equal(byzcoin.NewInstanceID(dkr.Write.InclusionProof.Key)) {
+			log.Errorf("read doesn't point to passed write")
+			continue
+		}
+		s.storage.Lock()
+		roster = s.storage.Rosters[string(write.LTSID)]
+		if roster == nil {
+			s.storage.Unlock()
+			log.Errorf("don't know the LTSID stored in write")
+			continue
+		}
+		scID := make([]byte, 32)
+		copy(scID, s.storage.OLIDs[string(write.LTSID)])
+		s.storage.Unlock()
+		if err = dkr.Read.Verify(scID); err != nil {
+			log.Errorf("read proof cannot be verified to come from scID: " + err.Error())
+			continue
+		}
+		if err = dkr.Write.Verify(scID); err != nil {
+			log.Errorf("write proof cannot be verified to come from scID: " + err.Error())
+			continue
+		}
+		verificationData := &vData{Proof: dkr.Read}
+		vd, err := protobuf.Encode(verificationData)
+		if err != nil {
+			log.Errorf("Couldn't marshal verification data: %v", err)
+			continue
+		}
+		rci := protocol.RCInput{
+			U:                write.U,
+			Xc:               read.Xc,
+			VerificationData: vd,
+		}
+		s.storage.Lock()
+		rci.Shared = s.storage.Shared[string(write.LTSID)]
+		pp := s.storage.Polys[string(write.LTSID)]
+		reply.DKBReply[i].X = s.storage.Shared[string(write.LTSID)].X.Clone()
+		var commits []kyber.Point
+		for _, c := range pp.Commits {
+			commits = append(commits, c.Clone())
+		}
+		rci.Poly = share.NewPubPoly(s.Suite(), pp.B.Clone(), commits)
+		s.storage.Unlock()
+		rcInput[i] = rci
+		reply.DKBReply[i].Cs = write.Cs
+	}
+
+	//// Start ocsbatch-protocol to re-encrypt the file's symmetric key under the
+	//// reader's public key.
+	nodes := len(roster.List)
+	threshold := nodes - (nodes-1)/3
+	tree := roster.GenerateNaryTreeWithRoot(nodes, s.ServerIdentity())
+	pi, err := s.CreateProtocol(protocol.NameOCSBatch, tree)
+	if err != nil {
+		return nil, err
+	}
+	ocsBatchProto := pi.(*protocol.OCSBatch)
+	ocsBatchProto.RcInput = rcInput
+	log.Lvl3("Starting reencryption protocol")
+	ocsBatchProto.SetConfig(&onet.GenericConfig{Data: write.LTSID})
+	err = ocsBatchProto.Start()
+	if err != nil {
+		return nil, err
+	}
+	<-ocsBatchProto.Reencrypted
+	log.Lvl3("Reencryption protocol is done.")
+	recoverSecrets(reply, ocsBatchProto.Uis, threshold, nodes)
+	return reply, nil
+}
+
+func recoverSecrets(r *DKBatchReply, Uis map[int][]*share.PubShare, thresh int, nodes int) {
+	for idx, uis := range Uis {
+		xhatEnc, err := share.RecoverCommit(cothority.Suite, uis, thresh, nodes)
+		if err != nil {
+			log.Errorf("Failed to recover commit %d: %v", idx, err)
+		} else {
+			r.DKBReply[idx].XhatEnc = xhatEnc
+		}
+	}
+}
+
 // SharedPublic returns the shared public key of an LTSID group.
 func (s *Service) SharedPublic(req *SharedPublic) (reply *SharedPublicReply, err error) {
 	log.Lvl2("Getting shared public key")
@@ -250,6 +349,14 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		ocs.Shared = shared
 		ocs.Verify = s.verifyReencryption
 		return ocs, nil
+	case protocol.NameOCSBatch:
+		pi, err := protocol.NewOCSBatch(tn)
+		if err != nil {
+			return nil, err
+		}
+		ocsBatchProto := pi.(*protocol.OCSBatch)
+		ocsBatchProto.Verify = s.verifyBatchReencryption
+		return ocsBatchProto, nil
 	}
 	return nil, nil
 }
@@ -278,6 +385,40 @@ func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
 			return errors.New("ephemeral keys not supported yet")
 		}
 		if !r.Xc.Equal(rc.Xc) {
+			return errors.New("wrong reader")
+		}
+		return nil
+	}()
+	if err != nil {
+		log.Lvl2(s.ServerIdentity(), "wrong reencryption:", err)
+		return false
+	}
+	return true
+}
+
+func (s *Service) verifyBatchReencryption(rcd *protocol.RCData) bool {
+	err := func() error {
+		var verificationData vData
+		err := protobuf.DecodeWithConstructors(*rcd.VerificationData, &verificationData, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			return err
+		}
+		_, vs, err := verificationData.Proof.KeyValue()
+		if err != nil {
+			return errors.New("proof cannot return values: " + err.Error())
+		}
+		if bytes.Compare(vs[1], []byte(ContractReadID)) != 0 {
+			return errors.New("proof doesn't point to read instance")
+		}
+		var r Read
+		err = protobuf.DecodeWithConstructors(vs[0], &r, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			return errors.New("couldn't decode read data: " + err.Error())
+		}
+		if verificationData.Ephemeral != nil {
+			return errors.New("ephemeral keys not supported yet")
+		}
+		if !r.Xc.Equal(rcd.Xc) {
 			return errors.New("wrong reader")
 		}
 		return nil

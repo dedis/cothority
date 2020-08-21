@@ -1,12 +1,14 @@
 package calypso
 
 import (
+	"time"
+
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 	"github.com/dedis/protobuf"
-	"time"
 )
 
 // Client is a class to communicate to the calypso service.
@@ -56,6 +58,15 @@ func (c *Client) CreateLTS() (reply *CreateLTSReply, err error) {
 func (c *Client) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error) {
 	reply = &DecryptKeyReply{}
 	err = c.c.SendProtobuf(c.bcClient.Roster.List[0], dkr, reply)
+	if err != nil {
+		return nil, err
+	}
+	return reply, nil
+}
+
+func (c *Client) DecryptKeyBatch(dkb *DKBatch) (reply *DKBatchReply, err error) {
+	reply = &DKBatchReply{}
+	err = c.c.SendProtobuf(c.bcClient.Roster.List[0], dkb, reply)
 	if err != nil {
 		return nil, err
 	}
@@ -163,6 +174,59 @@ func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer,
 	reply.AddTxResponse, err = c.bcClient.AddTransactionAndWait(ctx, wait)
 	if err != nil {
 		return nil, err
+	}
+	return reply, nil
+}
+
+//func (c *Client) AddReadBatch(proofs []*byzcoin.Proof, signer []darc.Signer,
+//darc []darc.Darc, wait int) (
+//reply *BatchReadReply, err error) {
+func (c *Client) AddReadBatch(batchData []*BatchData, wait int) (
+	reply *BatchReadReply, err error) {
+	w := 0
+	sz := len(batchData)
+	replies := make([]BRReply, sz)
+	for i, bd := range batchData {
+		if bd != nil {
+			var readBuf []byte
+			read := &Read{
+				Write: byzcoin.NewInstanceID(bd.Proof.InclusionProof.Key),
+				Xc:    bd.Signer.Ed25519.Point,
+			}
+			readBuf, err = protobuf.Encode(read)
+			if err != nil {
+				return nil, err
+			}
+			ctx := byzcoin.ClientTransaction{
+				Instructions: byzcoin.Instructions{{
+					InstanceID: byzcoin.NewInstanceID(bd.Proof.InclusionProof.Key),
+					Nonce:      byzcoin.Nonce{},
+					Index:      0,
+					Length:     1,
+					Spawn: &byzcoin.Spawn{
+						ContractID: ContractReadID,
+						Args:       byzcoin.Arguments{{Name: "read", Value: readBuf}},
+					},
+				}},
+			}
+			err = ctx.Instructions[0].SignBy(bd.Darc.GetID(), bd.Signer)
+			if err != nil {
+				log.Errorf("Cannot sign transaction: %v", err)
+			} else {
+				if i == sz-1 {
+					w = wait
+				}
+				_, err := c.bcClient.AddTransactionAndWait(ctx, w)
+				if err != nil {
+					log.Errorf("Cannot add transaction: %v", err)
+				} else {
+					replies[i] = BRReply{ID: ctx.Instructions[0].DeriveID(""), Valid: true}
+				}
+			}
+		}
+	}
+	reply = &BatchReadReply{
+		Replies: replies,
 	}
 	return reply, nil
 }

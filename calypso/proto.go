@@ -2,6 +2,7 @@ package calypso
 
 import (
 	"github.com/dedis/cothority/byzcoin"
+	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
@@ -20,7 +21,7 @@ import (
 // Common structures
 // ***
 
-// TODO: Ceyhun
+// For semi-centralized experiments
 type SemiWrite struct {
 	//Data     []byte
 	DataHash  []byte
@@ -28,6 +29,30 @@ type SemiWrite struct {
 	C         kyber.Point
 	Reader    kyber.Point
 	EncReader []byte
+}
+
+// For batch read requests
+type BRReply struct {
+	ID    byzcoin.InstanceID
+	Valid bool
+}
+
+type BatchData struct {
+	Proof  *byzcoin.Proof
+	Signer darc.Signer
+	Darc   darc.Darc
+}
+
+type BatchReadReply struct {
+	Replies []BRReply
+}
+
+type DKBatch struct {
+	DK []DecryptKey
+}
+
+type DKBatchReply struct {
+	DKBReply []DecryptKeyReply
 }
 
 // Write is the data stored in a write instance. It stores a reference to the LTS
