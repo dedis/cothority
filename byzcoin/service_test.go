@@ -815,8 +815,6 @@ func TestService_WaitInclusion(t *testing.T) {
 }
 
 func waitInclusion(t *testing.T, client int) {
-	// use a bigger block interval to allow txs to be included
-	// in the same block
 	s := newSer(t, 2, 2*time.Second)
 	defer s.local.CloseAll()
 
@@ -828,51 +826,68 @@ func waitInclusion(t *testing.T, client int) {
 	require.NoError(t, err)
 	counter := uint64(counterResponse.Counters[0])
 
-	// Create a transaction without waiting, we do not use sendTransactionWithCounter
-	// because it might slow us down since it gets a proof which causes the
-	// transactions to end up in two blocks.
-	log.Lvl1("Create transaction and don't wait")
-	counter++
-	tx, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, counter)
-	require.NoError(t, err)
-	ser := s.services[client]
-	resp, err := ser.AddTransaction(&AddTxRequest{
-		Version:       CurrentVersion,
-		SkipchainID:   s.genesis.SkipChainID(),
-		Transaction:   tx,
-		InclusionWait: 0,
-	})
-	transactionOK(t, resp, err)
+	cl := NewClient(s.genesis.SkipChainID(), *s.roster)
+	success := false
+	for try := 0; try < 10; try++ {
+		// Create a transaction without waiting, we do not use sendTransactionWithCounter
+		// because it might slow us down since it gets a proof which causes the
+		// transactions to end up in two blocks.
+		log.Lvl1("Create transaction and don't wait")
+		for i := 0; i < 2; i++ {
+			counter++
+			tx, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, counter)
+			require.NoError(t, err)
+			ser := s.services[client]
+			resp, err := ser.AddTransaction(&AddTxRequest{
+				Version:       CurrentVersion,
+				SkipchainID:   s.genesis.SkipChainID(),
+				Transaction:   tx,
+				InclusionWait: 0,
+			})
+			transactionOK(t, resp, err)
+		}
 
-	log.Lvl1("Create correct transaction and wait")
-	counter++
-	pr, k, resp, err, err2 := sendTransactionWithCounter(t, s, client, dummyContract, 10, counter)
-	transactionOK(t, resp, err)
-	require.NoError(t, err2)
-	require.True(t, pr.InclusionProof.Match(k))
+		log.Lvl1("Create correct transaction and wait")
+		counter++
+		pr, k, resp, err, err2 := sendTransactionWithCounter(t, s, client, dummyContract, 10, counter)
+		transactionOK(t, resp, err)
+		require.NoError(t, err2)
+		require.True(t, pr.InclusionProof.Match(k))
 
-	// We expect to see both transactions in the block in pr.
-	txr, err := txResultsFromBlock(&pr.Latest)
-	require.NoError(t, err)
-	require.Equal(t, 2, len(txr))
+		// We expect to see both transactions in the block in pr.
+		txr, err := txResultsFromBlock(&pr.Latest)
+		require.NoError(t, err)
+		if len(txr) == 2 {
+			success = true
+			break
+		}
+		require.NoError(t, cl.WaitPropagation(-1))
+	}
+	require.True(t, success, "couldn't get two transactions in one block")
 
 	log.Lvl1("Create wrong transaction and wait")
 	counter++
-	pr, _, resp, err, err2 = sendTransactionWithCounter(t, s, client, invalidContract, 10, counter)
+	pr, _, resp, err, err2 := sendTransactionWithCounter(t, s, client,
+		invalidContract, 10, counter)
 	require.NoError(t, err)
 	require.Contains(t, resp.Error, "this invalid contract always returns an error")
 	require.NoError(t, err2)
 
 	// We expect to see only the refused transaction in the block in pr.
 	require.True(t, len(pr.Latest.Payload) > 0)
-	txr, err = txResultsFromBlock(&pr.Latest)
+	txr, err := txResultsFromBlock(&pr.Latest)
 	require.NoError(t, err)
 	require.Equal(t, len(txr), 1)
 	require.False(t, txr[0].Accepted)
 
 	log.Lvl1("Create wrong transaction, no wait")
-	sendTransactionWithCounter(t, s, client, invalidContract, 0, counter)
+	_, _, _, err, err2 = sendTransactionWithCounter(t, s, client,
+		invalidContract, 0, counter)
+	require.NoError(t, err)
+	require.NoError(t, err2)
+
 	log.Lvl1("Create second correct transaction and wait")
+	var k []byte
 	pr, k, resp, err, err2 = sendTransactionWithCounter(t, s, client, dummyContract, 10, counter)
 	transactionOK(t, resp, err)
 	require.NoError(t, err2)
@@ -899,11 +914,7 @@ func waitInclusion(t *testing.T, client int) {
 		require.True(t, txr[1].Accepted)
 	}
 
-	// We need to wait a bit for the propagation to finish because the
-	// skipchain service might decide to update forward links by adding
-	// additional blocks. How do we make sure that the test closes only
-	// after the forward links are all updated?
-	time.Sleep(time.Second)
+	require.NoError(t, cl.WaitPropagation(-1))
 }
 
 // Sends too many transactions to the ledger and waits for all blocks to be

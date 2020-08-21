@@ -6,7 +6,7 @@
 #   commit=`git rev-parse --short HEAD`
 #   docker build -f Dockerfile-int -t dedis/cothority-integration-tester:$commit .
 
-FROM golang:1.13
+FROM golang:1.15
 RUN apt update && apt install pcregrep && apt clean
 
 WORKDIR /cothority

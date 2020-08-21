@@ -45,13 +45,23 @@ func TestViewChange_Basic3(t *testing.T) {
 	testViewChange(t, 10, 3, 2*testInterval)
 }
 
+// This test is brittle with regard to timeouts:
+//   - the given interval has been used for the 'blockInterval',
+//   which doesn't exist anymore, but is still used for
+//     - the timeout when adding a transaction
+//     - calculating the timeouts when asking for a signature
+//     - the time to wait to propagate to children
+// So it's using the `SetPropagationTimeout` to tweak it a bit.
 func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration) {
 	rw := time.Duration(3)
 	s := newSerN(t, 1, interval, nHosts, rw)
 	defer s.local.CloseAll()
 
+	// The propagation interval needs to be high enough so that the
+	// subleaders and the leaves have the time to make sure the
+	// transactions are correct.
 	for _, service := range s.services {
-		service.SetPropagationTimeout(2 * interval)
+		service.SetPropagationTimeout(4 * interval)
 	}
 
 	log.Lvl1("Wait for all the genesis config to be written on all nodes.")
@@ -105,7 +115,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	// Note: check is done after a tx has been sent so that nodes catch up if the
 	// propagation failed
 	log.Lvl1("Waiting for the new transaction to go through")
-	s.waitPropagation(t, 0)
+	s.waitPropagation(t, -1)
 	for _, service := range s.services[nFailures:] {
 		// everyone should have the same leader after the genesis block is stored
 		leader, err := service.getLeader(s.genesis.SkipChainID())
