@@ -139,9 +139,7 @@ func (bft *ByzCoinX) initCosiProtocol(phase phase) (*protocol.BlsCosi, error) {
 		cosiProto.SubleaderFailures = bft.SubleaderFailures
 	}
 
-	cosiProto.SetNbrSubTree(bft.nSubtrees)
-
-	return cosiProto, nil
+	return cosiProto, cosiProto.SetNbrSubTree(bft.nSubtrees)
 }
 
 // Dispatch is the main logic of the BFTCoSi protocol. It runs two CoSi
