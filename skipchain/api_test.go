@@ -3,10 +3,6 @@ package skipchain
 import (
 	"bytes"
 	"fmt"
-	"strings"
-	"sync"
-	"testing"
-
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/kyber/v3"
@@ -14,6 +10,9 @@ import (
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
+	"strings"
+	"sync"
+	"testing"
 )
 
 func init() {
@@ -463,7 +462,7 @@ func TestClient_Follow(t *testing.T) {
 	// Verify that server1 doesn't allow a new skipchain using server0 and server1
 	roster01 := onet.NewRoster(ls.roster.List[0:2])
 	_, err = ls.client.CreateGenesis(roster01, 1, 1, VerificationNone, nil)
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	roster0 := onet.NewRoster([]*network.ServerIdentity{ls.si})
 	genesis, err := ls.client.CreateGenesisSignature(roster0, 1, 1, VerificationNone, nil, priv0)
@@ -480,7 +479,7 @@ func TestClient_Follow(t *testing.T) {
 	genesis1, err := ls.client.CreateGenesisSignature(roster01, 1, 1, VerificationNone, nil, priv0)
 	require.NoError(t, err)
 	_, err = ls.client.StoreSkipBlockSignature(genesis1, roster01, nil, priv0)
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	// Now server1 follows the skipchain as a 'roster-inclusion' skipchain, so it
 	// should also allow creation of a new skipchain
@@ -499,7 +498,7 @@ func TestClient_Follow(t *testing.T) {
 	log.Lvl1("(1) Following skipchain-id only on server2")
 	err = ls.client.AddFollow(ls.roster.List[2], priv2, genesis.SkipChainID(),
 		FollowSearch, NewChainStrictNodes, "")
-	require.NotNil(t, err)
+	require.Error(t, err)
 	log.Lvl1("(2) Following skipchain-id only on server2")
 	err = ls.client.AddFollow(ls.roster.List[2], priv2, genesis.SkipChainID(),
 		FollowLookup, NewChainStrictNodes, ls.server.Address().NetworkAddress())
