@@ -38,7 +38,6 @@ require (
 	golang.org/x/sys v0.0.0-20200523222454-059865788121
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
-	gopkg.in/satori/go.uuid.v1 v1.2.0
 	gopkg.in/square/go-jose.v2 v2.4.1 // indirect
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 )
