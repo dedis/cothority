@@ -73,7 +73,7 @@ func dbCatchup(c *cli.Context) error {
 	}
 	log.Info("Last index in local db", lastIndex)
 
-	fb.index = 0
+	fb.setNode(0)
 	for {
 		sb, err := fb.gbMulti(latestID)
 		if err != nil {
@@ -746,9 +746,13 @@ func (fb *fetchBlocks) openDB(name string) (*skipchain.SkipBlockDB,
 	return skipchain.NewSkipBlockDB(db, bucketName), db, nil
 }
 
-func (fb *fetchBlocks) nextNode() {
-	fb.index = (fb.index + 1) % len(fb.roster.List)
+func (fb *fetchBlocks) setNode(i int) {
+	fb.index = i % len(fb.roster.List)
 	fb.cl.UseNode(fb.index)
+}
+
+func (fb *fetchBlocks) nextNode() {
+	fb.setNode(fb.index + 1)
 }
 
 func (fb *fetchBlocks) gbMulti(startID skipchain.SkipBlockID) (
@@ -787,7 +791,7 @@ func (fb *fetchBlocks) gbMulti(startID skipchain.SkipBlockID) (
 		if url == "" {
 			url = fb.roster.List[fb.index].Address.String()
 		}
-		log.Infof("Got %d blocks from %s, starting at index %d",
+		log.Infof("Got %d blocks from %s (not sure), starting at index %d",
 			len(blocks), url, blocks[0].Index)
 		return blocks[len(blocks)-1], nil
 	}
