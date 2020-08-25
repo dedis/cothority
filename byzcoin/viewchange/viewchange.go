@@ -174,7 +174,8 @@ func (c *Controller) Start(myID network.ServerIdentityID,
 				}
 			}
 			log.Lvlf2("counter: %d, thr: %d, meta[ctr] (#/state): %d/%d, "+
-				"req: %+v", ctr, threshold, meta.countOf(ctr), meta.stateOf(ctr), req)
+				"request: %v", ctr,
+				threshold, meta.countOf(ctr), meta.stateOf(ctr), req)
 			if meta.countOf(ctr) >= threshold && meta.stateOf(
 				ctr) < startedTimerState && meta.acceptOf(ctr) {
 				// To avoid starting the next view-change too
@@ -322,6 +323,12 @@ type InitReq struct {
 	View      View
 	SignerID  network.ServerIdentityID
 	Signature []byte
+}
+
+// String for the Stringer interface
+func (req InitReq) String() string {
+	return fmt.Sprintf("{LeaderIndex: %d, ViewID: %x, SkipchainID: %x}",
+		req.View.LeaderIndex, req.View.ID, req.View.Gen)
 }
 
 // Hash computes the digest of the request.

@@ -200,7 +200,7 @@ func (p *Propagate) Dispatch() error {
 					}
 				}
 			}
-			if !p.IsRoot() {
+			if !p.IsRoot() || p.Tree().Size() == 1 {
 				log.Lvl3(p.ServerIdentity(), "Sending to parent")
 				if err := p.SendToParent(&PropagateReply{}); err != nil {
 					return err

@@ -1605,8 +1605,8 @@ func (s *Service) propagateForwardLinkHandler(msg network.Message) error {
 		// have caught up during the signature request
 		return xerrors.New("couldn't get the block to attach the forward link")
 	}
-	log.Lvlf2("Adding Forwardlink to block %d: (%x height:%d %x)",
-		sb.Index, pfl.Height, pfl.ForwardLink.From, pfl.ForwardLink.To)
+	log.Lvlf2("Adding Forwardlink with height %d to block %d: %x -> %x)",
+		pfl.Height, sb.Index, pfl.ForwardLink.From, pfl.ForwardLink.To)
 
 	err := sb.AddForwardLink(pfl.ForwardLink, pfl.Height)
 	if err != nil {

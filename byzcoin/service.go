@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/satori/go.uuid"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/blscosi/protocol"
 	"go.dedis.ch/cothority/v3/byzcoin/trie"
@@ -31,7 +32,6 @@ import (
 	"go.dedis.ch/protobuf"
 	"go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
-	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
 var pairingSuite = suites.MustFind("bn256.adapter").(*pairing.SuiteBn256)

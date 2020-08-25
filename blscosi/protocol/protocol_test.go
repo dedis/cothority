@@ -45,9 +45,12 @@ func init() {
 	log.ErrFatal(err)
 
 	// Register Protocols
-	GlobalRegisterDefaultProtocols()
-	onet.GlobalProtocolRegister(FailureProtocolName, NewFailureProtocol)
-	onet.GlobalProtocolRegister(FailureSubProtocolName, NewFailureSubProtocol)
+	_, err = onet.GlobalProtocolRegister(FailureProtocolName,
+		NewFailureProtocol)
+	log.ErrFatal(err)
+	_, err = onet.GlobalProtocolRegister(FailureSubProtocolName,
+		NewFailureSubProtocol)
+	log.ErrFatal(err)
 }
 
 var testSuite = pairing.NewSuiteBn256()
@@ -299,34 +302,18 @@ func TestProtocol_IntegrityCheck(t *testing.T) {
 		t.Fatal("Error in creation of protocol:", err)
 	}
 
-	// missing create protocol
 	cosiProtocol := pi.(*BlsCosi)
-	cosiProtocol.Msg = []byte{}
 	cosiProtocol.Timeout = testTimeout
-
-	// wrong subtree number
-	err = cosiProtocol.SetNbrSubTree(1)
-	require.NotNil(t, err)
-
-	err = cosiProtocol.Start()
-	if err == nil {
-		t.Fatal("protocol should throw an error if called without create protocol function, but doesn't")
-	}
-
-	// missing proposal
-	pi, err = local.CreateProtocol(DefaultProtocolName, tree)
-	if err != nil {
-		t.Fatal("Error in creation of protocol:", err)
-	}
-	cosiProtocol = pi.(*BlsCosi)
 	cosiProtocol.CreateProtocol = rootService.CreateProtocol
 	cosiProtocol.Timeout = testTimeout
-	cosiProtocol.SetNbrSubTree(1)
+
+	// fail on wrong subtree number
+	require.Error(t, cosiProtocol.SetNbrSubTree(0))
+	require.NoError(t, cosiProtocol.SetNbrSubTree(1))
 
 	err = cosiProtocol.Start()
-	if err == nil {
-		t.Fatal("protocol should throw an error if called without a proposal, but doesn't")
-	}
+	require.Error(t, err,
+		"protocol should throw an error if called without a message")
 }
 
 func TestProtocol_AllFailing_5_1(t *testing.T) {
