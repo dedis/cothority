@@ -22,8 +22,8 @@ import (
 	"go.dedis.ch/onet/v3/network"
 	"golang.org/x/xerrors"
 
+	uuid "github.com/satori/go.uuid"
 	bbolt "go.etcd.io/bbolt"
-	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
 // ErrorInconsistentForwardLink is triggered when the target of a forward-link
