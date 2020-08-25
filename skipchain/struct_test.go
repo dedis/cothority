@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
@@ -21,7 +22,6 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	bbolt "go.etcd.io/bbolt"
-	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
 var pairingSuite = pairing.NewSuiteBn256()
