@@ -135,7 +135,7 @@ func (p *BlsCosi) SetNbrSubTree(nbr int) error {
 	var err error
 	p.subTrees, err = NewBlsProtocolTree(p.Tree(), nbr)
 	if err != nil {
-		return xerrors.Errorf("error in tree generation: %s", err.Error())
+		return xerrors.Errorf("error in tree generation: %v", err)
 	}
 
 	return nil
