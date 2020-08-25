@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/satori/go.uuid"
 	"go.dedis.ch/cothority/v3/cosi/protocol"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
-	"gopkg.in/satori/go.uuid.v1"
 )
 
 // This file contains all the code to run a CoSi service. It is used to reply to
