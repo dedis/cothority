@@ -14,10 +14,6 @@ import (
 	"go.dedis.ch/onet/v3/log"
 )
 
-func init() {
-	GlobalRegisterDefaultProtocols()
-}
-
 // sub_protocol is run by each sub-leader and each node once, and n times by
 // the root leader, where n is the number of sub-leader.
 
@@ -218,7 +214,8 @@ func (p *SubBlsCosi) dispatchRoot() error {
 	case <-time.After(p.Timeout):
 		// It might be only the subleader then we send a notification
 		// to let the parent protocol take actions
-		log.Warn(p.ServerIdentity(), "timed out while waiting for subleader response")
+		log.Warn(p.ServerIdentity(),
+			"timed out while waiting for subleader response")
 		p.subleaderNotResponding <- true
 	}
 
@@ -281,9 +278,7 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 				if !ok {
 					log.Warnf("Got a message from an unknown node %v", reply.ServerIdentity.ID)
 				} else if r == nil {
-					if public == nil {
-						log.Warnf("Tentative to forge a server identity or unknown node.")
-					} else if err := p.Verify(p.suite, public, p.Msg, reply.Signature); err == nil {
+					if err := p.Verify(p.suite, public, p.Msg, reply.Signature); err == nil {
 						responses[pubIndex] = &reply.Response
 						done++
 					}
@@ -311,7 +306,8 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 				log.Warnf("Duplicate refusal from %v", reply.ServerIdentity)
 			}
 		case <-timeout:
-			log.Lvlf3("Subleader reached timeout waiting for children responses: %v", p.ServerIdentity())
+			log.Lvlf3("Subleader reached timeout waiting for children"+
+				" responses: %v", p.ServerIdentity())
 			// Use whatever we received until then to try to finish
 			// the protocol
 			done = len(p.Children())

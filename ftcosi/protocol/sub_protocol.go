@@ -13,10 +13,6 @@ import (
 	"go.dedis.ch/onet/v3/log"
 )
 
-func init() {
-	GlobalRegisterDefaultProtocols()
-}
-
 // SubFtCosi holds the different channels used to receive the different protocol messages.
 type SubFtCosi struct {
 	*onet.TreeNodeInstance

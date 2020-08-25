@@ -6,8 +6,8 @@
 package protocol
 
 import (
-	"errors"
 	"fmt"
+	"golang.org/x/xerrors"
 	"math"
 	"sync"
 	"time"
@@ -20,6 +20,16 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 )
+
+// Register the protocols
+func init() {
+	_, err := onet.GlobalProtocolRegister(DefaultProtocolName,
+		NewDefaultProtocol)
+	log.ErrFatal(err)
+	_, err = onet.GlobalProtocolRegister(DefaultSubProtocolName,
+		NewDefaultSubProtocol)
+	log.ErrFatal(err)
+}
 
 const defaultTimeout = 10 * time.Second
 const defaultSubleaderFailures = 2
@@ -77,13 +87,6 @@ func NewDefaultProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error)
 	return NewBlsCosi(n, vf, DefaultSubProtocolName, pairing.NewSuiteBn256())
 }
 
-// GlobalRegisterDefaultProtocols is used to register the protocols before use,
-// most likely in an init function.
-func GlobalRegisterDefaultProtocols() {
-	onet.GlobalProtocolRegister(DefaultProtocolName, NewDefaultProtocol)
-	onet.GlobalProtocolRegister(DefaultSubProtocolName, NewDefaultSubProtocol)
-}
-
 // DefaultFaultyThreshold computes the maximum number of faulty nodes
 func DefaultFaultyThreshold(n int) int {
 	return (n - 1) / 3
@@ -112,18 +115,17 @@ func NewBlsCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName str
 		suite:             suite,
 	}
 
-	// the default number of subtree is the square root to
-	// distribute the nodes evenly
-	c.SetNbrSubTree(int(math.Sqrt(float64(nNodes - 1))))
-
 	return c, nil
 }
 
 // SetNbrSubTree generates N new subtrees that will be used
 // for the protocol
 func (p *BlsCosi) SetNbrSubTree(nbr int) error {
-	if nbr > len(p.Roster().List)-1 {
-		return errors.New("Cannot have more subtrees than nodes")
+	if nbr <= 0 {
+		return xerrors.New("need at least 1 subtree")
+	}
+	if nbr > len(p.Roster().List) {
+		return xerrors.New("cannot have more subtrees than nodes")
 	}
 	if p.Threshold == 1 || nbr <= 0 {
 		p.subTrees = []*onet.Tree{}
@@ -133,7 +135,7 @@ func (p *BlsCosi) SetNbrSubTree(nbr int) error {
 	var err error
 	p.subTrees, err = NewBlsProtocolTree(p.Tree(), nbr)
 	if err != nil {
-		return fmt.Errorf("error in tree generation: %s", err.Error())
+		return xerrors.Errorf("error in tree generation: %v", err)
 	}
 
 	return nil
@@ -167,13 +169,23 @@ func (p *BlsCosi) Dispatch() error {
 func (p *BlsCosi) Start() error {
 	if !p.IsRoot() {
 		p.Done()
-		return errors.New("node must be the root")
+		return xerrors.New("node must be the root")
+	}
+
+	if p.subTrees == nil {
+		// the default number of subtree is the square root to
+		// distribute the nodes evenly
+		if err := p.SetNbrSubTree(int(math.Sqrt(float64(len(p.Roster().
+			List))))); err != nil {
+			p.Done()
+			return xerrors.Errorf("couldn't set subtrees: %v", err)
+		}
 	}
 
 	err := p.checkIntegrity()
 	if err != nil {
 		p.Done()
-		return err
+		return xerrors.Errorf("integrity check failed: %v", err)
 	}
 
 	log.Lvlf3("Starting BLS CoSi on %v", p.ServerIdentity())

@@ -22,24 +22,31 @@ const RefuseOneProtocolName = "RefuseOneProtocol"
 const RefuseOneSubProtocolName = "RefuseOneSubProtocol"
 
 func init() {
-	GlobalRegisterDefaultProtocols()
-	onet.GlobalProtocolRegister(FailureProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		vf := func(a, b []byte) bool { return true }
-		return NewFtCosi(n, vf, FailureSubProtocolName, cothority.Suite)
-	})
-	onet.GlobalProtocolRegister(FailureSubProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		vf := func(a, b []byte) bool { return false }
-		return NewSubFtCosi(n, vf, cothority.Suite)
-	})
-	onet.GlobalProtocolRegister(RefuseOneProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		vf := func(a, b []byte) bool { return true }
-		return NewFtCosi(n, vf, RefuseOneSubProtocolName, cothority.Suite)
-	})
-	onet.GlobalProtocolRegister(RefuseOneSubProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewSubFtCosi(n, func(msg, data []byte) bool {
-			return refuse(n, msg, data)
-		}, cothority.Suite)
-	})
+	_, err := onet.GlobalProtocolRegister(FailureProtocolName,
+		func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+			vf := func(a, b []byte) bool { return true }
+			return NewFtCosi(n, vf, FailureSubProtocolName, cothority.Suite)
+		})
+	log.ErrFatal(err)
+	_, err = onet.GlobalProtocolRegister(FailureSubProtocolName,
+		func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+			vf := func(a, b []byte) bool { return false }
+			return NewSubFtCosi(n, vf, cothority.Suite)
+		})
+	log.ErrFatal(err)
+	_, err = onet.GlobalProtocolRegister(RefuseOneProtocolName,
+		func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+			vf := func(a, b []byte) bool { return true }
+			return NewFtCosi(n, vf, RefuseOneSubProtocolName, cothority.Suite)
+		})
+	log.ErrFatal(err)
+	_, err = onet.GlobalProtocolRegister(RefuseOneSubProtocolName,
+		func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+			return NewSubFtCosi(n, func(msg, data []byte) bool {
+				return refuse(n, msg, data)
+			}, cothority.Suite)
+		})
+	log.ErrFatal(err)
 }
 
 var testSuite = cothority.Suite

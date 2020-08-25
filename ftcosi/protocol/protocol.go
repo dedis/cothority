@@ -20,6 +20,16 @@ import (
 	"go.dedis.ch/onet/v3/network"
 )
 
+// Register the protocols
+func init() {
+	_, err := onet.GlobalProtocolRegister(DefaultProtocolName,
+		NewDefaultProtocol)
+	log.ErrFatal(err)
+	_, err = onet.GlobalProtocolRegister(DefaultSubProtocolName,
+		NewDefaultSubProtocol)
+	log.ErrFatal(err)
+}
+
 // VerificationFn is called on every node. Where msg is the message that is
 // co-signed and the data is additional data for verification.
 type VerificationFn func(msg []byte, data []byte) bool
@@ -64,13 +74,6 @@ type CreateProtocolFunction func(name string, t *onet.Tree) (onet.ProtocolInstan
 func NewDefaultProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	vf := func(a, b []byte) bool { return true }
 	return NewFtCosi(n, vf, DefaultSubProtocolName, cothority.Suite)
-}
-
-// GlobalRegisterDefaultProtocols is used to register the protocols before use,
-// most likely in an init function.
-func GlobalRegisterDefaultProtocols() {
-	onet.GlobalProtocolRegister(DefaultProtocolName, NewDefaultProtocol)
-	onet.GlobalProtocolRegister(DefaultSubProtocolName, NewDefaultSubProtocol)
 }
 
 // NewFtCosi method is used to define the ftcosi protocol.
