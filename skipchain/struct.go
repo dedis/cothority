@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"go.dedis.ch/protobuf"
 	"math"
 	"strconv"
 	"sync"
@@ -1357,10 +1358,22 @@ func (db *SkipBlockDB) getAll() (map[string]*SkipBlock, error) {
 	return data, nil
 }
 
+// Minimum structure necessary to find all skipchains.
+type skipBlockShort struct {
+	Index     int    `protobuf:"1"`
+	GenesisID []byte `protobuf:"7"`
+	Hash      []byte `protobuf:"10"`
+}
+
 // getAllSkipchains returns each of the skipchains in the database
 // in the form of a map from skipblock ID to the latest block.
+// To be faster in case there are a lot of blocks (> 10'000),
+// the method starts by decoding only the minimal information necessary.
+// Then only the final latest blocks representing each skipchain are
+// completely decoded.
+// This gives a speedup of about 150-200 with big chains.
 func (db *SkipBlockDB) getAllSkipchains() (map[string]*SkipBlock, error) {
-	gen := make(map[string]*SkipBlock)
+	genSBS := make(map[string]skipBlockShort)
 
 	// Loop over all blocks. If we see a new genesis block we
 	// have not seen, remember it. If we see a higher Index than what
@@ -1368,26 +1381,32 @@ func (db *SkipBlockDB) getAllSkipchains() (map[string]*SkipBlock, error) {
 	err := db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(db.bucketName))
 		return b.ForEach(func(k, v []byte) error {
-			_, sbMsg, err := network.Unmarshal(v, suite)
+			var sbs skipBlockShort
+			err := protobuf.Decode(v[16:], &sbs)
 			if err != nil {
 				return err
 			}
-			sb, ok := sbMsg.(*SkipBlock)
-			if ok {
-				k := string(sb.SkipChainID())
-				if cur, ok := gen[k]; ok {
-					if cur.Index < sb.Index {
-						gen[k] = sb
-					}
-				} else {
-					gen[k] = sb
+			scID := string(sbs.GenesisID)
+			if sbs.Index == 0 {
+				scID = string(sbs.Hash)
+			}
+			if cur, ok := genSBS[scID]; ok {
+				if cur.Index < sbs.Index {
+					genSBS[scID] = sbs
 				}
+			} else {
+				genSBS[scID] = sbs
 			}
 			return nil
 		})
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	gen := make(map[string]*SkipBlock)
+	for id, sbs := range genSBS {
+		gen[id] = db.GetByID(sbs.Hash)
 	}
 	return gen, nil
 }

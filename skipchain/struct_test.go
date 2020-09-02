@@ -3,6 +3,7 @@ package skipchain
 import (
 	"bytes"
 	"fmt"
+	"go.dedis.ch/kyber/v3/util/random"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -418,6 +419,155 @@ func TestSkipBlockDB_GetProof(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestNewSkipBlockDB_getAllSkipchains(t *testing.T) {
+	db, fname, scIDs := setupSkipchain(t, 10)
+	defer db.Close()
+	defer os.Remove(fname)
+
+	start := time.Now()
+	readIDs, err := db.getAllSkipchains()
+	require.NoError(t, err)
+	log.Lvl1("Time for reading:", time.Now().Sub(start))
+	require.Equal(t, len(scIDs), len(readIDs))
+searchIDs:
+	for sc := range readIDs {
+		for _, scOrig := range scIDs {
+			if bytes.Equal([]byte(sc), scOrig) {
+				continue searchIDs
+			}
+		}
+		require.Fail(t, "found unknown skipchain-ID")
+	}
+}
+
+// Writing this as a benchmark is difficult, as b.N gets way too big...
+func TestBenchmarkSkipchains(t *testing.T) {
+	// Increasing this value makes the new method even faster.
+	// With 1000 blocks per chain, the speed-up is around 175 faster.
+	nbrSkipBlocks := 10
+
+	db, fname, _ := setupSkipchain(t, nbrSkipBlocks)
+	defer db.Close()
+	defer os.Remove(fname)
+
+	start := time.Now()
+	_, err := getAllSkipchainsOld(db)
+	require.NoError(t, err)
+	log.Lvl1("Time for reading old:", time.Now().Sub(start))
+
+	start = time.Now()
+	_, err = db.getAllSkipchains()
+	require.NoError(t, err)
+	log.Lvl1("Time for reading new:", time.Now().Sub(start))
+}
+
+// This creates skipchains with wrong forward-links and that would not pass
+// tests.
+// So it can only be used in the benchmark / test methods of
+// getAllSkipchains, and not as generic skipchain-producer.
+func setupSkipchain(t *testing.T, nbrSkipBlocks int) (db *SkipBlockDB,
+	fname string, scIDs []SkipBlockID) {
+	nbrNodes := 10
+	nbrSkipChains := 10
+	var dataSize uint = 1024
+	var payloadSize uint = 1024
+
+	l := onet.NewTCPTest(suite)
+	_, roster, _ := l.GenTree(nbrNodes, true)
+	defer l.CloseAll()
+
+	db, fname = setupSkipBlockDB(t)
+
+	log.Lvl1("Setting up skipchains")
+	vids := []VerifierID{VerifierID(uuid.NewV4()),
+		VerifierID(uuid.NewV4()),
+		VerifierID(uuid.NewV4())}
+	rand32 := random.Bits(32*8, true, random.New())
+	rand64 := random.Bits(64*8, true, random.New())
+	randData := random.Bits(dataSize*8, true, random.New())
+	randPayload := random.Bits(payloadSize*8, true, random.New())
+	blIDs := []SkipBlockID{rand32, rand32}
+	fls := []*ForwardLink{
+		{rand32, rand32, roster,
+			byzcoinx.FinalSignature{Msg: rand32, Sig: rand64}},
+		{rand32, rand32, roster,
+			byzcoinx.FinalSignature{Msg: rand32, Sig: rand64}},
+	}
+	for sc := 0; sc < nbrSkipChains; sc++ {
+		log.Lvl2("Setting up skipchain", sc)
+		root := NewSkipBlock()
+		root.Roster = roster
+		root.BackLinkIDs = blIDs
+		root.VerifierIDs = vids
+		root.Data = append(randData, byte(sc))
+		root.Height = 2
+		root.MaximumHeight = 10
+		root.BaseHeight = 1
+		root.Payload = randPayload
+		next := random.Bits(32*8, true, random.New())
+		root.ForwardLink = fls
+		root.ForwardLink[0].To = next
+		root.Hash = root.CalculateHash()
+		require.NoError(t, storeRaw(db, root))
+		scIDs = append(scIDs, root.Hash)
+
+		for sb := 1; sb < nbrSkipBlocks; sb++ {
+			sblock := root.Copy()
+			sblock.Index = sb
+			sblock.GenesisID = root.Hash
+			sblock.Hash = sblock.CalculateHash()
+			require.NoError(t, storeRaw(db, sblock))
+		}
+	}
+
+	require.NoError(t, db.Close())
+	bb, err := bbolt.Open(fname, 0600, nil)
+	require.NoError(t, err)
+	db = NewSkipBlockDB(bb, []byte("skipblock-test"))
+	return
+}
+
+func storeRaw(db *SkipBlockDB, sb *SkipBlock) error {
+	return db.Update(func(tx *bbolt.Tx) error {
+		return db.storeToTx(tx, sb)
+	})
+}
+
+// getAllSkipchains returns each of the skipchains in the database
+// in the form of a map from skipblock ID to the latest block.
+func getAllSkipchainsOld(db *SkipBlockDB) (map[string]*SkipBlock, error) {
+	gen := make(map[string]*SkipBlock)
+
+	// Loop over all blocks. If we see a new genesis block we
+	// have not seen, remember it. If we see a higher Index than what
+	// we have, replace it.
+	err := db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte(db.bucketName))
+		return b.ForEach(func(k, v []byte) error {
+			_, sbMsg, err := network.Unmarshal(v, suite)
+			if err != nil {
+				return err
+			}
+			sb, ok := sbMsg.(*SkipBlock)
+			if ok {
+				k := string(sb.SkipChainID())
+				if cur, ok := gen[k]; ok {
+					if cur.Index < sb.Index {
+						gen[k] = sb
+					}
+				} else {
+					gen[k] = sb
+				}
+			}
+			return nil
+		})
+	})
+	if err != nil {
+		return nil, err
+	}
+	return gen, nil
+}
+
 // Test the edge cases of the verification function
 func TestProof_Verify(t *testing.T) {
 	sb := NewSkipBlock()
@@ -437,7 +587,7 @@ func setupSkipBlockDB(t *testing.T) (*SkipBlockDB, string) {
 	f, err := ioutil.TempFile("", "skipblock-test")
 	require.NoError(t, err)
 	fname := f.Name()
-	require.Nil(t, f.Close())
+	require.NoError(t, f.Close())
 
 	db, err := bbolt.Open(fname, 0600, nil)
 	require.NoError(t, err)
