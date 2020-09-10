@@ -4,6 +4,8 @@ import (
 	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/onet/v3/network"
+
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func init() {
@@ -143,9 +145,11 @@ type Signature struct {
 
 // Signer is a generic structure that can hold different types of signers
 type Signer struct {
-	Ed25519 *SignerEd25519
-	X509EC  *SignerX509EC
-	Proxy   *SignerProxy
+	Ed25519     *SignerEd25519
+	X509EC      *SignerX509EC
+	Proxy       *SignerProxy
+	EvmContract *SignerEvmContract
+	DID         *SignerDID
 }
 
 // SignerEd25519 holds a public and private keys necessary to sign Darcs
@@ -167,6 +171,20 @@ type SignerProxy struct {
 	Data         string
 	Public       kyber.Point
 	getSignature func([]byte) ([]byte, error)
+}
+
+// SignerEvmContract holds the address of an EVM contract.
+type SignerEvmContract struct {
+	BEvmID  []byte // BEvm InstanceID
+	Address common.Address
+}
+
+// SignerDID holds public and private keys from a DID Document to sign
+// Darcs.
+type SignerDID struct {
+	Point  kyber.Point
+	Secret kyber.Scalar
+	DID    string
 }
 
 // Request is the structure that the client must provide to be verified
