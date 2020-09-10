@@ -247,7 +247,7 @@ export class Instruction extends Message<Instruction> {
      */
     async signWith(ctxHash: Buffer, signers: Signer[]): Promise<void> {
         // @ts-ignore
-        this.signatures = await Promise.all(signers.map(async (s) => await s.sign(ctxHash));
+        this.signatures = await Promise.all(signers.map(async (s) => await s.sign(ctxHash)));
     }
 
     /**

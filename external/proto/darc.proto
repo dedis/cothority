@@ -137,6 +137,7 @@ message Signer {
   optional SignerX509EC x509ec = 2;
   optional SignerProxy proxy = 3;
   optional SignerEvmContract evmcontract = 4;
+  optional SignerDID did = 5;
 }
 
 // SignerEd25519 holds a public and private keys necessary to sign Darcs
@@ -162,6 +163,14 @@ message SignerProxy {
 message SignerEvmContract {
   // 	BEvmID  []byteBEvm InstanceID
   required bytes address = 1;
+}
+
+// SignerDID holds public and private keys from a DID Document to sign
+// Darcs.
+message SignerDID {
+  required bytes point = 1;
+  required bytes secret = 2;
+  required string did = 3;
 }
 
 // Request is the structure that the client must provide to be verified

@@ -158,6 +158,7 @@ type Signer struct {
 	X509EC      *SignerX509EC
 	Proxy       *SignerProxy
 	EvmContract *SignerEvmContract
+	DID         *SignerDID
 }
 
 // SignerEd25519 holds a public and private keys necessary to sign Darcs
@@ -185,6 +186,14 @@ type SignerProxy struct {
 type SignerEvmContract struct {
 	BEvmID  []byte // BEvm InstanceID
 	Address common.Address
+}
+
+// SignerDID holds public and private keys from a DID Document to sign
+// Darcs.
+type SignerDID struct {
+	Point  kyber.Point
+	Secret kyber.Scalar
+	DID    string
 }
 
 // Request is the structure that the client must provide to be verified

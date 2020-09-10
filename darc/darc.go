@@ -1290,6 +1290,20 @@ func (eds SignerEd25519) Sign(msg []byte) ([]byte, error) {
 	return schnorr.Sign(cothority.Suite, eds.Secret, msg)
 }
 
+// NewSignerDID initializes a new SignerDID signer for a given did, public
+// and private keys. This assumes that the keys for a DID have been resolved.
+func NewSignerDID(did string, public kyber.Point, private kyber.Scalar) Signer {
+	return Signer{DID: &SignerDID{
+		Point:  public,
+		Secret: private,
+		DID:    did,
+	}}
+}
+
+func (s SignerDID) Sign(msg []byte) ([]byte, error) {
+	return schnorr.Sign(cothority.Suite, s.Secret, msg)
+}
+
 // Hash computes the digest of the request, the identities and signatures are
 // not included.
 func (r Request) Hash() []byte {
