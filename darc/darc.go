@@ -780,6 +780,8 @@ func (s Signer) Type() int {
 		return 3
 	case s.EvmContract != nil:
 		return 4
+	case s.DID != nil:
+		return 5
 	default:
 		return -1
 	}
@@ -821,6 +823,8 @@ func (s Signer) Sign(msg []byte) ([]byte, error) {
 		return s.Proxy.Sign(msg)
 	case 4:
 		return s.EvmContract.Sign(msg)
+	case 5:
+		return s.DID.Sign(msg)
 	default:
 		return nil, errors.New("unknown signer type")
 	}
@@ -855,6 +859,8 @@ func (id Identity) Equal(id2 *Identity) bool {
 		return id.Proxy.Equal(id2.Proxy)
 	case 4:
 		return id.EvmContract.Equal(id2.EvmContract)
+	case 5:
+		return id.DID.Equal(id2.DID)
 	}
 	return false
 }
