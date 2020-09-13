@@ -1310,7 +1310,25 @@ func NewSignerDID(did string, public kyber.Point, private kyber.Scalar) Signer {
 }
 
 func (s SignerDID) Sign(msg []byte) ([]byte, error) {
-	return schnorr.Sign(cothority.Suite, s.Secret, msg)
+	eddsaOb := eddsa.NewEdDSA(cothority.Suite.RandomStream())
+	buf := make([]byte, 64)
+	pkbuf, err := s.Point.MarshalBinary()
+	if err != nil {
+		return nil, xerrors.Errorf("error unmarshaling point: %s", err)
+	}
+	skbuf, err := s.Secret.MarshalBinary()
+	if err != nil {
+		return nil, xerrors.Errorf("error unmarshaling scalar: %s", err)
+	}
+	copy(buf[:32], skbuf)
+	copy(buf[32:], pkbuf)
+
+	err = eddsaOb.UnmarshalBinary(buf)
+	if err != nil {
+		return nil, xerrors.Errorf("error unmarshalling eddsa object: %s", err)
+	}
+
+	return eddsaOb.Sign(msg)
 }
 
 // Hash computes the digest of the request, the identities and signatures are
