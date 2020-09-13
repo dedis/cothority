@@ -191,8 +191,8 @@ type SignerEvmContract struct {
 // SignerDID holds public and private keys from a DID Document to sign
 // Darcs.
 type SignerDID struct {
-	Point  kyber.Point
-	Secret kyber.Scalar
+	Public []byte
+	Secret []byte
 	DID    string
 }
 
