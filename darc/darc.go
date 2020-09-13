@@ -1301,9 +1301,9 @@ func (eds SignerEd25519) Sign(msg []byte) ([]byte, error) {
 
 // NewSignerDID initializes a new SignerDID signer for a given did, public
 // and private keys. This assumes that the keys for a DID have been resolved.
-func NewSignerDID(did string, public kyber.Point, private kyber.Scalar) Signer {
+func NewSignerDID(did string, public, private []byte) Signer {
 	return Signer{DID: &SignerDID{
-		Point:  public,
+		Public: public,
 		Secret: private,
 		DID:    did,
 	}}
@@ -1312,18 +1312,10 @@ func NewSignerDID(did string, public kyber.Point, private kyber.Scalar) Signer {
 func (s SignerDID) Sign(msg []byte) ([]byte, error) {
 	eddsaOb := eddsa.NewEdDSA(cothority.Suite.RandomStream())
 	buf := make([]byte, 64)
-	pkbuf, err := s.Point.MarshalBinary()
-	if err != nil {
-		return nil, xerrors.Errorf("error unmarshaling point: %s", err)
-	}
-	skbuf, err := s.Secret.MarshalBinary()
-	if err != nil {
-		return nil, xerrors.Errorf("error unmarshaling scalar: %s", err)
-	}
-	copy(buf[:32], skbuf)
-	copy(buf[32:], pkbuf)
+	copy(buf[:32], s.Secret)
+	copy(buf[32:], s.Public)
 
-	err = eddsaOb.UnmarshalBinary(buf)
+	err := eddsaOb.UnmarshalBinary(buf)
 	if err != nil {
 		return nil, xerrors.Errorf("error unmarshalling eddsa object: %s", err)
 	}
