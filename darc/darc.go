@@ -797,6 +797,9 @@ func (s Signer) Identity() Identity {
 		return NewIdentityProxy(s.Proxy)
 	case 4:
 		return NewIdentityEvmContract(s.EvmContract)
+	case 5:
+		parts := strings.Split(s.DID.DID, ":")
+		return NewIdentityDID(parts[2], parts[1])
 	default:
 		return Identity{}
 	}
