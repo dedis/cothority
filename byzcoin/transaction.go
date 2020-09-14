@@ -110,7 +110,6 @@ func (ctx *ClientTransaction) FillSignersAndSignWith(signers ...darc.Signer) err
 func (ctx *ClientTransaction) SignWith(signers ...darc.Signer) error {
 	digest := ctx.Instructions.Hash()
 	for i := range ctx.Instructions {
-		log.Infof("Signing digest=%x", digest)
 		if err := ctx.Instructions[i].SignWith(digest, signers...); err != nil {
 			return err
 		}
@@ -454,7 +453,6 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops 
 	// Save the identities that provide good signatures
 	identitiesWithCorrectSignatures := make([]string, 0)
 	for i := range instr.Signatures {
-		log.Infof("Verifying %s for msg=%s and signature=%s", instr.SignerIdentities[i], msg, instr.Signatures[i])
 		if err := instr.SignerIdentities[i].Verify(msg, instr.Signatures[i]); err == nil {
 			identitiesWithCorrectSignatures = append(identitiesWithCorrectSignatures, instr.SignerIdentities[i].String())
 		}
