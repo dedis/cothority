@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/mr-tron/base58"
+	"go.dedis.ch/onet/v3/log"
 )
 
 // DIDResolver resolves a given DID to a DID Document
@@ -60,6 +61,7 @@ func (r *IndyCLIDIDResolver) generatePoolName(n int) string {
 // An optimal way would be to reuse existing connections but that can be
 // done by another resolver
 func (r *IndyCLIDIDResolver) executeCli(id string) (string, error) {
+	log.Infof("executing cli")
 	poolName := r.generatePoolName(6)
 	commands := fmt.Sprintf(`
 pool create %s gen_txn_file="%s"
@@ -104,11 +106,12 @@ func (r *IndyCLIDIDResolver) parseOutput(id, output string) (time.Time, []Public
 	}
 
 	/*
-	_createdAt, err := time.Parse("2006-01-02 22:04:05", createdAt)
-	_createdAt, err := time.Parse("2006-01-02 15:04:05", createdAt)
-	if err != nil {
-	/return time.Time{}, nil, nil, fmt.Errorf("error parsing time: %s", err)
-	}
+		_createdAt, err := time.Parse("2006-01-02 22:04:05", createdAt)
+		_createdAt, err := time.Parse("2006-01-02 15:04:05", createdAt)
+		if err != nil {
+		/return time.Time{}, nil, nil, fmt.Errorf("error parsing time: %s", err)
+		}
+	*/
 
 	idBuf, err := base58.Decode(id)
 	if err != nil {
@@ -116,25 +119,25 @@ func (r *IndyCLIDIDResolver) parseOutput(id, output string) (time.Time, []Public
 	}
 
 	// Some txns have verykey beginning with a ~ sign
+	var verkeyBuf []byte
 	if len(verkey) > 0 && verkey[0] == '~' {
-		verkey = verkey[1:]
+		verkeyBuf, err = base58.Decode(verkey[1:])
+	} else {
+		verkeyBuf, err = base58.Decode(verkey)
 	}
-	*/
-	verkeyBuf, err := base58.Decode(verkey)
-	if err != nil {
-		return time.Time{}, nil, nil, fmt.Errorf("error base58 decoding did: %s", err)
-	}
+
 	var pkBuf []byte
-	/*
 	if len(verkey) > 0 && verkey[0] == '~' {
 		pkBuf = append(idBuf, verkeyBuf...)
-	} else { }
-	*/
+	} else {
+		pkBuf = verkeyBuf
+	}
+
 	pk := PublicKey{
 		ID:         fmt.Sprintf("%s-keys#1", id),
 		Type:       Ed25519VerificationKey2018.String(),
 		Controller: id,
-		Value:      verkeyBuf,
+		Value:      pkBuf,
 	}
 
 	var svcs []DIDService
@@ -171,10 +174,10 @@ func (r *IndyCLIDIDResolver) Resolve(id string) (*DIDDoc, error) {
 	}
 
 	return &DIDDoc{
-		Context: []string{""},
-		ID: id,
-		PublicKey: pks,
-		Service: svcs,
+		Context:        []string{""},
+		ID:             id,
+		PublicKey:      pks,
+		Service:        svcs,
 		Authentication: auths,
 	}, nil
 }
