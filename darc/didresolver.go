@@ -190,7 +190,7 @@ type IndyVDRResolver struct {
 }
 
 type nymResponse struct {
-	Data nymResponseData `json:"data"`
+	Data string `json:"data"`
 }
 
 type nymResponseData struct {
@@ -211,24 +211,34 @@ func (r *IndyVDRResolver) Resolve(id string) (*DIDDoc, error) {
 		return nil, xerrors.Errorf("error unmarshaling nymResponse: %s", err)
 	}
 
-	if len(nr.Data.Verkey) == 0 {
+	if nr.Data == "" {
+		return nil, xerrors.Errorf("verkey not found")
+	}
+
+	var nrdata nymResponseData
+	err = json.Unmarshal([]byte(nr.Data), &nrdata)
+	if err != nil {
+		return nil, xerrors.Errorf("error unmarshaling nym transaction data ket: %s", err)
+	}
+
+	if len(nrdata.Verkey) == 0 {
 		return nil, xerrors.Errorf("error resolving verkey")
 	}
 
 	pkBuf := []byte{}
-	if nr.Data.Verkey[0] == '~' {
+	if nrdata.Verkey[0] == '~' {
 		idBuf, err := base58.Decode(id)
 		if err != nil {
 			return nil, xerrors.Errorf("error decoding id: %s", err)
 		}
-		verkeyBuf, err := base58.Decode(nr.Data.Verkey[1:])
+		verkeyBuf, err := base58.Decode(nrdata.Verkey[1:])
 		if err != nil {
 			return nil, xerrors.Errorf("error decoding verkey: %s", err)
 		}
 		pkBuf = append(pkBuf, idBuf...)
 		pkBuf = append(pkBuf, verkeyBuf...)
 	} else {
-		verkeyBuf, err := base58.Decode(nr.Data.Verkey[1:])
+		verkeyBuf, err := base58.Decode(nrdata.Verkey[1:])
 		if err != nil {
 			return nil, xerrors.Errorf("error decoding verkey: %s", err)
 		}
