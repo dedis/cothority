@@ -2,15 +2,18 @@ package darc
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
+	"net/http"
 	"os/exec"
 	"strings"
 	"time"
 
 	"github.com/mr-tron/base58"
 	"go.dedis.ch/onet/v3/log"
+	"golang.org/x/xerrors"
 )
 
 // DIDResolver resolves a given DID to a DID Document
@@ -179,5 +182,73 @@ func (r *IndyCLIDIDResolver) Resolve(id string) (*DIDDoc, error) {
 		PublicKey:      pks,
 		Service:        svcs,
 		Authentication: auths,
+	}, nil
+}
+
+type IndyVDRResolver struct {
+	URL string
+}
+
+type nymResponse struct {
+	Data nymResponseData `json:"data"`
+}
+
+type nymResponseData struct {
+	Dest   string `json:"dest"`
+	Verkey string `json:"verkey"`
+}
+
+func (r *IndyVDRResolver) Resolve(id string) (*DIDDoc, error) {
+	response, err := http.Get(fmt.Sprintf("%s/nym/%s", r.URL, id))
+	if err != nil {
+		return nil, xerrors.Errorf("error getting nym txn: %s", err)
+	}
+
+	var nr nymResponse
+	decoder := json.NewDecoder(response.Body)
+	err = decoder.Decode(&nr)
+	if err != nil {
+		return nil, xerrors.Errorf("error unmarshaling nymResponse: %s", err)
+	}
+
+	if len(nr.Data.Verkey) == 0 {
+		return nil, xerrors.Errorf("error resolving verkey")
+	}
+
+	pkBuf := []byte{}
+	if nr.Data.Verkey[0] == '~' {
+		idBuf, err := base58.Decode(id)
+		if err != nil {
+			return nil, xerrors.Errorf("error decoding id: %s", err)
+		}
+		verkeyBuf, err := base58.Decode(nr.Data.Verkey[1:])
+		if err != nil {
+			return nil, xerrors.Errorf("error decoding verkey: %s", err)
+		}
+		pkBuf = append(pkBuf, idBuf...)
+		pkBuf = append(pkBuf, verkeyBuf...)
+	} else {
+		verkeyBuf, err := base58.Decode(nr.Data.Verkey[1:])
+		if err != nil {
+			return nil, xerrors.Errorf("error decoding verkey: %s", err)
+		}
+		pkBuf = verkeyBuf
+	}
+
+	pk := PublicKey{
+		ID:         fmt.Sprintf("%s-keys#1", id),
+		Type:       Ed25519VerificationKey2018.String(),
+		Controller: id,
+		Value:      pkBuf,
+	}
+	svc := DIDService{}
+	auth := VerificationMethod{PublicKey: pk}
+
+	return &DIDDoc{
+		Context:        []string{""},
+		ID:             id,
+		PublicKey:      []PublicKey{pk},
+		Service:        []DIDService{svc},
+		Authentication: []VerificationMethod{auth},
 	}, nil
 }

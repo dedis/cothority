@@ -42,8 +42,6 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"os"
-	"path"
 	"strconv"
 	"strings"
 
@@ -59,7 +57,6 @@ import (
 	"go.dedis.ch/kyber/v3/suites"
 	"go.dedis.ch/kyber/v3/util/encoding"
 	"go.dedis.ch/kyber/v3/util/key"
-	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
 )
 
@@ -69,16 +66,17 @@ const sign = "_sign"
 var didResolver DIDResolver
 
 func init() {
-	userConfigDir, err := os.UserConfigDir()
-	if err != nil {
-		log.Fatal(err)
-	}
+	//userConfigDir, err := os.UserConfigDir()
+	//if err != nil {
+	//log.Fatal(err)
+	//	}
 
 	// TODO: Allow chosing resolver through some conode configuration
-	didResolver = &IndyCLIDIDResolver{
-		Path:            "indy-cli",
-		GenesisFilePath: path.Join(userConfigDir, "/indy/genesis.txt"),
-	}
+	//didResolver = &IndyCLIDIDResolver{
+	//Path:            "indy-cli",
+	//GenesisFilePath: path.Join(userConfigDir, "/indy/genesis.txt"),
+	//}
+	didResolver = &IndyVDRResolver{URL: "http://localhost:4001"}
 }
 
 // GetDarc is a callback function that we expect the user of this library to
