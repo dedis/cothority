@@ -16,6 +16,9 @@ var maxTxHashes = 1000
 
 // txPipeline gathers new ClientTransactions and VersionUpdate requests,
 // and queues them up to be proposed as new blocks.
+// With VersionRollup and newer,
+// the nodes send the ClientTransactions directly to the leader,
+// which queues them up, and proposes them to the nodes for signing.
 type txPipeline struct {
 	ctxChan     chan ClientTransaction
 	needUpgrade chan Version

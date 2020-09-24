@@ -51,7 +51,13 @@ message CreateGenesisBlock {
   required onet.Roster roster = 2;
   // GenesisDarc defines who is allowed to write to this skipchain.
   required darc.Darc genesisdarc = 3;
-  // BlockInterval in int64.
+  // BlockInterval in int64 as nanoseconds since the Unix Epoch.
+  // Before VersionRollup,
+  // this was the time the leader waited between a signed block and asking
+  // for new transactions.
+  // With VersionRollup,
+  // the BlockInterval is only used to calculate the maximum protocol
+  // timeouts and the time-window of acceptance of a new block.
   required sint64 blockinterval = 4;
   // Maximum block size. Zero (or not present in protobuf) means use the default, 4 megs.
   optional sint32 maxblocksize = 5;
