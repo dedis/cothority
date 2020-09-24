@@ -77,6 +77,8 @@ Items 5 and 6 are the 'real' ByzCoin improvements as described in the
 [ByzCoin Paper](https://eprint.iacr.org/2017/406).
 
 ## Transaction collection and View Change
+Transactions can be submitted by end-users to any conode in the roster for
+ the Skipchain that is holding the ByzCoin.
 
 Since `VersionRollup`, the transaction collection and view change request
  have been changed. The leader does not request new transactions anymore,
@@ -86,11 +88,12 @@ Since `VersionRollup`, the transaction collection and view change request
  the system more responsive if there are few transactions submitted to the
  chain.
 
-If a node cannot send a transaction to the leader, it asks all other nodes to
- send the transaction to the leader themselves. Every node that couldn't send
- the transaction to the leader will start a view change request. This will
- only detect stopped leaders, but not leaders who censor certain
- transactions.
+A "view change" (change of leader) is needed when the leader stops performing
+ its duties correctly. If a node cannot send a transaction to the leader, it
+ asks all other nodes to send the transaction to the leader themselves. Every
+ node that couldn't send the transaction to the leader will start a view
+ change request. This will only detect stopped leaders, but not leaders who
+ censor certain transactions.
 
 The design of the view-change is similar to the view-change protocol in PBFT
  (OSDI99). We keep the view-change message that followers send when they
