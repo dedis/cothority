@@ -1,4 +1,3 @@
-import { Buffer } from "buffer/";
 import util from "util";
 
 const defaultLvl = 2;
