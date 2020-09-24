@@ -2962,7 +2962,13 @@ public final class ByzCoinProto {
 
     /**
      * <pre>
-     * BlockInterval in int64.
+     * BlockInterval in int64 as nanoseconds since the Unix Epoch.
+     * Before VersionRollup,
+     * this was the time the leader waited between a signed block and asking
+     * for new transactions.
+     * With VersionRollup,
+     * the BlockInterval is only used to calculate the maximum protocol
+     * timeouts and the time-window of acceptance of a new block.
      * </pre>
      *
      * <code>required sint64 blockinterval = 4;</code>
@@ -2970,7 +2976,13 @@ public final class ByzCoinProto {
     boolean hasBlockinterval();
     /**
      * <pre>
-     * BlockInterval in int64.
+     * BlockInterval in int64 as nanoseconds since the Unix Epoch.
+     * Before VersionRollup,
+     * this was the time the leader waited between a signed block and asking
+     * for new transactions.
+     * With VersionRollup,
+     * the BlockInterval is only used to calculate the maximum protocol
+     * timeouts and the time-window of acceptance of a new block.
      * </pre>
      *
      * <code>required sint64 blockinterval = 4;</code>
@@ -3259,7 +3271,13 @@ public final class ByzCoinProto {
     private long blockinterval_;
     /**
      * <pre>
-     * BlockInterval in int64.
+     * BlockInterval in int64 as nanoseconds since the Unix Epoch.
+     * Before VersionRollup,
+     * this was the time the leader waited between a signed block and asking
+     * for new transactions.
+     * With VersionRollup,
+     * the BlockInterval is only used to calculate the maximum protocol
+     * timeouts and the time-window of acceptance of a new block.
      * </pre>
      *
      * <code>required sint64 blockinterval = 4;</code>
@@ -3269,7 +3287,13 @@ public final class ByzCoinProto {
     }
     /**
      * <pre>
-     * BlockInterval in int64.
+     * BlockInterval in int64 as nanoseconds since the Unix Epoch.
+     * Before VersionRollup,
+     * this was the time the leader waited between a signed block and asking
+     * for new transactions.
+     * With VersionRollup,
+     * the BlockInterval is only used to calculate the maximum protocol
+     * timeouts and the time-window of acceptance of a new block.
      * </pre>
      *
      * <code>required sint64 blockinterval = 4;</code>
@@ -4223,7 +4247,13 @@ public final class ByzCoinProto {
       private long blockinterval_ ;
       /**
        * <pre>
-       * BlockInterval in int64.
+       * BlockInterval in int64 as nanoseconds since the Unix Epoch.
+       * Before VersionRollup,
+       * this was the time the leader waited between a signed block and asking
+       * for new transactions.
+       * With VersionRollup,
+       * the BlockInterval is only used to calculate the maximum protocol
+       * timeouts and the time-window of acceptance of a new block.
        * </pre>
        *
        * <code>required sint64 blockinterval = 4;</code>
@@ -4233,7 +4263,13 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * BlockInterval in int64.
+       * BlockInterval in int64 as nanoseconds since the Unix Epoch.
+       * Before VersionRollup,
+       * this was the time the leader waited between a signed block and asking
+       * for new transactions.
+       * With VersionRollup,
+       * the BlockInterval is only used to calculate the maximum protocol
+       * timeouts and the time-window of acceptance of a new block.
        * </pre>
        *
        * <code>required sint64 blockinterval = 4;</code>
@@ -4243,7 +4279,13 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * BlockInterval in int64.
+       * BlockInterval in int64 as nanoseconds since the Unix Epoch.
+       * Before VersionRollup,
+       * this was the time the leader waited between a signed block and asking
+       * for new transactions.
+       * With VersionRollup,
+       * the BlockInterval is only used to calculate the maximum protocol
+       * timeouts and the time-window of acceptance of a new block.
        * </pre>
        *
        * <code>required sint64 blockinterval = 4;</code>
@@ -4256,7 +4298,13 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * BlockInterval in int64.
+       * BlockInterval in int64 as nanoseconds since the Unix Epoch.
+       * Before VersionRollup,
+       * this was the time the leader waited between a signed block and asking
+       * for new transactions.
+       * With VersionRollup,
+       * the BlockInterval is only used to calculate the maximum protocol
+       * timeouts and the time-window of acceptance of a new block.
        * </pre>
        *
        * <code>required sint64 blockinterval = 4;</code>

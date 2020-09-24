@@ -71,7 +71,13 @@ type CreateGenesisBlock struct {
 	Roster onet.Roster
 	// GenesisDarc defines who is allowed to write to this skipchain.
 	GenesisDarc darc.Darc
-	// BlockInterval in int64.
+	// BlockInterval in int64 as nanoseconds since the Unix Epoch.
+	// Before VersionRollup,
+	// this was the time the leader waited between a signed block and asking
+	// for new transactions.
+	// With VersionRollup,
+	// the BlockInterval is only used to calculate the maximum protocol
+	// timeouts and the time-window of acceptance of a new block.
 	BlockInterval time.Duration
 	// Maximum block size. Zero (or not present in protobuf) means use the default, 4 megs.
 	// optional

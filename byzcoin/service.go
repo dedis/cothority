@@ -369,8 +369,14 @@ func (s *Service) prepareTxResponse(req *AddTxRequest, tx *TxResult) (*AddTxResp
 
 // AddTransaction requests to apply a new transaction to the ledger. Note
 // that unlike other service APIs, it is *not* enough to only check for the
-// error value to find out if an error has occured. The caller must also check
+// error value to find out if an error has occurred. The caller must also check
 // AddTxResponse.Error even if the error return value is nil.
+// Since VersionRollup, the leader failure detection has been moved in here.
+// It is still only a stop-detection, and does not handle a censoring leader.
+// If a ClientTransaction cannot be sent to the leader,
+// it is sent to all other nodes.
+// Every node that cannot send it to the leader will request a viewChange.
+// If enough nodes fail to send it to the leader, a new leader will be elected.
 func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 	s.closedMutex.Lock()
 	if s.closed {
@@ -2168,8 +2174,11 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		}
 	}
 
+	// The window here is calculated so that it can include some clock skew,
+	// the time for the signature, and processing time of the transactions.
 	window := 4 * config.BlockInterval
 	if window < minTimestampWindow {
+		// Set a minimum window when BlockInterval is very small during testing.
 		window = minTimestampWindow
 	}
 	t1 := time.Now().Add(window)

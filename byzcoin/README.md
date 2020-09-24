@@ -77,34 +77,32 @@ Items 5 and 6 are the 'real' ByzCoin improvements as described in the
 [ByzCoin Paper](https://eprint.iacr.org/2017/406).
 
 ## Transaction collection and View Change
-
 Transactions can be submitted by end-users to any conode in the roster for
-the Skipchain that is holding the ByzCoin.
+ the Skipchain that is holding the ByzCoin.
 
-At the beginning of each block creation, the leader launches a protocol to
-contact all the followers in parallel and to request the outstanding
-transactions they have. Once a follower answers this request, they are
-counting on the leader to faithfully attempt to include their transaction.
-There is no retry mechanism.
-
-With the collected transactions now in the leader, it runs them in order
-to find out how many it can fit into 1/2 of a block interval. It then sends
-the proposed block to the followers for them to validate. If there are transactions
-remaining to be run, they will be prepended to the next collected set of
-transactions when the next block interval expires.
+Since `VersionRollup`, the transaction collection and view change request
+ have been changed. The leader does not request new transactions anymore,
+ rather the nodes send new transactions to the leader. The leader puts the
+ transactions in a queue and creates new blocks with as many transactions as
+ are found in the queue, respecting the maximum size of the block. This makes
+ the system more responsive if there are few transactions submitted to the
+ chain.
 
 A "view change" (change of leader) is needed when the leader stops performing
-its duties correctly. Followers notice the need for a new leader if the leader
-stops sending heartbeat messages within some time window or detect a malicious
-behaviour (not implemented yet).
+ its duties correctly. If a node cannot send a transaction to the leader, it
+ asks all other nodes to send the transaction to the leader themselves. Every
+ node that couldn't send the transaction to the leader will start a view
+ change request. This will only detect stopped leaders, but not leaders who
+ censor certain transactions.
 
-The design is similar to the view-change protocol in PBFT (OSDI99). We keep the
-view-change message that followers send when they detect an anomaly. But we
-replace the new-view message with the ftcosi protocol and block creation. The
-result of ftcosi is an aggregate signature of all the nodes that agree to
-perform the view-change. The signature is included in the block which nodes
-accept if the aggregate signature is correct. This technique enables nodes to
-synchronise and replay blocks to compute the most up-to-date leader.
+The design of the view-change is similar to the view-change protocol in PBFT
+ (OSDI99). We keep the view-change message that followers send when they
+ detect an anomaly. But we replace the new-view message with the ftcosi
+ protocol and block creation. The result of ftcosi is an aggregate signature
+ of all the nodes that agree to perform the view-change. The signature is
+ included in the block which nodes accept if the aggregate signature is
+ correct. This technique enables nodes to synchronise and replay blocks to
+ compute the most up-to-date leader.
 
 # Structure Definitions
 
