@@ -20,7 +20,11 @@ import {
     AddTxRequest,
     AddTxResponse,
     CreateGenesisBlock,
-    CreateGenesisBlockResponse,
+    CreateGenesisBlockResponse, GetAllInstanceVersion,
+    GetAllInstanceVersionResponse,
+    GetInstanceVersion,
+    GetInstanceVersionResponse,
+    GetLastInstanceVersion,
     GetProof,
     GetProofResponse,
     GetSignerCounters,
@@ -581,6 +585,52 @@ export default class ByzCoinRPC implements ICounterUpdater {
             this.newBlockWS.close(1000);
             this.newBlock = undefined;
         }
+    }
+
+    /**
+     * Returns the latest version of an instance and the block-number it's been created or modified in. The node
+     * might not have the version available.
+     *
+     * @param instanceid
+     * @param version
+     */
+    async getInstanceVersion(instanceid: InstanceID, version: Long): Promise<GetInstanceVersionResponse> {
+        const req = new GetInstanceVersion({
+            instanceid,
+            skipchainid: this.genesisID,
+            version,
+        });
+        return this.conn.send<GetInstanceVersionResponse>(req, GetInstanceVersionResponse);
+    }
+
+    /**
+     * Returns the latest version of an instance and the block-number it's been created or modified in.
+     *
+     * @param instanceid
+     * @param version
+     */
+    async getLastInstanceVersion(instanceid: InstanceID): Promise<GetInstanceVersionResponse> {
+        const req = new GetLastInstanceVersion({
+            instanceid,
+            skipchainid: this.genesisID,
+        });
+        return this.conn.send<GetInstanceVersionResponse>(req, GetInstanceVersionResponse);
+    }
+
+    /**
+     * Returns a given version of an instance and the block-number it's in. The node might not have the version
+     * available.
+     *
+     * @param instanceid
+     * @param version
+     */
+    async getAllInstanceVersions(instanceid: InstanceID): Promise<GetInstanceVersionResponse[]> {
+        const req = new GetAllInstanceVersion({
+            instanceid,
+            skipchainid: this.genesisID,
+        });
+        const response = await this.conn.send<GetAllInstanceVersionResponse>(req, GetAllInstanceVersionResponse);
+        return response.statechanges;
     }
 
     private async getUpdateInstances(): Promise<BehaviorSubject<number>> {
