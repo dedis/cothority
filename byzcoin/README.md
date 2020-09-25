@@ -104,6 +104,98 @@ The design of the view-change is similar to the view-change protocol in PBFT
  correct. This technique enables nodes to synchronise and replay blocks to
  compute the most up-to-date leader.
 
+## Creation of Blocks
+
+This is the path a transaction takes from the client to the block:
+
+1. A client creates a `ClientTransaction` and sends it to one or more nodes.
+ Sending it to more than one node increases the probability that at least
+ one node correctly forwards the `ClientTransaction`.
+
+2. The nodes send the `ClientTransaction` to the leader.
+
+2.a If the leader is not responding, they send the `ClientTransaction` to
+ the other nodes, indicating that the node failed to send the transaction.
+ Every node that fails to send such a transaction to the leader will start
+ requesting a viewchange.
+
+3. The leader verifies it's a new `ClientTransaction`, and then puts the
+ `ClientTransction` in a queue. As the client might have sent the
+ `ClientTransaction` to multiple nodes, the leader might receive them more
+ than once, so he has to make sure that only unique `ClientTransaction`s are
+ included in the queue.
+
+4. If no block is being verified, the leader starts a new _proposed_ block:
+
+5. The leader collects as many `ClientTransaction`s from the queue as
+ possible, assuring that the resulting proposed block is smaller than the
+ `MaxBlockSize`.
+
+6. The leader creates a proposed block and fills the header with the
+ backward-links, the timestamp, and the other information of the skipchain.
+
+7. Then the leader executes every `ClientTransaction` in order, updating the
+ temporary state of the blockchain after every execution. Valid transactions
+ are marked as `Accepted = true` and update the temporary state, while failing
+ transactions are included with `Accepted = false` and don't update the
+ temporary state.
+ Every `ClientTransaction` is given the temporary state as it was after the
+ previous transaction. So depending on the ordering the accepted
+ `ClientTransaction`s might differ.
+
+8. Once the leader executed all transactions, it stores the Merkle tree root
+ hash of the temporary state in the proposed block header, and the
+ `ClientTransaction`s together with the `Accepted` flags in the body of the
+ proposed block.
+
+9. Then the leader sends the proposed block to all followers. Now every follower
+ verifies that the `ClientTransaction`s actually execute and produce the same
+ `Accepted` flags as given by the leader. The followers also verify that the
+ temporary Merkle tree root hash is the same as given by the leader.
+
+10. Every follower that is OK with the proposed block signs the forward-link
+ from the previous block to the proposed block and sends it to the leader. The
+ signature is quite complicated and described in the ByzCoin paper. It is
+ done over various rounds with a prepare and a commit phase. One long-running
+ bug is the fact that a view-change after a successful prepare phase does not
+ take into account the proposed block, but creates another proposed block.
+
+11. Once the leader has enough signatures `#nodes - int((#nodes-1)/3)`, he
+ finalizes the forward-link and sends it to the followers.
+
+12. Every follower that receives the forward-link will verify it, and if the
+ verification succeeds, will store the temporary state as the new global state.
+
+13. The proposed block is now the current block, and the leader goes back to
+ point 4. If there have been additional `ClientTransactions` received by the
+ leader during these steps, they will simply wait in the queue.
+
+## ClientTransaction verification
+
+Every `ClientTransaction` is made up of one or more `Instruction`s. Every
+ `Instruction` is sent to an existing instance in the global state. The
+ `Instruction` can either `spawn` a new instance, `invoke` a method of an
+ instance, or `delete` an existing instance.
+
+In the case of `invoke`, the `Instruction` also carries a `Command`. For
+ all three instruction types, additional `Arguments` might be present to
+ change the way the instruction is interpreted. As all this is hashed, the
+ `Arguments` are stored as a slice rather than a map, because maps are not
+ easily hashable.
+
+To verify a `ClientTranscation`, byzcoin goes over every `Instruction` and
+ verifies the following:
+
+- can it verify the signature on the `Instruction` using the given `Darc`?
+- does the instance exist and is it of the given contract-type if it's an
+ `invoke` or `delete` instruction?
+- does the contract-type exist for a `spawn` instruction?
+- does the call to the contract return successfully?
+
+After every call to the instruction of a `ClientTransaction`, a temporary
+ state is updated. Every instruction of the `ClientTransaction` is executed
+ with the temporary state of the previous instruction.
+
 # Structure Definitions
 
 Following is an overview of the most important structures defined in ByzCoin.
