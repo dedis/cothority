@@ -2093,7 +2093,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.TxResult txresults = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.TxResult>
+    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.TxResult> 
         getTxresultsList();
     /**
      * <code>repeated .byzcoin.TxResult txresults = 1;</code>
@@ -2106,7 +2106,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.TxResult txresults = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.TxResultOrBuilder>
+    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.TxResultOrBuilder> 
         getTxresultsOrBuilderList();
     /**
      * <code>repeated .byzcoin.TxResult txresults = 1;</code>
@@ -2214,7 +2214,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.TxResult txresults = 1;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.TxResultOrBuilder>
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.TxResultOrBuilder> 
         getTxresultsOrBuilderList() {
       return txresults_;
     }
@@ -2554,7 +2554,7 @@ public final class ByzCoinProto {
               txresultsBuilder_ = null;
               txresults_ = other.txresults_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              txresultsBuilder_ =
+              txresultsBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getTxresultsFieldBuilder() : null;
             } else {
@@ -2792,7 +2792,7 @@ public final class ByzCoinProto {
       /**
        * <code>repeated .byzcoin.TxResult txresults = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.TxResultOrBuilder>
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.TxResultOrBuilder> 
            getTxresultsOrBuilderList() {
         if (txresultsBuilder_ != null) {
           return txresultsBuilder_.getMessageOrBuilderList();
@@ -2818,12 +2818,12 @@ public final class ByzCoinProto {
       /**
        * <code>repeated .byzcoin.TxResult txresults = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.TxResult.Builder>
+      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.TxResult.Builder> 
            getTxresultsBuilderList() {
         return getTxresultsFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.TxResult, ch.epfl.dedis.lib.proto.ByzCoinProto.TxResult.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.TxResultOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.TxResult, ch.epfl.dedis.lib.proto.ByzCoinProto.TxResult.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.TxResultOrBuilder> 
           getTxresultsFieldBuilder() {
         if (txresultsBuilder_ == null) {
           txresultsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -2991,7 +2991,8 @@ public final class ByzCoinProto {
 
     /**
      * <pre>
-     * Maximum block size. Zero (or not present in protobuf) means use the default, 4 megs.
+     * MaxBlockSize is the maximum block size.
+     * Zero (or not present in protobuf) means use the default, 4 megs.
      * </pre>
      *
      * <code>optional sint32 maxblocksize = 5;</code>
@@ -2999,7 +3000,8 @@ public final class ByzCoinProto {
     boolean hasMaxblocksize();
     /**
      * <pre>
-     * Maximum block size. Zero (or not present in protobuf) means use the default, 4 megs.
+     * MaxBlockSize is the maximum block size.
+     * Zero (or not present in protobuf) means use the default, 4 megs.
      * </pre>
      *
      * <code>optional sint32 maxblocksize = 5;</code>
@@ -3008,7 +3010,7 @@ public final class ByzCoinProto {
 
     /**
      * <pre>
-     * DarcContracts is the set of contracts that can be parsed as a DARC.
+     * DarcContractIDs is the set of contracts that can be parsed as a DARC.
      * At least one contract must be given.
      * </pre>
      *
@@ -3018,7 +3020,7 @@ public final class ByzCoinProto {
         getDarccontractidsList();
     /**
      * <pre>
-     * DarcContracts is the set of contracts that can be parsed as a DARC.
+     * DarcContractIDs is the set of contracts that can be parsed as a DARC.
      * At least one contract must be given.
      * </pre>
      *
@@ -3027,7 +3029,7 @@ public final class ByzCoinProto {
     int getDarccontractidsCount();
     /**
      * <pre>
-     * DarcContracts is the set of contracts that can be parsed as a DARC.
+     * DarcContractIDs is the set of contracts that can be parsed as a DARC.
      * At least one contract must be given.
      * </pre>
      *
@@ -3036,7 +3038,7 @@ public final class ByzCoinProto {
     java.lang.String getDarccontractids(int index);
     /**
      * <pre>
-     * DarcContracts is the set of contracts that can be parsed as a DARC.
+     * DarcContractIDs is the set of contracts that can be parsed as a DARC.
      * At least one contract must be given.
      * </pre>
      *
@@ -3306,7 +3308,8 @@ public final class ByzCoinProto {
     private int maxblocksize_;
     /**
      * <pre>
-     * Maximum block size. Zero (or not present in protobuf) means use the default, 4 megs.
+     * MaxBlockSize is the maximum block size.
+     * Zero (or not present in protobuf) means use the default, 4 megs.
      * </pre>
      *
      * <code>optional sint32 maxblocksize = 5;</code>
@@ -3316,7 +3319,8 @@ public final class ByzCoinProto {
     }
     /**
      * <pre>
-     * Maximum block size. Zero (or not present in protobuf) means use the default, 4 megs.
+     * MaxBlockSize is the maximum block size.
+     * Zero (or not present in protobuf) means use the default, 4 megs.
      * </pre>
      *
      * <code>optional sint32 maxblocksize = 5;</code>
@@ -3329,7 +3333,7 @@ public final class ByzCoinProto {
     private com.google.protobuf.LazyStringList darccontractids_;
     /**
      * <pre>
-     * DarcContracts is the set of contracts that can be parsed as a DARC.
+     * DarcContractIDs is the set of contracts that can be parsed as a DARC.
      * At least one contract must be given.
      * </pre>
      *
@@ -3341,7 +3345,7 @@ public final class ByzCoinProto {
     }
     /**
      * <pre>
-     * DarcContracts is the set of contracts that can be parsed as a DARC.
+     * DarcContractIDs is the set of contracts that can be parsed as a DARC.
      * At least one contract must be given.
      * </pre>
      *
@@ -3352,7 +3356,7 @@ public final class ByzCoinProto {
     }
     /**
      * <pre>
-     * DarcContracts is the set of contracts that can be parsed as a DARC.
+     * DarcContractIDs is the set of contracts that can be parsed as a DARC.
      * At least one contract must be given.
      * </pre>
      *
@@ -3363,7 +3367,7 @@ public final class ByzCoinProto {
     }
     /**
      * <pre>
-     * DarcContracts is the set of contracts that can be parsed as a DARC.
+     * DarcContractIDs is the set of contracts that can be parsed as a DARC.
      * At least one contract must be given.
      * </pre>
      *
@@ -4077,7 +4081,7 @@ public final class ByzCoinProto {
        * <code>required .onet.Roster roster = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder>
+          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder> 
           getRosterFieldBuilder() {
         if (rosterBuilder_ == null) {
           rosterBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -4231,7 +4235,7 @@ public final class ByzCoinProto {
        * <code>required .darc.Darc genesisdarc = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.Darc, ch.epfl.dedis.lib.proto.DarcProto.Darc.Builder, ch.epfl.dedis.lib.proto.DarcProto.DarcOrBuilder>
+          ch.epfl.dedis.lib.proto.DarcProto.Darc, ch.epfl.dedis.lib.proto.DarcProto.Darc.Builder, ch.epfl.dedis.lib.proto.DarcProto.DarcOrBuilder> 
           getGenesisdarcFieldBuilder() {
         if (genesisdarcBuilder_ == null) {
           genesisdarcBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -4319,7 +4323,8 @@ public final class ByzCoinProto {
       private int maxblocksize_ ;
       /**
        * <pre>
-       * Maximum block size. Zero (or not present in protobuf) means use the default, 4 megs.
+       * MaxBlockSize is the maximum block size.
+       * Zero (or not present in protobuf) means use the default, 4 megs.
        * </pre>
        *
        * <code>optional sint32 maxblocksize = 5;</code>
@@ -4329,7 +4334,8 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * Maximum block size. Zero (or not present in protobuf) means use the default, 4 megs.
+       * MaxBlockSize is the maximum block size.
+       * Zero (or not present in protobuf) means use the default, 4 megs.
        * </pre>
        *
        * <code>optional sint32 maxblocksize = 5;</code>
@@ -4339,7 +4345,8 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * Maximum block size. Zero (or not present in protobuf) means use the default, 4 megs.
+       * MaxBlockSize is the maximum block size.
+       * Zero (or not present in protobuf) means use the default, 4 megs.
        * </pre>
        *
        * <code>optional sint32 maxblocksize = 5;</code>
@@ -4352,7 +4359,8 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * Maximum block size. Zero (or not present in protobuf) means use the default, 4 megs.
+       * MaxBlockSize is the maximum block size.
+       * Zero (or not present in protobuf) means use the default, 4 megs.
        * </pre>
        *
        * <code>optional sint32 maxblocksize = 5;</code>
@@ -4373,7 +4381,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * DarcContracts is the set of contracts that can be parsed as a DARC.
+       * DarcContractIDs is the set of contracts that can be parsed as a DARC.
        * At least one contract must be given.
        * </pre>
        *
@@ -4385,7 +4393,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * DarcContracts is the set of contracts that can be parsed as a DARC.
+       * DarcContractIDs is the set of contracts that can be parsed as a DARC.
        * At least one contract must be given.
        * </pre>
        *
@@ -4396,7 +4404,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * DarcContracts is the set of contracts that can be parsed as a DARC.
+       * DarcContractIDs is the set of contracts that can be parsed as a DARC.
        * At least one contract must be given.
        * </pre>
        *
@@ -4407,7 +4415,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * DarcContracts is the set of contracts that can be parsed as a DARC.
+       * DarcContractIDs is the set of contracts that can be parsed as a DARC.
        * At least one contract must be given.
        * </pre>
        *
@@ -4419,7 +4427,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * DarcContracts is the set of contracts that can be parsed as a DARC.
+       * DarcContractIDs is the set of contracts that can be parsed as a DARC.
        * At least one contract must be given.
        * </pre>
        *
@@ -4437,7 +4445,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * DarcContracts is the set of contracts that can be parsed as a DARC.
+       * DarcContractIDs is the set of contracts that can be parsed as a DARC.
        * At least one contract must be given.
        * </pre>
        *
@@ -4455,7 +4463,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * DarcContracts is the set of contracts that can be parsed as a DARC.
+       * DarcContractIDs is the set of contracts that can be parsed as a DARC.
        * At least one contract must be given.
        * </pre>
        *
@@ -4471,7 +4479,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * DarcContracts is the set of contracts that can be parsed as a DARC.
+       * DarcContractIDs is the set of contracts that can be parsed as a DARC.
        * At least one contract must be given.
        * </pre>
        *
@@ -4485,7 +4493,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * DarcContracts is the set of contracts that can be parsed as a DARC.
+       * DarcContractIDs is the set of contracts that can be parsed as a DARC.
        * At least one contract must be given.
        * </pre>
        *
@@ -5311,7 +5319,7 @@ public final class ByzCoinProto {
        * <code>optional .skipchain.SkipBlock skipblock = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
           getSkipblockFieldBuilder() {
         if (skipblockBuilder_ == null) {
           skipblockBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -6498,7 +6506,7 @@ public final class ByzCoinProto {
        * <code>required .byzcoin.ClientTransaction transaction = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction, ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransactionOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction, ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransactionOrBuilder> 
           getTransactionFieldBuilder() {
         if (transactionBuilder_ == null) {
           transactionBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -6951,7 +6959,7 @@ public final class ByzCoinProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -6971,7 +6979,7 @@ public final class ByzCoinProto {
         getErrorBytes() {
       java.lang.Object ref = error_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         error_ = b;
@@ -7502,7 +7510,7 @@ public final class ByzCoinProto {
           getErrorBytes() {
         java.lang.Object ref = error_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           error_ = b;
@@ -7700,7 +7708,7 @@ public final class ByzCoinProto {
        * <code>optional .byzcoin.Proof proof = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> 
           getProofFieldBuilder() {
         if (proofBuilder_ == null) {
           proofBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -9490,7 +9498,7 @@ public final class ByzCoinProto {
        * <code>required .byzcoin.Proof proof = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> 
           getProofFieldBuilder() {
         if (proofBuilder_ == null) {
           proofBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -9617,7 +9625,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .darc.Identity identities = 4;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity>
+    java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity> 
         getIdentitiesList();
     /**
      * <pre>
@@ -9642,7 +9650,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .darc.Identity identities = 4;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>
+    java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> 
         getIdentitiesOrBuilderList();
     /**
      * <pre>
@@ -9850,7 +9858,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .darc.Identity identities = 4;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> 
         getIdentitiesOrBuilderList() {
       return identities_;
     }
@@ -10291,7 +10299,7 @@ public final class ByzCoinProto {
               identitiesBuilder_ = null;
               identities_ = other.identities_;
               bitField0_ = (bitField0_ & ~0x00000008);
-              identitiesBuilder_ =
+              identitiesBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getIdentitiesFieldBuilder() : null;
             } else {
@@ -10748,7 +10756,7 @@ public final class ByzCoinProto {
        *
        * <code>repeated .darc.Identity identities = 4;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> 
            getIdentitiesOrBuilderList() {
         if (identitiesBuilder_ != null) {
           return identitiesBuilder_.getMessageOrBuilderList();
@@ -10786,12 +10794,12 @@ public final class ByzCoinProto {
        *
        * <code>repeated .darc.Identity identities = 4;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder>
+      public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder> 
            getIdentitiesBuilderList() {
         return getIdentitiesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>
+          ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> 
           getIdentitiesFieldBuilder() {
         if (identitiesBuilder_ == null) {
           identitiesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -11477,50 +11485,94 @@ public final class ByzCoinProto {
       com.google.protobuf.MessageOrBuilder {
 
     /**
+     * <pre>
+     * BlockInterval defines the maximum propagation time in the skipchain.
+     * </pre>
+     *
      * <code>required sint64 blockinterval = 1;</code>
      */
     boolean hasBlockinterval();
     /**
+     * <pre>
+     * BlockInterval defines the maximum propagation time in the skipchain.
+     * </pre>
+     *
      * <code>required sint64 blockinterval = 1;</code>
      */
     long getBlockinterval();
 
     /**
+     * <pre>
+     * Roster defines which nodes participate in the skipchain.
+     * </pre>
+     *
      * <code>required .onet.Roster roster = 2;</code>
      */
     boolean hasRoster();
     /**
+     * <pre>
+     * Roster defines which nodes participate in the skipchain.
+     * </pre>
+     *
      * <code>required .onet.Roster roster = 2;</code>
      */
     ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster();
     /**
+     * <pre>
+     * Roster defines which nodes participate in the skipchain.
+     * </pre>
+     *
      * <code>required .onet.Roster roster = 2;</code>
      */
     ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder getRosterOrBuilder();
 
     /**
+     * <pre>
+     * MaxBlockSize defines the maximum block size on the skipchain.
+     * </pre>
+     *
      * <code>required sint32 maxblocksize = 3;</code>
      */
     boolean hasMaxblocksize();
     /**
+     * <pre>
+     * MaxBlockSize defines the maximum block size on the skipchain.
+     * </pre>
+     *
      * <code>required sint32 maxblocksize = 3;</code>
      */
     int getMaxblocksize();
 
     /**
+     * <pre>
+     * DarcContractIDs is the set of contracts that can be parsed as a DARC.
+     * </pre>
+     *
      * <code>repeated string darccontractids = 4;</code>
      */
     java.util.List<java.lang.String>
         getDarccontractidsList();
     /**
+     * <pre>
+     * DarcContractIDs is the set of contracts that can be parsed as a DARC.
+     * </pre>
+     *
      * <code>repeated string darccontractids = 4;</code>
      */
     int getDarccontractidsCount();
     /**
+     * <pre>
+     * DarcContractIDs is the set of contracts that can be parsed as a DARC.
+     * </pre>
+     *
      * <code>repeated string darccontractids = 4;</code>
      */
     java.lang.String getDarccontractids(int index);
     /**
+     * <pre>
+     * DarcContractIDs is the set of contracts that can be parsed as a DARC.
+     * </pre>
+     *
      * <code>repeated string darccontractids = 4;</code>
      */
     com.google.protobuf.ByteString
@@ -11644,12 +11696,20 @@ public final class ByzCoinProto {
     public static final int BLOCKINTERVAL_FIELD_NUMBER = 1;
     private long blockinterval_;
     /**
+     * <pre>
+     * BlockInterval defines the maximum propagation time in the skipchain.
+     * </pre>
+     *
      * <code>required sint64 blockinterval = 1;</code>
      */
     public boolean hasBlockinterval() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
+     * <pre>
+     * BlockInterval defines the maximum propagation time in the skipchain.
+     * </pre>
+     *
      * <code>required sint64 blockinterval = 1;</code>
      */
     public long getBlockinterval() {
@@ -11659,18 +11719,30 @@ public final class ByzCoinProto {
     public static final int ROSTER_FIELD_NUMBER = 2;
     private ch.epfl.dedis.lib.proto.OnetProto.Roster roster_;
     /**
+     * <pre>
+     * Roster defines which nodes participate in the skipchain.
+     * </pre>
+     *
      * <code>required .onet.Roster roster = 2;</code>
      */
     public boolean hasRoster() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
+     * <pre>
+     * Roster defines which nodes participate in the skipchain.
+     * </pre>
+     *
      * <code>required .onet.Roster roster = 2;</code>
      */
     public ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster() {
       return roster_ == null ? ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
     }
     /**
+     * <pre>
+     * Roster defines which nodes participate in the skipchain.
+     * </pre>
+     *
      * <code>required .onet.Roster roster = 2;</code>
      */
     public ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder getRosterOrBuilder() {
@@ -11680,12 +11752,20 @@ public final class ByzCoinProto {
     public static final int MAXBLOCKSIZE_FIELD_NUMBER = 3;
     private int maxblocksize_;
     /**
+     * <pre>
+     * MaxBlockSize defines the maximum block size on the skipchain.
+     * </pre>
+     *
      * <code>required sint32 maxblocksize = 3;</code>
      */
     public boolean hasMaxblocksize() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
+     * <pre>
+     * MaxBlockSize defines the maximum block size on the skipchain.
+     * </pre>
+     *
      * <code>required sint32 maxblocksize = 3;</code>
      */
     public int getMaxblocksize() {
@@ -11695,6 +11775,10 @@ public final class ByzCoinProto {
     public static final int DARCCONTRACTIDS_FIELD_NUMBER = 4;
     private com.google.protobuf.LazyStringList darccontractids_;
     /**
+     * <pre>
+     * DarcContractIDs is the set of contracts that can be parsed as a DARC.
+     * </pre>
+     *
      * <code>repeated string darccontractids = 4;</code>
      */
     public com.google.protobuf.ProtocolStringList
@@ -11702,18 +11786,30 @@ public final class ByzCoinProto {
       return darccontractids_;
     }
     /**
+     * <pre>
+     * DarcContractIDs is the set of contracts that can be parsed as a DARC.
+     * </pre>
+     *
      * <code>repeated string darccontractids = 4;</code>
      */
     public int getDarccontractidsCount() {
       return darccontractids_.size();
     }
     /**
+     * <pre>
+     * DarcContractIDs is the set of contracts that can be parsed as a DARC.
+     * </pre>
+     *
      * <code>repeated string darccontractids = 4;</code>
      */
     public java.lang.String getDarccontractids(int index) {
       return darccontractids_.get(index);
     }
     /**
+     * <pre>
+     * DarcContractIDs is the set of contracts that can be parsed as a DARC.
+     * </pre>
+     *
      * <code>repeated string darccontractids = 4;</code>
      */
     public com.google.protobuf.ByteString
@@ -12165,18 +12261,30 @@ public final class ByzCoinProto {
 
       private long blockinterval_ ;
       /**
+       * <pre>
+       * BlockInterval defines the maximum propagation time in the skipchain.
+       * </pre>
+       *
        * <code>required sint64 blockinterval = 1;</code>
        */
       public boolean hasBlockinterval() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
+       * <pre>
+       * BlockInterval defines the maximum propagation time in the skipchain.
+       * </pre>
+       *
        * <code>required sint64 blockinterval = 1;</code>
        */
       public long getBlockinterval() {
         return blockinterval_;
       }
       /**
+       * <pre>
+       * BlockInterval defines the maximum propagation time in the skipchain.
+       * </pre>
+       *
        * <code>required sint64 blockinterval = 1;</code>
        */
       public Builder setBlockinterval(long value) {
@@ -12186,6 +12294,10 @@ public final class ByzCoinProto {
         return this;
       }
       /**
+       * <pre>
+       * BlockInterval defines the maximum propagation time in the skipchain.
+       * </pre>
+       *
        * <code>required sint64 blockinterval = 1;</code>
        */
       public Builder clearBlockinterval() {
@@ -12199,12 +12311,20 @@ public final class ByzCoinProto {
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder> rosterBuilder_;
       /**
+       * <pre>
+       * Roster defines which nodes participate in the skipchain.
+       * </pre>
+       *
        * <code>required .onet.Roster roster = 2;</code>
        */
       public boolean hasRoster() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
+       * <pre>
+       * Roster defines which nodes participate in the skipchain.
+       * </pre>
+       *
        * <code>required .onet.Roster roster = 2;</code>
        */
       public ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster() {
@@ -12215,6 +12335,10 @@ public final class ByzCoinProto {
         }
       }
       /**
+       * <pre>
+       * Roster defines which nodes participate in the skipchain.
+       * </pre>
+       *
        * <code>required .onet.Roster roster = 2;</code>
        */
       public Builder setRoster(ch.epfl.dedis.lib.proto.OnetProto.Roster value) {
@@ -12231,6 +12355,10 @@ public final class ByzCoinProto {
         return this;
       }
       /**
+       * <pre>
+       * Roster defines which nodes participate in the skipchain.
+       * </pre>
+       *
        * <code>required .onet.Roster roster = 2;</code>
        */
       public Builder setRoster(
@@ -12245,6 +12373,10 @@ public final class ByzCoinProto {
         return this;
       }
       /**
+       * <pre>
+       * Roster defines which nodes participate in the skipchain.
+       * </pre>
+       *
        * <code>required .onet.Roster roster = 2;</code>
        */
       public Builder mergeRoster(ch.epfl.dedis.lib.proto.OnetProto.Roster value) {
@@ -12265,6 +12397,10 @@ public final class ByzCoinProto {
         return this;
       }
       /**
+       * <pre>
+       * Roster defines which nodes participate in the skipchain.
+       * </pre>
+       *
        * <code>required .onet.Roster roster = 2;</code>
        */
       public Builder clearRoster() {
@@ -12278,6 +12414,10 @@ public final class ByzCoinProto {
         return this;
       }
       /**
+       * <pre>
+       * Roster defines which nodes participate in the skipchain.
+       * </pre>
+       *
        * <code>required .onet.Roster roster = 2;</code>
        */
       public ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder getRosterBuilder() {
@@ -12286,6 +12426,10 @@ public final class ByzCoinProto {
         return getRosterFieldBuilder().getBuilder();
       }
       /**
+       * <pre>
+       * Roster defines which nodes participate in the skipchain.
+       * </pre>
+       *
        * <code>required .onet.Roster roster = 2;</code>
        */
       public ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder getRosterOrBuilder() {
@@ -12297,10 +12441,14 @@ public final class ByzCoinProto {
         }
       }
       /**
+       * <pre>
+       * Roster defines which nodes participate in the skipchain.
+       * </pre>
+       *
        * <code>required .onet.Roster roster = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder>
+          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder> 
           getRosterFieldBuilder() {
         if (rosterBuilder_ == null) {
           rosterBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -12315,18 +12463,30 @@ public final class ByzCoinProto {
 
       private int maxblocksize_ ;
       /**
+       * <pre>
+       * MaxBlockSize defines the maximum block size on the skipchain.
+       * </pre>
+       *
        * <code>required sint32 maxblocksize = 3;</code>
        */
       public boolean hasMaxblocksize() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
+       * <pre>
+       * MaxBlockSize defines the maximum block size on the skipchain.
+       * </pre>
+       *
        * <code>required sint32 maxblocksize = 3;</code>
        */
       public int getMaxblocksize() {
         return maxblocksize_;
       }
       /**
+       * <pre>
+       * MaxBlockSize defines the maximum block size on the skipchain.
+       * </pre>
+       *
        * <code>required sint32 maxblocksize = 3;</code>
        */
       public Builder setMaxblocksize(int value) {
@@ -12336,6 +12496,10 @@ public final class ByzCoinProto {
         return this;
       }
       /**
+       * <pre>
+       * MaxBlockSize defines the maximum block size on the skipchain.
+       * </pre>
+       *
        * <code>required sint32 maxblocksize = 3;</code>
        */
       public Builder clearMaxblocksize() {
@@ -12353,6 +12517,10 @@ public final class ByzCoinProto {
          }
       }
       /**
+       * <pre>
+       * DarcContractIDs is the set of contracts that can be parsed as a DARC.
+       * </pre>
+       *
        * <code>repeated string darccontractids = 4;</code>
        */
       public com.google.protobuf.ProtocolStringList
@@ -12360,18 +12528,30 @@ public final class ByzCoinProto {
         return darccontractids_.getUnmodifiableView();
       }
       /**
+       * <pre>
+       * DarcContractIDs is the set of contracts that can be parsed as a DARC.
+       * </pre>
+       *
        * <code>repeated string darccontractids = 4;</code>
        */
       public int getDarccontractidsCount() {
         return darccontractids_.size();
       }
       /**
+       * <pre>
+       * DarcContractIDs is the set of contracts that can be parsed as a DARC.
+       * </pre>
+       *
        * <code>repeated string darccontractids = 4;</code>
        */
       public java.lang.String getDarccontractids(int index) {
         return darccontractids_.get(index);
       }
       /**
+       * <pre>
+       * DarcContractIDs is the set of contracts that can be parsed as a DARC.
+       * </pre>
+       *
        * <code>repeated string darccontractids = 4;</code>
        */
       public com.google.protobuf.ByteString
@@ -12379,6 +12559,10 @@ public final class ByzCoinProto {
         return darccontractids_.getByteString(index);
       }
       /**
+       * <pre>
+       * DarcContractIDs is the set of contracts that can be parsed as a DARC.
+       * </pre>
+       *
        * <code>repeated string darccontractids = 4;</code>
        */
       public Builder setDarccontractids(
@@ -12392,6 +12576,10 @@ public final class ByzCoinProto {
         return this;
       }
       /**
+       * <pre>
+       * DarcContractIDs is the set of contracts that can be parsed as a DARC.
+       * </pre>
+       *
        * <code>repeated string darccontractids = 4;</code>
        */
       public Builder addDarccontractids(
@@ -12405,6 +12593,10 @@ public final class ByzCoinProto {
         return this;
       }
       /**
+       * <pre>
+       * DarcContractIDs is the set of contracts that can be parsed as a DARC.
+       * </pre>
+       *
        * <code>repeated string darccontractids = 4;</code>
        */
       public Builder addAllDarccontractids(
@@ -12416,6 +12608,10 @@ public final class ByzCoinProto {
         return this;
       }
       /**
+       * <pre>
+       * DarcContractIDs is the set of contracts that can be parsed as a DARC.
+       * </pre>
+       *
        * <code>repeated string darccontractids = 4;</code>
        */
       public Builder clearDarccontractids() {
@@ -12425,6 +12621,10 @@ public final class ByzCoinProto {
         return this;
       }
       /**
+       * <pre>
+       * DarcContractIDs is the set of contracts that can be parsed as a DARC.
+       * </pre>
+       *
        * <code>repeated string darccontractids = 4;</code>
        */
       public Builder addDarccontractidsBytes(
@@ -12553,7 +12753,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .skipchain.ForwardLink links = 3;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink>
+    java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink> 
         getLinksList();
     /**
      * <pre>
@@ -12584,7 +12784,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .skipchain.ForwardLink links = 3;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder>
+    java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder> 
         getLinksOrBuilderList();
     /**
      * <pre>
@@ -12809,7 +13009,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .skipchain.ForwardLink links = 3;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder>
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder> 
         getLinksOrBuilderList() {
       return links_;
     }
@@ -13259,7 +13459,7 @@ public final class ByzCoinProto {
               linksBuilder_ = null;
               links_ = other.links_;
               bitField0_ = (bitField0_ & ~0x00000004);
-              linksBuilder_ =
+              linksBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getLinksFieldBuilder() : null;
             } else {
@@ -13455,7 +13655,7 @@ public final class ByzCoinProto {
        * <code>required .trie.Proof inclusionproof = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.TrieProto.Proof, ch.epfl.dedis.lib.proto.TrieProto.Proof.Builder, ch.epfl.dedis.lib.proto.TrieProto.ProofOrBuilder>
+          ch.epfl.dedis.lib.proto.TrieProto.Proof, ch.epfl.dedis.lib.proto.TrieProto.Proof.Builder, ch.epfl.dedis.lib.proto.TrieProto.ProofOrBuilder> 
           getInclusionproofFieldBuilder() {
         if (inclusionproofBuilder_ == null) {
           inclusionproofBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -13609,7 +13809,7 @@ public final class ByzCoinProto {
        * <code>required .skipchain.SkipBlock latest = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
           getLatestFieldBuilder() {
         if (latestBuilder_ == null) {
           latestBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -13907,7 +14107,7 @@ public final class ByzCoinProto {
        *
        * <code>repeated .skipchain.ForwardLink links = 3;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder>
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder> 
            getLinksOrBuilderList() {
         if (linksBuilder_ != null) {
           return linksBuilder_.getMessageOrBuilderList();
@@ -13951,12 +14151,12 @@ public final class ByzCoinProto {
        *
        * <code>repeated .skipchain.ForwardLink links = 3;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink.Builder>
+      public java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink.Builder> 
            getLinksBuilderList() {
         return getLinksFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink, ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder>
+          ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink, ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder> 
           getLinksFieldBuilder() {
         if (linksBuilder_ == null) {
           linksBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -14161,7 +14361,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .darc.Identity signeridentities = 6;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity>
+    java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity> 
         getSigneridentitiesList();
     /**
      * <pre>
@@ -14186,7 +14386,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .darc.Identity signeridentities = 6;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>
+    java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> 
         getSigneridentitiesOrBuilderList();
     /**
      * <pre>
@@ -14584,7 +14784,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .darc.Identity signeridentities = 6;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> 
         getSigneridentitiesOrBuilderList() {
       return signeridentities_;
     }
@@ -15193,7 +15393,7 @@ public final class ByzCoinProto {
               signeridentitiesBuilder_ = null;
               signeridentities_ = other.signeridentities_;
               bitField0_ = (bitField0_ & ~0x00000020);
-              signeridentitiesBuilder_ =
+              signeridentitiesBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getSigneridentitiesFieldBuilder() : null;
             } else {
@@ -15460,7 +15660,7 @@ public final class ByzCoinProto {
        * <code>optional .byzcoin.Spawn spawn = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Spawn, ch.epfl.dedis.lib.proto.ByzCoinProto.Spawn.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.SpawnOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Spawn, ch.epfl.dedis.lib.proto.ByzCoinProto.Spawn.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.SpawnOrBuilder> 
           getSpawnFieldBuilder() {
         if (spawnBuilder_ == null) {
           spawnBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -15614,7 +15814,7 @@ public final class ByzCoinProto {
        * <code>optional .byzcoin.Invoke invoke = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke, ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.InvokeOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke, ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.InvokeOrBuilder> 
           getInvokeFieldBuilder() {
         if (invokeBuilder_ == null) {
           invokeBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -15768,7 +15968,7 @@ public final class ByzCoinProto {
        * <code>optional .byzcoin.Delete delete = 4;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Delete, ch.epfl.dedis.lib.proto.ByzCoinProto.Delete.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.DeleteOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Delete, ch.epfl.dedis.lib.proto.ByzCoinProto.Delete.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.DeleteOrBuilder> 
           getDeleteFieldBuilder() {
         if (deleteBuilder_ == null) {
           deleteBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -16151,7 +16351,7 @@ public final class ByzCoinProto {
        *
        * <code>repeated .darc.Identity signeridentities = 6;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> 
            getSigneridentitiesOrBuilderList() {
         if (signeridentitiesBuilder_ != null) {
           return signeridentitiesBuilder_.getMessageOrBuilderList();
@@ -16189,12 +16389,12 @@ public final class ByzCoinProto {
        *
        * <code>repeated .darc.Identity signeridentities = 6;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder>
+      public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder> 
            getSigneridentitiesBuilderList() {
         return getSigneridentitiesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>
+          ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> 
           getSigneridentitiesFieldBuilder() {
         if (signeridentitiesBuilder_ == null) {
           signeridentitiesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -16404,7 +16604,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 2;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument>
+    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument> 
         getArgsList();
     /**
      * <pre>
@@ -16429,7 +16629,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 2;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder>
+    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder> 
         getArgsOrBuilderList();
     /**
      * <pre>
@@ -16561,7 +16761,7 @@ public final class ByzCoinProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -16581,7 +16781,7 @@ public final class ByzCoinProto {
         getContractidBytes() {
       java.lang.Object ref = contractid_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         contractid_ = b;
@@ -16610,7 +16810,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 2;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder>
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder> 
         getArgsOrBuilderList() {
       return args_;
     }
@@ -16993,7 +17193,7 @@ public final class ByzCoinProto {
               argsBuilder_ = null;
               args_ = other.args_;
               bitField0_ = (bitField0_ & ~0x00000002);
-              argsBuilder_ =
+              argsBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getArgsFieldBuilder() : null;
             } else {
@@ -17082,7 +17282,7 @@ public final class ByzCoinProto {
           getContractidBytes() {
         java.lang.Object ref = contractid_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           contractid_ = b;
@@ -17394,7 +17594,7 @@ public final class ByzCoinProto {
        *
        * <code>repeated .byzcoin.Argument args = 2;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder>
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder> 
            getArgsOrBuilderList() {
         if (argsBuilder_ != null) {
           return argsBuilder_.getMessageOrBuilderList();
@@ -17432,12 +17632,12 @@ public final class ByzCoinProto {
        *
        * <code>repeated .byzcoin.Argument args = 2;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder>
+      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder> 
            getArgsBuilderList() {
         return getArgsFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Argument, ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Argument, ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder> 
           getArgsFieldBuilder() {
         if (argsBuilder_ == null) {
           argsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -17566,7 +17766,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 3;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument>
+    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument> 
         getArgsList();
     /**
      * <pre>
@@ -17591,7 +17791,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 3;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder>
+    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder> 
         getArgsOrBuilderList();
     /**
      * <pre>
@@ -17731,7 +17931,7 @@ public final class ByzCoinProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -17751,7 +17951,7 @@ public final class ByzCoinProto {
         getContractidBytes() {
       java.lang.Object ref = contractid_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         contractid_ = b;
@@ -17785,7 +17985,7 @@ public final class ByzCoinProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -17805,7 +18005,7 @@ public final class ByzCoinProto {
         getCommandBytes() {
       java.lang.Object ref = command_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         command_ = b;
@@ -17834,7 +18034,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 3;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder>
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder> 
         getArgsOrBuilderList() {
       return args_;
     }
@@ -18248,7 +18448,7 @@ public final class ByzCoinProto {
               argsBuilder_ = null;
               args_ = other.args_;
               bitField0_ = (bitField0_ & ~0x00000004);
-              argsBuilder_ =
+              argsBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getArgsFieldBuilder() : null;
             } else {
@@ -18340,7 +18540,7 @@ public final class ByzCoinProto {
           getContractidBytes() {
         java.lang.Object ref = contractid_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           contractid_ = b;
@@ -18440,7 +18640,7 @@ public final class ByzCoinProto {
           getCommandBytes() {
         java.lang.Object ref = command_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           command_ = b;
@@ -18752,7 +18952,7 @@ public final class ByzCoinProto {
        *
        * <code>repeated .byzcoin.Argument args = 3;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder>
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder> 
            getArgsOrBuilderList() {
         if (argsBuilder_ != null) {
           return argsBuilder_.getMessageOrBuilderList();
@@ -18790,12 +18990,12 @@ public final class ByzCoinProto {
        *
        * <code>repeated .byzcoin.Argument args = 3;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder>
+      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder> 
            getArgsBuilderList() {
         return getArgsFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Argument, ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Argument, ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder> 
           getArgsFieldBuilder() {
         if (argsBuilder_ == null) {
           argsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -18898,7 +19098,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 2;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument>
+    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument> 
         getArgsList();
     /**
      * <pre>
@@ -18923,7 +19123,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 2;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder>
+    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder> 
         getArgsOrBuilderList();
     /**
      * <pre>
@@ -19056,7 +19256,7 @@ public final class ByzCoinProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -19076,7 +19276,7 @@ public final class ByzCoinProto {
         getContractidBytes() {
       java.lang.Object ref = contractid_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         contractid_ = b;
@@ -19105,7 +19305,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 2;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder>
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder> 
         getArgsOrBuilderList() {
       return args_;
     }
@@ -19489,7 +19689,7 @@ public final class ByzCoinProto {
               argsBuilder_ = null;
               args_ = other.args_;
               bitField0_ = (bitField0_ & ~0x00000002);
-              argsBuilder_ =
+              argsBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getArgsFieldBuilder() : null;
             } else {
@@ -19578,7 +19778,7 @@ public final class ByzCoinProto {
           getContractidBytes() {
         java.lang.Object ref = contractid_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           contractid_ = b;
@@ -19890,7 +20090,7 @@ public final class ByzCoinProto {
        *
        * <code>repeated .byzcoin.Argument args = 2;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder>
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder> 
            getArgsOrBuilderList() {
         if (argsBuilder_ != null) {
           return argsBuilder_.getMessageOrBuilderList();
@@ -19928,12 +20128,12 @@ public final class ByzCoinProto {
        *
        * <code>repeated .byzcoin.Argument args = 2;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder>
+      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder> 
            getArgsBuilderList() {
         return getArgsFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Argument, ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Argument, ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder> 
           getArgsFieldBuilder() {
         if (argsBuilder_ == null) {
           argsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -20159,7 +20359,7 @@ public final class ByzCoinProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -20179,7 +20379,7 @@ public final class ByzCoinProto {
         getNameBytes() {
       java.lang.Object ref = name_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         name_ = b;
@@ -20614,7 +20814,7 @@ public final class ByzCoinProto {
           getNameBytes() {
         java.lang.Object ref = name_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           name_ = b;
@@ -20781,7 +20981,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.Instruction instructions = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Instruction>
+    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Instruction> 
         getInstructionsList();
     /**
      * <code>repeated .byzcoin.Instruction instructions = 1;</code>
@@ -20794,7 +20994,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.Instruction instructions = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.InstructionOrBuilder>
+    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.InstructionOrBuilder> 
         getInstructionsOrBuilderList();
     /**
      * <code>repeated .byzcoin.Instruction instructions = 1;</code>
@@ -20905,7 +21105,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.Instruction instructions = 1;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.InstructionOrBuilder>
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.InstructionOrBuilder> 
         getInstructionsOrBuilderList() {
       return instructions_;
     }
@@ -21248,7 +21448,7 @@ public final class ByzCoinProto {
               instructionsBuilder_ = null;
               instructions_ = other.instructions_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              instructionsBuilder_ =
+              instructionsBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getInstructionsFieldBuilder() : null;
             } else {
@@ -21486,7 +21686,7 @@ public final class ByzCoinProto {
       /**
        * <code>repeated .byzcoin.Instruction instructions = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.InstructionOrBuilder>
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.InstructionOrBuilder> 
            getInstructionsOrBuilderList() {
         if (instructionsBuilder_ != null) {
           return instructionsBuilder_.getMessageOrBuilderList();
@@ -21512,12 +21712,12 @@ public final class ByzCoinProto {
       /**
        * <code>repeated .byzcoin.Instruction instructions = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Instruction.Builder>
+      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Instruction.Builder> 
            getInstructionsBuilderList() {
         return getInstructionsFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Instruction, ch.epfl.dedis.lib.proto.ByzCoinProto.Instruction.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.InstructionOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Instruction, ch.epfl.dedis.lib.proto.ByzCoinProto.Instruction.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.InstructionOrBuilder> 
           getInstructionsFieldBuilder() {
         if (instructionsBuilder_ == null) {
           instructionsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -22220,7 +22420,7 @@ public final class ByzCoinProto {
        * <code>required .byzcoin.ClientTransaction clienttransaction = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction, ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransactionOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction, ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransactionOrBuilder> 
           getClienttransactionFieldBuilder() {
         if (clienttransactionBuilder_ == null) {
           clienttransactionBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -22615,7 +22815,7 @@ public final class ByzCoinProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -22635,7 +22835,7 @@ public final class ByzCoinProto {
         getContractidBytes() {
       java.lang.Object ref = contractid_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         contractid_ = b;
@@ -23344,7 +23544,7 @@ public final class ByzCoinProto {
           getContractidBytes() {
         java.lang.Object ref = contractid_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           contractid_ = b;
@@ -25383,7 +25583,7 @@ public final class ByzCoinProto {
        * <code>optional .skipchain.SkipBlock block = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
           getBlockFieldBuilder() {
         if (blockBuilder_ == null) {
           blockBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -26421,7 +26621,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock>
+    java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock> 
         getBlocksList();
     /**
      * <pre>
@@ -26446,7 +26646,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>
+    java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
         getBlocksOrBuilderList();
     /**
      * <pre>
@@ -26687,7 +26887,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
         getBlocksOrBuilderList() {
       return blocks_;
     }
@@ -27263,7 +27463,7 @@ public final class ByzCoinProto {
               blocksBuilder_ = null;
               blocks_ = other.blocks_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              blocksBuilder_ =
+              blocksBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getBlocksFieldBuilder() : null;
             } else {
@@ -27589,7 +27789,7 @@ public final class ByzCoinProto {
        *
        * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
            getBlocksOrBuilderList() {
         if (blocksBuilder_ != null) {
           return blocksBuilder_.getMessageOrBuilderList();
@@ -27627,12 +27827,12 @@ public final class ByzCoinProto {
        *
        * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder>
+      public java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder> 
            getBlocksBuilderList() {
         return getBlocksFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
           getBlocksFieldBuilder() {
         if (blocksBuilder_ == null) {
           blocksBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -28845,7 +29045,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.DBKeyValue keyvalues = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValue>
+    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValue> 
         getKeyvaluesList();
     /**
      * <pre>
@@ -28873,7 +29073,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.DBKeyValue keyvalues = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValueOrBuilder>
+    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValueOrBuilder> 
         getKeyvaluesOrBuilderList();
     /**
      * <pre>
@@ -29047,7 +29247,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.DBKeyValue keyvalues = 1;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValueOrBuilder>
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValueOrBuilder> 
         getKeyvaluesOrBuilderList() {
       return keyvalues_;
     }
@@ -29503,7 +29703,7 @@ public final class ByzCoinProto {
               keyvaluesBuilder_ = null;
               keyvalues_ = other.keyvalues_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              keyvaluesBuilder_ =
+              keyvaluesBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getKeyvaluesFieldBuilder() : null;
             } else {
@@ -29825,7 +30025,7 @@ public final class ByzCoinProto {
        *
        * <code>repeated .byzcoin.DBKeyValue keyvalues = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValueOrBuilder>
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValueOrBuilder> 
            getKeyvaluesOrBuilderList() {
         if (keyvaluesBuilder_ != null) {
           return keyvaluesBuilder_.getMessageOrBuilderList();
@@ -29866,12 +30066,12 @@ public final class ByzCoinProto {
        *
        * <code>repeated .byzcoin.DBKeyValue keyvalues = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValue.Builder>
+      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValue.Builder> 
            getKeyvaluesBuilderList() {
         return getKeyvaluesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValue, ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValue.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValueOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValue, ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValue.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValueOrBuilder> 
           getKeyvaluesFieldBuilder() {
         if (keyvaluesBuilder_ == null) {
           keyvaluesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -30854,7 +31054,7 @@ public final class ByzCoinProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -30870,7 +31070,7 @@ public final class ByzCoinProto {
         getContractidBytes() {
       java.lang.Object ref = contractid_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         contractid_ = b;
@@ -31445,7 +31645,7 @@ public final class ByzCoinProto {
           getContractidBytes() {
         java.lang.Object ref = contractid_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           contractid_ = b;
@@ -35074,7 +35274,7 @@ public final class ByzCoinProto {
        * <code>required .byzcoin.StateChange statechange = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeOrBuilder> 
           getStatechangeFieldBuilder() {
         if (statechangeBuilder_ == null) {
           statechangeBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -35800,7 +36000,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.GetInstanceVersionResponse statechanges = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponse>
+    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponse> 
         getStatechangesList();
     /**
      * <code>repeated .byzcoin.GetInstanceVersionResponse statechanges = 1;</code>
@@ -35813,7 +36013,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.GetInstanceVersionResponse statechanges = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponseOrBuilder>
+    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponseOrBuilder> 
         getStatechangesOrBuilderList();
     /**
      * <code>repeated .byzcoin.GetInstanceVersionResponse statechanges = 1;</code>
@@ -35921,7 +36121,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.GetInstanceVersionResponse statechanges = 1;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponseOrBuilder>
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponseOrBuilder> 
         getStatechangesOrBuilderList() {
       return statechanges_;
     }
@@ -36261,7 +36461,7 @@ public final class ByzCoinProto {
               statechangesBuilder_ = null;
               statechanges_ = other.statechanges_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              statechangesBuilder_ =
+              statechangesBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getStatechangesFieldBuilder() : null;
             } else {
@@ -36499,7 +36699,7 @@ public final class ByzCoinProto {
       /**
        * <code>repeated .byzcoin.GetInstanceVersionResponse statechanges = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponseOrBuilder>
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponseOrBuilder> 
            getStatechangesOrBuilderList() {
         if (statechangesBuilder_ != null) {
           return statechangesBuilder_.getMessageOrBuilderList();
@@ -36525,12 +36725,12 @@ public final class ByzCoinProto {
       /**
        * <code>repeated .byzcoin.GetInstanceVersionResponse statechanges = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponse.Builder>
+      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponse.Builder> 
            getStatechangesBuilderList() {
         return getStatechangesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponse, ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponse.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponseOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponse, ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponse.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponseOrBuilder> 
           getStatechangesFieldBuilder() {
         if (statechangesBuilder_ == null) {
           statechangesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -37322,7 +37522,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.StateChange statechanges = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange>
+    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange> 
         getStatechangesList();
     /**
      * <code>repeated .byzcoin.StateChange statechanges = 1;</code>
@@ -37335,7 +37535,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.StateChange statechanges = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeOrBuilder>
+    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeOrBuilder> 
         getStatechangesOrBuilderList();
     /**
      * <code>repeated .byzcoin.StateChange statechanges = 1;</code>
@@ -37460,7 +37660,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.StateChange statechanges = 1;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeOrBuilder>
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeOrBuilder> 
         getStatechangesOrBuilderList() {
       return statechanges_;
     }
@@ -37844,7 +38044,7 @@ public final class ByzCoinProto {
               statechangesBuilder_ = null;
               statechanges_ = other.statechanges_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              statechangesBuilder_ =
+              statechangesBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getStatechangesFieldBuilder() : null;
             } else {
@@ -38088,7 +38288,7 @@ public final class ByzCoinProto {
       /**
        * <code>repeated .byzcoin.StateChange statechanges = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeOrBuilder>
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeOrBuilder> 
            getStatechangesOrBuilderList() {
         if (statechangesBuilder_ != null) {
           return statechangesBuilder_.getMessageOrBuilderList();
@@ -38114,12 +38314,12 @@ public final class ByzCoinProto {
       /**
        * <code>repeated .byzcoin.StateChange statechanges = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange.Builder>
+      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange.Builder> 
            getStatechangesBuilderList() {
         return getStatechangesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeOrBuilder> 
           getStatechangesFieldBuilder() {
         if (statechangesBuilder_ == null) {
           statechangesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -38398,7 +38598,7 @@ public final class ByzCoinProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -38414,7 +38614,7 @@ public final class ByzCoinProto {
         getNameBytes() {
       java.lang.Object ref = name_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         name_ = b;
@@ -38917,7 +39117,7 @@ public final class ByzCoinProto {
           getNameBytes() {
         java.lang.Object ref = name_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           name_ = b;
@@ -40062,7 +40262,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin>
+    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin> 
         getByzcoinsList();
     /**
      * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
@@ -40075,7 +40275,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoinOrBuilder>
+    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoinOrBuilder> 
         getByzcoinsOrBuilderList();
     /**
      * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
@@ -40086,7 +40286,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState>
+    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState> 
         getDumpList();
     /**
      * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
@@ -40099,7 +40299,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseStateOrBuilder>
+    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseStateOrBuilder> 
         getDumpOrBuilderList();
     /**
      * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
@@ -40221,7 +40421,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoinOrBuilder>
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoinOrBuilder> 
         getByzcoinsOrBuilderList() {
       return byzcoins_;
     }
@@ -40256,7 +40456,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseStateOrBuilder>
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseStateOrBuilder> 
         getDumpOrBuilderList() {
       return dump_;
     }
@@ -40632,7 +40832,7 @@ public final class ByzCoinProto {
               byzcoinsBuilder_ = null;
               byzcoins_ = other.byzcoins_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              byzcoinsBuilder_ =
+              byzcoinsBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getByzcoinsFieldBuilder() : null;
             } else {
@@ -40658,7 +40858,7 @@ public final class ByzCoinProto {
               dumpBuilder_ = null;
               dump_ = other.dump_;
               bitField0_ = (bitField0_ & ~0x00000002);
-              dumpBuilder_ =
+              dumpBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getDumpFieldBuilder() : null;
             } else {
@@ -40901,7 +41101,7 @@ public final class ByzCoinProto {
       /**
        * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoinOrBuilder>
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoinOrBuilder> 
            getByzcoinsOrBuilderList() {
         if (byzcoinsBuilder_ != null) {
           return byzcoinsBuilder_.getMessageOrBuilderList();
@@ -40927,12 +41127,12 @@ public final class ByzCoinProto {
       /**
        * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.Builder>
+      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.Builder> 
            getByzcoinsBuilderList() {
         return getByzcoinsFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoinOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoinOrBuilder> 
           getByzcoinsFieldBuilder() {
         if (byzcoinsBuilder_ == null) {
           byzcoinsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -41141,7 +41341,7 @@ public final class ByzCoinProto {
       /**
        * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseStateOrBuilder>
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseStateOrBuilder> 
            getDumpOrBuilderList() {
         if (dumpBuilder_ != null) {
           return dumpBuilder_.getMessageOrBuilderList();
@@ -41167,12 +41367,12 @@ public final class ByzCoinProto {
       /**
        * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.Builder>
+      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.Builder> 
            getDumpBuilderList() {
         return getDumpFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseStateOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseStateOrBuilder> 
           getDumpFieldBuilder() {
         if (dumpBuilder_ == null) {
           dumpBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -42000,7 +42200,7 @@ public final class ByzCoinProto {
        * <code>optional .skipchain.SkipBlock genesis = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
           getGenesisFieldBuilder() {
         if (genesisBuilder_ == null) {
           genesisBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -42118,7 +42318,7 @@ public final class ByzCoinProto {
        * <code>optional .skipchain.SkipBlock latest = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
           getLatestFieldBuilder() {
         if (latestBuilder_ == null) {
           latestBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -42854,7 +43054,7 @@ public final class ByzCoinProto {
        * <code>required .byzcoin.StateChangeBody state = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBodyOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBodyOrBuilder> 
           getStateFieldBuilder() {
         if (stateBuilder_ == null) {
           stateBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -44166,7 +44366,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.IDVersion instances = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersion>
+    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersion> 
         getInstancesList();
     /**
      * <code>repeated .byzcoin.IDVersion instances = 1;</code>
@@ -44179,7 +44379,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.IDVersion instances = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersionOrBuilder>
+    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersionOrBuilder> 
         getInstancesOrBuilderList();
     /**
      * <code>repeated .byzcoin.IDVersion instances = 1;</code>
@@ -44318,7 +44518,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.IDVersion instances = 1;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersionOrBuilder>
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersionOrBuilder> 
         getInstancesOrBuilderList() {
       return instances_;
     }
@@ -44743,7 +44943,7 @@ public final class ByzCoinProto {
               instancesBuilder_ = null;
               instances_ = other.instances_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              instancesBuilder_ =
+              instancesBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getInstancesFieldBuilder() : null;
             } else {
@@ -44993,7 +45193,7 @@ public final class ByzCoinProto {
       /**
        * <code>repeated .byzcoin.IDVersion instances = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersionOrBuilder>
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersionOrBuilder> 
            getInstancesOrBuilderList() {
         if (instancesBuilder_ != null) {
           return instancesBuilder_.getMessageOrBuilderList();
@@ -45019,12 +45219,12 @@ public final class ByzCoinProto {
       /**
        * <code>repeated .byzcoin.IDVersion instances = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersion.Builder>
+      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersion.Builder> 
            getInstancesBuilderList() {
         return getInstancesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersion, ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersion.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersionOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersion, ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersion.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersionOrBuilder> 
           getInstancesFieldBuilder() {
         if (instancesBuilder_ == null) {
           instancesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -45164,7 +45364,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .trie.Proof proofs = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.TrieProto.Proof>
+    java.util.List<ch.epfl.dedis.lib.proto.TrieProto.Proof> 
         getProofsList();
     /**
      * <code>repeated .trie.Proof proofs = 1;</code>
@@ -45177,7 +45377,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .trie.Proof proofs = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.TrieProto.ProofOrBuilder>
+    java.util.List<? extends ch.epfl.dedis.lib.proto.TrieProto.ProofOrBuilder> 
         getProofsOrBuilderList();
     /**
      * <code>repeated .trie.Proof proofs = 1;</code>
@@ -45188,7 +45388,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .skipchain.ForwardLink links = 2;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink>
+    java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink> 
         getLinksList();
     /**
      * <code>repeated .skipchain.ForwardLink links = 2;</code>
@@ -45201,7 +45401,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .skipchain.ForwardLink links = 2;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder>
+    java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder> 
         getLinksOrBuilderList();
     /**
      * <code>repeated .skipchain.ForwardLink links = 2;</code>
@@ -45349,7 +45549,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .trie.Proof proofs = 1;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.TrieProto.ProofOrBuilder>
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.TrieProto.ProofOrBuilder> 
         getProofsOrBuilderList() {
       return proofs_;
     }
@@ -45384,7 +45584,7 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .skipchain.ForwardLink links = 2;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder>
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder> 
         getLinksOrBuilderList() {
       return links_;
     }
@@ -45819,7 +46019,7 @@ public final class ByzCoinProto {
               proofsBuilder_ = null;
               proofs_ = other.proofs_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              proofsBuilder_ =
+              proofsBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getProofsFieldBuilder() : null;
             } else {
@@ -45845,7 +46045,7 @@ public final class ByzCoinProto {
               linksBuilder_ = null;
               links_ = other.links_;
               bitField0_ = (bitField0_ & ~0x00000002);
-              linksBuilder_ =
+              linksBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getLinksFieldBuilder() : null;
             } else {
@@ -46096,7 +46296,7 @@ public final class ByzCoinProto {
       /**
        * <code>repeated .trie.Proof proofs = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.TrieProto.ProofOrBuilder>
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.TrieProto.ProofOrBuilder> 
            getProofsOrBuilderList() {
         if (proofsBuilder_ != null) {
           return proofsBuilder_.getMessageOrBuilderList();
@@ -46122,12 +46322,12 @@ public final class ByzCoinProto {
       /**
        * <code>repeated .trie.Proof proofs = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.TrieProto.Proof.Builder>
+      public java.util.List<ch.epfl.dedis.lib.proto.TrieProto.Proof.Builder> 
            getProofsBuilderList() {
         return getProofsFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.TrieProto.Proof, ch.epfl.dedis.lib.proto.TrieProto.Proof.Builder, ch.epfl.dedis.lib.proto.TrieProto.ProofOrBuilder>
+          ch.epfl.dedis.lib.proto.TrieProto.Proof, ch.epfl.dedis.lib.proto.TrieProto.Proof.Builder, ch.epfl.dedis.lib.proto.TrieProto.ProofOrBuilder> 
           getProofsFieldBuilder() {
         if (proofsBuilder_ == null) {
           proofsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -46336,7 +46536,7 @@ public final class ByzCoinProto {
       /**
        * <code>repeated .skipchain.ForwardLink links = 2;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder>
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder> 
            getLinksOrBuilderList() {
         if (linksBuilder_ != null) {
           return linksBuilder_.getMessageOrBuilderList();
@@ -46362,12 +46562,12 @@ public final class ByzCoinProto {
       /**
        * <code>repeated .skipchain.ForwardLink links = 2;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink.Builder>
+      public java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink.Builder> 
            getLinksBuilderList() {
         return getLinksFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink, ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder>
+          ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink, ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder> 
           getLinksFieldBuilder() {
         if (linksBuilder_ == null) {
           linksBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -46486,7 +46686,7 @@ public final class ByzCoinProto {
        * <code>optional .skipchain.SkipBlock latest = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
           getLatestFieldBuilder() {
         if (latestBuilder_ == null) {
           latestBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -46553,252 +46753,252 @@ public final class ByzCoinProto {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_GetAllByzCoinIDsRequest_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_GetAllByzCoinIDsRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_GetAllByzCoinIDsResponse_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_GetAllByzCoinIDsResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_DataHeader_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_DataHeader_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_DataBody_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_DataBody_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_CreateGenesisBlock_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_CreateGenesisBlock_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_CreateGenesisBlockResponse_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_CreateGenesisBlockResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_AddTxRequest_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_AddTxRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_AddTxResponse_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_AddTxResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_GetProof_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_GetProof_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_GetProofResponse_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_GetProofResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_CheckAuthorization_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_CheckAuthorization_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_CheckAuthorizationResponse_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_CheckAuthorizationResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_ChainConfig_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_ChainConfig_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_Proof_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_Proof_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_Instruction_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_Instruction_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_Spawn_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_Spawn_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_Invoke_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_Invoke_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_Delete_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_Delete_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_Argument_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_Argument_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_ClientTransaction_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_ClientTransaction_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_TxResult_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_TxResult_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_StateChange_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_StateChange_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_Coin_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_Coin_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_StreamingRequest_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_StreamingRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_StreamingResponse_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_StreamingResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_PaginateRequest_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_PaginateRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_PaginateResponse_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_PaginateResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_DownloadState_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_DownloadState_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_DownloadStateResponse_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_DownloadStateResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_DBKeyValue_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_DBKeyValue_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_StateChangeBody_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_StateChangeBody_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_GetSignerCounters_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_GetSignerCounters_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_GetSignerCountersResponse_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_GetSignerCountersResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_GetInstanceVersion_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_GetInstanceVersion_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_GetLastInstanceVersion_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_GetLastInstanceVersion_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_GetInstanceVersionResponse_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_GetInstanceVersionResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_GetAllInstanceVersion_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_GetAllInstanceVersion_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_GetAllInstanceVersionResponse_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_GetAllInstanceVersionResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_CheckStateChangeValidity_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_CheckStateChangeValidity_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_CheckStateChangeValidityResponse_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_CheckStateChangeValidityResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_ResolveInstanceID_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_ResolveInstanceID_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_ResolvedInstanceID_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_ResolvedInstanceID_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_DebugRequest_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_DebugRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_DebugResponse_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_DebugResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_DebugResponseByzcoin_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_DebugResponseByzcoin_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_DebugResponseState_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_DebugResponseState_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_DebugRemoveRequest_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_DebugRemoveRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_IDVersion_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_IDVersion_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_GetUpdatesRequest_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_GetUpdatesRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_GetUpdatesReply_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_GetUpdatesReply_fieldAccessorTable;
 

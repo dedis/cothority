@@ -59,9 +59,10 @@ message CreateGenesisBlock {
   // the BlockInterval is only used to calculate the maximum protocol
   // timeouts and the time-window of acceptance of a new block.
   required sint64 blockinterval = 4;
-  // Maximum block size. Zero (or not present in protobuf) means use the default, 4 megs.
+  // MaxBlockSize is the maximum block size.
+  // Zero (or not present in protobuf) means use the default, 4 megs.
   optional sint32 maxblocksize = 5;
-  // DarcContracts is the set of contracts that can be parsed as a DARC.
+  // DarcContractIDs is the set of contracts that can be parsed as a DARC.
   // At least one contract must be given.
   repeated string darccontractids = 6;
 }
@@ -152,9 +153,13 @@ message CheckAuthorizationResponse {
 // ChainConfig stores all the configuration information for one skipchain. It
 // will be stored under the key [32]byte{} in the tree.
 message ChainConfig {
+  // BlockInterval defines the maximum propagation time in the skipchain.
   required sint64 blockinterval = 1;
+  // Roster defines which nodes participate in the skipchain.
   required onet.Roster roster = 2;
+  // MaxBlockSize defines the maximum block size on the skipchain.
   required sint32 maxblocksize = 3;
+  // DarcContractIDs is the set of contracts that can be parsed as a DARC.
   repeated string darccontractids = 4;
 }
 
