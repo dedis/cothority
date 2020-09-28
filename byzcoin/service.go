@@ -1979,8 +1979,7 @@ func (s *Service) startTxPipeline(scID skipchain.SkipBlockID) chan struct{} {
 		log.Panicf("Fatal error while searching for skipchain %x: %+v\n"+
 			"DB is in bad state and cannot find skipchain anymore."+
 			" This function should never be called on a skipchain that does"+
-			" not exist. DB is in bad state and cannot find skipchain"+
-			" anymore.",
+			" not exist.",
 			scID[:], err)
 	}
 

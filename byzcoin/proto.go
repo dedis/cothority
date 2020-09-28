@@ -79,10 +79,11 @@ type CreateGenesisBlock struct {
 	// the BlockInterval is only used to calculate the maximum protocol
 	// timeouts and the time-window of acceptance of a new block.
 	BlockInterval time.Duration
-	// Maximum block size. Zero (or not present in protobuf) means use the default, 4 megs.
+	// MaxBlockSize is the maximum block size.
+	// Zero (or not present in protobuf) means use the default, 4 megs.
 	// optional
 	MaxBlockSize int
-	// DarcContracts is the set of contracts that can be parsed as a DARC.
+	// DarcContractIDs is the set of contracts that can be parsed as a DARC.
 	// At least one contract must be given.
 	DarcContractIDs []string
 }
@@ -173,9 +174,13 @@ type CheckAuthorizationResponse struct {
 // ChainConfig stores all the configuration information for one skipchain. It
 // will be stored under the key [32]byte{} in the tree.
 type ChainConfig struct {
-	BlockInterval   time.Duration
-	Roster          onet.Roster
-	MaxBlockSize    int
+	// BlockInterval defines the maximum propagation time in the skipchain.
+	BlockInterval time.Duration
+	// Roster defines which nodes participate in the skipchain.
+	Roster onet.Roster
+	// MaxBlockSize defines the maximum block size on the skipchain.
+	MaxBlockSize int
+	// DarcContractIDs is the set of contracts that can be parsed as a DARC.
 	DarcContractIDs []string
 }
 
