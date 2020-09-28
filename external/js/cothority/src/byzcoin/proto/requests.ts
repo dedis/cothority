@@ -5,7 +5,7 @@ import { Roster } from "../../network/proto";
 import { registerMessage } from "../../protobuf";
 import { ForwardLink, SkipBlock } from "../../skipchain/skipblock";
 import ClientTransaction from "../client-transaction";
-import Proof, { InclusionProof } from "../proof";
+import Proof, { InclusionProof, StateChangeBody } from "../proof";
 
 /**
  * Request to create a byzcoin skipchain
@@ -268,6 +268,71 @@ export class GetUpdatesReply extends Message<GetUpdatesReply> {
     readonly latest: SkipBlock;
 }
 
+/**
+ * Request information about a specific version of an instance. The node might not have this version in its cache,
+ * so it might return an error.
+ */
+export class GetInstanceVersion extends Message<GetInstanceVersion> {
+    static register() {
+        registerMessage("GetInstanceVersion", GetInstanceVersion);
+    }
+
+    readonly skipchainid: Buffer;
+    readonly instanceid: Buffer;
+    readonly version: Long;
+}
+
+/**
+ * Request the latest version of this instance. The difference with this and GetProof is that it doesn't return a
+ * full proof, but it includes the block where this instance has been created or modified.
+ */
+export class GetLastInstanceVersion extends Message<GetLastInstanceVersion> {
+    static register() {
+        registerMessage("GetLastInstanceVersion", GetLastInstanceVersion);
+    }
+
+    readonly skipchainid: Buffer;
+    readonly instanceid: Buffer;
+}
+
+/**
+ * Returns the StateChangeBody and the block index where this instance has been created or modified. Contrary to
+ * GetProof, this does not return a full proof that can be verified by the client. For this, the client has to
+ * either request the block itself, or ask for a GetProof to get the latest version of the instance.
+ */
+export class GetInstanceVersionResponse extends Message<GetInstanceVersionResponse> {
+    static register() {
+        registerMessage("GetInstanceVersionResponse", GetInstanceVersionResponse, StateChangeBody);
+    }
+
+    readonly statechange: StateChangeBody;
+    readonly blockindex: number;
+}
+
+/**
+ * Requests all known versions of a given instance. The nodes only hold a certain amount of versions, so this might
+ * not go back all the way to the version where the instance has been created.
+ */
+export class GetAllInstanceVersion extends Message<GetAllInstanceVersion> {
+    static register() {
+        registerMessage("GetAllInstanceVersion", GetAllInstanceVersion);
+    }
+
+    readonly skipchainid: Buffer;
+    readonly instanceid: Buffer;
+}
+
+/**
+ * Reply holding all known versions of this instance.
+ */
+export class GetAllInstanceVersionResponse extends Message<GetAllInstanceVersionResponse> {
+    static register() {
+        registerMessage("GetAllInstanceVersionResponse", GetAllInstanceVersionResponse, GetInstanceVersionResponse);
+    }
+
+    readonly statechanges: GetInstanceVersionResponse[];
+}
+
 CreateGenesisBlock.register();
 CreateGenesisBlockResponse.register();
 GetProof.register();
@@ -278,3 +343,8 @@ GetSignerCounters.register();
 GetSignerCountersResponse.register();
 GetUpdatesRequest.register();
 GetUpdatesReply.register();
+GetInstanceVersion.register();
+GetLastInstanceVersion.register();
+GetInstanceVersionResponse.register();
+GetAllInstanceVersion.register();
+GetAllInstanceVersionResponse.register();
