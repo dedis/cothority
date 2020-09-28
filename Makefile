@@ -1,6 +1,8 @@
 .DEFAULT_GOAL := test
 
 EXCLUDE_LINT := should be.*UI
+#TESTS := TestViewChange_Basic3\$$
+TESTS := SecureDarc|TestDeferred_WrongSignature|TestViewChange_Basic|TestDeferred_DefaultExpireBlockIdx
 
 Coding/bin/Makefile.base:
 	git clone https://github.com/dedis/Coding
@@ -11,8 +13,11 @@ include Coding/bin/Makefile.base
 # to `make test_playground`.
 test_playground:
 	cd byzcoin; \
-	for a in $$( seq 100 ); do \
-		if DEBUG_TIME=true go test -v -race > log.txt 2>&1; then \
+	export DEBUG_COLOR=1; \
+	for a in $$( seq 1000 ); do \
+		if DEBUG_TIME=true go test -short -v -race -count=1 -run \
+			"(${TESTS})" \
+			 ./... > log.txt 2>&1; then \
 			echo Successfully ran \#$$a at $$(date); \
 		else \
 			echo Failed at $$(date); \

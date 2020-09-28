@@ -850,6 +850,7 @@ func TestDeferred_WrongSignature(t *testing.T) {
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
 	require.NoError(t, err)
+	defer require.NoError(t, cl.WaitPropagation(-1))
 
 	// ------------------------------------------------------------------------
 	// 1. Spawn

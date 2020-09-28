@@ -699,7 +699,7 @@ func (c *Client) ResolveInstanceID(darcID darc.ID, name string) (InstanceID, err
 func (c *Client) WaitPropagation(index int) error {
 	var sb skipchain.SkipBlock
 	sb.SkipBlockFix = &skipchain.SkipBlockFix{}
-	if index > 0 {
+	if index >= 0 {
 		sb.Index = index
 	}
 searchLatest:
@@ -715,7 +715,8 @@ searchLatest:
 			}
 			pr, err := c.GetProof(make([]byte, 32))
 			if err != nil {
-				log.Warn("error while searching for node - ignoring")
+				log.Warnf("error while querying node %s - ignoring",
+					c.Roster.List[node])
 				continue
 			}
 			if pr.Proof.Latest.Index > sb.Index {

@@ -24,10 +24,10 @@ import (
 // TestStateTrie is a sanity check for setting and retrieving keys, values and
 // index. The main functionalities are tested in the trie package.
 func TestStateTrie(t *testing.T) {
-	s := newSer(t, 1, testInterval)
-	defer s.local.CloseAll()
+	b := NewBCTest(t)
+	defer b.CloseAll()
 
-	st, err := s.service().getStateTrie(s.genesis.SkipChainID())
+	st, err := b.Service().getStateTrie(b.Genesis.SkipChainID())
 	require.NoError(t, err)
 	require.NotNil(t, st)
 	require.NotEqual(t, -1, st.GetIndex())
@@ -95,13 +95,15 @@ func TestDarcRetrieval(t *testing.T) {
 	darcWidth := 10
 	entries := 1000
 
-	s := newSer(t, 1, 10*time.Second)
-	defer s.local.CloseAll()
+	bArgs := NewBCTestArgs()
+	bArgs.PropagationInterval = 10 * time.Second
+	b := NewBCTestWithArgs(t, bArgs)
+	defer b.CloseAll()
 	// When running with `-cpuprofile`, additional go-routines are added,
 	// which should be ignored.
 	log.AddUserUninterestingGoroutine("/runtime/cpuprof.go")
 
-	st, err := s.service().getStateTrie(s.genesis.SkipChainID())
+	st, err := b.Service().getStateTrie(b.Genesis.SkipChainID())
 	require.NoError(t, err)
 	require.NotEqual(t, -1, st.GetIndex())
 

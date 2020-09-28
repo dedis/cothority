@@ -12,13 +12,13 @@ var chanTimeout = time.Millisecond * 100
 
 func TestStreamingService_PaginateBlocks(t *testing.T) {
 	// Creating a service with only the genesis block
-	s := newSerN(t, 1, testInterval, 4, disableViewChange)
-	defer s.local.CloseAll()
-	service := s.service()
+	b := NewBCTest(t)
+	defer b.CloseAll()
+	service := b.Service()
 
 	// We should be able to get 1 page with one item, which is the genesis block
 	paginateRequest := &PaginateRequest{
-		StartID:  s.genesis.Hash,
+		StartID:  b.Genesis.Hash,
 		PageSize: 1,
 		NumPages: 1,
 		Backward: false,
@@ -33,7 +33,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 				"the messages: %v", response.ErrorCode, response.ErrorText)
 		}
 		require.Equal(t, 1, len(response.Blocks))
-		require.Equal(t, response.Blocks[0].Hash, s.genesis.Hash)
+		require.Equal(t, response.Blocks[0].Hash, b.Genesis.Hash)
 	case <-time.After(chanTimeout):
 		t.Fatal("didn't get a papginateResponse in the channel after timeout")
 	}
@@ -48,7 +48,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 	// Trying to fetch 2 items per page should raise an error since there is
 	// only the genesis block
 	paginateRequest = &PaginateRequest{
-		StartID:  s.genesis.Hash,
+		StartID:  b.Genesis.Hash,
 		PageSize: 2,
 		NumPages: 1,
 		Backward: false,
@@ -74,7 +74,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 	// Trying to fetch 2 pages should raise an error in the second page since
 	// there is only the genesis block
 	paginateRequest = &PaginateRequest{
-		StartID:  s.genesis.Hash,
+		StartID:  b.Genesis.Hash,
 		PageSize: 1,
 		NumPages: 2,
 		Backward: false,
@@ -89,7 +89,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 				"the messages: %v", response.ErrorCode, response.ErrorText)
 		}
 		require.Equal(t, 1, len(response.Blocks))
-		require.Equal(t, response.Blocks[0].Hash, s.genesis.Hash)
+		require.Equal(t, response.Blocks[0].Hash, b.Genesis.Hash)
 	case <-time.After(chanTimeout):
 		t.Fatal("didn't get a papginateResponse in the channel after timeout")
 	}
@@ -111,12 +111,12 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 
 	// Adding a new block so we can fetch a page of two blocks, or two pages
 	// with one item each.
-	tx, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
+	tx, err := createOneClientTx(b.GenesisDarc.GetBaseID(), dummyContract, b.Value, b.Signer)
 	require.NoError(t, err)
-	s.tx = tx
-	resp, err := s.service().AddTransaction(&AddTxRequest{
+	b.CTx = tx
+	resp, err := b.Service().AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
-		SkipchainID:   s.genesis.SkipChainID(),
+		SkipchainID:   b.Genesis.SkipChainID(),
 		Transaction:   tx,
 		InclusionWait: 10,
 	})
@@ -124,7 +124,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 
 	// Fetching two items in one page
 	paginateRequest = &PaginateRequest{
-		StartID:  s.genesis.Hash,
+		StartID:  b.Genesis.Hash,
 		PageSize: 2,
 		NumPages: 1,
 		Backward: false,
@@ -140,7 +140,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 				"the messages: %v", response.ErrorCode, response.ErrorText)
 		}
 		require.Equal(t, 2, len(response.Blocks))
-		require.Equal(t, response.Blocks[0].Hash, s.genesis.Hash)
+		require.Equal(t, response.Blocks[0].Hash, b.Genesis.Hash)
 		secondBlockHash = response.Blocks[1].Hash
 	case <-time.After(chanTimeout):
 		t.Fatal("didn't get a papginateResponse in the channel after timeout")
@@ -155,7 +155,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 
 	// Fecthing two pages with 1 item each
 	paginateRequest = &PaginateRequest{
-		StartID:  s.genesis.Hash,
+		StartID:  b.Genesis.Hash,
 		PageSize: 1,
 		NumPages: 2,
 		Backward: false,
@@ -170,7 +170,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 				"the messages: %v", response.ErrorCode, response.ErrorText)
 		}
 		require.Equal(t, 1, len(response.Blocks))
-		require.Equal(t, response.Blocks[0].Hash, s.genesis.Hash)
+		require.Equal(t, response.Blocks[0].Hash, b.Genesis.Hash)
 	case <-time.After(chanTimeout):
 		t.Fatal("didn't get a papginateResponse in the channel after timeout")
 	}
@@ -196,7 +196,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 	// If we get the page in reverse order from the genesis block we should get
 	// an error
 	paginateRequest = &PaginateRequest{
-		StartID:  s.genesis.Hash,
+		StartID:  b.Genesis.Hash,
 		PageSize: 2,
 		NumPages: 1,
 		Backward: true,
@@ -228,7 +228,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 	// Trying to fetch 2 pages from the genesis block in reverse order should
 	// raise an error in the second page
 	paginateRequest = &PaginateRequest{
-		StartID:  s.genesis.Hash,
+		StartID:  b.Genesis.Hash,
 		PageSize: 1,
 		NumPages: 2,
 		Backward: true,
@@ -243,7 +243,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 				"the messages: %v", response.ErrorCode, response.ErrorText)
 		}
 		require.Equal(t, 1, len(response.Blocks))
-		require.Equal(t, response.Blocks[0].Hash, s.genesis.Hash)
+		require.Equal(t, response.Blocks[0].Hash, b.Genesis.Hash)
 	case <-time.After(chanTimeout):
 		t.Fatal("didn't get a papginateResponse in the channel after timeout")
 	}
@@ -281,7 +281,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 		}
 		require.Equal(t, 2, len(response.Blocks))
 		require.Equal(t, response.Blocks[0].Hash, secondBlockHash)
-		require.Equal(t, response.Blocks[1].Hash, s.genesis.Hash)
+		require.Equal(t, response.Blocks[1].Hash, b.Genesis.Hash)
 	case <-time.After(chanTimeout):
 		t.Fatal("didn't get a papginateResponse in the channel after timeout")
 	}
@@ -322,7 +322,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 				"the messages: %v", response.ErrorCode, response.ErrorText)
 		}
 		require.Equal(t, 1, len(response.Blocks))
-		require.Equal(t, response.Blocks[0].Hash, s.genesis.Hash)
+		require.Equal(t, response.Blocks[0].Hash, b.Genesis.Hash)
 	case <-time.After(chanTimeout):
 		t.Fatal("didn't get a papginateResponse in the channel after timeout")
 	}
@@ -336,7 +336,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 
 	// Using a wrong page size should return an error 2
 	paginateRequest = &PaginateRequest{
-		StartID:  s.genesis.Hash,
+		StartID:  b.Genesis.Hash,
 		PageSize: 0,
 		NumPages: 1,
 		Backward: false,

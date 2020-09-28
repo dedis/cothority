@@ -2,43 +2,32 @@ package byzcoin
 
 import (
 	"testing"
-	"time"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/skipchain"
-	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestSecureDarc(t *testing.T) {
-	local := onet.NewTCPTest(cothority.Suite)
-	defer local.CloseAll()
-
-	signer := darc.NewSignerEd25519(nil, nil)
-	_, roster, _ := local.GenTree(3, true)
-
-	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{}, signer.Identity())
-	require.NoError(t, err)
-	gDarc := &genesisMsg.GenesisDarc
-	genesisMsg.BlockInterval = time.Second
-	cl, _, err := NewLedger(genesisMsg, false)
-	require.NoError(t, err)
+	b := NewBCTest(t)
+	defer b.CloseAll()
 
 	restrictedSigner := darc.NewSignerEd25519(nil, nil)
 	unrestrictedSigner := darc.NewSignerEd25519(nil, nil)
 	invokeEvolve := darc.Action("invoke:" + ContractDarcID + "." + cmdDarcEvolve)
 	invokeEvolveUnrestricted := darc.Action("invoke:" + ContractDarcID + "." + cmdDarcEvolveUnrestriction)
+	cl := NewClient(b.Genesis.SkipChainID(), *b.Roster)
 
 	log.Lvl1("spawn a new secure darc with spawn:insecure_darc - fail")
-	secDarc := gDarc.Copy()
+	secDarc := b.GenesisDarc.Copy()
 	require.NoError(t, secDarc.Rules.AddRule("spawn:insecure_darc", []byte(restrictedSigner.Identity().String())))
 	secDarcBuf, err := secDarc.ToProto()
 	require.NoError(t, err)
 	ctx, err := cl.CreateTransaction(Instruction{
-		InstanceID: NewInstanceID(gDarc.GetBaseID()),
+		InstanceID: NewInstanceID(b.GenesisDarc.GetBaseID()),
 		Spawn: &Spawn{
 			ContractID: ContractDarcID,
 			Args: []Argument{{
@@ -49,7 +38,7 @@ func TestSecureDarc(t *testing.T) {
 		SignerCounter: []uint64{1},
 	})
 	require.NoError(t, err)
-	require.NoError(t, ctx.FillSignersAndSignWith(signer))
+	require.NoError(t, ctx.FillSignersAndSignWith(b.Signer))
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 
@@ -60,7 +49,7 @@ func TestSecureDarc(t *testing.T) {
 	secDarcBuf, err = secDarc.ToProto()
 	require.NoError(t, err)
 	ctx, err = cl.CreateTransaction(Instruction{
-		InstanceID: NewInstanceID(gDarc.GetBaseID()),
+		InstanceID: NewInstanceID(b.GenesisDarc.GetBaseID()),
 		Spawn: &Spawn{
 			ContractID: ContractDarcID,
 			Args: []Argument{{
@@ -71,7 +60,7 @@ func TestSecureDarc(t *testing.T) {
 		SignerCounter: []uint64{1},
 	})
 	require.NoError(t, err)
-	require.NoError(t, ctx.FillSignersAndSignWith(signer))
+	require.NoError(t, ctx.FillSignersAndSignWith(b.Signer))
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.NoError(t, err)
 
@@ -80,7 +69,7 @@ func TestSecureDarc(t *testing.T) {
 	secDarcBuf, err = secDarc.ToProto()
 	require.NoError(t, err)
 	ctx, err = cl.CreateTransaction(Instruction{
-		InstanceID: NewInstanceID(gDarc.GetBaseID()),
+		InstanceID: NewInstanceID(b.GenesisDarc.GetBaseID()),
 		Spawn: &Spawn{
 			ContractID: ContractDarcID,
 			Args: []Argument{{
@@ -91,7 +80,7 @@ func TestSecureDarc(t *testing.T) {
 		SignerCounter: []uint64{2},
 	})
 	require.NoError(t, err)
-	require.NoError(t, ctx.FillSignersAndSignWith(signer))
+	require.NoError(t, ctx.FillSignersAndSignWith(b.Signer))
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 
@@ -182,7 +171,7 @@ func TestSecureDarc(t *testing.T) {
 	require.NoError(t, resp.Proof.VerifyAndDecode(cothority.Suite, ContractDarcID, &myDarc))
 	// secDarc is copied from genesis DARC, after one evolution the version
 	// should increase by one
-	require.Equal(t, myDarc.Version, gDarc.Version+1)
+	require.Equal(t, myDarc.Version, b.GenesisDarc.Version+1)
 
 	log.Lvl1("evolve_unrestricted fails with the wrong signer")
 	{
@@ -237,6 +226,7 @@ func TestSecureDarc(t *testing.T) {
 	}
 
 	// try to get the DARC again and it should have the "spawn:coin" rule
+	log.Lvl1("Checking darc rules")
 	{
 		resp, err := cl.GetProofAfter(secDarc.GetBaseID(), false, barrier)
 		require.NoError(t, err)
@@ -244,6 +234,4 @@ func TestSecureDarc(t *testing.T) {
 		require.NoError(t, resp.Proof.VerifyAndDecode(cothority.Suite, ContractDarcID, &myDarc))
 		require.Equal(t, myDarc.Rules.Get("spawn:coin"), myDarc.Rules.Get("invoke:darc."+cmdDarcEvolveUnrestriction))
 	}
-
-	require.NoError(t, local.WaitDone(5*genesisMsg.BlockInterval))
 }

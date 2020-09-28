@@ -101,6 +101,8 @@ func NewSubBlsCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite *pairing.S
 func (p *SubBlsCosi) Dispatch() error {
 	defer p.Done()
 
+	log.Printf("%s: has %s", p.ServerIdentity(), p.Tree().Dump())
+
 	// Send announcement to start sending signatures
 	if p.IsRoot() {
 		return p.dispatchRoot()
@@ -214,8 +216,8 @@ func (p *SubBlsCosi) dispatchRoot() error {
 	case <-time.After(p.Timeout):
 		// It might be only the subleader then we send a notification
 		// to let the parent protocol take actions
-		log.Warn(p.ServerIdentity(),
-			"timed out while waiting for subleader response")
+		log.Warnf("%s: timed out while waiting for subleader response while %s",
+			p.ServerIdentity(), p.Tree().Dump())
 		p.subleaderNotResponding <- true
 	}
 
