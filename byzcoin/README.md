@@ -76,11 +76,11 @@ The following points are scheduled to be done before end of '18:
 Items 5 and 6 are the 'real' ByzCoin improvements as described in the
 [ByzCoin Paper](https://eprint.iacr.org/2017/406).
 
-## Transaction collection and View Change
+## Transaction collection and View-Change
 Transactions can be submitted by end-users to any conode in the roster for
  the Skipchain that is holding the ByzCoin.
 
-Since `VersionRollup`, the transaction collection and view change request
+Since `VersionRollup`, the transaction collection and view-change request
  have been changed. The leader does not request new transactions anymore,
  rather the nodes send new transactions to the leader. The leader puts the
  transactions in a queue and creates new blocks with as many transactions as
@@ -88,11 +88,11 @@ Since `VersionRollup`, the transaction collection and view change request
  the system more responsive if there are few transactions submitted to the
  chain.
 
-A "view change" (change of leader) is needed when the leader stops performing
+A "view-change" (change of leader) is needed when the leader stops performing
  its duties correctly. If a node cannot send a transaction to the leader, it
  asks all other nodes to send the transaction to the leader themselves. Every
  node that couldn't send the transaction to the leader will start a view
- change request. This will only detect stopped leaders, but not leaders who
+ -change request. This will only detect stopped leaders, but not leaders who
  censor certain transactions.
 
 The design of the view-change is similar to the view-change protocol in PBFT
@@ -117,12 +117,12 @@ This is the path a transaction takes from the client to the block:
 2.a If the leader is not responding, they send the `ClientTransaction` to
  the other nodes, indicating that the node failed to send the transaction.
  Every node that fails to send such a transaction to the leader will start
- requesting a viewchange.
+ requesting a view-change.
 
 3. The leader verifies it's a new `ClientTransaction`, and then puts the
  `ClientTransction` in a queue. As the client might have sent the
  `ClientTransaction` to multiple nodes, the leader might receive them more
- than once, so he has to make sure that only unique `ClientTransaction`s are
+ than once, so it has to make sure that only unique `ClientTransaction`s are
  included in the queue.
 
 4. If no block is being verified, the leader starts a new _proposed_ block:
@@ -135,10 +135,11 @@ This is the path a transaction takes from the client to the block:
  backward-links, the timestamp, and the other information of the skipchain.
 
 7. Then the leader executes every `ClientTransaction` in order, updating the
- temporary state of the blockchain after every execution. Valid transactions
- are marked as `Accepted = true` and update the temporary state, while failing
- transactions are included with `Accepted = false` and don't update the
- temporary state.
+ temporary state of the blockchain after every execution. The
+ `ClientTransaction`s are stored in a slice of `TxResult`s, with Valid
+ transactions marked with `Accepted = true`, while failing transactions are
+ marked with `Accepted = false`. For `Accepted = true`, the temporary state
+ is updated, else the changes for this transaction are discarded.
  Every `ClientTransaction` is given the temporary state as it was after the
  previous transaction. So depending on the ordering the accepted
  `ClientTransaction`s might differ.
@@ -158,7 +159,8 @@ This is the path a transaction takes from the client to the block:
  signature is quite complicated and described in the ByzCoin paper. It is
  done over various rounds with a prepare and a commit phase. One long-running
  bug is the fact that a view-change after a successful prepare phase does not
- take into account the proposed block, but creates another proposed block.
+ take into account the proposed block, but creates another proposed block, see
+ https://github.com/dedis/cothority/issues/2080.
 
 11. Once the leader has enough signatures `#nodes - int((#nodes-1)/3)`, he
  finalizes the forward-link and sends it to the followers.
