@@ -260,7 +260,7 @@ public final class EventLogProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -280,7 +280,7 @@ public final class EventLogProto {
         getTopicBytes() {
       java.lang.Object ref = topic_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         topic_ = b;
@@ -909,7 +909,7 @@ public final class EventLogProto {
           getTopicBytes() {
         java.lang.Object ref = topic_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           topic_ = b;
@@ -1121,7 +1121,7 @@ public final class EventLogProto {
     /**
      * <code>repeated .eventlog.Event events = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.EventLogProto.Event> 
+    java.util.List<ch.epfl.dedis.lib.proto.EventLogProto.Event>
         getEventsList();
     /**
      * <code>repeated .eventlog.Event events = 1;</code>
@@ -1134,7 +1134,7 @@ public final class EventLogProto {
     /**
      * <code>repeated .eventlog.Event events = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.EventLogProto.EventOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.lib.proto.EventLogProto.EventOrBuilder>
         getEventsOrBuilderList();
     /**
      * <code>repeated .eventlog.Event events = 1;</code>
@@ -1269,7 +1269,7 @@ public final class EventLogProto {
     /**
      * <code>repeated .eventlog.Event events = 1;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.EventLogProto.EventOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.EventLogProto.EventOrBuilder>
         getEventsOrBuilderList() {
       return events_;
     }
@@ -1664,7 +1664,7 @@ public final class EventLogProto {
               eventsBuilder_ = null;
               events_ = other.events_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              eventsBuilder_ = 
+              eventsBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getEventsFieldBuilder() : null;
             } else {
@@ -1908,7 +1908,7 @@ public final class EventLogProto {
       /**
        * <code>repeated .eventlog.Event events = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.EventLogProto.EventOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.EventLogProto.EventOrBuilder>
            getEventsOrBuilderList() {
         if (eventsBuilder_ != null) {
           return eventsBuilder_.getMessageOrBuilderList();
@@ -1934,12 +1934,12 @@ public final class EventLogProto {
       /**
        * <code>repeated .eventlog.Event events = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.EventLogProto.Event.Builder> 
+      public java.util.List<ch.epfl.dedis.lib.proto.EventLogProto.Event.Builder>
            getEventsBuilderList() {
         return getEventsFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.EventLogProto.Event, ch.epfl.dedis.lib.proto.EventLogProto.Event.Builder, ch.epfl.dedis.lib.proto.EventLogProto.EventOrBuilder> 
+          ch.epfl.dedis.lib.proto.EventLogProto.Event, ch.epfl.dedis.lib.proto.EventLogProto.Event.Builder, ch.epfl.dedis.lib.proto.EventLogProto.EventOrBuilder>
           getEventsFieldBuilder() {
         if (eventsBuilder_ == null) {
           eventsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -2230,7 +2230,7 @@ public final class EventLogProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -2246,7 +2246,7 @@ public final class EventLogProto {
         getTopicBytes() {
       java.lang.Object ref = topic_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         topic_ = b;
@@ -2272,7 +2272,7 @@ public final class EventLogProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -2288,7 +2288,7 @@ public final class EventLogProto {
         getContentBytes() {
       java.lang.Object ref = content_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         content_ = b;
@@ -2755,7 +2755,7 @@ public final class EventLogProto {
           getTopicBytes() {
         java.lang.Object ref = topic_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           topic_ = b;
@@ -2831,7 +2831,7 @@ public final class EventLogProto {
           getContentBytes() {
         java.lang.Object ref = content_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           content_ = b;
@@ -2930,17 +2930,17 @@ public final class EventLogProto {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_eventlog_SearchRequest_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_eventlog_SearchRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_eventlog_SearchResponse_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_eventlog_SearchResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_eventlog_Event_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_eventlog_Event_fieldAccessorTable;
 

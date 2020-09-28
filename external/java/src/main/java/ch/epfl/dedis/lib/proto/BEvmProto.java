@@ -1452,12 +1452,12 @@ public final class BEvmProto {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_bevm_ViewCallRequest_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_bevm_ViewCallRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_bevm_ViewCallResponse_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_bevm_ViewCallResponse_fieldAccessorTable;
 
