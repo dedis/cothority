@@ -20,10 +20,15 @@ const contractName = "eventlog"
 const logCmd = "log"
 
 // Set a relatively low time for bucketMaxAge: during peak message arrival
-// this will pretect the buckets from getting too big. During low message
+// this will protect the buckets from getting too big. During low message
 // arrival (< 1 per 5 sec) it does not create extra buckets, because time
 // periods with no events do not need buckets created for them.
 const bucketMaxAge = 5 * time.Second
+
+// eventDelayTolerance indicates how much time after the event timestamp
+// we are stilling willing to accept an event as genuine and contemporaneous,
+// and hence as valid. Expressed in [ns]
+const eventDelayTolerance = time.Duration(-60 * 1e9)
 
 func init() {
 	var err error
@@ -143,12 +148,11 @@ filter:
 	return reply, nil
 }
 
-func decodeAndCheckEvent(coll byzcoin.ReadOnlyStateTrie, eventBuf []byte) (*Event, error) {
-	// Check the timestamp of the event: it should never be in the future,
-	// and it should not be more than 30 seconds in the past. (Why 30 sec
-	// and not something more auto-scaling like blockInterval * 30?
-	// Because a # of blocks limit is too fragile when using fast blocks for
-	// tests.)
+func decodeAndCheckEvent(rst byzcoin.ReadOnlyStateTrie, eventBuf []byte) (*Event, error) {
+	// Check the timestamp of the event: it should never be in the future beyond the current block,
+	// and it should not be more than 30 seconds in the past before the current block.
+	// (Why 30 sec and not something more auto-scaling like blockInterval * 30?
+	// Because a # of blocks limit is too fragile when using fast blocks for tests.)
 	//
 	// Also: An event a few seconds into the future is OK because there might be
 	// time skew between a legitimate event producer and the network. See issue #1331.
@@ -158,12 +162,29 @@ func decodeAndCheckEvent(coll byzcoin.ReadOnlyStateTrie, eventBuf []byte) (*Even
 		return nil, err
 	}
 	when := time.Unix(0, event.When)
-	now := time.Now()
-	if when.Before(now.Add(-30 * time.Second)) {
-		return nil, fmt.Errorf("event timestamp too long ago - when=%v, now=%v", when, now)
+
+	config, err := rst.LoadConfig()
+	if err != nil {
+		return nil, err
 	}
-	if when.After(now.Add(5 * time.Second)) {
-		return nil, errors.New("event timestamp is too far in the future")
+
+	tr, ok := rst.(byzcoin.TimeReader)
+	if !ok {
+		return nil, fmt.Errorf("internal error: cannot convert ReadOnlyStateTrie to TimeReader")
+	}
+
+	currentBlockTs := time.Unix(0, tr.GetCurrentBlockTimestamp())
+
+	lowerBound := currentBlockTs.Add(eventDelayTolerance)
+
+	// Acceptable positive clock skew in the system, mirroring block acceptance criteria.
+	upperBound := currentBlockTs.Add(4 * config.BlockInterval)
+
+	if when.Before(lowerBound) {
+		return nil, fmt.Errorf("event timestamp too long ago - when=%v, current block=%v", when, currentBlockTs)
+	}
+	if when.After(upperBound) {
+		return nil, fmt.Errorf("event timestamp is too far in the future - when=%v, current block=%v", when, currentBlockTs)
 	}
 	return event, nil
 }
