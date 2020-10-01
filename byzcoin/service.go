@@ -493,11 +493,17 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 			if originalRequest {
 				// As this node might be the leader now,
 				// need to try again from scratch.
+				// The total duration depends on how many nodes are failing.
+				// In the worst case, maxFailingNodes are failing in a row,
+				// and the view-change protocol will wait exponentially on
+				// every node.
+				maxFailingNodes := float64(protocol.DefaultFaultyThreshold(
+					len(latest.Roster.List)))
 				viewChangeWait := interval *
-					time.Duration(len(latest.Roster.List)*10)
+					time.Duration(math.Pow(2, maxFailingNodes+2))
 				select {
 				case bl := <-ch:
-					log.Lvl2("Got new block while waiting for viewchange:",
+					log.LLvl2("Got new block while waiting for viewchange:",
 						bl.block.Index)
 				case <-time.After(viewChangeWait):
 					log.Error(s.ServerIdentity(),

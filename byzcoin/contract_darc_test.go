@@ -12,7 +12,7 @@ import (
 )
 
 func TestSecureDarc(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	restrictedSigner := darc.NewSignerEd25519(nil, nil)

@@ -157,7 +157,7 @@ func (bft *ByzCoinX) Dispatch() error {
 		return fmt.Errorf("non-root should not start this protocol")
 	}
 
-	log.LLvl2(bft.ServerIdentity(), "Starting prepare phase")
+	log.Lvl2(bft.ServerIdentity(), "Starting prepare phase")
 	// prepare phase (part 2)
 	prepSig := <-bft.prepSigChan
 	err := bft.verifier(bft.suite, bft.Msg, prepSig, bft.publics)
@@ -166,10 +166,10 @@ func (bft *ByzCoinX) Dispatch() error {
 		bft.FinalSignatureChan <- FinalSignature{nil, nil}
 		return nil
 	}
-	log.LLvl2(bft.ServerIdentity(), "Finished prepare phase")
+	log.Lvl2(bft.ServerIdentity(), "Finished prepare phase")
 
 	// commit phase
-	log.LLvl2(bft.ServerIdentity(), "Starting commit phase")
+	log.Lvl2(bft.ServerIdentity(), "Starting commit phase")
 	commitProto, err := bft.initCosiProtocol(phaseCommit)
 	if err != nil {
 		return err
@@ -183,7 +183,7 @@ func (bft *ByzCoinX) Dispatch() error {
 	var commitSig []byte
 	select {
 	case commitSig = <-commitProto.FinalSignature:
-		log.LLvl2(bft.ServerIdentity(), "Finished commit phase")
+		log.Lvl2(bft.ServerIdentity(), "Finished commit phase")
 	case <-time.After(bft.Timeout / time.Duration(2) * time.Duration(bft.SubleaderFailures+1)):
 		// Waiting for bft.Timeout is too long here but used as a safeguard in
 		// case the commitProto does not return in time.

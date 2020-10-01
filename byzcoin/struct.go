@@ -639,6 +639,14 @@ func (bc *bcNotifications) unregisterForBlocks(ch waitChannel) {
 
 	for i, listener := range bc.blockListeners {
 		if listener == ch {
+		emptyChannel:
+			for {
+				select {
+				case <-ch:
+				default:
+					break emptyChannel
+				}
+			}
 			bc.blockListeners = append(bc.blockListeners[0:i], bc.blockListeners[i+1:]...)
 		}
 	}

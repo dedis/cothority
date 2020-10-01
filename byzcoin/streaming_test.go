@@ -12,9 +12,9 @@ var chanTimeout = time.Millisecond * 100
 
 func TestStreamingService_PaginateBlocks(t *testing.T) {
 	// Creating a service with only the genesis block
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
-	service := b.Service()
+	service := b.Services[0]
 
 	// We should be able to get 1 page with one item, which is the genesis block
 	paginateRequest := &PaginateRequest{
@@ -111,10 +111,9 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 
 	// Adding a new block so we can fetch a page of two blocks, or two pages
 	// with one item each.
-	tx, err := createOneClientTx(b.GenesisDarc.GetBaseID(), dummyContract, b.Value, b.Signer)
+	tx, err := createOneClientTx(b.GenesisDarc.GetBaseID(), DummyContractName, b.Value, b.Signer)
 	require.NoError(t, err)
-	b.CTx = tx
-	resp, err := b.Service().AddTransaction(&AddTxRequest{
+	resp, err := b.Services[0].AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   b.Genesis.SkipChainID(),
 		Transaction:   tx,

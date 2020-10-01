@@ -30,7 +30,6 @@ import (
 
 var tSuite = suites.MustFind("Ed25519")
 
-const dummyContract = "dummy"
 const slowContract = "slow"
 const panicContract = "panic"
 const invalidContract = "invalid"
@@ -43,7 +42,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestService_GetAllByzCoinIDs(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	service := b.Services[0]
@@ -65,9 +64,7 @@ func TestService_GetAllByzCoinIDs(t *testing.T) {
 }
 
 func TestService_CreateGenesisBlock(t *testing.T) {
-	bArgs := NewBCTestArgs()
-	bArgs.Step = 0
-	b := NewBCTestWithArgs(t, bArgs)
+	b := newBCT(t, nil)
 	defer b.CloseAll()
 
 	service := b.Services[1]
@@ -156,31 +153,31 @@ func TestService_AddTransaction_WithFailure_OnFollower(t *testing.T) {
 func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 	var b *BCTest
 	if failure {
-		bArgs := NewBCTestArgs()
+		bArgs := defaultBCTArgs
 		bArgs.Nodes = 4
-		b = NewBCTestWithArgs(t, bArgs)
+		b = newBCTRun(t, &bArgs)
 		for _, service := range b.Services {
 			service.SetPropagationTimeout(b.PropagationInterval * 2)
 		}
 	} else {
-		b = NewBCTest(t)
+		b = newBCTRun(t, nil)
 	}
 	defer b.CloseAll()
 
 	// wrong version
-	_, err := b.Service().AddTransaction(&AddTxRequest{
+	_, err := b.Services[0].AddTransaction(&AddTxRequest{
 		Version: CurrentVersion + 1,
 	})
 	require.Error(t, err)
 
 	// missing skipchain
-	_, err = b.Service().AddTransaction(&AddTxRequest{
+	_, err = b.Services[0].AddTransaction(&AddTxRequest{
 		Version: CurrentVersion,
 	})
 	require.Error(t, err)
 
 	// missing transaction
-	_, err = b.Service().AddTransaction(&AddTxRequest{
+	_, err = b.Services[0].AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
 		SkipchainID: b.Genesis.SkipChainID(),
 	})
@@ -189,52 +186,35 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 	if failure {
 		// kill a child conode and adding tx should still succeed
 		log.Lvl1("Pausing (killing) conode", b.Servers[len(b.Servers)-1].Address())
-		b.Services[len(b.Servers)-1].TestClose()
-		b.Servers[len(b.Servers)-1].Pause()
+		b.NodeStop(len(b.Servers) - 1)
 	}
 
 	// the operations below should succeed
 	// add the first tx
+	txArgs := TxArgsDefault
+	txArgs.Node = sendToIdx
 	log.Lvl1("adding the first tx")
-	tx1, err := createOneClientTxWithCounter(b.GenesisDarc.GetBaseID(), dummyContract, b.Value, b.Signer, 1)
-	require.NoError(t, err)
-	akvresp, err := b.Service().AddTransaction(&AddTxRequest{
-		Version:       CurrentVersion,
-		SkipchainID:   b.Genesis.SkipChainID(),
-		Transaction:   tx1,
-		InclusionWait: 10,
-	})
-	transactionOK(t, akvresp, err)
-	require.Equal(t, CurrentVersion, akvresp.Version)
-	require.NotNil(t, akvresp.Proof)
-	require.NoError(t, akvresp.Proof.VerifyFromBlock(b.Genesis))
+	tx1, _ := b.SpawnDummy(&txArgs)
 
 	// add the second tx
 	log.Lvl1("adding the second tx")
-	value2 := []byte("value2")
-	tx2, err := createOneClientTxWithCounter(b.GenesisDarc.GetBaseID(), dummyContract, value2, b.Signer, 2)
-	require.NoError(t, err)
-	akvresp, err = b.Services[sendToIdx].AddTransaction(&AddTxRequest{
-		Version:       CurrentVersion,
-		SkipchainID:   b.Genesis.SkipChainID(),
-		Transaction:   tx2,
-		InclusionWait: 10,
-	})
-	transactionOK(t, akvresp, err)
-	require.Equal(t, CurrentVersion, akvresp.Version)
+	tx2, _ := b.SpawnDummy(&txArgs)
 
 	// try to read the transaction back again
 	log.Lvl1("reading the transactions back")
 	txs := []ClientTransaction{tx1, tx2}
+	b.Client.UseNode(sendToIdx)
 	for i := 0; i < 2; i++ {
 		if i == 1 {
 			// Now read the key/values from a new service
 			log.Lvl1("Recreate services and fetch keys again")
-			b.Service().TestClose()
-			require.NoError(t, b.Service().TestRestart())
+			b.NodeStop(0)
+			b.NodeRestart(0)
 		}
 		for _, tx := range txs {
-			pr := b.WaitProofWithIdx(tx.Instructions[0].Hash(), 0)
+			prResp, err := b.Client.GetProof(tx.Instructions[0].Hash())
+			require.NoError(t, err)
+			pr := prResp.Proof
 			require.Nil(t, pr.Verify(b.Genesis.SkipChainID()))
 			_, v0, _, _, err := pr.KeyValue()
 			require.NoError(t, err)
@@ -251,11 +231,13 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 	// Bring the failed node back up and it should also see the transactions.
 	if failure {
 		log.Lvl1("bringing the failed node back up")
-		b.Servers[len(b.Servers)-1].Unpause()
-		require.NoError(t, b.Services[len(b.Servers)-1].TestRestart())
+		b.NodeRestart(len(b.Servers) - 1)
+		require.NoError(t, b.Client.WaitPropagation(-1))
 
 		for _, tx := range txs {
-			pr := b.WaitProofWithIdx(tx.Instructions[0].Hash(), len(b.Servers)-1)
+			prResp, err := b.Client.GetProof(tx.Instructions[0].Hash())
+			require.NoError(t, err)
+			pr := prResp.Proof
 			require.Nil(t, pr.Verify(b.Genesis.SkipChainID()))
 			_, v0, _, _, err := pr.KeyValue()
 			require.NoError(t, err)
@@ -270,30 +252,26 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 		// Try to add a new transaction to the node that failed (but is
 		// now running) and it should work.
 		log.Lvl1("making a last transaction")
-		pr, k, resp, err, err2 := sendTransaction(t, b, len(b.Servers)-1, dummyContract, 10)
-		transactionOK(t, resp, err)
-		require.NoError(t, err2)
-		require.True(t, pr.InclusionProof.Match(k))
-
-		log.Lvl1("done")
-		// Wait for tasks to finish.
-		time.Sleep(b.PropagationInterval)
+		txArgs.Node = len(b.Servers) - 1
+		b.SpawnDummy(&txArgs)
 	}
+
+	log.Lvl1("done")
 }
 
 func TestService_AddTransaction_WrongNode(t *testing.T) {
 	defer log.SetShowTime(log.ShowTime())
 	log.SetShowTime(true)
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	outsideServer := b.Local.GenServers(1)[0]
 	outside := outsideServer.Service(ServiceName).(*Service)
-	registerDummy(t, []*onet.Server{outsideServer})
+	registerContracts([]*onet.Server{outsideServer})
 
 	// add the first tx to outside server
 	log.Lvl1("adding the first tx - this should fail")
-	tx1, err := createOneClientTxWithCounter(b.GenesisDarc.GetBaseID(), dummyContract, b.Value, b.Signer, 1)
+	tx1, err := createOneClientTxWithCounter(b.GenesisDarc.GetBaseID(), DummyContractName, b.Value, b.Signer, 1)
 	require.NoError(t, err)
 	atx := &AddTxRequest{
 		Version:       CurrentVersion,
@@ -308,18 +286,18 @@ func TestService_AddTransaction_WrongNode(t *testing.T) {
 	log.Lvl1("Adding new node to the roster")
 	rosterR := onet.NewRoster(append(b.Roster.List, outside.ServerIdentity()))
 	ctx, _ := createConfigTxWithCounter(t, b.PropagationInterval, *rosterR, defaultMaxBlockSize, b, 1)
-	b.SendTxAndWait(ctx, 10)
+	b.SendTx(nil, ctx)
 
 	// force the synchronization as the new node needs to get the
 	// propagation to know about the skipchain but we're not testing that
 	// here
-	proof, err := b.Service().db().GetProof(b.Genesis.Hash)
+	proof, err := b.Services[0].db().GetProof(b.Genesis.Hash)
 	require.NoError(t, err)
 	_, err = outside.db().StoreBlocks(proof)
 	require.NoError(t, err)
 
 	log.Lvl1("adding tx to now included node")
-	atx.Transaction, err = createOneClientTxWithCounter(b.GenesisDarc.GetBaseID(), dummyContract, b.Value, b.Signer, 2)
+	atx.Transaction, err = createOneClientTxWithCounter(b.GenesisDarc.GetBaseID(), DummyContractName, b.Value, b.Signer, 2)
 	require.NoError(t, err)
 	resp, err := outside.AddTransaction(atx)
 	transactionOK(t, resp, err)
@@ -330,13 +308,13 @@ func TestService_AddTransaction_WrongNode(t *testing.T) {
 func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 	defer log.SetShowTime(log.ShowTime())
 	log.SetShowTime(true)
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	// add the first tx to create the instance
 	log.Lvl1("Adding the first tx")
 	dcID := random.Bits(256, false, random.New())
-	tx1, err := createOneClientTxWithCounter(b.GenesisDarc.GetBaseID(), dummyContract, dcID, b.Signer, 1)
+	tx1, err := createOneClientTxWithCounter(b.GenesisDarc.GetBaseID(), DummyContractName, dcID, b.Signer, 1)
 	require.NoError(t, err)
 	atx := &AddTxRequest{
 		Version:       CurrentVersion,
@@ -344,7 +322,7 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 		Transaction:   tx1,
 		InclusionWait: 5,
 	}
-	resp, err := b.Service().AddTransaction(atx)
+	resp, err := b.Services[0].AddTransaction(atx)
 	transactionOK(t, resp, err)
 
 	// add a second tx that holds two instructions: one valid and one invalid (creates the same contract)
@@ -352,7 +330,7 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 	instr1 := createInvokeInstr(NewInstanceID(dcID), ContractDarcID, cmdDarcEvolve, "data", dcID)
 	instr1.SignerIdentities = []darc.Identity{b.Signer.Identity()}
 	instr1.SignerCounter = []uint64{2}
-	instr2 := createSpawnInstr(b.GenesisDarc.GetBaseID(), dummyContract, "data", dcID)
+	instr2 := createSpawnInstr(b.GenesisDarc.GetBaseID(), DummyContractName, "data", dcID)
 	instr2.SignerIdentities = []darc.Identity{b.Signer.Identity()}
 	instr2.SignerCounter = []uint64{3}
 	tx2 := NewClientTransaction(CurrentVersion, instr1, instr2)
@@ -367,7 +345,7 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 		Transaction:   tx2,
 		InclusionWait: 5,
 	}
-	resp, err = b.Service().AddTransaction(atx)
+	resp, err = b.Services[0].AddTransaction(atx)
 	require.NoError(t, err)
 	require.Contains(t, resp.Error, "contract darc tried to create existing instanceID")
 
@@ -377,7 +355,7 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 	instr1.SignerCounter = []uint64{2}
 	instr1.SignerIdentities = []darc.Identity{b.Signer.Identity()}
 	dcID2 := random.Bits(256, true, random.New())
-	instr2 = createSpawnInstr(b.GenesisDarc.GetBaseID(), dummyContract, "data", dcID2)
+	instr2 = createSpawnInstr(b.GenesisDarc.GetBaseID(), DummyContractName, "data", dcID2)
 	instr2.SignerCounter = []uint64{3}
 	instr2.SignerIdentities = []darc.Identity{b.Signer.Identity()}
 	tx3 := NewClientTransaction(CurrentVersion, instr1, instr2)
@@ -388,7 +366,7 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 		Transaction:   tx3,
 		InclusionWait: 5,
 	}
-	resp, err = b.Service().AddTransaction(atx)
+	resp, err = b.Services[0].AddTransaction(atx)
 	transactionOK(t, resp, err)
 }
 
@@ -397,13 +375,13 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 func TestService_AddTransaction_Parallel(t *testing.T) {
 	defer log.SetShowTime(log.ShowTime())
 	log.SetShowTime(true)
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	// add the first tx to create the instance
 	log.Lvl1("Adding a tx twice")
 	dcID := random.Bits(256, false, random.New())
-	tx1, err := createOneClientTxWithCounter(b.GenesisDarc.GetBaseID(), dummyContract, dcID, b.Signer, 1)
+	tx1, err := createOneClientTxWithCounter(b.GenesisDarc.GetBaseID(), DummyContractName, dcID, b.Signer, 1)
 	require.NoError(t, err)
 	atx := &AddTxRequest{
 		Version:       CurrentVersion,
@@ -414,15 +392,19 @@ func TestService_AddTransaction_Parallel(t *testing.T) {
 
 	// This is somewhat racy, as we could just fall between the creation of a block. So fingers crossed that
 	// both transactions are sent to the same block.
-	resp, err := b.Service().AddTransaction(atx)
+	resp, err := b.Services[0].AddTransaction(atx)
 	transactionOK(t, resp, err)
-	atx2 := atx
-	atx2.InclusionWait = 5
+	atx2 := &AddTxRequest{
+		Version:       CurrentVersion,
+		SkipchainID:   b.Genesis.SkipChainID(),
+		Transaction:   tx1.Clone(),
+		InclusionWait: 5,
+	}
 	resp, err = b.Services[1].AddTransaction(atx2)
 	transactionOK(t, resp, err)
 
 	// Get latest block and count the number of transactions
-	proof, err := b.Service().GetProof(&GetProof{
+	proof, err := b.Services[0].GetProof(&GetProof{
 		Version: CurrentVersion,
 		Key:     tx1.Instructions[0].DeriveID("").Slice(),
 		ID:      b.Genesis.Hash,
@@ -440,14 +422,14 @@ func TestService_AddTransaction_Parallel(t *testing.T) {
 
 	log.Lvl1("Adding another transaction to create block")
 	dcID = random.Bits(256, false, random.New())
-	atx.Transaction, err = createOneClientTxWithCounter(b.GenesisDarc.GetBaseID(), dummyContract, dcID, b.Signer, 2)
+	atx.Transaction, err = createOneClientTxWithCounter(b.GenesisDarc.GetBaseID(), DummyContractName, dcID, b.Signer, 2)
 	require.NoError(t, err)
 	atx.InclusionWait = 5
 	resp, err = b.Services[1].AddTransaction(atx)
 	transactionOK(t, resp, err)
 
 	// Get latest block and make sure that it didn't get added
-	proof, err = b.Service().GetProof(&GetProof{
+	proof, err = b.Services[0].GetProof(&GetProof{
 		Version: CurrentVersion,
 		Key:     tx1.Instructions[0].DeriveID("").Slice(),
 		ID:      b.Genesis.Hash,
@@ -464,9 +446,9 @@ func TestService_AddTransactionVersion(t *testing.T) {
 	testNoUpgradeBlockVersion = true
 	defer func() { testNoUpgradeBlockVersion = false }()
 
-	bArgs := NewBCTestArgs()
+	bArgs := defaultBCTArgs
 	bArgs.Version = 0
-	b := NewBCTestWithArgs(t, bArgs)
+	b := newBCTRun(t, &bArgs)
 	defer b.CloseAll()
 
 	// Send the first tx with a version 0 of the ByzCoin protocol. The contract
@@ -479,12 +461,12 @@ func TestService_AddTransactionVersion(t *testing.T) {
 		Transaction:   tx1,
 		InclusionWait: 10,
 	}
-	_, err = b.Service().AddTransaction(atx)
+	_, err = b.Services[0].AddTransaction(atx)
 	require.NoError(t, err)
 
 	// Upgrade the chain with a special block.
 	testNoUpgradeBlockVersion = false
-	_, err = b.Service().createUpgradeVersionBlock(b.Genesis.Hash, 1)
+	_, err = b.Services[0].createUpgradeVersionBlock(b.Genesis.Hash, 1)
 	testNoUpgradeBlockVersion = true
 	require.NoError(t, err)
 
@@ -497,7 +479,7 @@ func TestService_AddTransactionVersion(t *testing.T) {
 		Transaction:   tx2,
 		InclusionWait: 10,
 	}
-	_, err = b.Service().AddTransaction(atx)
+	_, err = b.Services[0].AddTransaction(atx)
 	require.NoError(t, err)
 
 	// This one will fail as the version must be 1.
@@ -509,16 +491,16 @@ func TestService_AddTransactionVersion(t *testing.T) {
 		Transaction:   tx3,
 		InclusionWait: 10,
 	}
-	reply, err := b.Service().AddTransaction(atx)
+	reply, err := b.Services[0].AddTransaction(atx)
 	require.NoError(t, err)
 	require.Contains(t, reply.Error, "wrong byzcoin version")
 }
 
 func TestService_AutomaticVersionUpgrade(t *testing.T) {
 	// Creates a chain starting with version 0.
-	bArgs := NewBCTestArgs()
+	bArgs := defaultBCTArgs
 	bArgs.Version = 0
-	b := NewBCTestWithArgs(t, bArgs)
+	b := newBCTRun(t, &bArgs)
 	defer b.CloseAll()
 
 	closing := make(chan bool)
@@ -538,7 +520,7 @@ func TestService_AutomaticVersionUpgrade(t *testing.T) {
 			default:
 			}
 
-			tx, err := createOneClientTxWithCounter(b.GenesisDarc.GetBaseID(), dummyContract, []byte{}, b.Signer, c)
+			tx, err := createOneClientTxWithCounter(b.GenesisDarc.GetBaseID(), DummyContractName, []byte{}, b.Signer, c)
 			require.NoError(t, err)
 			atx := &AddTxRequest{
 				Version:       CurrentVersion,
@@ -546,7 +528,7 @@ func TestService_AutomaticVersionUpgrade(t *testing.T) {
 				Transaction:   tx,
 				InclusionWait: wait,
 			}
-			_, err = b.Service().AddTransaction(atx)
+			_, err = b.Services[0].AddTransaction(atx)
 			require.NoError(t, err)
 
 			c++
@@ -566,7 +548,7 @@ func TestService_AutomaticVersionUpgrade(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		time.Sleep(b.PropagationInterval)
 
-		proof, err := b.Service().GetProof(&GetProof{
+		proof, err := b.Services[0].GetProof(&GetProof{
 			Version: CurrentVersion,
 			Key:     NewInstanceID([]byte{}).Slice(),
 			ID:      b.Genesis.Hash,
@@ -589,19 +571,19 @@ func TestService_AutomaticVersionUpgrade(t *testing.T) {
 }
 
 func TestService_GetProof(t *testing.T) {
-	bArgs := NewBCTestArgs()
-	bArgs.Step = 2
-	b := NewBCTestWithArgs(t, bArgs)
+	bArgs := defaultBCTArgs
+	b := newBCTRun(t, &bArgs)
 	defer b.CloseAll()
 
-	serKey := b.CTx.Instructions[0].Hash()
+	ctx, _ := b.SpawnDummy(nil)
+	serKey := ctx.Instructions[0].Hash()
 
 	var rep *GetProofResponse
 	var i int
 	for i = 0; i < 10; i++ {
 		time.Sleep(2 * b.PropagationInterval)
 		var err error
-		rep, err = b.Service().GetProof(&GetProof{
+		rep, err = b.Services[0].GetProof(&GetProof{
 			Version: CurrentVersion,
 			ID:      b.Genesis.SkipChainID(),
 			Key:     serKey,
@@ -621,7 +603,7 @@ func TestService_GetProof(t *testing.T) {
 
 	// Modify the key and we should not be able to get the proof.
 	wrongKey := append(serKey, byte(0))
-	rep, err = b.Service().GetProof(&GetProof{
+	rep, err = b.Services[0].GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      b.Genesis.SkipChainID(),
 		Key:     wrongKey,
@@ -633,7 +615,7 @@ func TestService_GetProof(t *testing.T) {
 }
 
 func TestService_DarcProxy(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	email := "test@example.com"
@@ -648,7 +630,7 @@ func TestService_DarcProxy(t *testing.T) {
 	require.Nil(t, d2.EvolveFrom(b.GenesisDarc))
 	err := d2.Rules.UpdateRule("spawn:dummy", expression.Expr(id.String()))
 	require.NoError(t, err)
-	b.TestDarcEvolution(*d2, false)
+	testDarcEvolution(b, *d2, false)
 
 	ga := func(msg []byte) ([]byte, error) {
 		h := sha256.New()
@@ -682,7 +664,7 @@ func TestService_DarcProxy(t *testing.T) {
 	err = ctx.FillSignersAndSignWith(signer)
 	require.NoError(t, err)
 
-	resp, err := b.Service().AddTransaction(&AddTxRequest{
+	resp, err := b.Services[0].AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   b.Genesis.SkipChainID(),
 		Transaction:   ctx,
@@ -692,10 +674,10 @@ func TestService_DarcProxy(t *testing.T) {
 }
 
 func TestService_WrongSigner(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
-	in1 := createSpawnInstr(b.GenesisDarc.GetBaseID(), dummyContract, "data", []byte("whatever"))
+	in1 := createSpawnInstr(b.GenesisDarc.GetBaseID(), DummyContractName, "data", []byte("whatever"))
 	in1.SignerCounter = []uint64{1}
 
 	signer := darc.NewSignerEd25519(nil, nil)
@@ -715,14 +697,14 @@ func TestService_WrongSigner(t *testing.T) {
 
 // Test that inter-instruction dependencies are correctly handled.
 func TestService_Depending(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	// Create a client tx with two instructions in it where the second one
 	// depends on the first one having executed.
 
 	// First instruction: spawn a dummy value.
-	in1 := createSpawnInstr(b.GenesisDarc.GetBaseID(), dummyContract, "data", []byte("something to delete"))
+	in1 := createSpawnInstr(b.GenesisDarc.GetBaseID(), DummyContractName, "data", []byte("something to delete"))
 	in1.SignerIdentities = []darc.Identity{b.Signer.Identity()}
 	in1.SignerCounter = []uint64{1}
 
@@ -730,7 +712,7 @@ func TestService_Depending(t *testing.T) {
 	in2 := Instruction{
 		InstanceID: NewInstanceID(in1.Hash()),
 		Delete: &Delete{
-			ContractID: dummyContract,
+			ContractID: DummyContractName,
 		},
 	}
 	in2.SignerIdentities = []darc.Identity{b.Signer.Identity()}
@@ -747,7 +729,7 @@ func TestService_Depending(t *testing.T) {
 	})
 	transactionOK(t, resp, err)
 
-	cdb, err := b.Service().getStateTrie(b.Genesis.SkipChainID())
+	cdb, err := b.Services[0].getStateTrie(b.Genesis.SkipChainID())
 	require.NoError(t, err)
 	_, _, _, _, err = cdb.GetValues(in1.Hash())
 	require.Error(t, err)
@@ -761,7 +743,7 @@ func TestService_Depending(t *testing.T) {
 }
 
 func TestService_BadDataHeader(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	ser := b.Services[0]
@@ -780,7 +762,7 @@ func TestService_BadDataHeader(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	tx, err := createOneClientTx(b.GenesisDarc.GetBaseID(), dummyContract, b.Value, b.Signer)
+	tx, err := createOneClientTx(b.GenesisDarc.GetBaseID(), DummyContractName, b.Value, b.Signer)
 	require.NoError(t, err)
 	_, err = ser.AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
@@ -813,14 +795,13 @@ func TestService_WaitInclusion(t *testing.T) {
 }
 
 func waitInclusion(t *testing.T, client int) {
-	bArgs := NewBCTestArgs()
-	bArgs.Step = 2
+	bArgs := defaultBCTArgs
 	bArgs.PropagationInterval = 2 * time.Second
-	b := NewBCTestWithArgs(t, bArgs)
+	b := newBCTRun(t, &bArgs)
 	defer b.CloseAll()
 
 	// Get counter
-	counterResponse, err := b.Service().GetSignerCounters(&GetSignerCounters{
+	counterResponse, err := b.Services[0].GetSignerCounters(&GetSignerCounters{
 		SignerIDs:   []string{b.Signer.Identity().String()},
 		SkipchainID: b.Genesis.SkipChainID(),
 	})
@@ -836,7 +817,7 @@ func waitInclusion(t *testing.T, client int) {
 		log.Lvl1("Create transaction and don't wait")
 		for i := 0; i < 2; i++ {
 			counter++
-			tx, err := createOneClientTxWithCounter(b.GenesisDarc.GetBaseID(), dummyContract, b.Value, b.Signer, counter)
+			tx, err := createOneClientTxWithCounter(b.GenesisDarc.GetBaseID(), DummyContractName, b.Value, b.Signer, counter)
 			require.NoError(t, err)
 			ser := b.Services[client]
 			resp, err := ser.AddTransaction(&AddTxRequest{
@@ -850,7 +831,7 @@ func waitInclusion(t *testing.T, client int) {
 
 		log.Lvl1("Create correct transaction and wait")
 		counter++
-		pr, k, resp, err, err2 := sendTransactionWithCounter(t, b, client, dummyContract, 10, counter)
+		pr, k, resp, err, err2 := sendTransactionWithCounter(t, b, client, DummyContractName, 10, counter)
 		transactionOK(t, resp, err)
 		require.NoError(t, err2)
 		require.True(t, pr.InclusionProof.Match(k))
@@ -889,7 +870,7 @@ func waitInclusion(t *testing.T, client int) {
 
 	log.Lvl1("Create second correct transaction and wait")
 	var k []byte
-	pr, k, resp, err, err2 = sendTransactionWithCounter(t, b, client, dummyContract, 10, counter)
+	pr, k, resp, err, err2 = sendTransactionWithCounter(t, b, client, DummyContractName, 10, counter)
 	transactionOK(t, resp, err)
 	require.NoError(t, err2)
 	require.True(t, pr.InclusionProof.Match(k))
@@ -903,7 +884,7 @@ func waitInclusion(t *testing.T, client int) {
 		require.True(t, txr[0].Accepted)
 
 		// Look in the previous block for the failed one.
-		prev := b.Service().db().GetByID(pr.Latest.BackLinkIDs[0])
+		prev := b.Services[0].db().GetByID(pr.Latest.BackLinkIDs[0])
 		require.NotNil(t, prev)
 		txr, err = txResultsFromBlock(prev)
 		require.NoError(t, err)
@@ -921,30 +902,31 @@ func waitInclusion(t *testing.T, client int) {
 // Sends too many transactions to the ledger and waits for all blocks to be
 // done.
 func TestService_FloodLedger(t *testing.T) {
-	bArgs := NewBCTestArgs()
-	bArgs.Step = 2
-	b := NewBCTestWithArgs(t, bArgs)
+	bArgs := defaultBCTArgs
+	b := newBCTRun(t, &bArgs)
 	defer b.CloseAll()
 
 	// ask to the root service because of propagation delay
-	before, err := b.Service().db().GetLatestByID(b.Genesis.Hash)
+	before, err := b.Services[0].db().GetLatestByID(b.Genesis.Hash)
 	require.NoError(t, err)
 
 	log.Lvl1("Create 10 transactions and don't wait")
 	n := 10
 	for i := 0; i < n; i++ {
-		_, _, resp, err, err2 := sendTransactionWithCounter(t, b, 0, slowContract, 0, uint64(i)+2)
+		_, _, resp, err, err2 := sendTransactionWithCounter(t, b, 0,
+			slowContract, 0, uint64(i)+1)
 		transactionOK(t, resp, err)
 		require.NoError(t, err2)
 	}
 	// Send a last transaction and wait for it to be included
-	_, _, resp, err, err2 := sendTransactionWithCounter(t, b, 0, dummyContract, 10, uint64(n)+2)
+	_, _, resp, err, err2 := sendTransactionWithCounter(t, b, 0,
+		DummyContractName, 10, uint64(n)+1)
 	transactionOK(t, resp, err)
 	require.NoError(t, err2)
 
 	// Suppose we need at least 2 blocks (slowContract waits 1/5 interval
 	// for each execution)
-	latest, err := b.Service().db().GetLatestByID(b.Genesis.Hash)
+	latest, err := b.Services[0].db().GetLatestByID(b.Genesis.Hash)
 	require.NoError(t, err)
 	if latest.Index-before.Index < 2 {
 		t.Fatalf("didn't get at least 2 blocks: index before %d, index after %v", before.Index, latest.Index)
@@ -956,16 +938,16 @@ func TestService_BigTx(t *testing.T) {
 	// blocks gets to be too close to the edge with the normal short
 	// testing interval, and starts generating
 	// errors-that-might-not-be-errors.
-	bArgss := NewBCTestArgs()
-	bArgss.PropagationInterval = 2 * time.Second
-	b := NewBCTestWithArgs(t, bArgss)
+	bArgs := defaultBCTArgs
+	bArgs.PropagationInterval = 2 * time.Second
+	b := newBCTRun(t, &bArgs)
 	defer b.CloseAll()
 
 	smallVal := b.Value
 
 	// Try to send a value so big it will be refused.
 	b.Value = make([]byte, defaultMaxBlockSize+1)
-	_, _, _, e1, e2 := sendTransaction(t, b, 0, dummyContract, 0)
+	_, _, _, e1, e2 := sendTransaction(t, b, 0, DummyContractName, 0)
 	require.Error(t, e1)
 	require.Contains(t, "transaction too large", e1.Error())
 	require.NoError(t, e2)
@@ -974,16 +956,16 @@ func TestService_BigTx(t *testing.T) {
 	b.Value = make([]byte, defaultMaxBlockSize/4*3)
 
 	log.Lvl1("Create 2 giant transactions and 1 little one, wait for the 3rd one")
-	_, _, resp, e1, e2 := sendTransactionWithCounter(t, b, 0, dummyContract, 0, 1)
+	_, _, resp, e1, e2 := sendTransactionWithCounter(t, b, 0, DummyContractName, 0, 1)
 	transactionOK(t, resp, e1)
 	require.NoError(t, e2)
-	_, _, resp, e1, e2 = sendTransactionWithCounter(t, b, 0, dummyContract, 0, 2)
+	_, _, resp, e1, e2 = sendTransactionWithCounter(t, b, 0, DummyContractName, 0, 2)
 	transactionOK(t, resp, e1)
 	require.NoError(t, e2)
 
 	// Back to little values again for the last tx.
 	b.Value = smallVal
-	p, k, resp, e1, e2 := sendTransactionWithCounter(t, b, 0, dummyContract, 10, 3)
+	p, k, resp, e1, e2 := sendTransactionWithCounter(t, b, 0, DummyContractName, 10, 3)
 	transactionOK(t, resp, e1)
 	require.NoError(t, e2)
 	require.True(t, p.InclusionProof.Match(k))
@@ -997,7 +979,7 @@ func TestService_BigTx(t *testing.T) {
 }
 
 func sendTransaction(t *testing.T, s *BCTest, client int, kind string, wait int) (Proof, []byte, *AddTxResponse, error, error) {
-	counterResponse, err := s.Service().GetSignerCounters(&GetSignerCounters{
+	counterResponse, err := s.Services[0].GetSignerCounters(&GetSignerCounters{
 		SignerIDs:   []string{s.Signer.Identity().String()},
 		SkipchainID: s.Genesis.SkipChainID(),
 	})
@@ -1042,7 +1024,7 @@ func (b *BCTest) sendInstructions(t *testing.T, wait int,
 	var err error
 	ctx, err = combineInstrsAndSign(b.Signer, instr...)
 	require.NoError(t, err)
-	resp, err = b.Service().AddTransaction(&AddTxRequest{
+	resp, err = b.Services[0].AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   b.Genesis.SkipChainID(),
 		Transaction:   ctx,
@@ -1053,7 +1035,7 @@ func (b *BCTest) sendInstructions(t *testing.T, wait int,
 }
 
 func TestService_InvalidVerification(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	for _, s := range b.Services {
@@ -1064,7 +1046,7 @@ func TestService_InvalidVerification(t *testing.T) {
 	value1 := []byte("a")
 	tx0, err := createOneClientTx(b.GenesisDarc.GetBaseID(), "panic", value1, b.Signer)
 	require.NoError(t, err)
-	akvresp, err := b.Service().AddTransaction(&AddTxRequest{
+	akvresp, err := b.Services[0].AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
 		SkipchainID: b.Genesis.SkipChainID(),
 		Transaction: tx0,
@@ -1075,7 +1057,7 @@ func TestService_InvalidVerification(t *testing.T) {
 	// tx1 uses the invalid contract, so it should _not_ be stored.
 	tx1, err := createOneClientTx(b.GenesisDarc.GetBaseID(), invalidContract, value1, b.Signer)
 	require.NoError(t, err)
-	akvresp, err = b.Service().AddTransaction(&AddTxRequest{
+	akvresp, err = b.Services[0].AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
 		SkipchainID: b.Genesis.SkipChainID(),
 		Transaction: tx1,
@@ -1085,9 +1067,9 @@ func TestService_InvalidVerification(t *testing.T) {
 
 	// tx2 uses the dummy kind, its value should be stored.
 	value2 := []byte("b")
-	tx2, err := createOneClientTx(b.GenesisDarc.GetBaseID(), dummyContract, value2, b.Signer)
+	tx2, err := createOneClientTx(b.GenesisDarc.GetBaseID(), DummyContractName, value2, b.Signer)
 	require.NoError(t, err)
-	akvresp, err = b.Service().AddTransaction(&AddTxRequest{
+	akvresp, err = b.Services[0].AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   b.Genesis.SkipChainID(),
 		Transaction:   tx2,
@@ -1097,7 +1079,7 @@ func TestService_InvalidVerification(t *testing.T) {
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
 	// Check that tx1 is _not_ stored.
-	pr, err := b.Service().GetProof(&GetProof{
+	pr, err := b.Services[0].GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      b.Genesis.SkipChainID(),
 		Key:     tx1.Instructions[0].Hash(),
@@ -1107,7 +1089,7 @@ func TestService_InvalidVerification(t *testing.T) {
 	require.False(t, match)
 
 	// Check that tx2 is stored.
-	pr, err = b.Service().GetProof(&GetProof{
+	pr, err = b.Services[0].GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      b.Genesis.SkipChainID(),
 		Key:     tx2.Instructions[0].Hash(),
@@ -1122,17 +1104,17 @@ func TestService_InvalidVerification(t *testing.T) {
 }
 
 func TestService_LoadBlockInfo(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
-	dur, sz, err := b.Service().LoadBlockInfo(b.Genesis.SkipChainID())
+	dur, sz, err := b.Services[0].LoadBlockInfo(b.Genesis.SkipChainID())
 	require.NoError(t, err)
 	require.Equal(t, dur, b.PropagationInterval)
 	require.True(t, sz == defaultMaxBlockSize)
 }
 
 func TestService_StateChange(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	var latest int64
@@ -1185,9 +1167,9 @@ func TestService_StateChange(t *testing.T) {
 		}
 		return nil, nil, xerrors.New("need spawn or invoke")
 	}
-	b.Service().testRegisterContract("add", adaptorNoVerify(f))
+	b.Services[0].testRegisterContract("add", adaptorNoVerify(f))
 
-	cdb, err := b.Service().getStateTrie(b.Genesis.SkipChainID())
+	cdb, err := b.Services[0].getStateTrie(b.Genesis.SkipChainID())
 	require.NoError(t, err)
 	require.NotNil(t, cdb)
 
@@ -1229,7 +1211,7 @@ func TestService_StateChange(t *testing.T) {
 	ct2 := ClientTransaction{Instructions: instrs2}
 
 	timestamp := time.Now().UnixNano()
-	_, txOut, scs, _ := b.Service().createStateChanges(cdb.MakeStagingStateTrie(), b.Genesis.SkipChainID(), NewTxResults(ct1, ct2), noTimeout, CurrentVersion, timestamp)
+	_, txOut, scs, _ := b.Services[0].createStateChanges(cdb.MakeStagingStateTrie(), b.Genesis.SkipChainID(), NewTxResults(ct1, ct2), noTimeout, CurrentVersion, timestamp)
 	require.Equal(t, 2, len(txOut))
 	require.True(t, txOut[0].Accepted)
 	require.False(t, txOut[1].Accepted)
@@ -1238,7 +1220,7 @@ func TestService_StateChange(t *testing.T) {
 }
 
 func TestService_StateChangeVerification(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	cid := "createSC"
@@ -1279,8 +1261,8 @@ func TestService_StateChangeVerification(t *testing.T) {
 			},
 		}, nil, nil
 	}
-	require.NoError(t, b.Service().testRegisterContract(cid, adaptorNoVerify(f)))
-	cdb, err := b.Service().getStateTrie(b.Genesis.SkipChainID())
+	b.Services[0].testRegisterContract(cid, adaptorNoVerify(f))
+	cdb, err := b.Services[0].getStateTrie(b.Genesis.SkipChainID())
 	require.NoError(t, err)
 	require.NotNil(t, cdb)
 
@@ -1296,14 +1278,14 @@ func TestService_StateChangeVerification(t *testing.T) {
 	timestamp := time.Now().UnixNano()
 
 	log.Lvl1("Failing updating and removing non-existing instances")
-	mkroot1, txOut, scs, _ := b.Service().createStateChanges(cdb.MakeStagingStateTrie(), b.Genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
+	mkroot1, txOut, scs, _ := b.Services[0].createStateChanges(cdb.MakeStagingStateTrie(), b.Genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
 		InstanceID: iid,
 		Invoke:     &Invoke{},
 	}}}), noTimeout, CurrentVersion, timestamp)
 	require.Equal(t, 0, len(scs))
 	require.Equal(t, 1, len(txOut))
 	require.Equal(t, false, txOut[0].Accepted)
-	mkroot2, txOut, scs, _ := b.Service().createStateChanges(cdb.MakeStagingStateTrie(), b.Genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
+	mkroot2, txOut, scs, _ := b.Services[0].createStateChanges(cdb.MakeStagingStateTrie(), b.Genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
 		InstanceID: iid,
 		Delete:     &Delete{},
 	}}}), noTimeout, CurrentVersion, timestamp)
@@ -1317,28 +1299,28 @@ func TestService_StateChangeVerification(t *testing.T) {
 		InstanceID: iid,
 		Spawn:      &Spawn{ContractID: cid},
 	}}})
-	mkroot1, txOut, scs, _ = b.Service().createStateChanges(cdb.MakeStagingStateTrie(), b.Genesis.SkipChainID(), txs, noTimeout, CurrentVersion, timestamp)
+	mkroot1, txOut, scs, _ = b.Services[0].createStateChanges(cdb.MakeStagingStateTrie(), b.Genesis.SkipChainID(), txs, noTimeout, CurrentVersion, timestamp)
 	require.Equal(t, 3, len(scs))
 	require.Equal(t, 1, len(txOut))
 	require.Equal(t, true, txOut[0].Accepted)
 	require.Nil(t, cdb.StoreAll(scs, 0, CurrentVersion))
 	// Clear cache so that the transactions get re-evaluated
-	delete(b.Service().stateChangeCache.cache, string(b.Genesis.SkipChainID()))
-	mkroot2, txOut, scs, _ = b.Service().createStateChanges(cdb.MakeStagingStateTrie(), b.Genesis.SkipChainID(), txs, noTimeout, CurrentVersion, timestamp)
+	delete(b.Services[0].stateChangeCache.cache, string(b.Genesis.SkipChainID()))
+	mkroot2, txOut, scs, _ = b.Services[0].createStateChanges(cdb.MakeStagingStateTrie(), b.Genesis.SkipChainID(), txs, noTimeout, CurrentVersion, timestamp)
 	require.Equal(t, 0, len(scs))
 	require.Equal(t, 1, len(txOut))
 	require.Equal(t, false, txOut[0].Accepted)
 	require.True(t, bytes.Equal(mkroot1, mkroot2))
 
 	log.Lvl1("Accept updating and removing existing instance")
-	_, txOut, scs, _ = b.Service().createStateChanges(cdb.MakeStagingStateTrie(), b.Genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
+	_, txOut, scs, _ = b.Services[0].createStateChanges(cdb.MakeStagingStateTrie(), b.Genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
 		InstanceID: iid,
 		Invoke:     &Invoke{},
 	}}}), noTimeout, CurrentVersion, timestamp)
 	require.Equal(t, 3, len(scs))
 	require.Equal(t, 1, len(txOut))
 	require.Equal(t, true, txOut[0].Accepted)
-	_, txOut, scs, _ = b.Service().createStateChanges(cdb.MakeStagingStateTrie(), b.Genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
+	_, txOut, scs, _ = b.Services[0].createStateChanges(cdb.MakeStagingStateTrie(), b.Genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
 		InstanceID: iid,
 		Delete:     &Delete{},
 	}}}), noTimeout, CurrentVersion, timestamp)
@@ -1348,7 +1330,7 @@ func TestService_StateChangeVerification(t *testing.T) {
 }
 
 func TestService_DarcEvolutionFail(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	d2 := b.GenesisDarc.Copy()
@@ -1356,7 +1338,7 @@ func TestService_DarcEvolutionFail(t *testing.T) {
 
 	// first try to evolve with the wrong contract ID
 	{
-		counterResponse, err := b.Service().GetSignerCounters(&GetSignerCounters{
+		counterResponse, err := b.Services[0].GetSignerCounters(&GetSignerCounters{
 			SignerIDs:   []string{b.Signer.Identity().String()},
 			SkipchainID: b.Genesis.SkipChainID(),
 		})
@@ -1385,11 +1367,14 @@ func TestService_DarcEvolutionFail(t *testing.T) {
 
 	// then we create a bad request, i.e., with an invalid version number
 	d2.Version = 11
-	pr := b.TestDarcEvolution(*d2, true)
+	testDarcEvolution(b, *d2, true)
+	b.SignerCounter--
 
 	// parse the darc
-	require.True(t, pr.InclusionProof.Match(d2.GetBaseID()))
-	_, v0, _, _, err := pr.KeyValue()
+	pr, err := b.Client.GetProof(d2.GetBaseID())
+	require.NoError(t, err)
+	require.True(t, pr.Proof.InclusionProof.Match(d2.GetBaseID()))
+	_, v0, _, _, err := pr.Proof.KeyValue()
 	require.NoError(t, err)
 	d22, err := darc.NewFromProtobuf(v0)
 	require.NoError(t, err)
@@ -1398,16 +1383,16 @@ func TestService_DarcEvolutionFail(t *testing.T) {
 
 	// finally we do it correctly
 	d2.Version = 1
-	b.TestDarcEvolution(*d2, false)
+	testDarcEvolution(b, *d2, false)
 }
 
 func TestService_DarcEvolution(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	d2 := b.GenesisDarc.Copy()
 	require.Nil(t, d2.EvolveFrom(b.GenesisDarc))
-	pr := b.TestDarcEvolution(*d2, false)
+	pr := testDarcEvolution(b, *d2, false)
 
 	// parse the darc
 	require.True(t, pr.InclusionProof.Match(d2.GetBaseID()))
@@ -1419,7 +1404,7 @@ func TestService_DarcEvolution(t *testing.T) {
 }
 
 func TestService_DarcSpawn(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	id := []darc.Identity{b.Signer.Identity()}
@@ -1428,33 +1413,24 @@ func TestService_DarcSpawn(t *testing.T) {
 	darc2.Rules.AddRule("spawn:rain", darc2.Rules.GetSignExpr())
 	darc2Buf, err := darc2.ToProto()
 	require.NoError(t, err)
-	darc2Copy, err := darc.NewFromProtobuf(darc2Buf)
-	require.NoError(t, err)
-	require.True(t, darc2.Equal(darc2Copy))
 
-	ctx := NewClientTransaction(CurrentVersion,
-		Instruction{
-			InstanceID: NewInstanceID(b.GenesisDarc.GetBaseID()),
-			Spawn: &Spawn{
-				ContractID: ContractDarcID,
-				Args: []Argument{{
-					Name:  "darc",
-					Value: darc2Buf,
-				}},
-			},
-			SignerIdentities: []darc.Identity{b.Signer.Identity()},
-			SignerCounter:    []uint64{1},
+	b.SendInst(nil, Instruction{
+		InstanceID: NewInstanceID(b.GenesisDarc.GetBaseID()),
+		Spawn: &Spawn{
+			ContractID: ContractDarcID,
+			Args: []Argument{{
+				Name:  "darc",
+				Value: darc2Buf,
+			}},
 		},
-	)
-	require.Nil(t, ctx.Instructions[0].SignWith(ctx.Instructions.Hash(), b.Signer))
-
-	b.SendTx(ctx)
-	pr := b.WaitProof(NewInstanceID(darc2.GetBaseID()))
-	require.True(t, pr.InclusionProof.Match(darc2.GetBaseID()))
+	})
+	pr, err := b.Client.GetProof(darc2.GetBaseID())
+	require.NoError(t, err)
+	require.True(t, pr.Proof.InclusionProof.Match(darc2.GetBaseID()))
 }
 
 func TestService_DarcDelegation(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	// Spawn second darc with a new owner/signer, but delegate its spawn
@@ -1466,10 +1442,7 @@ func TestService_DarcDelegation(t *testing.T) {
 	darc2.Rules.AddRule("spawn:"+ContractDarcID, expression.InitOrExpr(b.GenesisDarc.GetIdentityString()))
 	darc2Buf, err := darc2.ToProto()
 	require.NoError(t, err)
-	darc2Copy, err := darc.NewFromProtobuf(darc2Buf)
-	require.NoError(t, err)
-	require.True(t, darc2.Equal(darc2Copy))
-	instr := Instruction{
+	b.SendInst(nil, Instruction{
 		InstanceID: NewInstanceID(b.GenesisDarc.GetBaseID()),
 		Spawn: &Spawn{
 			ContractID: ContractDarcID,
@@ -1479,10 +1452,10 @@ func TestService_DarcDelegation(t *testing.T) {
 			}},
 		},
 		SignerCounter: []uint64{1},
-	}
-	b.sendInstructions(t, 10, instr)
-	pr := b.WaitProof(NewInstanceID(darc2.GetBaseID()))
-	require.True(t, pr.InclusionProof.Match(darc2.GetBaseID()))
+	})
+	pr, err := b.Client.GetProof(darc2.GetBaseID())
+	require.NoError(t, err)
+	require.True(t, pr.Proof.InclusionProof.Match(darc2.GetBaseID()))
 
 	// Spawn third darc from the second one, but sign the request with
 	// the signer of the first darc to test delegation
@@ -1492,10 +1465,7 @@ func TestService_DarcDelegation(t *testing.T) {
 		[]byte("third darc"))
 	darc3Buf, err := darc3.ToProto()
 	require.NoError(t, err)
-	darc3Copy, err := darc.NewFromProtobuf(darc3Buf)
-	require.NoError(t, err)
-	require.True(t, darc3.Equal(darc3Copy))
-	instr = Instruction{
+	b.SendInst(nil, Instruction{
 		InstanceID: NewInstanceID(darc2.GetBaseID()),
 		Spawn: &Spawn{
 			ContractID: ContractDarcID,
@@ -1505,14 +1475,14 @@ func TestService_DarcDelegation(t *testing.T) {
 			}},
 		},
 		SignerCounter: []uint64{2},
-	}
-	b.sendInstructions(t, 10, instr)
-	pr = b.WaitProof(NewInstanceID(darc3.GetBaseID()))
-	require.True(t, pr.InclusionProof.Match(darc3.GetBaseID()))
+	})
+	pr, err = b.Client.GetProof(darc3.GetBaseID())
+	require.NoError(t, err)
+	require.True(t, pr.Proof.InclusionProof.Match(darc3.GetBaseID()))
 }
 
 func TestService_CheckAuthorization(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	// Spawn second darc with a new owner/signer, but delegate its spawn
@@ -1527,7 +1497,7 @@ func TestService_CheckAuthorization(t *testing.T) {
 	darc2Copy, err := darc.NewFromProtobuf(darc2Buf)
 	require.NoError(t, err)
 	require.True(t, darc2.Equal(darc2Copy))
-	instr := Instruction{
+	b.SendInst(nil, Instruction{
 		InstanceID: NewInstanceID(b.GenesisDarc.GetBaseID()),
 		Spawn: &Spawn{
 			ContractID: ContractDarcID,
@@ -1537,10 +1507,10 @@ func TestService_CheckAuthorization(t *testing.T) {
 			}},
 		},
 		SignerCounter: []uint64{1},
-	}
-	b.sendInstructions(t, 10, instr)
-	pr := b.WaitProof(NewInstanceID(darc2.GetBaseID()))
-	require.True(t, pr.InclusionProof.Match(darc2.GetBaseID()))
+	})
+	pr, err := b.Client.GetProof(darc2.GetBaseID())
+	require.NoError(t, err)
+	require.True(t, pr.Proof.InclusionProof.Match(darc2.GetBaseID()))
 
 	ca := &CheckAuthorization{
 		Version:    CurrentVersion,
@@ -1548,42 +1518,42 @@ func TestService_CheckAuthorization(t *testing.T) {
 		DarcID:     b.GenesisDarc.GetBaseID(),
 		Identities: []darc.Identity{b.Signer.Identity()},
 	}
-	resp, err := b.Service().CheckAuthorization(ca)
+	resp, err := b.Services[0].CheckAuthorization(ca)
 	require.NoError(t, err)
 	require.Contains(t, resp.Actions, darc.Action("_sign"))
 
 	ca.Identities[0] = darc.NewIdentityEd25519(b.Roster.List[0].Public)
-	resp, err = b.Service().CheckAuthorization(ca)
+	resp, err = b.Services[0].CheckAuthorization(ca)
 	require.NoError(t, err)
 	require.Contains(t, resp.Actions, darc.Action("invoke:"+ContractConfigID+".view_change"))
 
 	ca.Identities = append(ca.Identities, darc.NewIdentityEd25519(b.Roster.List[1].Public))
-	resp, err = b.Service().CheckAuthorization(ca)
+	resp, err = b.Services[0].CheckAuthorization(ca)
 	require.NoError(t, err)
 	require.Contains(t, resp.Actions, darc.Action("invoke:"+ContractConfigID+".view_change"))
 
 	log.Lvl1("Check delegation of darcs")
 	ca.DarcID = darc2.GetID()
 	ca.Identities[0] = darc.NewSignerEd25519(nil, nil).Identity()
-	resp, err = b.Service().CheckAuthorization(ca)
+	resp, err = b.Services[0].CheckAuthorization(ca)
 	require.NoError(t, err)
 	require.Equal(t, 0, len(resp.Actions))
 
 	ca.DarcID = darc2.GetID()
 	ca.Identities[0] = b.Signer.Identity()
-	resp, err = b.Service().CheckAuthorization(ca)
+	resp, err = b.Services[0].CheckAuthorization(ca)
 	require.NoError(t, err)
 	require.Contains(t, resp.Actions, darc.Action("spawn:"+ContractDarcID))
 
 	ca.DarcID = darc2.GetID()
 	ca.Identities[0] = darc.NewIdentityDarc(b.GenesisDarc.GetID())
-	resp, err = b.Service().CheckAuthorization(ca)
+	resp, err = b.Services[0].CheckAuthorization(ca)
 	require.NoError(t, err)
 	require.Contains(t, resp.Actions, darc.Action("spawn:"+ContractDarcID))
 }
 
 func TestService_GetLeader(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	for _, service := range b.Services {
@@ -1596,18 +1566,18 @@ func TestService_GetLeader(t *testing.T) {
 }
 
 func TestService_SetConfig(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	interval := 42 * time.Millisecond
 	blocksize := 424242
 	ctx, _ := createConfigTxWithCounter(t, interval, *b.Roster, blocksize, b, 1)
-	b.SendTxAndWait(ctx, 10)
+	b.SendTx(nil, ctx)
 
-	_, err := b.Service().LoadConfig(b.Genesis.SkipChainID())
+	_, err := b.Services[0].LoadConfig(b.Genesis.SkipChainID())
 	require.NoError(t, err)
 
-	newInterval, newBlocksize, err := b.Service().LoadBlockInfo(b.Genesis.SkipChainID())
+	newInterval, newBlocksize, err := b.Services[0].LoadBlockInfo(b.Genesis.SkipChainID())
 	require.NoError(t, err)
 	require.Equal(t, interval, newInterval)
 	require.Equal(t, blocksize, newBlocksize)
@@ -1619,9 +1589,9 @@ func TestService_SetConfigRosterKeepLeader(t *testing.T) {
 		n = 2
 	}
 
-	bArgs := NewBCTestArgs()
+	bArgs := defaultBCTArgs
 	bArgs.Nodes = 4
-	b := NewBCTestWithArgs(t, bArgs)
+	b := newBCTRun(t, &bArgs)
 	defer b.CloseAll()
 
 	log.Lvl1("Creating blocks to check rotation of the roster while keeping leader")
@@ -1631,9 +1601,9 @@ func TestService_SetConfigRosterKeepLeader(t *testing.T) {
 			rosterR.List[0], rosterR.List[2], rosterR.List[3], rosterR.List[1]})
 		log.Lvl2("Creating block", i)
 		ctx, _ := createConfigTxWithCounter(t, b.PropagationInterval, *rosterR, defaultMaxBlockSize, b, 1+i)
-		b.SendTxAndWait(ctx, 10)
+		b.SendTx(nil, ctx)
 		log.Lvl2("Verifying the correct roster is in place")
-		latest, err := b.Service().db().GetLatestByID(b.Genesis.Hash)
+		latest, err := b.Services[0].db().GetLatestByID(b.Genesis.Hash)
 		require.NoError(t, err)
 		equals, err := latest.Roster.Equal(rosterR)
 		require.NoError(t, err)
@@ -1642,9 +1612,9 @@ func TestService_SetConfigRosterKeepLeader(t *testing.T) {
 }
 
 func TestService_SetConfigRosterNewLeader(t *testing.T) {
-	bArgs := NewBCTestArgs()
+	bArgs := defaultBCTArgs
 	bArgs.Nodes = 4
-	b := NewBCTestWithArgs(t, bArgs)
+	b := newBCTRun(t, &bArgs)
 	defer b.CloseAll()
 
 	log.Lvl1("Creating blocks to check rotation of the leader")
@@ -1654,9 +1624,9 @@ func TestService_SetConfigRosterNewLeader(t *testing.T) {
 			rosterR.List[1], rosterR.List[2], rosterR.List[3], rosterR.List[0]})
 		log.Lvl2("Creating block", i)
 		ctx, _ := createConfigTxWithCounter(t, b.PropagationInterval, *rosterR, defaultMaxBlockSize, b, 1+i)
-		b.SendTxAndWait(ctx, 10)
+		b.SendTx(nil, ctx)
 		log.Lvl2("Verifying the correct roster is in place")
-		latest, err := b.Service().db().GetLatestByID(b.Genesis.Hash)
+		latest, err := b.Services[0].db().GetLatestByID(b.Genesis.Hash)
 		require.NoError(t, err)
 		equals, err := latest.Roster.Equal(rosterR)
 		require.NoError(t, err)
@@ -1665,7 +1635,7 @@ func TestService_SetConfigRosterNewLeader(t *testing.T) {
 }
 
 func TestService_SetConfigRosterNewNodes(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	nbrNewNodes := 10
@@ -1707,16 +1677,16 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 		rosterR = onet.NewRoster(append(rosterR.List, newNode))
 		ctx, _ := createConfigTxWithCounter(t, b.PropagationInterval, *rosterR, defaultMaxBlockSize, b, counter)
 		counter++
-		b.SendTxAndWait(ctx, 10)
+		b.SendTx(nil, ctx)
 
 		log.Lvl2("Verifying the correct roster is in place")
-		latest, err := b.Service().db().GetLatestByID(b.Genesis.Hash)
+		latest, err := b.Services[0].db().GetLatestByID(b.Genesis.Hash)
 		require.NoError(t, err)
 		equals, err := latest.Roster.Equal(rosterR)
 		require.NoError(t, err)
 		require.True(t, equals, "roster has not been updated")
 		// Get latest genesis darc and verify the 'view_change' rule is updated
-		st, err := b.Service().GetReadOnlyStateTrie(b.Genesis.Hash)
+		st, err := b.Services[0].GetReadOnlyStateTrie(b.Genesis.Hash)
 		require.NoError(t, err)
 		val, _, _, _, err := st.GetValues(b.GenesisDarc.GetBaseID())
 		require.NoError(t, err)
@@ -1772,7 +1742,7 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 }
 
 func TestService_SetConfigRosterSwitchNodes(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	newNodes := len(b.Roster.List)
@@ -1792,7 +1762,7 @@ func TestService_SetConfigRosterSwitchNodes(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.Contains(t, resp.Error, "new leader must be in previous roster")
-	b.WaitPropagation(-1)
+	b.Client.WaitPropagation(-1)
 
 	log.Lvl1("Allow new nodes at the end", newRoster.List)
 	goodRoster := onet.NewRoster(b.Roster.List)
@@ -1802,13 +1772,13 @@ func TestService_SetConfigRosterSwitchNodes(t *testing.T) {
 		goodRoster = onet.NewRoster(append(goodRoster.List, si))
 		ctx, _ = createConfigTxWithCounter(t, b.PropagationInterval, *goodRoster, defaultMaxBlockSize, b, counter)
 		counter++
-		b.SendTxAndWait(ctx, 10)
+		b.SendTx(nil, ctx)
 	}
 }
 
 // Replaces all nodes from the previous roster with new nodes
 func TestService_SetConfigRosterReplace(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	newNodes := len(b.Roster.List)
@@ -1829,7 +1799,7 @@ func TestService_SetConfigRosterReplace(t *testing.T) {
 		require.NoError(t, cl.UseNode(1))
 		resp, err := cl.AddTransactionAndWait(ctx, 10)
 		transactionOK(t, resp, err)
-		b.WaitPropagation(-1)
+		b.Client.WaitPropagation(-1)
 
 		log.Lvl1("Removing", goodRoster.List[0])
 		goodRoster = onet.NewRoster(goodRoster.List[1:])
@@ -1837,13 +1807,13 @@ func TestService_SetConfigRosterReplace(t *testing.T) {
 		counter++
 		resp, err = cl.AddTransactionAndWait(ctx, 10)
 		transactionOK(t, resp, err)
-		b.WaitPropagation(-1)
+		b.Client.WaitPropagation(-1)
 	}
 }
 
 // Check consistency of the set of valid peers while replacing roster
 func TestService_CheckValidPeers(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	var nbNewServers int
@@ -1856,7 +1826,7 @@ func TestService_CheckValidPeers(t *testing.T) {
 		ByzCoinID)
 
 	// Compute the peerSetID for this skipchain
-	onetCtx := b.Service().ServiceProcessor.Context
+	onetCtx := b.Services[0].ServiceProcessor.Context
 	peerSetID := onetCtx.NewPeerSetID(b.Genesis.SkipChainID())
 
 	// List of all servers involved in the test
@@ -1945,7 +1915,7 @@ func addDummyTxsTo(t *testing.T, s *BCTest, nbr int, perCTx int, counter int, id
 }
 
 func TestService_SetConfigRosterDownload(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	cfdb := catchupFetchDBEntries
@@ -1975,7 +1945,7 @@ func TestService_SetConfigRosterDownload(t *testing.T) {
 	ctx, _ := createConfigTxWithCounter(t, b.PropagationInterval, *newRoster,
 		defaultMaxBlockSize, b, ct)
 	ct++
-	b.SendTxAndWait(ctx, 10)
+	b.SendTx(nil, ctx)
 
 	// Create a new block
 	log.Lvl1("Creating two dummy blocks for the new node to catch up")
@@ -1994,7 +1964,7 @@ func TestService_SetConfigRosterDownload(t *testing.T) {
 }
 
 func TestService_DownloadState(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	cfdb := catchupFetchDBEntries
@@ -2007,34 +1977,34 @@ func TestService_DownloadState(t *testing.T) {
 	ct := addDummyTxs(t, b, 3, 3, 1)
 	addDummyTxs(t, b, 1, 20, ct)
 
-	config, err := b.Service().LoadConfig(b.Genesis.SkipChainID())
+	config, err := b.Services[0].LoadConfig(b.Genesis.SkipChainID())
 	require.NoError(t, err)
-	stateTrie, err := b.Service().getStateTrie(b.Genesis.SkipChainID())
+	stateTrie, err := b.Services[0].getStateTrie(b.Genesis.SkipChainID())
 	require.NoError(t, err)
 	merkleRoot := stateTrie.GetRoot()
 
 	// Wrong parameters
 	log.Lvl1("Testing wrong parameters")
-	_, err = b.Service().DownloadState(&DownloadState{
+	_, err = b.Services[0].DownloadState(&DownloadState{
 		ByzCoinID: skipchain.SkipBlockID{},
 	})
 	require.Error(t, err)
-	_, err = b.Service().DownloadState(&DownloadState{
+	_, err = b.Services[0].DownloadState(&DownloadState{
 		ByzCoinID: skipchain.SkipBlockID{},
 		Nonce:     0,
 		Length:    1,
 	})
 	require.Error(t, err)
-	_, err = b.Service().DownloadState(&DownloadState{
+	_, err = b.Services[0].DownloadState(&DownloadState{
 		ByzCoinID: b.Genesis.SkipChainID(),
 	})
 	require.Error(t, err)
-	_, err = b.Service().DownloadState(&DownloadState{
+	_, err = b.Services[0].DownloadState(&DownloadState{
 		ByzCoinID: b.Genesis.SkipChainID(),
 		Nonce:     1,
 	})
 	require.Error(t, err)
-	_, err = b.Service().DownloadState(&DownloadState{
+	_, err = b.Services[0].DownloadState(&DownloadState{
 		ByzCoinID: b.Genesis.SkipChainID(),
 		Nonce:     0,
 	})
@@ -2043,7 +2013,7 @@ func TestService_DownloadState(t *testing.T) {
 	// Start one download and check it is aborted
 	// if we start a second download.
 	log.Lvl1("Check aborting of download and resuming")
-	resp, err := b.Service().DownloadState(&DownloadState{
+	resp, err := b.Services[0].DownloadState(&DownloadState{
 		ByzCoinID: b.Genesis.SkipChainID(),
 		Nonce:     0,
 		Length:    1,
@@ -2051,14 +2021,14 @@ func TestService_DownloadState(t *testing.T) {
 	require.NoError(t, err)
 	nonce1 := resp.Nonce
 	// Continue 1st download
-	_, err = b.Service().DownloadState(&DownloadState{
+	_, err = b.Services[0].DownloadState(&DownloadState{
 		ByzCoinID: b.Genesis.SkipChainID(),
 		Nonce:     nonce1,
 		Length:    1,
 	})
 	require.NoError(t, err)
 	// Start 2nd download
-	resp, err = b.Service().DownloadState(&DownloadState{
+	resp, err = b.Services[0].DownloadState(&DownloadState{
 		ByzCoinID: b.Genesis.SkipChainID(),
 		Nonce:     0,
 		Length:    1,
@@ -2067,14 +2037,14 @@ func TestService_DownloadState(t *testing.T) {
 	nonce2 := resp.Nonce
 	require.NotEqual(t, nonce1, nonce2)
 	// Now 1st download should fail
-	_, err = b.Service().DownloadState(&DownloadState{
+	_, err = b.Services[0].DownloadState(&DownloadState{
 		ByzCoinID: b.Genesis.SkipChainID(),
 		Nonce:     nonce1,
 		Length:    1,
 	})
 	require.Error(t, err)
 	// And 2nd download should still continue
-	_, err = b.Service().DownloadState(&DownloadState{
+	_, err = b.Services[0].DownloadState(&DownloadState{
 		ByzCoinID: b.Genesis.SkipChainID(),
 		Nonce:     nonce2,
 		Length:    1,
@@ -2083,7 +2053,7 @@ func TestService_DownloadState(t *testing.T) {
 
 	// Start downloading
 	log.Lvl1("Partial download")
-	resp, err = b.Service().DownloadState(&DownloadState{
+	resp, err = b.Services[0].DownloadState(&DownloadState{
 		ByzCoinID: b.Genesis.SkipChainID(),
 		Nonce:     0,
 		Length:    10,
@@ -2097,7 +2067,7 @@ func TestService_DownloadState(t *testing.T) {
 	length := 0
 	var nonce uint64
 	for {
-		resp, err = b.Service().DownloadState(&DownloadState{
+		resp, err = b.Services[0].DownloadState(&DownloadState{
 			ByzCoinID: b.Genesis.SkipChainID(),
 			Nonce:     nonce,
 			Length:    10,
@@ -2113,10 +2083,10 @@ func TestService_DownloadState(t *testing.T) {
 	// are copied, so we cannot know in advance how many
 	// entries we copy...
 	require.True(t, length > 40)
-	configDown, err := b.Service().LoadConfig(b.Genesis.SkipChainID())
+	configDown, err := b.Services[0].LoadConfig(b.Genesis.SkipChainID())
 	require.NoError(t, err)
 	require.Equal(t, config, configDown)
-	stateTrieDown, err := b.Service().getStateTrie(b.Genesis.SkipChainID())
+	stateTrieDown, err := b.Services[0].getStateTrie(b.Genesis.SkipChainID())
 	require.NoError(t, err)
 	merkleRootDown := stateTrieDown.GetRoot()
 	require.Equal(t, merkleRoot, merkleRootDown)
@@ -2162,7 +2132,7 @@ func TestService_DownloadStateRunning(t *testing.T) {
 		catchupDownloadAll = cda
 	}()
 	catchupDownloadAll = 3
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	log.Lvl1("Adding dummy transactions")
@@ -2183,17 +2153,20 @@ func TestService_DownloadStateRunning(t *testing.T) {
 }
 
 func TestService_SetBadConfig(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	// send in a bad new block size
 	ctx, badConfig := createBadConfigTx(t, b, false, true)
-	b.SendTx(ctx)
+	txArgs := TxArgsDefault
+	txArgs.Wait = 0
+	txArgs.WaitPropagation = false
+	b.SendTx(&txArgs, ctx)
 
 	// wait for a change, which should not happen
 	for i := 0; i < 5; i++ {
 		time.Sleep(b.PropagationInterval)
-		config, err := b.Service().LoadConfig(b.Genesis.SkipChainID())
+		config, err := b.Services[0].LoadConfig(b.Genesis.SkipChainID())
 		require.NoError(t, err)
 
 		if badConfig.Roster.List[0].Equal(config.Roster.List[0]) {
@@ -2203,12 +2176,12 @@ func TestService_SetBadConfig(t *testing.T) {
 
 	// send in a bad new interval
 	ctx, badConfig = createBadConfigTx(t, b, true, false)
-	b.SendTx(ctx)
+	b.SendTx(&txArgs, ctx)
 
 	// wait for a change, which should not happen
 	for i := 0; i < 5; i++ {
 		time.Sleep(b.PropagationInterval)
-		config, err := b.Service().LoadConfig(b.Genesis.SkipChainID())
+		config, err := b.Services[0].LoadConfig(b.Genesis.SkipChainID())
 		require.NoError(t, err)
 
 		if badConfig.Roster.List[0].Equal(config.Roster.List[0]) {
@@ -2218,7 +2191,7 @@ func TestService_SetBadConfig(t *testing.T) {
 }
 
 func TestService_DarcToSc(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	darcID := b.GenesisDarc.GetBaseID()
@@ -2231,22 +2204,30 @@ func TestService_DarcToSc(t *testing.T) {
 
 	// remove the mapping and then load it again
 	log.Lvl1("Reloading all services")
-	for _, service := range b.Services {
+	for i, service := range b.Services {
 		service.darcToSc = make(map[string]skipchain.SkipBlockID)
-		service.TestClose()
-		service.closed = false
-		require.NoError(t, service.startChain(scID))
+		b.NodeStop(i)
+		b.NodeRestart(i)
 	}
 
 	// check that the mapping is still correct
 	log.Lvl1("Verifying mapping is still correct")
 	for _, service := range b.Services {
+		for {
+			time.Sleep(100 * time.Millisecond)
+			service.darcToScMut.Lock()
+			nbr := len(service.darcToSc)
+			service.darcToScMut.Unlock()
+			if nbr > 0 {
+				break
+			}
+		}
 		require.True(t, service.darcToSc[string(darcID)].Equal(scID))
 	}
 }
 
 func TestService_StateChangeCache(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	// Register a stateful contract, so we can monitor how many times that
@@ -2258,10 +2239,10 @@ func TestService_StateChangeCache(t *testing.T) {
 		ctr++
 		return []StateChange{}, []Coin{}, nil
 	}
-	require.NoError(t, b.Service().testRegisterContract(contractID, adaptor(contract)))
+	b.Services[0].testRegisterContract(contractID, adaptor(contract))
 
 	scID := b.Genesis.SkipChainID()
-	st, err := b.Service().getStateTrie(scID)
+	st, err := b.Services[0].getStateTrie(scID)
 	require.NoError(t, err)
 	sst := st.MakeStagingStateTrie()
 	tx1, err := createOneClientTxWithCounter(b.GenesisDarc.GetBaseID(), contractID, []byte{}, b.Signer, 1)
@@ -2276,7 +2257,7 @@ func TestService_StateChangeCache(t *testing.T) {
 
 	txs := NewTxResults(tx1, tx2)
 	require.NoError(t, err)
-	root, txOut, states, _ := b.Service().createStateChanges(sst, scID, txs, noTimeout, CurrentVersion, timestamp)
+	root, txOut, states, _ := b.Services[0].createStateChanges(sst, scID, txs, noTimeout, CurrentVersion, timestamp)
 	require.Equal(t, 2, len(txOut))
 	require.Equal(t, 1, ctr)
 	// we expect one state change to increment the signature counter
@@ -2289,7 +2270,7 @@ func TestService_StateChangeCache(t *testing.T) {
 	// createStateChanges when making the block), then it should load it from the
 	// cache, which means that ctr is still one (we do not call the
 	// contract twice).
-	root1, txOut1, states1, _ := b.Service().createStateChanges(sst, scID, txOut, noTimeout, CurrentVersion, timestamp)
+	root1, txOut1, states1, _ := b.Services[0].createStateChanges(sst, scID, txOut, noTimeout, CurrentVersion, timestamp)
 	require.Equal(t, 1, ctr)
 	require.Equal(t, root, root1)
 	require.Equal(t, txOut, txOut1)
@@ -2297,9 +2278,9 @@ func TestService_StateChangeCache(t *testing.T) {
 
 	// If we remove the cache, then we expect the contract to be called
 	// again, i.e., ctr == 2.
-	b.Service().stateChangeCache = newStateChangeCache()
+	b.Services[0].stateChangeCache = newStateChangeCache()
 	require.NoError(t, err)
-	root2, txOut2, states2, _ := b.Service().createStateChanges(sst, scID, txs, noTimeout, CurrentVersion, timestamp)
+	root2, txOut2, states2, _ := b.Services[0].createStateChanges(sst, scID, txs, noTimeout, CurrentVersion, timestamp)
 	require.Equal(t, root, root2)
 	require.Equal(t, txOut, txOut2)
 	require.Equal(t, states, states2)
@@ -2308,12 +2289,12 @@ func TestService_StateChangeCache(t *testing.T) {
 
 // Check that we got no error from an existing state trie
 func TestService_UpdateTrieCallback(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	// already announced but it should exit silently
 	// as the trie index is different
-	err := b.Service().updateTrieCallback(b.Genesis.SkipChainID())
+	err := b.Services[0].updateTrieCallback(b.Genesis.SkipChainID())
 	require.NoError(t, err)
 }
 
@@ -2321,7 +2302,7 @@ func TestService_UpdateTrieCallback(t *testing.T) {
 // store them and increase the versions accordingly over
 // several transactions and instructions
 func TestService_StateChangeStorage(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 	signerIID := NewInstanceID(publicVersionKey(b.Signer.Identity().String()))
 
@@ -2348,8 +2329,7 @@ func TestService_StateChangeStorage(t *testing.T) {
 		return scs, []Coin{}, nil
 	}
 	for _, s := range b.Services {
-		require.NoError(t, s.testRegisterContract(contractID,
-			adaptor(contract)))
+		s.testRegisterContract(contractID, adaptor(contract))
 	}
 
 	for i := 0; i < n; i++ {
@@ -2361,7 +2341,7 @@ func TestService_StateChangeStorage(t *testing.T) {
 		if i == n-1 {
 			wait = 10
 		}
-		resp, err := b.Service().AddTransaction(&AddTxRequest{
+		resp, err := b.Services[0].AddTransaction(&AddTxRequest{
 			Version:       CurrentVersion,
 			SkipchainID:   b.Genesis.SkipChainID(),
 			Transaction:   tx,
@@ -2451,90 +2431,86 @@ func TestService_StateChangeStorageCatchUp(t *testing.T) {
 	// we don't want a db download
 	catchupDownloadAll = 100
 
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
-	n := 2
-	for i := 0; i < n; i++ {
-		tx, err := createClientTxWithTwoInstrWithCounter(b.GenesisDarc.GetBaseID(), dummyContract, []byte{}, b.Signer, uint64(i*2+1))
-		require.NoError(t, err)
-
-		resp, err := b.Service().AddTransaction(&AddTxRequest{
-			Version:       CurrentVersion,
-			SkipchainID:   b.Genesis.SkipChainID(),
-			Transaction:   tx,
-			InclusionWait: 10,
-		})
-		transactionOK(t, resp, err)
-	}
+	b.SpawnDummy(nil)
+	b.SpawnDummy(nil)
 
 	newServer, newRoster, newService := b.Local.MakeSRS(cothority.Suite, 1, ByzCoinID)
-	registerDummy(t, newServer)
+	registerContracts(newServer)
 
 	newRoster = onet.NewRoster(append(b.Roster.List, newRoster.List...))
-	ctx, _ := createConfigTxWithCounter(t, b.PropagationInterval, *newRoster, defaultMaxBlockSize, b, 5)
+	ctx, _ := createConfigTxWithCounter(t, b.PropagationInterval, *newRoster,
+		defaultMaxBlockSize, b, 3)
 	log.Lvl1("Updating config to include new roster")
-	b.SendTxAndWait(ctx, 10)
+	b.SendTx(nil, ctx)
+	require.NoError(b.T, b.Client.WaitPropagation(3))
 
-	for i := 0; i < 10; i++ {
-		log.Lvl1("Sleeping for 1 second...")
-		time.Sleep(time.Second)
-		scs, _ := newService.(*Service).stateChangeStorage.getByBlock(b.Genesis.Hash, 2)
+	scs, err := newService.(*Service).stateChangeStorage.getByBlock(b.
+		Genesis.Hash, 2)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(scs))
+	require.Equal(t, Create, scs[0].StateChange.StateAction)
 
-		if len(scs) > 0 {
-			require.Equal(t, Create, scs[0].StateChange.StateAction)
-			require.Equal(t, Update, scs[1].StateChange.StateAction)
-			require.Equal(t, uint64(3), scs[1].StateChange.Version)
-			return
-		}
-	}
-
-	require.True(t, false, "the new conode has never caught up in the last 10s")
+	scs, err = newService.(*Service).stateChangeStorage.getByBlock(b.
+		Genesis.Hash, 3)
+	require.NoError(t, err)
+	require.Equal(t, 3, len(scs))
+	// Config update
+	require.Equal(t, Update, scs[0].StateChange.StateAction)
+	require.Equal(t, uint64(1), scs[0].StateChange.Version)
+	// Darc update
+	require.Equal(t, Update, scs[1].StateChange.StateAction)
+	require.Equal(t, uint64(1), scs[1].StateChange.Version)
+	// Signer update
+	require.Equal(t, Update, scs[2].StateChange.StateAction)
+	require.Equal(t, uint64(3), scs[2].StateChange.Version)
 }
 
 // Tests that a conode can't be overflowed by catching requests
 func TestService_TestCatchUpHistory(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
-	require.Equal(t, 0, len(b.Service().catchingUpHistory))
+	require.Equal(t, 0, len(b.Services[0].catchingUpHistory))
 
-	sc := b.Service().Service(skipchain.ServiceName).(*skipchain.Service)
+	sc := b.Services[0].Service(skipchain.ServiceName).(*skipchain.Service)
 	sc.Storage.FollowIDs = []skipchain.SkipBlockID{b.Genesis.Hash}
 
 	// unknown, unfriendly skipchain, we shouldn't try to catch up
-	err := b.Service().catchupFromID(b.Roster, skipchain.SkipBlockID{}, skipchain.SkipBlockID{})
-	require.Equal(t, 0, len(b.Service().catchingUpHistory))
+	err := b.Services[0].catchupFromID(b.Roster, skipchain.SkipBlockID{}, skipchain.SkipBlockID{})
+	require.Equal(t, 0, len(b.Services[0].catchingUpHistory))
 	require.NoError(t, err)
 
 	// catch up
-	err = b.Service().catchupFromID(b.Roster, b.Genesis.Hash, b.Genesis.Hash)
-	require.Equal(t, 1, len(b.Service().catchingUpHistory))
+	err = b.Services[0].catchupFromID(b.Roster, b.Genesis.Hash, b.Genesis.Hash)
+	require.Equal(t, 1, len(b.Services[0].catchingUpHistory))
 	require.NoError(t, err)
 
-	ts := b.Service().catchingUpHistory[string(b.Genesis.Hash)]
+	ts := b.Services[0].catchingUpHistory[string(b.Genesis.Hash)]
 
 	// ... but not twice
-	err = b.Service().catchupFromID(b.Roster, b.Genesis.Hash, b.Genesis.Hash)
-	require.True(t, b.Service().catchingUpHistory[string(b.Genesis.Hash)].Equal(ts))
+	err = b.Services[0].catchupFromID(b.Roster, b.Genesis.Hash, b.Genesis.Hash)
+	require.True(t, b.Services[0].catchingUpHistory[string(b.Genesis.Hash)].Equal(ts))
 	require.Error(t, err)
 }
 
 func TestService_Repair(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	var intermediateStateTrie *stateTrie
 	var finalRoot []byte
 	n := 5
 	for i := 0; i < n; i++ {
-		ctx, err := createOneClientTxWithCounter(b.GenesisDarc.GetBaseID(), dummyContract, []byte{}, b.Signer, uint64(i+1))
+		ctx, err := createOneClientTxWithCounter(b.GenesisDarc.GetBaseID(), DummyContractName, []byte{}, b.Signer, uint64(i+1))
 		require.NoError(t, err)
-		b.SendTxAndWait(ctx, 10)
+		b.SendTx(nil, ctx)
 
 		// take a copy of the state trie at the middle
 		if i == 2 {
-			tmpTrie, err := b.Service().getStateTrie(b.Genesis.SkipChainID())
+			tmpTrie, err := b.Services[0].getStateTrie(b.Genesis.SkipChainID())
 			require.NoError(t, err)
 			nonce, err := tmpTrie.GetNonce()
 			require.NoError(t, err)
@@ -2549,7 +2525,7 @@ func TestService_Repair(t *testing.T) {
 			intermediateStateTrie = &stateTrie{*intermediateTrie,
 				trieCache{}, sync.Mutex{}}
 		} else if i == n-1 {
-			tmpTrie, err := b.Service().getStateTrie(b.Genesis.SkipChainID())
+			tmpTrie, err := b.Services[0].getStateTrie(b.Genesis.SkipChainID())
 			require.NoError(t, err)
 			finalRoot = tmpTrie.GetRoot()
 		}
@@ -2557,21 +2533,21 @@ func TestService_Repair(t *testing.T) {
 
 	// Introduce an artificial corruption and then try to repair it.
 	genesisHex := fmt.Sprintf("%x", b.Genesis.SkipChainID())
-	b.Service().stateTriesLock.Lock()
-	b.Service().stateTries[genesisHex] = intermediateStateTrie
-	b.Service().stateTriesLock.Unlock()
+	b.Services[0].stateTriesLock.Lock()
+	b.Services[0].stateTries[genesisHex] = intermediateStateTrie
+	b.Services[0].stateTriesLock.Unlock()
 
-	err := b.Service().fixInconsistencyIfAny(b.Genesis.SkipChainID(), intermediateStateTrie)
+	err := b.Services[0].fixInconsistencyIfAny(b.Genesis.SkipChainID(), intermediateStateTrie)
 	require.NoError(t, err)
 
-	b.Service().stateTriesLock.Lock()
-	newRoot := b.Service().stateTries[genesisHex].GetRoot()
-	b.Service().stateTriesLock.Unlock()
+	b.Services[0].stateTriesLock.Lock()
+	newRoot := b.Services[0].stateTries[genesisHex].GetRoot()
+	b.Services[0].stateTriesLock.Unlock()
 	require.Equal(t, finalRoot, newRoot)
 }
 
 func TestService_GetUpdates(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	req := &GetUpdatesRequest{
@@ -2579,45 +2555,45 @@ func TestService_GetUpdates(t *testing.T) {
 		Flags:         0,
 		LatestBlockID: nil,
 	}
-	_, err := b.Service().GetUpdates(req)
+	_, err := b.Services[0].GetUpdates(req)
 	require.Error(t, err)
 
 	req.Instances = []IDVersion{{ConfigInstanceID, 0}}
 	req.LatestBlockID = b.Genesis.SkipChainID()
-	gur, err := b.Service().GetUpdates(req)
+	gur, err := b.Services[0].GetUpdates(req)
 	require.NoError(t, err)
 	require.Equal(t, 0, len(gur.Proofs))
 
 	req.Flags = GUFSendVersion0
-	gur, err = b.Service().GetUpdates(req)
+	gur, err = b.Services[0].GetUpdates(req)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(gur.Proofs))
 	require.True(t, gur.Proofs[0].Match(ConfigInstanceID[:]))
 
 	ctx, _ := createConfigTxWithCounter(t, time.Millisecond*100, *b.Roster,
 		1e5, b, 1)
-	b.SendTxAndWait(ctx, 10)
+	b.SendTx(nil, ctx)
 
 	req.Flags = 0
-	_, err = b.Service().GetUpdates(req)
+	_, err = b.Services[0].GetUpdates(req)
 	require.Error(t, err)
-	latest, err := b.Service().db().GetLatest(b.Genesis)
+	latest, err := b.Services[0].db().GetLatest(b.Genesis)
 	req.LatestBlockID = latest.Hash
 	require.NoError(t, err)
 
-	gur, err = b.Service().GetUpdates(req)
+	gur, err = b.Services[0].GetUpdates(req)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(gur.Proofs))
 	require.True(t, gur.Proofs[0].Match(ConfigInstanceID[:]))
 
 	invID := sha256.Sum256([]byte("invalid instance"))
 	req.Instances = append(req.Instances, IDVersion{invID, 0})
-	gur, err = b.Service().GetUpdates(req)
+	gur, err = b.Services[0].GetUpdates(req)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(gur.Proofs))
 
 	req.Flags = GUFSendMissingProofs
-	gur, err = b.Service().GetUpdates(req)
+	gur, err = b.Services[0].GetUpdates(req)
 	require.NoError(t, err)
 	require.Equal(t, 2, len(gur.Proofs))
 	require.False(t, gur.Proofs[1].Match(invID[:]))
@@ -2727,36 +2703,6 @@ func panicContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]Sta
 	panic("this contract panics")
 }
 
-func dummyContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
-	_, _, _, darcID, err := cdb.GetValues(inst.InstanceID.Slice())
-	if err != nil {
-		return nil, nil, err
-	}
-
-	switch inst.GetType() {
-	case SpawnType:
-		if len(inst.Spawn.Args.Search("data")) == 32 {
-			return []StateChange{
-				NewStateChange(Create, NewInstanceID(inst.Spawn.Args.Search("data")), inst.Spawn.ContractID,
-					[]byte{}, darcID),
-			}, nil, nil
-		}
-		return []StateChange{
-			NewStateChange(Create, NewInstanceID(inst.Hash()), inst.Spawn.ContractID, inst.Spawn.Args[0].Value, darcID),
-		}, nil, nil
-	case InvokeType:
-		return []StateChange{
-			NewStateChange(Update, inst.InstanceID, dummyContract, inst.Invoke.Args[0].Value, darcID),
-		}, nil, nil
-	case DeleteType:
-		return []StateChange{
-			NewStateChange(Remove, inst.InstanceID, "", nil, darcID),
-		}, nil, nil
-	default:
-		panic("should not get here")
-	}
-}
-
 func slowContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	// This has to sleep for less than BlockInterval / 2 or else it will
 	// block the system from processing txs. See #1359.
@@ -2765,7 +2711,7 @@ func slowContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]Stat
 		return nil, nil, xerrors.Errorf("couldn't get config: %v", err)
 	}
 	time.Sleep(cfg.BlockInterval / 5)
-	return dummyContractFunc(cdb, inst, c)
+	return nil, nil, nil
 }
 
 // Simple contract that verifies if the available version is equal to the value.
@@ -2783,20 +2729,16 @@ func versionContractFunc(rst ReadOnlyStateTrie, inst Instruction, c []Coin) ([]S
 	return []StateChange{sc}, c, nil
 }
 
-func registerDummy(t *testing.T, servers []*onet.Server) {
+func registerContracts(servers []*onet.Server) {
 	// For testing - there must be a better way to do that. But putting
 	// services []skipchain.Service in the method signature doesn't work :(
 	for _, s := range servers {
 		service := s.Service(ServiceName).(*Service)
 
-		err := service.testRegisterContract(dummyContract, adaptor(dummyContractFunc))
-		require.NoError(t, err)
-		err = service.testRegisterContract(slowContract, adaptor(slowContractFunc))
-		require.NoError(t, err)
-		err = service.testRegisterContract(invalidContract, adaptor(invalidContractFunc))
-		require.NoError(t, err)
-		err = service.testRegisterContract(versionContract, adaptor(versionContractFunc))
-		require.NoError(t, err)
+		service.testRegisterContract(DummyContractName, DummyContractFromBytes)
+		service.testRegisterContract(slowContract, adaptor(slowContractFunc))
+		service.testRegisterContract(invalidContract, adaptor(invalidContractFunc))
+		service.testRegisterContract(versionContract, adaptor(versionContractFunc))
 	}
 }
 
@@ -2807,7 +2749,79 @@ func genID() (i InstanceID) {
 
 // registerContract stores the contract in a map and will
 // call it whenever a contract needs to be done.
-func (s *Service) testRegisterContract(contractID string, c ContractFn) error {
+func (s *Service) testRegisterContract(contractID string, c ContractFn) {
 	s.contracts.registry[contractID] = c
-	return nil
+}
+
+// caller gives us a darc, and we try to make an evolution request.
+func testDarcEvolution(b *BCTest, d2 darc.Darc, fail bool) Proof {
+	d2Buf, err := d2.ToProto()
+	require.NoError(b.T, err)
+	args := TxArgsDefault
+	args.RequireSuccess = false
+	_, resp := b.SendInst(&args, Instruction{
+		InstanceID: NewInstanceID(d2.GetBaseID()),
+		Invoke: &Invoke{
+			ContractID: ContractDarcID,
+			Command:    cmdDarcEvolve,
+			Args: Arguments{{
+				Name:  "darc",
+				Value: d2Buf,
+			}},
+		},
+	})
+
+	require.Equal(b.T, fail, resp.Error != "")
+	pr, err := b.Client.GetProof(d2.GetBaseID())
+	require.NoError(b.T, err)
+	return pr.Proof
+}
+
+type bctArgs struct {
+	BCTestArgs
+	RotationWindow int
+	Version        Version
+}
+
+var defaultBCTArgs = bctArgs{
+	BCTestArgs:     defaultBCTestArgs,
+	RotationWindow: 9999,
+	Version:        CurrentVersion,
+}
+
+func newBCTRun(t *testing.T, args *bctArgs) *BCTest {
+	bct := newBCT(t, args)
+	bct.CreateByzCoin()
+	return bct
+}
+
+func newBCT(t *testing.T, args *bctArgs) *BCTest {
+	if args == nil {
+		args = &defaultBCTArgs
+	}
+	bct := NewBCTest(t, &args.BCTestArgs)
+
+	for _, sv := range bct.Services {
+		sv.rotationWindow = args.RotationWindow
+		sv.defaultVersion = args.Version
+	}
+
+	registerContracts(bct.Servers)
+
+	bct.AddGenesisRules(
+		"spawn:"+DummyContractName,
+		"spawn:"+invalidContract,
+		"spawn:"+panicContract,
+		"spawn:"+slowContract,
+		"spawn:"+versionContract,
+		"spawn:"+stateChangeCacheContract,
+		"delete:"+DummyContractName)
+
+	return bct
+}
+
+func transactionOK(t *testing.T, resp *AddTxResponse, err error) {
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Empty(t, resp.Error)
 }

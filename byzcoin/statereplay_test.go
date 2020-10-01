@@ -14,15 +14,15 @@ import (
 
 // Test the expected use case
 func TestService_StateReplay(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
 	n := 2
 	for i := 0; i < n; i++ {
-		tx, err := createClientTxWithTwoInstrWithCounter(b.GenesisDarc.GetBaseID(), dummyContract, []byte{}, b.Signer, uint64(i*2+1))
+		tx, err := createClientTxWithTwoInstrWithCounter(b.GenesisDarc.GetBaseID(), DummyContractName, []byte{}, b.Signer, uint64(i*2+1))
 		require.NoError(t, err)
 
-		_, err = b.Service().AddTransaction(&AddTxRequest{
+		_, err = b.Services[0].AddTransaction(&AddTxRequest{
 			Version:       CurrentVersion,
 			SkipchainID:   b.Genesis.SkipChainID(),
 			Transaction:   tx,
@@ -31,20 +31,20 @@ func TestService_StateReplay(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	_, err := b.Service().ReplayState(b.Genesis.Hash, stdFetcher{},
+	_, err := b.Services[0].ReplayState(b.Genesis.Hash, stdFetcher{},
 		ReplayStateOptions{})
 	require.NoError(t, err)
 }
 
 func tryReplayBlock(t *testing.T, s *BCTest, sbID skipchain.SkipBlockID, msg string) {
-	_, err := s.Service().ReplayState(sbID, stdFetcher{},
+	_, err := s.Services[0].ReplayState(sbID, stdFetcher{},
 		ReplayStateOptions{MaxBlocks: 1})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), msg)
 }
 
 func forceStoreBlock(s *BCTest, sb *skipchain.SkipBlock) error {
-	return s.Service().db().Update(func(tx *bbolt.Tx) error {
+	return s.Services[0].db().Update(func(tx *bbolt.Tx) error {
 		buf, err := network.Marshal(sb)
 		if err != nil {
 			return err
@@ -56,13 +56,13 @@ func forceStoreBlock(s *BCTest, sb *skipchain.SkipBlock) error {
 
 // Test that it catches failing chains and return meaningful errors
 func TestService_StateReplayFailures(t *testing.T) {
-	b := NewBCTest(t)
+	b := newBCTRun(t, nil)
 	defer b.CloseAll()
 
-	tx, err := createClientTxWithTwoInstrWithCounter(b.GenesisDarc.GetBaseID(), dummyContract, []byte{}, b.Signer, uint64(1))
+	tx, err := createClientTxWithTwoInstrWithCounter(b.GenesisDarc.GetBaseID(), DummyContractName, []byte{}, b.Signer, uint64(1))
 	require.NoError(t, err)
 
-	_, err = b.Service().AddTransaction(&AddTxRequest{
+	_, err = b.Services[0].AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   b.Genesis.SkipChainID(),
 		Transaction:   tx,
@@ -75,7 +75,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 		"failed to get the first block")
 
 	// 2. not a genesis block for the first block
-	genesis := b.Service().db().GetByID(b.Genesis.Hash)
+	genesis := b.Services[0].db().GetByID(b.Genesis.Hash)
 	tryReplayBlock(t, b, genesis.ForwardLink[0].To,
 		"must start from genesis block")
 
@@ -100,7 +100,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 	tryReplayBlock(t, b, sb.Hash, "client transaction hash does not match")
 
 	// 6. mismatching merkle trie root
-	sb = b.Service().db().GetByID(b.Genesis.SkipChainID())
+	sb = b.Services[0].db().GetByID(b.Genesis.SkipChainID())
 	var dHead DataHeader
 	require.NoError(t, protobuf.Decode(sb.Data, &dHead))
 	dHead.TrieRoot = []byte{1, 2, 3}
@@ -111,7 +111,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 	tryReplayBlock(t, b, sb.Hash, "merkle tree root doesn't match with trie root")
 
 	// 7. failing instruction
-	sb = b.Service().db().GetByID(b.Genesis.SkipChainID())
+	sb = b.Services[0].db().GetByID(b.Genesis.SkipChainID())
 	var dBody DataBody
 	require.NoError(t, protobuf.Decode(sb.Payload, &dBody))
 	dBody.TxResults = append(dBody.TxResults, TxResult{

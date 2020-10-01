@@ -50,10 +50,10 @@ func TestViewChange_Basic3(t *testing.T) {
 //     - the time to wait to propagate to children
 // So it's using the `SetPropagationTimeout` to tweak it a bit.
 func testViewChange(t *testing.T, nHosts, nFailures int) {
-	bArgs := NewBCTestArgs()
+	bArgs := defaultBCTArgs
 	bArgs.Nodes = nHosts
 	bArgs.RotationWindow = 3
-	b := NewBCTestWithArgs(t, bArgs)
+	b := newBCTRun(t, &bArgs)
 	defer b.CloseAll()
 
 	propTimeout := time.Duration(4) * b.PropagationInterval
@@ -65,12 +65,6 @@ func testViewChange(t *testing.T, nHosts, nFailures int) {
 		service.SetPropagationTimeout(propTimeout)
 	}
 
-	log.Lvl1("Wait for all the genesis config to be written on all nodes.")
-	genesisInstanceID := InstanceID{}
-	for i := range b.Services {
-		b.WaitProofWithIdx(genesisInstanceID.Slice(), i)
-	}
-
 	// Stop the first nFailures hosts then the node at index nFailures
 	// should take over.
 	for i := 0; i < nFailures; i++ {
@@ -80,10 +74,9 @@ func testViewChange(t *testing.T, nHosts, nFailures int) {
 	}
 
 	log.Lvl1("creating a first tx to trigger the view-change")
-	tx0, err := createOneClientTx(b.GenesisDarc.GetBaseID(), dummyContract,
-		NewInstanceID([]byte{1}).Slice(), b.Signer)
-	require.NoError(t, err)
-	b.SendTxWaitPropagation(tx0, nFailures)
+	txArgs := TxArgsDefault
+	txArgs.Node = nFailures
+	b.SpawnDummy(&txArgs)
 
 	gucr, err := b.Services[nFailures].skService().GetUpdateChain(&skipchain.
 		GetUpdateChain{LatestID: b.Genesis.SkipChainID()})
@@ -100,13 +93,8 @@ func testViewChange(t *testing.T, nHosts, nFailures int) {
 	// try to send a transaction to the node on index nFailures+1, which is
 	// a follower (not the new leader)
 	log.Lvl1("Sending a transaction to the node after the new leader")
-	tx1ID := NewInstanceID([]byte{2}).Slice()
-	counter := uint64(2)
-	tx1, err := createOneClientTxWithCounter(b.GenesisDarc.GetBaseID(), dummyContract, tx1ID,
-		b.Signer, counter)
-	counter++
-	require.NoError(t, err)
-	b.SendTxWaitPropagation(tx1, nFailures+1)
+	txArgs.Node = nFailures + 1
+	b.SpawnDummy(&txArgs)
 
 	// check that the leader is updated for all nodes
 	// Note: check is done after a tx has been sent so that nodes catch up if the
@@ -121,8 +109,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int) {
 	}
 
 	log.Lvl1("Creating new TX")
-	b.SendDummyTxWaitPropagation(nFailures+1, counter)
-	counter++
+	b.SpawnDummy(&txArgs)
 
 	// We need to bring the failed (the first nFailures) nodes back up and
 	// check that they can synchronise to the latest state.
@@ -132,12 +119,11 @@ func testViewChange(t *testing.T, nHosts, nFailures int) {
 		require.NoError(t, b.Services[i].TestRestart())
 		b.Services[i].SetPropagationTimeout(propTimeout)
 	}
-	b.WaitPropagation(4)
+	b.Client.WaitPropagation(4)
 
 	log.Lvl1("Adding two new tx for the resurrected nodes to catch up")
 	for tx := 0; tx < 2; tx++ {
-		b.SendDummyTxWaitPropagation(nFailures, counter)
-		counter++
+		b.SpawnDummy(&txArgs)
 	}
 
 	log.Lvl1("Check that last block has index == 6")
@@ -148,11 +134,11 @@ func testViewChange(t *testing.T, nHosts, nFailures int) {
 
 // Tests that a view change can happen when the leader index is out of bound
 func TestViewChange_LeaderIndex(t *testing.T) {
-	bArgs := NewBCTestArgs()
+	bArgs := defaultBCTArgs
 	bArgs.PropagationInterval = time.Second
 	bArgs.Nodes = 5
 	bArgs.RotationWindow = defaultRotationWindow
-	b := NewBCTestWithArgs(t, bArgs)
+	b := newBCTRun(t, &bArgs)
 	defer b.CloseAll()
 
 	err := b.Services[0].sendViewChangeReq(viewchange.View{LeaderIndex: -1})
@@ -187,11 +173,11 @@ func TestViewChange_LeaderIndex(t *testing.T) {
 // Test that old states of a view change that got stuck in the middle of the protocol
 // are correctly cleaned if a new block is discovered.
 func TestViewChange_LostSync(t *testing.T) {
-	bArgs := NewBCTestArgs()
+	bArgs := defaultBCTArgs
 	bArgs.Nodes = 5
 	bArgs.PropagationInterval = time.Second
 	bArgs.RotationWindow = defaultRotationWindow
-	b := NewBCTestWithArgs(t, bArgs)
+	b := newBCTRun(t, &bArgs)
 	defer b.CloseAll()
 
 	target := b.Servers[1].ServerIdentity
@@ -216,7 +202,7 @@ func TestViewChange_LostSync(t *testing.T) {
 	// conode is still waiting for requests
 
 	// then new blocks have been added
-	tx1, err := createOneClientTxWithCounter(b.GenesisDarc.GetBaseID(), dummyContract, b.Value, b.Signer, 1)
+	tx1, err := createOneClientTxWithCounter(b.GenesisDarc.GetBaseID(), DummyContractName, b.Value, b.Signer, 1)
 	require.NoError(t, err)
 	_, err = b.Services[1].AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
@@ -272,7 +258,7 @@ func TestViewChange_LostSync(t *testing.T) {
 	}
 
 	log.Lvl1("Waiting for the new block to be propagated")
-	b.WaitPropagation(2)
+	b.Client.WaitPropagation(2)
 	for _, service := range b.Services {
 		// everyone should have the same leader after the genesis block is stored
 		leader, err := service.getLeader(b.Genesis.SkipChainID())
@@ -289,46 +275,39 @@ func TestViewChange_LostSync(t *testing.T) {
 //  - Node3 - misses block #1, unpaused after creation of block #1
 func TestViewChange_NeedCatchUp(t *testing.T) {
 	nodes := 4
-	bArgs := NewBCTestArgs()
+	bArgs := defaultBCTArgs
 	bArgs.Nodes = nodes
 	bArgs.RotationWindow = 3
-	b := NewBCTestWithArgs(t, bArgs)
+	b := newBCTRun(t, &bArgs)
 	defer b.CloseAll()
 
 	for _, service := range b.Services {
 		service.SetPropagationTimeout(2 * b.PropagationInterval)
 	}
 
+	b.Services[nodes-1].TestClose()
 	b.Servers[nodes-1].Pause()
 
 	// Create a block that host 4 will miss
 	log.Lvl1("Send block that node 4 will miss")
-	tx1, err := createOneClientTx(b.GenesisDarc.GetBaseID(), dummyContract, b.Value, b.Signer)
-	require.NoError(t, err)
-	b.SendTxToAndWait(tx1, 0, 10)
+	b.SpawnDummy(nil)
 
+	log.Lvl1("Kill the leader")
 	// Kill the leader, and unpause the sleepy node
 	b.Services[0].TestClose()
 	b.Servers[0].Pause()
 	b.Servers[nodes-1].Unpause()
+	require.NoError(t, b.Services[nodes-1].TestRestart())
 
 	// Trigger a viewchange
 	log.Lvl1("Trigger the viewchange")
-	tx1, err = createOneClientTx(b.GenesisDarc.GetBaseID(), dummyContract, b.Value, b.Signer)
-	require.NoError(t, err)
-	b.SendTxTo(tx1, nodes-1)
-
-	log.Lvl1("Wait for the block to propagate")
-	require.NoError(t, NewClient(b.Genesis.SkipChainID(),
-		*b.Roster).WaitPropagation(1))
+	txArgs := TxArgsDefault
+	txArgs.Node = nodes - 1
+	b.SpawnDummy(&txArgs)
 
 	// Send the block again
 	log.Lvl1("Sending block again")
-	b.SendTxTo(tx1, nodes-1)
-
-	log.Lvl1("Wait for the transaction to be included")
-	require.NoError(t, NewClient(b.Genesis.SkipChainID(),
-		*b.Roster).WaitPropagation(2))
+	b.SpawnDummy(&txArgs)
 
 	// Check that a view change was finally executed
 	leader, err := b.Services[nodes-1].getLeader(b.Genesis.SkipChainID())
