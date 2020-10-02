@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
+	"go.etcd.io/bbolt"
 	"strings"
 	"sync"
 	"testing"
@@ -27,6 +29,11 @@ import (
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 )
+
+func init() {
+	log.ErrFatal(RegisterGlobalContract(DummyContractName,
+		dummyContractFromBytes))
+}
 
 var tSuite = suites.MustFind("Ed25519")
 
@@ -267,7 +274,7 @@ func TestService_AddTransaction_WrongNode(t *testing.T) {
 
 	outsideServer := b.Local.GenServers(1)[0]
 	outside := outsideServer.Service(ServiceName).(*Service)
-	registerContracts([]*onet.Server{outsideServer})
+	registerContracts(outside)
 
 	// add the first tx to outside server
 	log.Lvl1("adding the first tx - this should fail")
@@ -1019,21 +1026,6 @@ func sendTransactionWithCounter(t *testing.T, s *BCTest, client int, kind string
 	return proof, key, resp, err, err2
 }
 
-func (b *BCTest) sendInstructions(t *testing.T, wait int,
-	instr ...Instruction) (resp *AddTxResponse, ctx ClientTransaction) {
-	var err error
-	ctx, err = combineInstrsAndSign(b.Signer, instr...)
-	require.NoError(t, err)
-	resp, err = b.Services[0].AddTransaction(&AddTxRequest{
-		Version:       CurrentVersion,
-		SkipchainID:   b.Genesis.SkipChainID(),
-		Transaction:   ctx,
-		InclusionWait: wait,
-	})
-	require.NoError(t, err)
-	return
-}
-
 func TestService_InvalidVerification(t *testing.T) {
 	b := newBCTRun(t, nil)
 	defer b.CloseAll()
@@ -1361,8 +1353,11 @@ func TestService_DarcEvolutionFail(t *testing.T) {
 			Invoke:        &invoke,
 			SignerCounter: []uint64{counterResponse.Counters[0] + 1},
 		}
-		resp, _ := b.sendInstructions(t, 10, instr)
+		bcArgs := TxArgsDefault
+		bcArgs.RequireSuccess = false
+		_, resp := b.SendInst(&bcArgs, instr)
 		require.Contains(t, resp.Error, "instruction verification failed")
+		b.SignerCounter--
 	}
 
 	// then we create a bad request, i.e., with an invalid version number
@@ -1649,8 +1644,7 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 	testDarcBuf, err := testDarc.ToProto()
 	require.NoError(t, err)
 	instr := createSpawnInstr(b.GenesisDarc.GetBaseID(), ContractDarcID, "darc", testDarcBuf)
-	require.NoError(t, err)
-	b.sendInstructions(t, 10, instr)
+	b.SendInst(nil, instr)
 
 	log.Lvl1("Creating blocks to check rotation of the leader")
 	leanClient := onet.NewClient(cothority.Suite, ServiceName)
@@ -1908,8 +1902,7 @@ func addDummyTxsTo(t *testing.T, s *BCTest, nbr int, perCTx int, counter int, id
 			counter++
 			instrs = append(instrs, instr)
 		}
-		s.sendInstructions(t, 10, instrs...)
-		s.Local.WaitDone(time.Second)
+		s.SendInst(nil, instrs...)
 	}
 	return counter
 }
@@ -1929,8 +1922,7 @@ func TestService_SetConfigRosterDownload(t *testing.T) {
 	testDarcBuf, err := testDarc.ToProto()
 	require.NoError(t, err)
 	instr := createSpawnInstr(b.GenesisDarc.GetBaseID(), ContractDarcID, "darc", testDarcBuf)
-	require.NoError(t, err)
-	b.sendInstructions(t, 10, instr)
+	b.SendInst(nil, instr)
 	// Add other transaction so we're on a new border between forward links
 	ct := addDummyTxs(t, b, 4, 1, 2)
 
@@ -2145,7 +2137,7 @@ func TestService_DownloadStateRunning(t *testing.T) {
 			continue
 		}
 		log.Lvl1("Deleting node", i, "and adding new transaction")
-		b.DeleteDBs(i)
+		deleteDBs(b, i)
 
 		addDummyTxsTo(t, b, 1, 1, counter, (i+1)%len(b.Services))
 		counter++
@@ -2437,8 +2429,8 @@ func TestService_StateChangeStorageCatchUp(t *testing.T) {
 	b.SpawnDummy(nil)
 	b.SpawnDummy(nil)
 
-	newServer, newRoster, newService := b.Local.MakeSRS(cothority.Suite, 1, ByzCoinID)
-	registerContracts(newServer)
+	_, newRoster, newService := b.Local.MakeSRS(cothority.Suite, 1, ByzCoinID)
+	registerContracts(newService.(*Service))
 
 	newRoster = onet.NewRoster(append(b.Roster.List, newRoster.List...))
 	ctx, _ := createConfigTxWithCounter(t, b.PropagationInterval, *newRoster,
@@ -2729,13 +2721,10 @@ func versionContractFunc(rst ReadOnlyStateTrie, inst Instruction, c []Coin) ([]S
 	return []StateChange{sc}, c, nil
 }
 
-func registerContracts(servers []*onet.Server) {
+func registerContracts(services ...*Service) {
 	// For testing - there must be a better way to do that. But putting
 	// services []skipchain.Service in the method signature doesn't work :(
-	for _, s := range servers {
-		service := s.Service(ServiceName).(*Service)
-
-		service.testRegisterContract(DummyContractName, DummyContractFromBytes)
+	for _, service := range services {
 		service.testRegisterContract(slowContract, adaptor(slowContractFunc))
 		service.testRegisterContract(invalidContract, adaptor(invalidContractFunc))
 		service.testRegisterContract(versionContract, adaptor(versionContractFunc))
@@ -2778,15 +2767,17 @@ func testDarcEvolution(b *BCTest, d2 darc.Darc, fail bool) Proof {
 }
 
 type bctArgs struct {
-	BCTestArgs
-	RotationWindow int
-	Version        Version
+	PropagationInterval time.Duration
+	Nodes               int
+	RotationWindow      int
+	Version             Version
 }
 
 var defaultBCTArgs = bctArgs{
-	BCTestArgs:     defaultBCTestArgs,
-	RotationWindow: 9999,
-	Version:        CurrentVersion,
+	Nodes:               3,
+	PropagationInterval: 500 * time.Millisecond,
+	RotationWindow:      9999,
+	Version:             CurrentVersion,
 }
 
 func newBCTRun(t *testing.T, args *bctArgs) *BCTest {
@@ -2799,23 +2790,21 @@ func newBCT(t *testing.T, args *bctArgs) *BCTest {
 	if args == nil {
 		args = &defaultBCTArgs
 	}
-	bct := NewBCTest(t, &args.BCTestArgs)
+	bct := NewBCTest(t, args.PropagationInterval, args.Nodes)
 
 	for _, sv := range bct.Services {
 		sv.rotationWindow = args.RotationWindow
 		sv.defaultVersion = args.Version
 	}
 
-	registerContracts(bct.Servers)
+	registerContracts(bct.Services...)
 
 	bct.AddGenesisRules(
-		"spawn:"+DummyContractName,
 		"spawn:"+invalidContract,
 		"spawn:"+panicContract,
 		"spawn:"+slowContract,
 		"spawn:"+versionContract,
-		"spawn:"+stateChangeCacheContract,
-		"delete:"+DummyContractName)
+		"spawn:"+stateChangeCacheContract)
 
 	return bct
 }
@@ -2824,4 +2813,28 @@ func transactionOK(t *testing.T, resp *AddTxResponse, err error) {
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.Empty(t, resp.Error)
+}
+
+// DeleteDBs resets the byzcoin- and skipchain-dbs of the given node.
+func deleteDBs(b *BCTest, index int) {
+	bc := b.Services[index]
+	log.Lvlf1("%s: Deleting DB of node %d", bc.ServerIdentity(), index)
+	bc.TestClose()
+	for scid := range bc.stateTries {
+		require.NoError(b.T, deleteDB(bc.ServiceProcessor, []byte(scid)))
+		idStr := hex.EncodeToString([]byte(scid))
+		require.NoError(b.T, deleteDB(bc.ServiceProcessor, []byte(idStr)))
+	}
+	require.NoError(b.T, deleteDB(bc.ServiceProcessor, storageID))
+	sc := bc.Service(skipchain.ServiceName).(*skipchain.Service)
+	require.NoError(b.T, deleteDB(sc.ServiceProcessor, []byte("skipblocks")))
+	require.NoError(b.T, deleteDB(sc.ServiceProcessor, []byte("skipchainconfig")))
+	require.NoError(b.T, bc.TestRestart())
+}
+
+func deleteDB(s *onet.ServiceProcessor, key []byte) error {
+	db, stBucket := s.GetAdditionalBucket(key)
+	return db.Update(func(tx *bbolt.Tx) error {
+		return tx.DeleteBucket(stBucket)
+	})
 }

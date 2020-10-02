@@ -118,41 +118,21 @@ func TestClient_CreateTransaction(t *testing.T) {
 }
 
 func TestClient_GetProof(t *testing.T) {
-	l := onet.NewTCPTest(cothority.Suite)
-	servers, roster, _ := l.GenTree(3, true)
-	registerContracts(servers)
-	defer l.CloseAll()
-
-	// Initialise the genesis message and send it to the service.
-	signer := darc.NewSignerEd25519(nil, nil)
-	msg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{"spawn:dummy"}, signer.Identity())
-	msg.BlockInterval = 100 * time.Millisecond
-	require.NoError(t, err)
-
-	// The darc inside it should be valid.
-	d := msg.GenesisDarc
-	require.Nil(t, d.Verify(true))
-
-	c, csr, err := NewLedger(msg, false)
-	require.NoError(t, err)
-
-	gac, err := c.GetAllByzCoinIDs(roster.List[1])
-	require.NoError(t, err)
-	require.Equal(t, 1, len(gac.IDs))
+	b := newBCTRun(t, nil)
+	defer b.CloseAll()
 
 	// Create a new transaction.
 	value := []byte{5, 6, 7, 8}
-	kind := "dummy"
-	tx, err := createOneClientTx(d.GetBaseID(), kind, value, signer)
+	tx, err := createOneClientTx(b.GenesisDarc.GetBaseID(), DummyContractName, value, b.Signer)
 	require.NoError(t, err)
-	atr, err := c.AddTransactionAndWait(tx, 10)
+	atr, err := b.Client.AddTransactionAndWait(tx, 10)
 	require.NoError(t, err)
 
 	// We should have a proof of our transaction in the skipchain.
 	newID := tx.Instructions[0].Hash()
-	p, err := c.GetProofAfter(newID, true, &atr.Proof.Latest)
+	p, err := b.Client.GetProofAfter(newID, true, &atr.Proof.Latest)
 	require.NoError(t, err)
-	require.Nil(t, p.Proof.Verify(csr.Skipblock.SkipChainID()))
+	require.Nil(t, p.Proof.Verify(b.Genesis.SkipChainID()))
 	require.Equal(t, 2, len(p.Proof.Links))
 	k, v0, _, _, err := p.Proof.KeyValue()
 	require.NoError(t, err)
@@ -160,7 +140,7 @@ func TestClient_GetProof(t *testing.T) {
 	require.Equal(t, value, v0)
 
 	// The proof should now be smaller as we learnt about the block
-	p, err = c.GetProofAfter(newID, false, &atr.Proof.Latest)
+	p, err = b.Client.GetProofAfter(newID, false, &atr.Proof.Latest)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(p.Proof.Links))
 }
@@ -198,41 +178,25 @@ func TestClient_GetProofCorrupted(t *testing.T) {
 // Create a streaming client and add blocks in the background. The client
 // should receive valid blocks.
 func TestClient_Streaming(t *testing.T) {
-	l := onet.NewTCPTest(cothority.Suite)
-	servers, roster, _ := l.GenTree(3, true)
-	registerContracts(servers)
-	defer l.CloseAll()
-
-	// Initialise the genesis message and send it to the service.
-	signer := darc.NewSignerEd25519(nil, nil)
-	msg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{"spawn:dummy"}, signer.Identity())
-	msg.BlockInterval = time.Second
-	require.NoError(t, err)
-
-	// The darc inside it should be valid.
-	d := msg.GenesisDarc
-	require.Nil(t, d.Verify(true))
-
-	c, csr, err := NewLedger(msg, false)
-	require.NoError(t, err)
+	b := newBCTRun(t, nil)
+	defer b.CloseAll()
 
 	n := 2
 	go func() {
 		time.Sleep(100 * time.Millisecond)
 		for i := 0; i < n; i++ {
 			value := []byte{5, 6, 7, 8}
-			kind := "dummy"
-			tx, err := createOneClientTxWithCounter(d.GetBaseID(), kind, value, signer, uint64(i)+1)
+			tx, err := createOneClientTxWithCounter(b.GenesisDarc.GetBaseID(), DummyContractName, value, b.Signer, uint64(i)+1)
 			// Need log.ErrFatal here, else it races with the rest of the code that
 			// uses 't'.
 			require.NoError(t, err)
-			_, err = c.AddTransaction(tx)
+			_, err = b.Client.AddTransaction(tx)
 			require.NoError(t, err)
 		}
 	}()
 
 	// Start collecting transactions
-	c1 := NewClientKeep(csr.Skipblock.Hash, *roster)
+	c1 := NewClientKeep(b.Genesis.Hash, *b.Roster)
 	var xMut sync.Mutex
 	var x int
 	done := make(chan bool)
@@ -263,48 +227,31 @@ func TestClient_Streaming(t *testing.T) {
 	}
 
 	go func() {
-		err = c1.StreamTransactions(cb)
+		err := c1.StreamTransactions(cb)
 		require.NoError(t, err)
 	}()
 	select {
 	case <-done:
-	case <-time.After(time.Duration(10) * msg.BlockInterval):
+	case <-time.After(time.Duration(10) * b.GenesisMessage.BlockInterval):
 		require.Fail(t, "should have got n transactions")
 	}
 	require.NoError(t, c1.Close())
 }
 
 func TestClient_NoPhantomSkipchain(t *testing.T) {
-	l := onet.NewTCPTest(cothority.Suite)
-	servers, roster, _ := l.GenTree(3, true)
-	registerContracts(servers)
-	defer l.CloseAll()
-
-	// Initialise the genesis message and send it to the service.
-	signer := darc.NewSignerEd25519(nil, nil)
-	msg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{"spawn:dummy"}, signer.Identity())
-	msg.BlockInterval = 100 * time.Millisecond
-	require.NoError(t, err)
-
-	d := msg.GenesisDarc
-
-	c, _, err := NewLedger(msg, false)
-	require.NoError(t, err)
-
-	gac, err := c.GetAllByzCoinIDs(roster.List[0])
-	require.NoError(t, err)
-	require.Equal(t, 1, len(gac.IDs))
+	b := newBCTRun(t, nil)
+	defer b.CloseAll()
 
 	// Create a new transaction.
-	tx, err := createOneClientTx(d.GetBaseID(), "dummy", []byte{}, signer)
+	tx, err := createOneClientTx(b.GenesisDarc.GetBaseID(), DummyContractName,
+		[]byte{}, b.Signer)
 	require.NoError(t, err)
-	_, err = c.AddTransactionAndWait(tx, 10)
+	_, err = b.Client.AddTransactionAndWait(tx, 10)
 	require.NoError(t, err)
 
-	gac, err = c.GetAllByzCoinIDs(roster.List[0])
+	gac, err := b.Client.GetAllByzCoinIDs(b.Roster.List[0])
 	require.NoError(t, err)
 	require.Equal(t, 1, len(gac.IDs))
-	require.NoError(t, l.WaitDone(time.Second))
 }
 
 // Insure that the decoder will return an error if the reply

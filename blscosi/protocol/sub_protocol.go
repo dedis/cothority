@@ -101,6 +101,8 @@ func NewSubBlsCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite *pairing.S
 func (p *SubBlsCosi) Dispatch() error {
 	defer p.Done()
 
+	log.Printf("%s: has %s", p.ServerIdentity(), p.Tree().Dump())
+
 	// Send announcement to start sending signatures
 	if p.IsRoot() {
 		return p.dispatchRoot()

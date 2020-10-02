@@ -1,18 +1,20 @@
 package byzcoin
 
 import (
-	"encoding/hex"
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3/suites"
 	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/log"
-	"go.etcd.io/bbolt"
 	"testing"
 	"time"
 )
 
+// BCTest structure represents commonly used elements when doing integration
+// tests in ByzCoin.
+// The different methods use the testing.T field
+// to reduce manual error checking.
 type BCTest struct {
 	Local               *onet.LocalTest
 	Servers             []*onet.Server
@@ -29,64 +31,48 @@ type BCTest struct {
 	T                   *testing.T
 }
 
-type BCTestArgs struct {
-	PropagationInterval time.Duration
-	Nodes               int
+// NewBCTestDefault creates a new structure with default values.
+func NewBCTestDefault(t *testing.T) *BCTest {
+	return NewBCTest(t, 500*time.Millisecond, 3)
 }
 
-type TxArgs struct {
-	Node            int
-	Wait            int
-	WaitPropagation bool
-	RequireSuccess  bool
-}
-
-var TxArgsDefault = TxArgs{
-	Node:            0,
-	Wait:            10,
-	WaitPropagation: true,
-	RequireSuccess:  true,
-}
-
-var defaultBCTestArgs = BCTestArgs{
-	PropagationInterval: 500 * time.Millisecond,
-	Nodes:               3,
-}
-
-// NewBCTestWithArgs takes a BCTestArgs to override the default values.
-func NewBCTest(t *testing.T, ba *BCTestArgs) *BCTest {
-	if ba == nil {
-		ba = &defaultBCTestArgs
-	}
+// NewBCTest creates a new structure for the test, initializing the nodes,
+// but not yet starting the byzcoin instance.
+func NewBCTest(t *testing.T, propagation time.Duration, nodes int) *BCTest {
 	b := &BCTest{
 		T:             t,
-		Local:         onet.NewLocalTestT(tSuite, t),
+		Local:         onet.NewLocalTestT(suites.MustFind("Ed25519"), t),
 		Value:         []byte("anyvalue"),
 		Signer:        darc.NewSignerEd25519(nil, nil),
 		SignerCounter: 1,
 	}
 
-	require.NoError(t, RegisterGlobalContract(DummyContractName,
-		DummyContractFromBytes))
-	b.Servers, b.Roster, _ = b.Local.GenTree(ba.Nodes, true)
+	b.Servers, b.Roster, _ = b.Local.GenTree(nodes, true)
 	for _, sv := range b.Local.GetServices(b.Servers, ByzCoinID) {
 		service := sv.(*Service)
 		b.Services = append(b.Services, service)
 	}
 
 	var err error
-	b.GenesisMessage, err = DefaultGenesisMsg(CurrentVersion, b.Roster, nil,
+	b.GenesisMessage, err = DefaultGenesisMsg(CurrentVersion, b.Roster,
+		[]string{
+			"spawn:" + DummyContractName,
+			"delete:" + DummyContractName,
+		},
 		b.Signer.Identity())
 	require.NoError(t, err)
 	b.GenesisDarc = &b.GenesisMessage.GenesisDarc
 
-	b.GenesisMessage.BlockInterval = ba.PropagationInterval
+	b.GenesisMessage.BlockInterval = propagation
 	b.PropagationInterval = b.GenesisMessage.BlockInterval
 
 	return b
 }
 
+// AddGenesisRules can be used before CreateByzCoin to add rules to the
+// genesis darc.
 func (b *BCTest) AddGenesisRules(rules ...string) {
+	require.Nil(b.T, b.Genesis, "cannot add rules after CreateByzCoin")
 	ownerExpr := expression.Expr(b.Signer.Identity().String())
 	for _, r := range rules {
 		require.NoError(b.T, b.GenesisMessage.GenesisDarc.Rules.AddRule(
@@ -94,7 +80,10 @@ func (b *BCTest) AddGenesisRules(rules ...string) {
 	}
 }
 
+// CreateByzCoin starts the byzcoin instance and updates the Genesis and
+// Client fields.
 func (b *BCTest) CreateByzCoin() {
+	require.Nil(b.T, b.Genesis, "CreateByzCoin can only be called once")
 	resp, err := b.Services[0].CreateGenesisBlock(b.GenesisMessage)
 	require.NoError(b.T, err)
 	b.Genesis = resp.Skipblock
@@ -102,16 +91,20 @@ func (b *BCTest) CreateByzCoin() {
 	require.NoError(b.T, b.Client.WaitPropagation(0))
 }
 
+// NodeStop simulates a node that is down.
 func (b *BCTest) NodeStop(index int) {
 	b.Services[index].TestClose()
 	b.Servers[index].Pause()
 }
 
+// NodeRestart simulates a node that goes up.
 func (b *BCTest) NodeRestart(index int) {
 	b.Servers[index].Unpause()
 	require.NoError(b.T, b.Services[index].TestRestart())
 }
 
+// CloseAll must be used when the test is done.
+// It makes sure that the system is in an idle state before shutting it down.
 func (b *BCTest) CloseAll() {
 	if b.Client != nil {
 		require.NoError(b.T, b.Client.WaitPropagation(-1))
@@ -119,19 +112,51 @@ func (b *BCTest) CloseAll() {
 	b.Local.CloseAll()
 }
 
+// TxArgs can be used to define in more detail how the transactions should be
+// sent to the ledger.
+type TxArgs struct {
+	Node            int
+	Wait            int
+	WaitPropagation bool
+	RequireSuccess  bool
+}
+
+// TxArgsDefault represent sensible defaults for new transactions.
+// They are used if the args=nil.
+var TxArgsDefault = TxArgs{
+	Node:            0,
+	Wait:            10,
+	WaitPropagation: true,
+	RequireSuccess:  true,
+}
+
+// SendInst takes the instructions, adds the counters,
+// and signs them using the b.Signer. If b.Signer is used
+// outside of SendInst and SendTx,
+// b.SignerCounter needs to be updated by the test.
+// If args == nil, TxArgsDefault is used.
 func (b *BCTest) SendInst(args *TxArgs,
 	inst ...Instruction) (ClientTransaction, AddTxResponse) {
 
 	for i := range inst {
+		inst[i].SignerIdentities = []darc.Identity{b.Signer.Identity()}
 		inst[i].SignerCounter = []uint64{b.SignerCounter}
 		b.SignerCounter++
 	}
-	ctx, err := combineInstrsAndSign(b.Signer, inst...)
-	require.NoError(b.T, err)
+	ctx := NewClientTransaction(CurrentVersion, inst...)
+	h := ctx.Instructions.Hash()
+	for i := range ctx.Instructions {
+		require.NoError(b.T, ctx.Instructions[i].SignWith(h, b.Signer))
+	}
 
 	return ctx, b.SendTx(args, ctx)
 }
 
+// SendTx calls the service of the node given in args and adds a transaction.
+// Depending on args,
+// it checks for success and waits for the transaction to be stored in all
+// nodes.
+// If args == nil, TxArgsDefault is used.
 func (b *BCTest) SendTx(args *TxArgs, ctx ClientTransaction) AddTxResponse {
 	if args == nil {
 		args = &TxArgsDefault
@@ -154,6 +179,8 @@ func (b *BCTest) SendTx(args *TxArgs, ctx ClientTransaction) AddTxResponse {
 	return *resp
 }
 
+// SpawnDummy creates a new dummy-instance with the value "anyvalue".
+// If args == nil, TxArgsDefault is used.
 func (b *BCTest) SpawnDummy(args *TxArgs) (ClientTransaction, AddTxResponse) {
 	return b.SendInst(args, Instruction{
 		InstanceID: NewInstanceID(b.GenesisDarc.GetBaseID()),
@@ -164,41 +191,20 @@ func (b *BCTest) SpawnDummy(args *TxArgs) (ClientTransaction, AddTxResponse) {
 	})
 }
 
-func (b *BCTest) DeleteDBs(index int) {
-	bc := b.Services[index]
-	log.Lvlf1("%s: Deleting DB of node %d", bc.ServerIdentity(), index)
-	bc.TestClose()
-	for scid := range bc.stateTries {
-		require.NoError(b.T, deleteDB(bc.ServiceProcessor, []byte(scid)))
-		idStr := hex.EncodeToString([]byte(scid))
-		require.NoError(b.T, deleteDB(bc.ServiceProcessor, []byte(idStr)))
-	}
-	require.NoError(b.T, deleteDB(bc.ServiceProcessor, storageID))
-	sc := bc.Service(skipchain.ServiceName).(*skipchain.Service)
-	require.NoError(b.T, deleteDB(sc.ServiceProcessor, []byte("skipblocks")))
-	require.NoError(b.T, deleteDB(sc.ServiceProcessor, []byte("skipchainconfig")))
-	require.NoError(b.T, bc.TestRestart())
-}
-
-func deleteDB(s *onet.ServiceProcessor, key []byte) error {
-	db, stBucket := s.GetAdditionalBucket(key)
-	return db.Update(func(tx *bbolt.Tx) error {
-		return tx.DeleteBucket(stBucket)
-	})
-}
-
+// DummyContractName is the name of the dummy contract.
 const DummyContractName = "dummy"
 
-type DummyContract struct {
+// dummyContract is a copy of the value-contract
+type dummyContract struct {
 	BasicContract
 	Data []byte
 }
 
-func DummyContractFromBytes(in []byte) (Contract, error) {
-	return &DummyContract{Data: in}, nil
+func dummyContractFromBytes(in []byte) (Contract, error) {
+	return &dummyContract{Data: in}, nil
 }
 
-func (dc *DummyContract) Spawn(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+func (dc *dummyContract) Spawn(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	_, _, _, darcID, err := cdb.GetValues(inst.InstanceID.Slice())
 	if err != nil {
 		return nil, nil, err
@@ -215,7 +221,7 @@ func (dc *DummyContract) Spawn(cdb ReadOnlyStateTrie, inst Instruction, c []Coin
 	}, nil, nil
 }
 
-func (dc *DummyContract) Invoke(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+func (dc *dummyContract) Invoke(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	_, _, _, darcID, err := cdb.GetValues(inst.InstanceID.Slice())
 	if err != nil {
 		return nil, nil, err
@@ -226,7 +232,7 @@ func (dc *DummyContract) Invoke(cdb ReadOnlyStateTrie, inst Instruction, c []Coi
 	}, nil, nil
 }
 
-func (dc *DummyContract) Delete(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+func (dc *dummyContract) Delete(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	_, _, _, darcID, err := cdb.GetValues(inst.InstanceID.Slice())
 	if err != nil {
 		return nil, nil, err

@@ -2,7 +2,8 @@
 
 EXCLUDE_LINT := should be.*UI
 #TESTS := TestViewChange_Basic3\$$
-TESTS := SecureDarc|TestDeferred_WrongSignature|TestViewChange_Basic|TestDeferred_DefaultExpireBlockIdx
+#TESTS := SecureDarc|TestDeferred_WrongSignature|TestViewChange_Basic|TestDeferred_DefaultExpireBlockIdx
+TESTS :=
 
 Coding/bin/Makefile.base:
 	git clone https://github.com/dedis/Coding
