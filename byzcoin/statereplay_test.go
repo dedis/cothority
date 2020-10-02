@@ -14,37 +14,37 @@ import (
 
 // Test the expected use case
 func TestService_StateReplay(t *testing.T) {
-	s := newSer(t, 1, testInterval)
-	defer s.local.CloseAll()
+	b := newBCTRun(t, nil)
+	defer b.CloseAll()
 
 	n := 2
 	for i := 0; i < n; i++ {
-		tx, err := createClientTxWithTwoInstrWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, uint64(i*2+1))
+		tx, err := createClientTxWithTwoInstrWithCounter(b.GenesisDarc.GetBaseID(), DummyContractName, []byte{}, b.Signer, uint64(i*2+1))
 		require.NoError(t, err)
 
-		_, err = s.service().AddTransaction(&AddTxRequest{
+		_, err = b.Services[0].AddTransaction(&AddTxRequest{
 			Version:       CurrentVersion,
-			SkipchainID:   s.genesis.SkipChainID(),
+			SkipchainID:   b.Genesis.SkipChainID(),
 			Transaction:   tx,
 			InclusionWait: 10,
 		})
 		require.NoError(t, err)
 	}
 
-	_, err := s.service().ReplayState(s.genesis.Hash, stdFetcher{},
+	_, err := b.Services[0].ReplayState(b.Genesis.Hash, stdFetcher{},
 		ReplayStateOptions{})
 	require.NoError(t, err)
 }
 
-func tryReplayBlock(t *testing.T, s *ser, sbID skipchain.SkipBlockID, msg string) {
-	_, err := s.service().ReplayState(sbID, stdFetcher{},
+func tryReplayBlock(t *testing.T, s *BCTest, sbID skipchain.SkipBlockID, msg string) {
+	_, err := s.Services[0].ReplayState(sbID, stdFetcher{},
 		ReplayStateOptions{MaxBlocks: 1})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), msg)
 }
 
-func forceStoreBlock(s *ser, sb *skipchain.SkipBlock) error {
-	return s.service().db().Update(func(tx *bbolt.Tx) error {
+func forceStoreBlock(s *BCTest, sb *skipchain.SkipBlock) error {
+	return s.Services[0].db().Update(func(tx *bbolt.Tx) error {
 		buf, err := network.Marshal(sb)
 		if err != nil {
 			return err
@@ -56,62 +56,62 @@ func forceStoreBlock(s *ser, sb *skipchain.SkipBlock) error {
 
 // Test that it catches failing chains and return meaningful errors
 func TestService_StateReplayFailures(t *testing.T) {
-	s := newSer(t, 1, testInterval)
-	defer s.local.CloseAll()
+	b := newBCTRun(t, nil)
+	defer b.CloseAll()
 
-	tx, err := createClientTxWithTwoInstrWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, uint64(1))
+	tx, err := createClientTxWithTwoInstrWithCounter(b.GenesisDarc.GetBaseID(), DummyContractName, []byte{}, b.Signer, uint64(1))
 	require.NoError(t, err)
 
-	_, err = s.service().AddTransaction(&AddTxRequest{
+	_, err = b.Services[0].AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
-		SkipchainID:   s.genesis.SkipChainID(),
+		SkipchainID:   b.Genesis.SkipChainID(),
 		Transaction:   tx,
 		InclusionWait: 10,
 	})
 	require.NoError(t, err)
 
 	// 1. error when fetching the genesis block
-	tryReplayBlock(t, s, skipchain.SkipBlockID{},
+	tryReplayBlock(t, b, skipchain.SkipBlockID{},
 		"failed to get the first block")
 
 	// 2. not a genesis block for the first block
-	genesis := s.service().db().GetByID(s.genesis.Hash)
-	tryReplayBlock(t, s, genesis.ForwardLink[0].To,
+	genesis := b.Services[0].db().GetByID(b.Genesis.Hash)
+	tryReplayBlock(t, b, genesis.ForwardLink[0].To,
 		"must start from genesis block")
 
 	// 3. bad payload
 	sb := skipchain.NewSkipBlock()
-	sb.Roster = s.roster
+	sb.Roster = b.Roster
 	sb.Payload = []byte{1, 1, 1, 1, 1}
 	sb.ForwardLink = []*skipchain.ForwardLink{{}}
-	require.NoError(t, forceStoreBlock(s, sb))
-	tryReplayBlock(t, s, sb.Hash, "Error while decoding field")
+	require.NoError(t, forceStoreBlock(b, sb))
+	tryReplayBlock(t, b, sb.Hash, "Error while decoding field")
 
 	// 4. bad data
 	sb.Payload = genesis.Payload
 	sb.Data = []byte{1, 1, 1, 1, 1}
-	require.NoError(t, forceStoreBlock(s, sb))
-	tryReplayBlock(t, s, sb.Hash, "Error while decoding field")
+	require.NoError(t, forceStoreBlock(b, sb))
+	tryReplayBlock(t, b, sb.Hash, "Error while decoding field")
 
 	// 5. non matching hash
 	sb.Data = []byte{}
 	sb.ForwardLink = []*skipchain.ForwardLink{{}}
-	require.NoError(t, forceStoreBlock(s, sb))
-	tryReplayBlock(t, s, sb.Hash, "client transaction hash does not match")
+	require.NoError(t, forceStoreBlock(b, sb))
+	tryReplayBlock(t, b, sb.Hash, "client transaction hash does not match")
 
 	// 6. mismatching merkle trie root
-	sb = s.service().db().GetByID(s.genesis.SkipChainID())
+	sb = b.Services[0].db().GetByID(b.Genesis.SkipChainID())
 	var dHead DataHeader
 	require.NoError(t, protobuf.Decode(sb.Data, &dHead))
 	dHead.TrieRoot = []byte{1, 2, 3}
 	buf, err := protobuf.Encode(&dHead)
 	require.NoError(t, err)
 	sb.Data = buf
-	require.NoError(t, forceStoreBlock(s, sb))
-	tryReplayBlock(t, s, sb.Hash, "merkle tree root doesn't match with trie root")
+	require.NoError(t, forceStoreBlock(b, sb))
+	tryReplayBlock(t, b, sb.Hash, "merkle tree root doesn't match with trie root")
 
 	// 7. failing instruction
-	sb = s.service().db().GetByID(s.genesis.SkipChainID())
+	sb = b.Services[0].db().GetByID(b.Genesis.SkipChainID())
 	var dBody DataBody
 	require.NoError(t, protobuf.Decode(sb.Payload, &dBody))
 	dBody.TxResults = append(dBody.TxResults, TxResult{
@@ -128,8 +128,8 @@ func TestService_StateReplayFailures(t *testing.T) {
 	buf, err = protobuf.Encode(&dHead)
 	require.NoError(t, err)
 	sb.Data = buf
-	require.NoError(t, forceStoreBlock(s, sb))
-	tryReplayBlock(t, s, sb.Hash, "instruction verification failed")
+	require.NoError(t, forceStoreBlock(b, sb))
+	tryReplayBlock(t, b, sb.Hash, "instruction verification failed")
 }
 
 // stdFetcher is a fetcher method that outputs using the onet.log library.

@@ -154,8 +154,7 @@ func createSpawnInstr(dID darc.ID, contractID string, argName string, value []by
 			ContractID: contractID,
 			Args:       Arguments{{Name: argName, Value: value}},
 		},
-		SignerCounter: []uint64{1},
-		version:       CurrentVersion,
+		version: CurrentVersion,
 	}
 }
 
