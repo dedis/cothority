@@ -214,8 +214,8 @@ func (p *SubBlsCosi) dispatchRoot() error {
 	case <-time.After(p.Timeout):
 		// It might be only the subleader then we send a notification
 		// to let the parent protocol take actions
-		log.Warn(p.ServerIdentity(),
-			"timed out while waiting for subleader response")
+		log.Warnf("%s: timed out while waiting for subleader response while %s",
+			p.ServerIdentity(), p.Tree().Dump())
 		p.subleaderNotResponding <- true
 	}
 

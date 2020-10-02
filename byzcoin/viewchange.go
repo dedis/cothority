@@ -224,7 +224,7 @@ func (s *Service) computeInitialDuration(scID skipchain.SkipBlockID) (time.Durat
 	if err != nil {
 		return 0, xerrors.Errorf("loading block info: %v", err)
 	}
-	return s.rotationWindow * interval, nil
+	return time.Duration(s.rotationWindow) * interval, nil
 }
 
 func (s *Service) getSignatureThreshold(sbID skipchain.SkipBlockID) int {

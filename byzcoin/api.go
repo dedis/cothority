@@ -695,11 +695,11 @@ func (c *Client) ResolveInstanceID(darcID darc.ID, name string) (InstanceID, err
 // `GetProof`, the error will be ignored. This helps when waiting
 // for the propagation, but only a subset of the nodes are actually
 // participating in the consensus.
-// If index >= 0,  it waits to have at least this block present in all nodes.
+// If index >= 0, it waits to have at least this block present in all nodes.
 func (c *Client) WaitPropagation(index int) error {
 	var sb skipchain.SkipBlock
 	sb.SkipBlockFix = &skipchain.SkipBlockFix{}
-	if index > 0 {
+	if index >= 0 {
 		sb.Index = index
 	}
 searchLatest:
@@ -715,7 +715,8 @@ searchLatest:
 			}
 			pr, err := c.GetProof(make([]byte, 32))
 			if err != nil {
-				log.Warn("error while searching for node - ignoring")
+				log.Warnf("error while querying node %s - ignoring",
+					c.Roster.List[node])
 				continue
 			}
 			if pr.Proof.Latest.Index > sb.Index {

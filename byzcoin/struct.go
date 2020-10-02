@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"go.dedis.ch/onet/v3/log"
 	"sort"
 	"strings"
 	"sync"
@@ -21,6 +22,12 @@ const defaultMaxSize = (1 << 31) - 1 // maximum 32-bit int
 const versionLength = 64 / 8         // bytes
 const prefixLength = 32              // bytes
 const cleanThreshold = 0.8
+
+// number of blocks in the queue before the service doesn't notify new
+// blocks anymore.
+// This is per-queue, so if one queue doesn't collect its blocks,
+// the other queues continue normally.
+const notificationQueueLenght = 8
 
 var bucketStateChangeStorage = []byte("statechangestorage")
 var errLengthInstanceID = xerrors.New("InstanceID must have 32 bytes")
@@ -617,9 +624,12 @@ func (bc *bcNotifications) informBlock(block *skipchain.SkipBlock, txs TxResults
 	bc.Lock()
 	defer bc.Unlock()
 	for _, x := range bc.blockListeners {
-		go func(wc waitChannel) {
-			wc <- notif
-		}(x)
+		select {
+		case x <- notif:
+		default:
+			log.Warn("not queueing up block for notification because queue is" +
+				" full")
+		}
 	}
 }
 
@@ -627,7 +637,7 @@ func (bc *bcNotifications) registerForBlocks() waitChannel {
 	bc.Lock()
 	defer bc.Unlock()
 
-	ch := make(waitChannel, 1)
+	ch := make(waitChannel, notificationQueueLenght)
 	bc.blockListeners = append(bc.blockListeners, ch)
 
 	return ch
