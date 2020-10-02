@@ -834,30 +834,19 @@ func TestDeferred_WrongSignature(t *testing.T) {
 	// ------------------------------------------------------------------------
 	// 0. Set up
 	// ------------------------------------------------------------------------
-	local := onet.NewTCPTest(cothority.Suite)
-	defer local.CloseAll()
-
-	signer := darc.NewSignerEd25519(nil, nil)
-	_, roster, _ := local.GenTree(3, true)
-
-	genesisMsg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
-		[]string{"spawn:value", "spawn:deferred", "invoke:deferred.addProof",
-			"invoke:deferred.execProposedTx"}, signer.Identity())
-	require.NoError(t, err)
-	gDarc := &genesisMsg.GenesisDarc
-
-	genesisMsg.BlockInterval = time.Second
-
-	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
-	require.NoError(t, err)
+	b := byzcoin.NewBCTestDefault(t)
+	b.AddGenesisRules("spawn:value", "spawn:deferred", "invoke:deferred.addProof",
+		"invoke:deferred.execProposedTx")
+	b.CreateByzCoin()
+	defer b.CloseAll()
 
 	// ------------------------------------------------------------------------
 	// 1. Spawn
 	// ------------------------------------------------------------------------
 	rootInstructionValue := []byte("aef123456789fab")
 
-	proposedTransaction, err := cl.CreateTransaction(byzcoin.Instruction{
-		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+	proposedTransaction, err := b.Client.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(b.GenesisDarc.GetBaseID()),
 		Spawn: &byzcoin.Spawn{
 			ContractID: "value",
 			Args: byzcoin.Arguments{
@@ -876,8 +865,8 @@ func TestDeferred_WrongSignature(t *testing.T) {
 	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
 	require.NoError(t, err)
 
-	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
-		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+	ctx, err := b.Client.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(b.GenesisDarc.GetBaseID()),
 		Spawn: &byzcoin.Spawn{
 			ContractID: byzcoin.ContractDeferredID,
 			Args: []byzcoin.Argument{
@@ -894,13 +883,13 @@ func TestDeferred_WrongSignature(t *testing.T) {
 		SignerCounter: []uint64{1},
 	})
 	require.NoError(t, err)
-	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+	require.Nil(t, ctx.FillSignersAndSignWith(b.Signer))
 
-	atr, err := cl.AddTransactionAndWait(ctx, 10)
+	atr, err := b.Client.AddTransactionAndWait(ctx, 10)
 	require.NoError(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	result, err := cl.GetDeferredDataAfter(myID, &atr.Proof.Latest)
+	result, err := b.Client.GetDeferredDataAfter(myID, &atr.Proof.Latest)
 	require.NoError(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -915,11 +904,11 @@ func TestDeferred_WrongSignature(t *testing.T) {
 	// 2 Invoke an "addProof" with a wrong signature
 	// ------------------------------------------------------------------------
 
-	identity := signer.Identity()
+	identity := b.Signer.Identity()
 	identityBuf, err := protobuf.Encode(&identity)
 	require.NoError(t, err)
 
-	signature, err := signer.Sign(rootHash[0]) // == index
+	signature, err := b.Signer.Sign(rootHash[0]) // == index
 	require.NoError(t, err)
 	signature[1] = 0xf
 
@@ -927,7 +916,7 @@ func TestDeferred_WrongSignature(t *testing.T) {
 	indexBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(indexBuf, uint32(index))
 
-	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+	ctx, err = b.Client.CreateTransaction(byzcoin.Instruction{
 		InstanceID: myID,
 		Invoke: &byzcoin.Invoke{
 			ContractID: byzcoin.ContractDeferredID,
@@ -950,9 +939,9 @@ func TestDeferred_WrongSignature(t *testing.T) {
 		SignerCounter: []uint64{2},
 	})
 	require.NoError(t, err)
-	require.NoError(t, ctx.FillSignersAndSignWith(signer))
+	require.NoError(t, ctx.FillSignersAndSignWith(b.Signer))
 
-	_, err = cl.AddTransactionAndWait(ctx, 10)
+	_, err = b.Client.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 }
 
