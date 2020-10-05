@@ -55,7 +55,7 @@ var catchupFetchBlocks = 10
 // How many DB-entries to download in one go.
 var catchupFetchDBEntries = 100
 
-const defaultRotationWindow time.Duration = 10
+const defaultRotationWindow = 10
 
 const noTimeout time.Duration = 0
 
@@ -156,7 +156,7 @@ type Service struct {
 
 	downloadState downloadState
 
-	rotationWindow time.Duration
+	rotationWindow int
 
 	txErrorBuf ringBuf
 
@@ -383,6 +383,11 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		s.closedMutex.Unlock()
 		return nil, xerrors.New("node is closed")
 	}
+	// Make sure AddTransaction is done before the node closes down - mostly
+	// for testing.
+	s.working.Add(1)
+	defer s.working.Done()
+
 	s.closedMutex.Unlock()
 
 	if len(req.Transaction.Instructions) == 0 {
@@ -488,8 +493,14 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 			if originalRequest {
 				// As this node might be the leader now,
 				// need to try again from scratch.
-				viewChangeWait := interval * time.Duration(len(latest.Roster.
-					List)*4)
+				// The total duration depends on how many nodes are failing.
+				// In the worst case, maxFailingNodes are failing in a row,
+				// and the view-change protocol will wait exponentially on
+				// every node.
+				maxFailingNodes := float64(protocol.DefaultFaultyThreshold(
+					len(latest.Roster.List)))
+				viewChangeWait := interval *
+					time.Duration(math.Pow(2, maxFailingNodes+2))
 				select {
 				case bl := <-ch:
 					log.Lvl2("Got new block while waiting for viewchange:",
@@ -514,10 +525,6 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 	// add() after createWaitChannel() solves this, but then we need a second add() for the
 	// no inclusion wait case.
 	if req.InclusionWait > 0 {
-		// Wait for InclusionWait new blocks and look if our transaction is in it.
-		s.working.Add(1)
-		defer s.working.Done()
-
 		// In case we don't have any blocks, because there are no transactions,
 		// have a hard timeout in twice the minimal expected time to create the
 		// blocks.
@@ -560,7 +567,15 @@ func (s *Service) GetProof(req *GetProof) (*GetProofResponse, error) {
 	s.closedMutex.Lock()
 	defer s.closedMutex.Unlock()
 	if s.closed {
-		return nil, xerrors.New("cannot get proof while in closed state")
+		// This should only ever happen during testing
+		log.Lvl2(s.ServerIdentity(), "cannot get proof while in closed state")
+		sb := skipchain.NewSkipBlock()
+		return &GetProofResponse{
+			Version: CurrentVersion,
+			Proof: Proof{
+				Latest: *sb,
+			},
+		}, nil
 	}
 
 	sb := s.db().GetByID(req.ID)

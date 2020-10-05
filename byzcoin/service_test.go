@@ -34,7 +34,7 @@ var tSuite = suites.MustFind("Ed25519")
 var testInterval = 500 * time.Millisecond
 
 // use this value as a rotation window to make it impossible to trigger a view change
-var disableViewChange = time.Duration(9999)
+var disableViewChange = 9999
 
 const dummyContract = "dummy"
 const slowContract = "slow"
@@ -287,7 +287,7 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 		// Wait for tasks to finish.
 		time.Sleep(blockInterval)
 	}
-	s.waitPropagation(t, 0)
+	s.waitPropagation(t, -1)
 }
 
 func TestService_AddTransaction_WrongNode(t *testing.T) {
@@ -1784,7 +1784,7 @@ func TestService_SetConfigRosterSwitchNodes(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.Contains(t, resp.Error, "new leader must be in previous roster")
-	s.waitPropagation(t, 0)
+	s.waitPropagation(t, -1)
 
 	log.Lvl1("Allow new nodes at the end", newRoster.List)
 	goodRoster := onet.NewRoster(s.roster.List)
@@ -1796,7 +1796,7 @@ func TestService_SetConfigRosterSwitchNodes(t *testing.T) {
 		counter++
 		s.sendTxAndWait(t, ctx, 10)
 	}
-	s.waitPropagation(t, 0)
+	s.waitPropagation(t, -1)
 }
 
 // Replaces all nodes from the previous roster with new nodes
@@ -2822,11 +2822,13 @@ func newSer(t *testing.T, step int, interval time.Duration) *ser {
 	return newSerN(t, step, interval, 4, disableViewChange)
 }
 
-func newSerN(t *testing.T, step int, interval time.Duration, n int, rw time.Duration) *ser {
+func newSerN(t *testing.T, step int, interval time.Duration, n int,
+	rw int) *ser {
 	return newSerWithVersion(t, step, interval, n, rw, CurrentVersion)
 }
 
-func newSerWithVersion(t *testing.T, step int, interval time.Duration, n int, rw time.Duration, v Version) *ser {
+func newSerWithVersion(t *testing.T, step int, interval time.Duration, n int,
+	rw int, v Version) *ser {
 	s := &ser{
 		local:  onet.NewLocalTestT(tSuite, t),
 		value:  []byte("anyvalue"),

@@ -53,7 +53,7 @@ func TestViewChange_Basic3(t *testing.T) {
 //     - the time to wait to propagate to children
 // So it's using the `SetPropagationTimeout` to tweak it a bit.
 func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration) {
-	rw := time.Duration(3)
+	rw := 3
 	s := newSerN(t, 1, interval, nHosts, rw)
 	defer s.local.CloseAll()
 
@@ -84,7 +84,8 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	require.NoError(t, err)
 	s.sendTxTo(t, tx0, nFailures)
 
-	sl := s.interval * rw * time.Duration(math.Pow(2, float64(nFailures)))
+	sl := s.interval * time.Duration(float64(rw)*
+		math.Pow(2, float64(nFailures)))
 	log.Lvl1("Waiting for the propagation to be finished during", sl)
 	time.Sleep(sl)
 	s.waitPropagation(t, 1)
@@ -156,7 +157,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 		pr := s.waitProofWithIdx(t, tx1ID, i)
 		require.True(t, pr.InclusionProof.Match(tx1ID))
 	}
-	s.waitPropagation(t, 0)
+	s.waitPropagation(t, -1)
 
 	log.Lvl1("Two final transactions")
 	for tx := 0; tx < 2; tx++ {
@@ -302,9 +303,8 @@ func TestViewChange_LostSync(t *testing.T) {
 //  - Node0 - leader - stopped after creation of block #1
 //  - Node3 - misses block #1, unpaused after creation of block #1
 func TestViewChange_NeedCatchUp(t *testing.T) {
-	rw := time.Duration(3)
 	nodes := 4
-	s := newSerN(t, 1, testInterval, nodes, rw)
+	s := newSerN(t, 1, testInterval, nodes, 3)
 	defer s.local.CloseAll()
 
 	for _, service := range s.services {

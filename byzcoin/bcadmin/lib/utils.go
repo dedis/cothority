@@ -144,7 +144,7 @@ func WaitPropagation(c *cli.Context, cl *byzcoin.Client) error {
 		return nil
 	}
 
-	return cl.WaitPropagation(0)
+	return cl.WaitPropagation(-1)
 }
 
 // We are recursively building the leaves of a tree that contains every
