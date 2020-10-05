@@ -53,6 +53,8 @@ func testViewChange(t *testing.T, nHosts, nFailures int) {
 	bArgs := defaultBCTArgs
 	bArgs.Nodes = nHosts
 	bArgs.RotationWindow = 3
+	// Give some more time on Travis to do the verifications
+	bArgs.PropagationInterval = 2 * bArgs.PropagationInterval
 	b := newBCTRun(t, &bArgs)
 	defer b.CloseAll()
 
