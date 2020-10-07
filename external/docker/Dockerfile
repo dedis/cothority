@@ -2,9 +2,7 @@ FROM golang:1.15-buster
 RUN apt update && apt install -y procps ca-certificates && apt clean
 WORKDIR /root/
 
-EXPOSE 7770 7771
-
-# EXPOSE 7771 7773 7775 7777 7779 7781 7783
+EXPOSE 7770 7771 7772 7773 7774 7775 7776 7777 7778 7779 7780 7781 7782 7783
 
 COPY co1/*.toml co1/
 COPY co2/*.toml co2/

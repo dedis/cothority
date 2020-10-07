@@ -27,8 +27,6 @@ proto:
 	./proto.sh
 	make -C external
 
-# 	docker run -t -v $(PWD):/cothority neilotoole/xcgo \
-
 docker:
 	docker run -t -v $(PWD):/cothority golang:1.15-buster \
 		bash -c "cd /cothority; go build -o external/docker/conode ./conode"
