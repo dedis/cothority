@@ -1,6 +1,6 @@
 import IdentityDarc from "../../src/darc/identity-darc";
-import IdentityEd25519 from "../../src/darc/identity-ed25519";
 import IdentityDid from "../../src/darc/identity-did";
+import IdentityEd25519 from "../../src/darc/identity-ed25519";
 import IdentityWrapper from "../../src/darc/identity-wrapper";
 import { SIGNER } from "../support/conondes";
 

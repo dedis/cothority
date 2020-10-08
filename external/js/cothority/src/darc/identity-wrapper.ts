@@ -2,8 +2,8 @@ import Ed25519Point from "@dedis/kyber/curve/edwards25519/point";
 import { Message } from "protobufjs/light";
 import { registerMessage } from "../protobuf";
 import IdentityDarc from "./identity-darc";
-import IdentityEd25519 from "./identity-ed25519";
 import IdentityDid from "./identity-did";
+import IdentityEd25519 from "./identity-ed25519";
 
 /**
  * Protobuf representation of an identity
@@ -38,7 +38,7 @@ export default class IdentityWrapper extends Message<IdentityWrapper> {
             return new IdentityWrapper({darc: id});
         }
         if (idStr.startsWith("did:")) {
-		    const field = idStr.split(":", 3)
+            const field = idStr.split(":", 3);
             const id = new IdentityDid({method: Buffer.from(field[1]), did: Buffer.from(field[2]) });
             return new IdentityWrapper({did: id});
         }
