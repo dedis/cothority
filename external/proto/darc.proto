@@ -107,7 +107,7 @@ message PublicKey {
   required bytes value = 4;
 }
 
-// Service DID doc service
+// DIDService is a description of a service endpoint.
 message DIDService {
   required string id = 1;
   required string type = 2;

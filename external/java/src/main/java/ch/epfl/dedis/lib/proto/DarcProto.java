@@ -11743,7 +11743,7 @@ public final class DarcProto {
   }
   /**
    * <pre>
-   * Service DID doc service
+   * DIDService is a description of a service endpoint.
    * </pre>
    *
    * Protobuf type {@code darc.DIDService}
@@ -12366,7 +12366,7 @@ public final class DarcProto {
     }
     /**
      * <pre>
-     * Service DID doc service
+     * DIDService is a description of a service endpoint.
      * </pre>
      *
      * Protobuf type {@code darc.DIDService}
