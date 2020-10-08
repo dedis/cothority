@@ -25,6 +25,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes data = 1;</code>
+     * @return Whether the data field is set.
      */
     boolean hasData();
     /**
@@ -34,6 +35,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes data = 1;</code>
+     * @return The data.
      */
     com.google.protobuf.ByteString getData();
 
@@ -43,6 +45,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes u = 2;</code>
+     * @return Whether the u field is set.
      */
     boolean hasU();
     /**
@@ -51,6 +54,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes u = 2;</code>
+     * @return The u.
      */
     com.google.protobuf.ByteString getU();
 
@@ -63,6 +67,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes ubar = 3;</code>
+     * @return Whether the ubar field is set.
      */
     boolean hasUbar();
     /**
@@ -74,6 +79,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes ubar = 3;</code>
+     * @return The ubar.
      */
     com.google.protobuf.ByteString getUbar();
 
@@ -83,6 +89,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes e = 4;</code>
+     * @return Whether the e field is set.
      */
     boolean hasE();
     /**
@@ -91,6 +98,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes e = 4;</code>
+     * @return The e.
      */
     com.google.protobuf.ByteString getE();
 
@@ -101,6 +109,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes f = 5;</code>
+     * @return Whether the f field is set.
      */
     boolean hasF();
     /**
@@ -110,6 +119,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes f = 5;</code>
+     * @return The f.
      */
     com.google.protobuf.ByteString getF();
 
@@ -120,6 +130,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes c = 6;</code>
+     * @return Whether the c field is set.
      */
     boolean hasC();
     /**
@@ -129,6 +140,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes c = 6;</code>
+     * @return The c.
      */
     com.google.protobuf.ByteString getC();
 
@@ -138,6 +150,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>optional bytes extradata = 7;</code>
+     * @return Whether the extradata field is set.
      */
     boolean hasExtradata();
     /**
@@ -146,6 +159,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>optional bytes extradata = 7;</code>
+     * @return The extradata.
      */
     com.google.protobuf.ByteString getExtradata();
 
@@ -155,6 +169,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes ltsid = 8;</code>
+     * @return Whether the ltsid field is set.
      */
     boolean hasLtsid();
     /**
@@ -163,6 +178,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes ltsid = 8;</code>
+     * @return The ltsid.
      */
     com.google.protobuf.ByteString getLtsid();
 
@@ -172,6 +188,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>optional .byzcoin.Coin cost = 9;</code>
+     * @return Whether the cost field is set.
      */
     boolean hasCost();
     /**
@@ -180,6 +197,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>optional .byzcoin.Coin cost = 9;</code>
+     * @return The cost.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCost();
     /**
@@ -199,7 +217,7 @@ public final class Calypso {
    *
    * Protobuf type {@code calypso.Write}
    */
-  public  static final class Write extends
+  public static final class Write extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:calypso.Write)
       WriteOrBuilder {
@@ -217,6 +235,13 @@ public final class Calypso {
       c_ = com.google.protobuf.ByteString.EMPTY;
       extradata_ = com.google.protobuf.ByteString.EMPTY;
       ltsid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Write();
     }
 
     @java.lang.Override
@@ -285,7 +310,7 @@ public final class Calypso {
             }
             case 74: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000100) == 0x00000100)) {
+              if (((bitField0_ & 0x00000100) != 0)) {
                 subBuilder = cost_.toBuilder();
               }
               cost_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.parser(), extensionRegistry);
@@ -338,9 +363,11 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes data = 1;</code>
+     * @return Whether the data field is set.
      */
+    @java.lang.Override
     public boolean hasData() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -349,7 +376,9 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes data = 1;</code>
+     * @return The data.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getData() {
       return data_;
     }
@@ -362,9 +391,11 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes u = 2;</code>
+     * @return Whether the u field is set.
      */
+    @java.lang.Override
     public boolean hasU() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -372,7 +403,9 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes u = 2;</code>
+     * @return The u.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getU() {
       return u_;
     }
@@ -388,9 +421,11 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes ubar = 3;</code>
+     * @return Whether the ubar field is set.
      */
+    @java.lang.Override
     public boolean hasUbar() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -401,7 +436,9 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes ubar = 3;</code>
+     * @return The ubar.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getUbar() {
       return ubar_;
     }
@@ -414,9 +451,11 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes e = 4;</code>
+     * @return Whether the e field is set.
      */
+    @java.lang.Override
     public boolean hasE() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <pre>
@@ -424,7 +463,9 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes e = 4;</code>
+     * @return The e.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getE() {
       return e_;
     }
@@ -438,9 +479,11 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes f = 5;</code>
+     * @return Whether the f field is set.
      */
+    @java.lang.Override
     public boolean hasF() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <pre>
@@ -449,7 +492,9 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes f = 5;</code>
+     * @return The f.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getF() {
       return f_;
     }
@@ -463,9 +508,11 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes c = 6;</code>
+     * @return Whether the c field is set.
      */
+    @java.lang.Override
     public boolean hasC() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000020) != 0);
     }
     /**
      * <pre>
@@ -474,7 +521,9 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes c = 6;</code>
+     * @return The c.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getC() {
       return c_;
     }
@@ -487,9 +536,11 @@ public final class Calypso {
      * </pre>
      *
      * <code>optional bytes extradata = 7;</code>
+     * @return Whether the extradata field is set.
      */
+    @java.lang.Override
     public boolean hasExtradata() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000040) != 0);
     }
     /**
      * <pre>
@@ -497,7 +548,9 @@ public final class Calypso {
      * </pre>
      *
      * <code>optional bytes extradata = 7;</code>
+     * @return The extradata.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getExtradata() {
       return extradata_;
     }
@@ -510,9 +563,11 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes ltsid = 8;</code>
+     * @return Whether the ltsid field is set.
      */
+    @java.lang.Override
     public boolean hasLtsid() {
-      return ((bitField0_ & 0x00000080) == 0x00000080);
+      return ((bitField0_ & 0x00000080) != 0);
     }
     /**
      * <pre>
@@ -520,7 +575,9 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes ltsid = 8;</code>
+     * @return The ltsid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getLtsid() {
       return ltsid_;
     }
@@ -533,9 +590,11 @@ public final class Calypso {
      * </pre>
      *
      * <code>optional .byzcoin.Coin cost = 9;</code>
+     * @return Whether the cost field is set.
      */
+    @java.lang.Override
     public boolean hasCost() {
-      return ((bitField0_ & 0x00000100) == 0x00000100);
+      return ((bitField0_ & 0x00000100) != 0);
     }
     /**
      * <pre>
@@ -543,7 +602,9 @@ public final class Calypso {
      * </pre>
      *
      * <code>optional .byzcoin.Coin cost = 9;</code>
+     * @return The cost.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCost() {
       return cost_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : cost_;
     }
@@ -554,6 +615,7 @@ public final class Calypso {
      *
      * <code>optional .byzcoin.Coin cost = 9;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder getCostOrBuilder() {
       return cost_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : cost_;
     }
@@ -606,31 +668,31 @@ public final class Calypso {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, data_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, u_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBytes(3, ubar_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeBytes(4, e_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeBytes(5, f_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         output.writeBytes(6, c_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         output.writeBytes(7, extradata_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         output.writeBytes(8, ltsid_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000100) != 0)) {
         output.writeMessage(9, getCost());
       }
       unknownFields.writeTo(output);
@@ -642,39 +704,39 @@ public final class Calypso {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, data_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, u_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, ubar_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(4, e_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(5, f_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(6, c_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(7, extradata_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(8, ltsid_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000100) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(9, getCost());
       }
@@ -693,54 +755,53 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.Write other = (ch.epfl.dedis.lib.proto.Calypso.Write) obj;
 
-      boolean result = true;
-      result = result && (hasData() == other.hasData());
+      if (hasData() != other.hasData()) return false;
       if (hasData()) {
-        result = result && getData()
-            .equals(other.getData());
+        if (!getData()
+            .equals(other.getData())) return false;
       }
-      result = result && (hasU() == other.hasU());
+      if (hasU() != other.hasU()) return false;
       if (hasU()) {
-        result = result && getU()
-            .equals(other.getU());
+        if (!getU()
+            .equals(other.getU())) return false;
       }
-      result = result && (hasUbar() == other.hasUbar());
+      if (hasUbar() != other.hasUbar()) return false;
       if (hasUbar()) {
-        result = result && getUbar()
-            .equals(other.getUbar());
+        if (!getUbar()
+            .equals(other.getUbar())) return false;
       }
-      result = result && (hasE() == other.hasE());
+      if (hasE() != other.hasE()) return false;
       if (hasE()) {
-        result = result && getE()
-            .equals(other.getE());
+        if (!getE()
+            .equals(other.getE())) return false;
       }
-      result = result && (hasF() == other.hasF());
+      if (hasF() != other.hasF()) return false;
       if (hasF()) {
-        result = result && getF()
-            .equals(other.getF());
+        if (!getF()
+            .equals(other.getF())) return false;
       }
-      result = result && (hasC() == other.hasC());
+      if (hasC() != other.hasC()) return false;
       if (hasC()) {
-        result = result && getC()
-            .equals(other.getC());
+        if (!getC()
+            .equals(other.getC())) return false;
       }
-      result = result && (hasExtradata() == other.hasExtradata());
+      if (hasExtradata() != other.hasExtradata()) return false;
       if (hasExtradata()) {
-        result = result && getExtradata()
-            .equals(other.getExtradata());
+        if (!getExtradata()
+            .equals(other.getExtradata())) return false;
       }
-      result = result && (hasLtsid() == other.hasLtsid());
+      if (hasLtsid() != other.hasLtsid()) return false;
       if (hasLtsid()) {
-        result = result && getLtsid()
-            .equals(other.getLtsid());
+        if (!getLtsid()
+            .equals(other.getLtsid())) return false;
       }
-      result = result && (hasCost() == other.hasCost());
+      if (hasCost() != other.hasCost()) return false;
       if (hasCost()) {
-        result = result && getCost()
-            .equals(other.getCost());
+        if (!getCost()
+            .equals(other.getCost())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -975,45 +1036,45 @@ public final class Calypso {
         ch.epfl.dedis.lib.proto.Calypso.Write result = new ch.epfl.dedis.lib.proto.Calypso.Write(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.data_ = data_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.u_ = u_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.ubar_ = ubar_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
           to_bitField0_ |= 0x00000008;
         }
         result.e_ = e_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
           to_bitField0_ |= 0x00000010;
         }
         result.f_ = f_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((from_bitField0_ & 0x00000020) != 0)) {
           to_bitField0_ |= 0x00000020;
         }
         result.c_ = c_;
-        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((from_bitField0_ & 0x00000040) != 0)) {
           to_bitField0_ |= 0x00000040;
         }
         result.extradata_ = extradata_;
-        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+        if (((from_bitField0_ & 0x00000080) != 0)) {
           to_bitField0_ |= 0x00000080;
         }
         result.ltsid_ = ltsid_;
-        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+        if (((from_bitField0_ & 0x00000100) != 0)) {
+          if (costBuilder_ == null) {
+            result.cost_ = cost_;
+          } else {
+            result.cost_ = costBuilder_.build();
+          }
           to_bitField0_ |= 0x00000100;
-        }
-        if (costBuilder_ == null) {
-          result.cost_ = cost_;
-        } else {
-          result.cost_ = costBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -1022,35 +1083,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -1155,9 +1216,11 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes data = 1;</code>
+       * @return Whether the data field is set.
        */
+      @java.lang.Override
       public boolean hasData() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -1166,7 +1229,9 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes data = 1;</code>
+       * @return The data.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getData() {
         return data_;
       }
@@ -1177,6 +1242,8 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes data = 1;</code>
+       * @param value The data to set.
+       * @return This builder for chaining.
        */
       public Builder setData(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -1194,6 +1261,7 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes data = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearData() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -1209,9 +1277,11 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes u = 2;</code>
+       * @return Whether the u field is set.
        */
+      @java.lang.Override
       public boolean hasU() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -1219,7 +1289,9 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes u = 2;</code>
+       * @return The u.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getU() {
         return u_;
       }
@@ -1229,6 +1301,8 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes u = 2;</code>
+       * @param value The u to set.
+       * @return This builder for chaining.
        */
       public Builder setU(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -1245,6 +1319,7 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes u = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearU() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -1263,9 +1338,11 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes ubar = 3;</code>
+       * @return Whether the ubar field is set.
        */
+      @java.lang.Override
       public boolean hasUbar() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -1276,7 +1353,9 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes ubar = 3;</code>
+       * @return The ubar.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getUbar() {
         return ubar_;
       }
@@ -1289,6 +1368,8 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes ubar = 3;</code>
+       * @param value The ubar to set.
+       * @return This builder for chaining.
        */
       public Builder setUbar(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -1308,6 +1389,7 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes ubar = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearUbar() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -1323,9 +1405,11 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes e = 4;</code>
+       * @return Whether the e field is set.
        */
+      @java.lang.Override
       public boolean hasE() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <pre>
@@ -1333,7 +1417,9 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes e = 4;</code>
+       * @return The e.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getE() {
         return e_;
       }
@@ -1343,6 +1429,8 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes e = 4;</code>
+       * @param value The e to set.
+       * @return This builder for chaining.
        */
       public Builder setE(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -1359,6 +1447,7 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes e = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearE() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -1375,9 +1464,11 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes f = 5;</code>
+       * @return Whether the f field is set.
        */
+      @java.lang.Override
       public boolean hasF() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <pre>
@@ -1386,7 +1477,9 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes f = 5;</code>
+       * @return The f.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getF() {
         return f_;
       }
@@ -1397,6 +1490,8 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes f = 5;</code>
+       * @param value The f to set.
+       * @return This builder for chaining.
        */
       public Builder setF(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -1414,6 +1509,7 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes f = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearF() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -1430,9 +1526,11 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes c = 6;</code>
+       * @return Whether the c field is set.
        */
+      @java.lang.Override
       public boolean hasC() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000020) != 0);
       }
       /**
        * <pre>
@@ -1441,7 +1539,9 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes c = 6;</code>
+       * @return The c.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getC() {
         return c_;
       }
@@ -1452,6 +1552,8 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes c = 6;</code>
+       * @param value The c to set.
+       * @return This builder for chaining.
        */
       public Builder setC(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -1469,6 +1571,7 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes c = 6;</code>
+       * @return This builder for chaining.
        */
       public Builder clearC() {
         bitField0_ = (bitField0_ & ~0x00000020);
@@ -1484,9 +1587,11 @@ public final class Calypso {
        * </pre>
        *
        * <code>optional bytes extradata = 7;</code>
+       * @return Whether the extradata field is set.
        */
+      @java.lang.Override
       public boolean hasExtradata() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
+        return ((bitField0_ & 0x00000040) != 0);
       }
       /**
        * <pre>
@@ -1494,7 +1599,9 @@ public final class Calypso {
        * </pre>
        *
        * <code>optional bytes extradata = 7;</code>
+       * @return The extradata.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getExtradata() {
         return extradata_;
       }
@@ -1504,6 +1611,8 @@ public final class Calypso {
        * </pre>
        *
        * <code>optional bytes extradata = 7;</code>
+       * @param value The extradata to set.
+       * @return This builder for chaining.
        */
       public Builder setExtradata(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -1520,6 +1629,7 @@ public final class Calypso {
        * </pre>
        *
        * <code>optional bytes extradata = 7;</code>
+       * @return This builder for chaining.
        */
       public Builder clearExtradata() {
         bitField0_ = (bitField0_ & ~0x00000040);
@@ -1535,9 +1645,11 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes ltsid = 8;</code>
+       * @return Whether the ltsid field is set.
        */
+      @java.lang.Override
       public boolean hasLtsid() {
-        return ((bitField0_ & 0x00000080) == 0x00000080);
+        return ((bitField0_ & 0x00000080) != 0);
       }
       /**
        * <pre>
@@ -1545,7 +1657,9 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes ltsid = 8;</code>
+       * @return The ltsid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getLtsid() {
         return ltsid_;
       }
@@ -1555,6 +1669,8 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes ltsid = 8;</code>
+       * @param value The ltsid to set.
+       * @return This builder for chaining.
        */
       public Builder setLtsid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -1571,6 +1687,7 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes ltsid = 8;</code>
+       * @return This builder for chaining.
        */
       public Builder clearLtsid() {
         bitField0_ = (bitField0_ & ~0x00000080);
@@ -1579,7 +1696,7 @@ public final class Calypso {
         return this;
       }
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin cost_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin cost_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder> costBuilder_;
       /**
@@ -1588,9 +1705,10 @@ public final class Calypso {
        * </pre>
        *
        * <code>optional .byzcoin.Coin cost = 9;</code>
+       * @return Whether the cost field is set.
        */
       public boolean hasCost() {
-        return ((bitField0_ & 0x00000100) == 0x00000100);
+        return ((bitField0_ & 0x00000100) != 0);
       }
       /**
        * <pre>
@@ -1598,6 +1716,7 @@ public final class Calypso {
        * </pre>
        *
        * <code>optional .byzcoin.Coin cost = 9;</code>
+       * @return The cost.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCost() {
         if (costBuilder_ == null) {
@@ -1653,7 +1772,7 @@ public final class Calypso {
        */
       public Builder mergeCost(ch.epfl.dedis.lib.proto.ByzCoinProto.Coin value) {
         if (costBuilder_ == null) {
-          if (((bitField0_ & 0x00000100) == 0x00000100) &&
+          if (((bitField0_ & 0x00000100) != 0) &&
               cost_ != null &&
               cost_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance()) {
             cost_ =
@@ -1791,19 +1910,23 @@ public final class Calypso {
 
     /**
      * <code>required bytes write = 1;</code>
+     * @return Whether the write field is set.
      */
     boolean hasWrite();
     /**
      * <code>required bytes write = 1;</code>
+     * @return The write.
      */
     com.google.protobuf.ByteString getWrite();
 
     /**
      * <code>required bytes xc = 2;</code>
+     * @return Whether the xc field is set.
      */
     boolean hasXc();
     /**
      * <code>required bytes xc = 2;</code>
+     * @return The xc.
      */
     com.google.protobuf.ByteString getXc();
   }
@@ -1815,7 +1938,7 @@ public final class Calypso {
    *
    * Protobuf type {@code calypso.Read}
    */
-  public  static final class Read extends
+  public static final class Read extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:calypso.Read)
       ReadOrBuilder {
@@ -1827,6 +1950,13 @@ public final class Calypso {
     private Read() {
       write_ = com.google.protobuf.ByteString.EMPTY;
       xc_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Read();
     }
 
     @java.lang.Override
@@ -1900,13 +2030,17 @@ public final class Calypso {
     private com.google.protobuf.ByteString write_;
     /**
      * <code>required bytes write = 1;</code>
+     * @return Whether the write field is set.
      */
+    @java.lang.Override
     public boolean hasWrite() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes write = 1;</code>
+     * @return The write.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getWrite() {
       return write_;
     }
@@ -1915,13 +2049,17 @@ public final class Calypso {
     private com.google.protobuf.ByteString xc_;
     /**
      * <code>required bytes xc = 2;</code>
+     * @return Whether the xc field is set.
      */
+    @java.lang.Override
     public boolean hasXc() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes xc = 2;</code>
+     * @return The xc.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getXc() {
       return xc_;
     }
@@ -1948,10 +2086,10 @@ public final class Calypso {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, write_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, xc_);
       }
       unknownFields.writeTo(output);
@@ -1963,11 +2101,11 @@ public final class Calypso {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, write_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, xc_);
       }
@@ -1986,19 +2124,18 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.Read other = (ch.epfl.dedis.lib.proto.Calypso.Read) obj;
 
-      boolean result = true;
-      result = result && (hasWrite() == other.hasWrite());
+      if (hasWrite() != other.hasWrite()) return false;
       if (hasWrite()) {
-        result = result && getWrite()
-            .equals(other.getWrite());
+        if (!getWrite()
+            .equals(other.getWrite())) return false;
       }
-      result = result && (hasXc() == other.hasXc());
+      if (hasXc() != other.hasXc()) return false;
       if (hasXc()) {
-        result = result && getXc()
-            .equals(other.getXc());
+        if (!getXc()
+            .equals(other.getXc())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -2186,11 +2323,11 @@ public final class Calypso {
         ch.epfl.dedis.lib.proto.Calypso.Read result = new ch.epfl.dedis.lib.proto.Calypso.Read(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.write_ = write_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.xc_ = xc_;
@@ -2201,35 +2338,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -2288,18 +2425,24 @@ public final class Calypso {
       private com.google.protobuf.ByteString write_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes write = 1;</code>
+       * @return Whether the write field is set.
        */
+      @java.lang.Override
       public boolean hasWrite() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes write = 1;</code>
+       * @return The write.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getWrite() {
         return write_;
       }
       /**
        * <code>required bytes write = 1;</code>
+       * @param value The write to set.
+       * @return This builder for chaining.
        */
       public Builder setWrite(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -2312,6 +2455,7 @@ public final class Calypso {
       }
       /**
        * <code>required bytes write = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearWrite() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -2323,18 +2467,24 @@ public final class Calypso {
       private com.google.protobuf.ByteString xc_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes xc = 2;</code>
+       * @return Whether the xc field is set.
        */
+      @java.lang.Override
       public boolean hasXc() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes xc = 2;</code>
+       * @return The xc.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getXc() {
         return xc_;
       }
       /**
        * <code>required bytes xc = 2;</code>
+       * @param value The xc to set.
+       * @return This builder for chaining.
        */
       public Builder setXc(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -2347,6 +2497,7 @@ public final class Calypso {
       }
       /**
        * <code>required bytes xc = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearXc() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -2413,10 +2564,12 @@ public final class Calypso {
 
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return Whether the byzcoinid field is set.
      */
     boolean hasByzcoinid();
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return The byzcoinid.
      */
     com.google.protobuf.ByteString getByzcoinid();
   }
@@ -2428,7 +2581,7 @@ public final class Calypso {
    *
    * Protobuf type {@code calypso.Authorise}
    */
-  public  static final class Authorise extends
+  public static final class Authorise extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:calypso.Authorise)
       AuthoriseOrBuilder {
@@ -2439,6 +2592,13 @@ public final class Calypso {
     }
     private Authorise() {
       byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Authorise();
     }
 
     @java.lang.Override
@@ -2507,13 +2667,17 @@ public final class Calypso {
     private com.google.protobuf.ByteString byzcoinid_;
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return Whether the byzcoinid field is set.
      */
+    @java.lang.Override
     public boolean hasByzcoinid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return The byzcoinid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getByzcoinid() {
       return byzcoinid_;
     }
@@ -2536,7 +2700,7 @@ public final class Calypso {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, byzcoinid_);
       }
       unknownFields.writeTo(output);
@@ -2548,7 +2712,7 @@ public final class Calypso {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, byzcoinid_);
       }
@@ -2567,14 +2731,13 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.Authorise other = (ch.epfl.dedis.lib.proto.Calypso.Authorise) obj;
 
-      boolean result = true;
-      result = result && (hasByzcoinid() == other.hasByzcoinid());
+      if (hasByzcoinid() != other.hasByzcoinid()) return false;
       if (hasByzcoinid()) {
-        result = result && getByzcoinid()
-            .equals(other.getByzcoinid());
+        if (!getByzcoinid()
+            .equals(other.getByzcoinid())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -2756,7 +2919,7 @@ public final class Calypso {
         ch.epfl.dedis.lib.proto.Calypso.Authorise result = new ch.epfl.dedis.lib.proto.Calypso.Authorise(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.byzcoinid_ = byzcoinid_;
@@ -2767,35 +2930,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -2848,18 +3011,24 @@ public final class Calypso {
       private com.google.protobuf.ByteString byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @return Whether the byzcoinid field is set.
        */
+      @java.lang.Override
       public boolean hasByzcoinid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @return The byzcoinid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getByzcoinid() {
         return byzcoinid_;
       }
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @param value The byzcoinid to set.
+       * @return This builder for chaining.
        */
       public Builder setByzcoinid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -2872,6 +3041,7 @@ public final class Calypso {
       }
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearByzcoinid() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -2944,7 +3114,7 @@ public final class Calypso {
    *
    * Protobuf type {@code calypso.AuthoriseReply}
    */
-  public  static final class AuthoriseReply extends
+  public static final class AuthoriseReply extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:calypso.AuthoriseReply)
       AuthoriseReplyOrBuilder {
@@ -2954,6 +3124,13 @@ public final class Calypso {
       super(builder);
     }
     private AuthoriseReply() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new AuthoriseReply();
     }
 
     @java.lang.Override
@@ -3049,9 +3226,8 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.AuthoriseReply other = (ch.epfl.dedis.lib.proto.Calypso.AuthoriseReply) obj;
 
-      boolean result = true;
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -3231,35 +3407,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -3360,28 +3536,34 @@ public final class Calypso {
 
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return Whether the byzcoinid field is set.
      */
     boolean hasByzcoinid();
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return The byzcoinid.
      */
     com.google.protobuf.ByteString getByzcoinid();
 
     /**
      * <code>optional sint64 timestamp = 2;</code>
+     * @return Whether the timestamp field is set.
      */
     boolean hasTimestamp();
     /**
      * <code>optional sint64 timestamp = 2;</code>
+     * @return The timestamp.
      */
     long getTimestamp();
 
     /**
      * <code>optional bytes signature = 3;</code>
+     * @return Whether the signature field is set.
      */
     boolean hasSignature();
     /**
      * <code>optional bytes signature = 3;</code>
+     * @return The signature.
      */
     com.google.protobuf.ByteString getSignature();
   }
@@ -3394,7 +3576,7 @@ public final class Calypso {
    *
    * Protobuf type {@code calypso.Authorize}
    */
-  public  static final class Authorize extends
+  public static final class Authorize extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:calypso.Authorize)
       AuthorizeOrBuilder {
@@ -3405,8 +3587,14 @@ public final class Calypso {
     }
     private Authorize() {
       byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
-      timestamp_ = 0L;
       signature_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Authorize();
     }
 
     @java.lang.Override
@@ -3485,13 +3673,17 @@ public final class Calypso {
     private com.google.protobuf.ByteString byzcoinid_;
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return Whether the byzcoinid field is set.
      */
+    @java.lang.Override
     public boolean hasByzcoinid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return The byzcoinid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getByzcoinid() {
       return byzcoinid_;
     }
@@ -3500,13 +3692,17 @@ public final class Calypso {
     private long timestamp_;
     /**
      * <code>optional sint64 timestamp = 2;</code>
+     * @return Whether the timestamp field is set.
      */
+    @java.lang.Override
     public boolean hasTimestamp() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional sint64 timestamp = 2;</code>
+     * @return The timestamp.
      */
+    @java.lang.Override
     public long getTimestamp() {
       return timestamp_;
     }
@@ -3515,13 +3711,17 @@ public final class Calypso {
     private com.google.protobuf.ByteString signature_;
     /**
      * <code>optional bytes signature = 3;</code>
+     * @return Whether the signature field is set.
      */
+    @java.lang.Override
     public boolean hasSignature() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional bytes signature = 3;</code>
+     * @return The signature.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getSignature() {
       return signature_;
     }
@@ -3544,13 +3744,13 @@ public final class Calypso {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, byzcoinid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeSInt64(2, timestamp_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBytes(3, signature_);
       }
       unknownFields.writeTo(output);
@@ -3562,15 +3762,15 @@ public final class Calypso {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, byzcoinid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt64Size(2, timestamp_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, signature_);
       }
@@ -3589,24 +3789,23 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.Authorize other = (ch.epfl.dedis.lib.proto.Calypso.Authorize) obj;
 
-      boolean result = true;
-      result = result && (hasByzcoinid() == other.hasByzcoinid());
+      if (hasByzcoinid() != other.hasByzcoinid()) return false;
       if (hasByzcoinid()) {
-        result = result && getByzcoinid()
-            .equals(other.getByzcoinid());
+        if (!getByzcoinid()
+            .equals(other.getByzcoinid())) return false;
       }
-      result = result && (hasTimestamp() == other.hasTimestamp());
+      if (hasTimestamp() != other.hasTimestamp()) return false;
       if (hasTimestamp()) {
-        result = result && (getTimestamp()
-            == other.getTimestamp());
+        if (getTimestamp()
+            != other.getTimestamp()) return false;
       }
-      result = result && (hasSignature() == other.hasSignature());
+      if (hasSignature() != other.hasSignature()) return false;
       if (hasSignature()) {
-        result = result && getSignature()
-            .equals(other.getSignature());
+        if (!getSignature()
+            .equals(other.getSignature())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -3802,15 +4001,15 @@ public final class Calypso {
         ch.epfl.dedis.lib.proto.Calypso.Authorize result = new ch.epfl.dedis.lib.proto.Calypso.Authorize(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.byzcoinid_ = byzcoinid_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.timestamp_ = timestamp_;
           to_bitField0_ |= 0x00000002;
         }
-        result.timestamp_ = timestamp_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.signature_ = signature_;
@@ -3821,35 +4020,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -3908,18 +4107,24 @@ public final class Calypso {
       private com.google.protobuf.ByteString byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @return Whether the byzcoinid field is set.
        */
+      @java.lang.Override
       public boolean hasByzcoinid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @return The byzcoinid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getByzcoinid() {
         return byzcoinid_;
       }
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @param value The byzcoinid to set.
+       * @return This builder for chaining.
        */
       public Builder setByzcoinid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -3932,6 +4137,7 @@ public final class Calypso {
       }
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearByzcoinid() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -3943,18 +4149,24 @@ public final class Calypso {
       private long timestamp_ ;
       /**
        * <code>optional sint64 timestamp = 2;</code>
+       * @return Whether the timestamp field is set.
        */
+      @java.lang.Override
       public boolean hasTimestamp() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional sint64 timestamp = 2;</code>
+       * @return The timestamp.
        */
+      @java.lang.Override
       public long getTimestamp() {
         return timestamp_;
       }
       /**
        * <code>optional sint64 timestamp = 2;</code>
+       * @param value The timestamp to set.
+       * @return This builder for chaining.
        */
       public Builder setTimestamp(long value) {
         bitField0_ |= 0x00000002;
@@ -3964,6 +4176,7 @@ public final class Calypso {
       }
       /**
        * <code>optional sint64 timestamp = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTimestamp() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -3975,18 +4188,24 @@ public final class Calypso {
       private com.google.protobuf.ByteString signature_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>optional bytes signature = 3;</code>
+       * @return Whether the signature field is set.
        */
+      @java.lang.Override
       public boolean hasSignature() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional bytes signature = 3;</code>
+       * @return The signature.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getSignature() {
         return signature_;
       }
       /**
        * <code>optional bytes signature = 3;</code>
+       * @param value The signature to set.
+       * @return This builder for chaining.
        */
       public Builder setSignature(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -3999,6 +4218,7 @@ public final class Calypso {
       }
       /**
        * <code>optional bytes signature = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSignature() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -4070,7 +4290,7 @@ public final class Calypso {
    *
    * Protobuf type {@code calypso.AuthorizeReply}
    */
-  public  static final class AuthorizeReply extends
+  public static final class AuthorizeReply extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:calypso.AuthorizeReply)
       AuthorizeReplyOrBuilder {
@@ -4080,6 +4300,13 @@ public final class Calypso {
       super(builder);
     }
     private AuthorizeReply() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new AuthorizeReply();
     }
 
     @java.lang.Override
@@ -4175,9 +4402,8 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply other = (ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply) obj;
 
-      boolean result = true;
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -4356,35 +4582,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -4485,10 +4711,12 @@ public final class Calypso {
 
     /**
      * <code>required .byzcoin.Proof proof = 1;</code>
+     * @return Whether the proof field is set.
      */
     boolean hasProof();
     /**
      * <code>required .byzcoin.Proof proof = 1;</code>
+     * @return The proof.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof();
     /**
@@ -4505,7 +4733,7 @@ public final class Calypso {
    *
    * Protobuf type {@code calypso.CreateLTS}
    */
-  public  static final class CreateLTS extends
+  public static final class CreateLTS extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:calypso.CreateLTS)
       CreateLTSOrBuilder {
@@ -4515,6 +4743,13 @@ public final class Calypso {
       super(builder);
     }
     private CreateLTS() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new CreateLTS();
     }
 
     @java.lang.Override
@@ -4543,7 +4778,7 @@ public final class Calypso {
               break;
             case 10: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = proof_.toBuilder();
               }
               proof_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.parser(), extensionRegistry);
@@ -4591,19 +4826,24 @@ public final class Calypso {
     private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_;
     /**
      * <code>required .byzcoin.Proof proof = 1;</code>
+     * @return Whether the proof field is set.
      */
+    @java.lang.Override
     public boolean hasProof() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required .byzcoin.Proof proof = 1;</code>
+     * @return The proof.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof() {
       return proof_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
     }
     /**
      * <code>required .byzcoin.Proof proof = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getProofOrBuilder() {
       return proof_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
     }
@@ -4630,7 +4870,7 @@ public final class Calypso {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getProof());
       }
       unknownFields.writeTo(output);
@@ -4642,7 +4882,7 @@ public final class Calypso {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getProof());
       }
@@ -4661,14 +4901,13 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.CreateLTS other = (ch.epfl.dedis.lib.proto.Calypso.CreateLTS) obj;
 
-      boolean result = true;
-      result = result && (hasProof() == other.hasProof());
+      if (hasProof() != other.hasProof()) return false;
       if (hasProof()) {
-        result = result && getProof()
-            .equals(other.getProof());
+        if (!getProof()
+            .equals(other.getProof())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -4856,13 +5095,13 @@ public final class Calypso {
         ch.epfl.dedis.lib.proto.Calypso.CreateLTS result = new ch.epfl.dedis.lib.proto.Calypso.CreateLTS(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (proofBuilder_ == null) {
+            result.proof_ = proof_;
+          } else {
+            result.proof_ = proofBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
-        }
-        if (proofBuilder_ == null) {
-          result.proof_ = proof_;
-        } else {
-          result.proof_ = proofBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -4871,35 +5110,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -4952,17 +5191,19 @@ public final class Calypso {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> proofBuilder_;
       /**
        * <code>required .byzcoin.Proof proof = 1;</code>
+       * @return Whether the proof field is set.
        */
       public boolean hasProof() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required .byzcoin.Proof proof = 1;</code>
+       * @return The proof.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof() {
         if (proofBuilder_ == null) {
@@ -5006,7 +5247,7 @@ public final class Calypso {
        */
       public Builder mergeProof(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof value) {
         if (proofBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               proof_ != null &&
               proof_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance()) {
             proof_ =
@@ -5128,19 +5369,23 @@ public final class Calypso {
 
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return Whether the byzcoinid field is set.
      */
     boolean hasByzcoinid();
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return The byzcoinid.
      */
     com.google.protobuf.ByteString getByzcoinid();
 
     /**
      * <code>required bytes instanceid = 2;</code>
+     * @return Whether the instanceid field is set.
      */
     boolean hasInstanceid();
     /**
      * <code>required bytes instanceid = 2;</code>
+     * @return The instanceid.
      */
     com.google.protobuf.ByteString getInstanceid();
 
@@ -5150,6 +5395,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes x = 3;</code>
+     * @return Whether the x field is set.
      */
     boolean hasX();
     /**
@@ -5158,6 +5404,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes x = 3;</code>
+     * @return The x.
      */
     com.google.protobuf.ByteString getX();
   }
@@ -5169,7 +5416,7 @@ public final class Calypso {
    *
    * Protobuf type {@code calypso.CreateLTSReply}
    */
-  public  static final class CreateLTSReply extends
+  public static final class CreateLTSReply extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:calypso.CreateLTSReply)
       CreateLTSReplyOrBuilder {
@@ -5182,6 +5429,13 @@ public final class Calypso {
       byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
       instanceid_ = com.google.protobuf.ByteString.EMPTY;
       x_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new CreateLTSReply();
     }
 
     @java.lang.Override
@@ -5260,13 +5514,17 @@ public final class Calypso {
     private com.google.protobuf.ByteString byzcoinid_;
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return Whether the byzcoinid field is set.
      */
+    @java.lang.Override
     public boolean hasByzcoinid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return The byzcoinid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getByzcoinid() {
       return byzcoinid_;
     }
@@ -5275,13 +5533,17 @@ public final class Calypso {
     private com.google.protobuf.ByteString instanceid_;
     /**
      * <code>required bytes instanceid = 2;</code>
+     * @return Whether the instanceid field is set.
      */
+    @java.lang.Override
     public boolean hasInstanceid() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes instanceid = 2;</code>
+     * @return The instanceid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getInstanceid() {
       return instanceid_;
     }
@@ -5294,9 +5556,11 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes x = 3;</code>
+     * @return Whether the x field is set.
      */
+    @java.lang.Override
     public boolean hasX() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -5304,7 +5568,9 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes x = 3;</code>
+     * @return The x.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getX() {
       return x_;
     }
@@ -5335,13 +5601,13 @@ public final class Calypso {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, byzcoinid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, instanceid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBytes(3, x_);
       }
       unknownFields.writeTo(output);
@@ -5353,15 +5619,15 @@ public final class Calypso {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, byzcoinid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, instanceid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, x_);
       }
@@ -5380,24 +5646,23 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply other = (ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply) obj;
 
-      boolean result = true;
-      result = result && (hasByzcoinid() == other.hasByzcoinid());
+      if (hasByzcoinid() != other.hasByzcoinid()) return false;
       if (hasByzcoinid()) {
-        result = result && getByzcoinid()
-            .equals(other.getByzcoinid());
+        if (!getByzcoinid()
+            .equals(other.getByzcoinid())) return false;
       }
-      result = result && (hasInstanceid() == other.hasInstanceid());
+      if (hasInstanceid() != other.hasInstanceid()) return false;
       if (hasInstanceid()) {
-        result = result && getInstanceid()
-            .equals(other.getInstanceid());
+        if (!getInstanceid()
+            .equals(other.getInstanceid())) return false;
       }
-      result = result && (hasX() == other.hasX());
+      if (hasX() != other.hasX()) return false;
       if (hasX()) {
-        result = result && getX()
-            .equals(other.getX());
+        if (!getX()
+            .equals(other.getX())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -5591,15 +5856,15 @@ public final class Calypso {
         ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply result = new ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.byzcoinid_ = byzcoinid_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.instanceid_ = instanceid_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.x_ = x_;
@@ -5610,35 +5875,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -5703,18 +5968,24 @@ public final class Calypso {
       private com.google.protobuf.ByteString byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @return Whether the byzcoinid field is set.
        */
+      @java.lang.Override
       public boolean hasByzcoinid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @return The byzcoinid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getByzcoinid() {
         return byzcoinid_;
       }
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @param value The byzcoinid to set.
+       * @return This builder for chaining.
        */
       public Builder setByzcoinid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -5727,6 +5998,7 @@ public final class Calypso {
       }
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearByzcoinid() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -5738,18 +6010,24 @@ public final class Calypso {
       private com.google.protobuf.ByteString instanceid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes instanceid = 2;</code>
+       * @return Whether the instanceid field is set.
        */
+      @java.lang.Override
       public boolean hasInstanceid() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes instanceid = 2;</code>
+       * @return The instanceid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getInstanceid() {
         return instanceid_;
       }
       /**
        * <code>required bytes instanceid = 2;</code>
+       * @param value The instanceid to set.
+       * @return This builder for chaining.
        */
       public Builder setInstanceid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -5762,6 +6040,7 @@ public final class Calypso {
       }
       /**
        * <code>required bytes instanceid = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearInstanceid() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -5777,9 +6056,11 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes x = 3;</code>
+       * @return Whether the x field is set.
        */
+      @java.lang.Override
       public boolean hasX() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -5787,7 +6068,9 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes x = 3;</code>
+       * @return The x.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getX() {
         return x_;
       }
@@ -5797,6 +6080,8 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes x = 3;</code>
+       * @param value The x to set.
+       * @return This builder for chaining.
        */
       public Builder setX(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -5813,6 +6098,7 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes x = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearX() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -5879,10 +6165,12 @@ public final class Calypso {
 
     /**
      * <code>required .byzcoin.Proof proof = 1;</code>
+     * @return Whether the proof field is set.
      */
     boolean hasProof();
     /**
      * <code>required .byzcoin.Proof proof = 1;</code>
+     * @return The proof.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof();
     /**
@@ -5899,7 +6187,7 @@ public final class Calypso {
    *
    * Protobuf type {@code calypso.ReshareLTS}
    */
-  public  static final class ReshareLTS extends
+  public static final class ReshareLTS extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:calypso.ReshareLTS)
       ReshareLTSOrBuilder {
@@ -5909,6 +6197,13 @@ public final class Calypso {
       super(builder);
     }
     private ReshareLTS() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new ReshareLTS();
     }
 
     @java.lang.Override
@@ -5937,7 +6232,7 @@ public final class Calypso {
               break;
             case 10: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = proof_.toBuilder();
               }
               proof_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.parser(), extensionRegistry);
@@ -5985,19 +6280,24 @@ public final class Calypso {
     private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_;
     /**
      * <code>required .byzcoin.Proof proof = 1;</code>
+     * @return Whether the proof field is set.
      */
+    @java.lang.Override
     public boolean hasProof() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required .byzcoin.Proof proof = 1;</code>
+     * @return The proof.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof() {
       return proof_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
     }
     /**
      * <code>required .byzcoin.Proof proof = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getProofOrBuilder() {
       return proof_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
     }
@@ -6024,7 +6324,7 @@ public final class Calypso {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getProof());
       }
       unknownFields.writeTo(output);
@@ -6036,7 +6336,7 @@ public final class Calypso {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getProof());
       }
@@ -6055,14 +6355,13 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.ReshareLTS other = (ch.epfl.dedis.lib.proto.Calypso.ReshareLTS) obj;
 
-      boolean result = true;
-      result = result && (hasProof() == other.hasProof());
+      if (hasProof() != other.hasProof()) return false;
       if (hasProof()) {
-        result = result && getProof()
-            .equals(other.getProof());
+        if (!getProof()
+            .equals(other.getProof())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -6250,13 +6549,13 @@ public final class Calypso {
         ch.epfl.dedis.lib.proto.Calypso.ReshareLTS result = new ch.epfl.dedis.lib.proto.Calypso.ReshareLTS(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (proofBuilder_ == null) {
+            result.proof_ = proof_;
+          } else {
+            result.proof_ = proofBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
-        }
-        if (proofBuilder_ == null) {
-          result.proof_ = proof_;
-        } else {
-          result.proof_ = proofBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -6265,35 +6564,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -6346,17 +6645,19 @@ public final class Calypso {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> proofBuilder_;
       /**
        * <code>required .byzcoin.Proof proof = 1;</code>
+       * @return Whether the proof field is set.
        */
       public boolean hasProof() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required .byzcoin.Proof proof = 1;</code>
+       * @return The proof.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof() {
         if (proofBuilder_ == null) {
@@ -6400,7 +6701,7 @@ public final class Calypso {
        */
       public Builder mergeProof(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof value) {
         if (proofBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               proof_ != null &&
               proof_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance()) {
             proof_ =
@@ -6528,7 +6829,7 @@ public final class Calypso {
    *
    * Protobuf type {@code calypso.ReshareLTSReply}
    */
-  public  static final class ReshareLTSReply extends
+  public static final class ReshareLTSReply extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:calypso.ReshareLTSReply)
       ReshareLTSReplyOrBuilder {
@@ -6538,6 +6839,13 @@ public final class Calypso {
       super(builder);
     }
     private ReshareLTSReply() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new ReshareLTSReply();
     }
 
     @java.lang.Override
@@ -6633,9 +6941,8 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply other = (ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply) obj;
 
-      boolean result = true;
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -6815,35 +7122,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -6944,10 +7251,12 @@ public final class Calypso {
 
     /**
      * <code>required .byzcoin.Proof proof = 1;</code>
+     * @return Whether the proof field is set.
      */
     boolean hasProof();
     /**
      * <code>required .byzcoin.Proof proof = 1;</code>
+     * @return The proof.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof();
     /**
@@ -6962,7 +7271,7 @@ public final class Calypso {
    *
    * Protobuf type {@code calypso.UpdateValidPeers}
    */
-  public  static final class UpdateValidPeers extends
+  public static final class UpdateValidPeers extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:calypso.UpdateValidPeers)
       UpdateValidPeersOrBuilder {
@@ -6972,6 +7281,13 @@ public final class Calypso {
       super(builder);
     }
     private UpdateValidPeers() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new UpdateValidPeers();
     }
 
     @java.lang.Override
@@ -7000,7 +7316,7 @@ public final class Calypso {
               break;
             case 10: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = proof_.toBuilder();
               }
               proof_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.parser(), extensionRegistry);
@@ -7048,19 +7364,24 @@ public final class Calypso {
     private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_;
     /**
      * <code>required .byzcoin.Proof proof = 1;</code>
+     * @return Whether the proof field is set.
      */
+    @java.lang.Override
     public boolean hasProof() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required .byzcoin.Proof proof = 1;</code>
+     * @return The proof.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof() {
       return proof_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
     }
     /**
      * <code>required .byzcoin.Proof proof = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getProofOrBuilder() {
       return proof_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
     }
@@ -7087,7 +7408,7 @@ public final class Calypso {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getProof());
       }
       unknownFields.writeTo(output);
@@ -7099,7 +7420,7 @@ public final class Calypso {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getProof());
       }
@@ -7118,14 +7439,13 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.UpdateValidPeers other = (ch.epfl.dedis.lib.proto.Calypso.UpdateValidPeers) obj;
 
-      boolean result = true;
-      result = result && (hasProof() == other.hasProof());
+      if (hasProof() != other.hasProof()) return false;
       if (hasProof()) {
-        result = result && getProof()
-            .equals(other.getProof());
+        if (!getProof()
+            .equals(other.getProof())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -7311,13 +7631,13 @@ public final class Calypso {
         ch.epfl.dedis.lib.proto.Calypso.UpdateValidPeers result = new ch.epfl.dedis.lib.proto.Calypso.UpdateValidPeers(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (proofBuilder_ == null) {
+            result.proof_ = proof_;
+          } else {
+            result.proof_ = proofBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
-        }
-        if (proofBuilder_ == null) {
-          result.proof_ = proof_;
-        } else {
-          result.proof_ = proofBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -7326,35 +7646,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -7407,17 +7727,19 @@ public final class Calypso {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> proofBuilder_;
       /**
        * <code>required .byzcoin.Proof proof = 1;</code>
+       * @return Whether the proof field is set.
        */
       public boolean hasProof() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required .byzcoin.Proof proof = 1;</code>
+       * @return The proof.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof() {
         if (proofBuilder_ == null) {
@@ -7461,7 +7783,7 @@ public final class Calypso {
        */
       public Builder mergeProof(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof value) {
         if (proofBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               proof_ != null &&
               proof_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance()) {
             proof_ =
@@ -7588,7 +7910,7 @@ public final class Calypso {
    *
    * Protobuf type {@code calypso.UpdateValidPeersReply}
    */
-  public  static final class UpdateValidPeersReply extends
+  public static final class UpdateValidPeersReply extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:calypso.UpdateValidPeersReply)
       UpdateValidPeersReplyOrBuilder {
@@ -7598,6 +7920,13 @@ public final class Calypso {
       super(builder);
     }
     private UpdateValidPeersReply() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new UpdateValidPeersReply();
     }
 
     @java.lang.Override
@@ -7693,9 +8022,8 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.UpdateValidPeersReply other = (ch.epfl.dedis.lib.proto.Calypso.UpdateValidPeersReply) obj;
 
-      boolean result = true;
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -7874,35 +8202,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -8007,6 +8335,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required .byzcoin.Proof read = 1;</code>
+     * @return Whether the read field is set.
      */
     boolean hasRead();
     /**
@@ -8015,6 +8344,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required .byzcoin.Proof read = 1;</code>
+     * @return The read.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getRead();
     /**
@@ -8032,6 +8362,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required .byzcoin.Proof write = 2;</code>
+     * @return Whether the write field is set.
      */
     boolean hasWrite();
     /**
@@ -8040,6 +8371,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required .byzcoin.Proof write = 2;</code>
+     * @return The write.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getWrite();
     /**
@@ -8059,7 +8391,7 @@ public final class Calypso {
    *
    * Protobuf type {@code calypso.DecryptKey}
    */
-  public  static final class DecryptKey extends
+  public static final class DecryptKey extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:calypso.DecryptKey)
       DecryptKeyOrBuilder {
@@ -8069,6 +8401,13 @@ public final class Calypso {
       super(builder);
     }
     private DecryptKey() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new DecryptKey();
     }
 
     @java.lang.Override
@@ -8097,7 +8436,7 @@ public final class Calypso {
               break;
             case 10: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = read_.toBuilder();
               }
               read_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.parser(), extensionRegistry);
@@ -8110,7 +8449,7 @@ public final class Calypso {
             }
             case 18: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = write_.toBuilder();
               }
               write_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.parser(), extensionRegistry);
@@ -8162,9 +8501,11 @@ public final class Calypso {
      * </pre>
      *
      * <code>required .byzcoin.Proof read = 1;</code>
+     * @return Whether the read field is set.
      */
+    @java.lang.Override
     public boolean hasRead() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -8172,7 +8513,9 @@ public final class Calypso {
      * </pre>
      *
      * <code>required .byzcoin.Proof read = 1;</code>
+     * @return The read.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getRead() {
       return read_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : read_;
     }
@@ -8183,6 +8526,7 @@ public final class Calypso {
      *
      * <code>required .byzcoin.Proof read = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getReadOrBuilder() {
       return read_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : read_;
     }
@@ -8195,9 +8539,11 @@ public final class Calypso {
      * </pre>
      *
      * <code>required .byzcoin.Proof write = 2;</code>
+     * @return Whether the write field is set.
      */
+    @java.lang.Override
     public boolean hasWrite() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -8205,7 +8551,9 @@ public final class Calypso {
      * </pre>
      *
      * <code>required .byzcoin.Proof write = 2;</code>
+     * @return The write.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getWrite() {
       return write_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : write_;
     }
@@ -8216,6 +8564,7 @@ public final class Calypso {
      *
      * <code>required .byzcoin.Proof write = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getWriteOrBuilder() {
       return write_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : write_;
     }
@@ -8250,10 +8599,10 @@ public final class Calypso {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getRead());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getWrite());
       }
       unknownFields.writeTo(output);
@@ -8265,11 +8614,11 @@ public final class Calypso {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getRead());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getWrite());
       }
@@ -8288,19 +8637,18 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.DecryptKey other = (ch.epfl.dedis.lib.proto.Calypso.DecryptKey) obj;
 
-      boolean result = true;
-      result = result && (hasRead() == other.hasRead());
+      if (hasRead() != other.hasRead()) return false;
       if (hasRead()) {
-        result = result && getRead()
-            .equals(other.getRead());
+        if (!getRead()
+            .equals(other.getRead())) return false;
       }
-      result = result && (hasWrite() == other.hasWrite());
+      if (hasWrite() != other.hasWrite()) return false;
       if (hasWrite()) {
-        result = result && getWrite()
-            .equals(other.getWrite());
+        if (!getWrite()
+            .equals(other.getWrite())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -8498,21 +8846,21 @@ public final class Calypso {
         ch.epfl.dedis.lib.proto.Calypso.DecryptKey result = new ch.epfl.dedis.lib.proto.Calypso.DecryptKey(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (readBuilder_ == null) {
+            result.read_ = read_;
+          } else {
+            result.read_ = readBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
         }
-        if (readBuilder_ == null) {
-          result.read_ = read_;
-        } else {
-          result.read_ = readBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (writeBuilder_ == null) {
+            result.write_ = write_;
+          } else {
+            result.write_ = writeBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
-        }
-        if (writeBuilder_ == null) {
-          result.write_ = write_;
-        } else {
-          result.write_ = writeBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -8521,35 +8869,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -8611,7 +8959,7 @@ public final class Calypso {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof read_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof read_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> readBuilder_;
       /**
@@ -8620,9 +8968,10 @@ public final class Calypso {
        * </pre>
        *
        * <code>required .byzcoin.Proof read = 1;</code>
+       * @return Whether the read field is set.
        */
       public boolean hasRead() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -8630,6 +8979,7 @@ public final class Calypso {
        * </pre>
        *
        * <code>required .byzcoin.Proof read = 1;</code>
+       * @return The read.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getRead() {
         if (readBuilder_ == null) {
@@ -8685,7 +9035,7 @@ public final class Calypso {
        */
       public Builder mergeRead(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof value) {
         if (readBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               read_ != null &&
               read_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance()) {
             read_ =
@@ -8765,7 +9115,7 @@ public final class Calypso {
         return readBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof write_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof write_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> writeBuilder_;
       /**
@@ -8774,9 +9124,10 @@ public final class Calypso {
        * </pre>
        *
        * <code>required .byzcoin.Proof write = 2;</code>
+       * @return Whether the write field is set.
        */
       public boolean hasWrite() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -8784,6 +9135,7 @@ public final class Calypso {
        * </pre>
        *
        * <code>required .byzcoin.Proof write = 2;</code>
+       * @return The write.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getWrite() {
         if (writeBuilder_ == null) {
@@ -8839,7 +9191,7 @@ public final class Calypso {
        */
       public Builder mergeWrite(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof value) {
         if (writeBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               write_ != null &&
               write_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance()) {
             write_ =
@@ -8981,6 +9333,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes c = 1;</code>
+     * @return Whether the c field is set.
      */
     boolean hasC();
     /**
@@ -8989,6 +9342,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes c = 1;</code>
+     * @return The c.
      */
     com.google.protobuf.ByteString getC();
 
@@ -8998,6 +9352,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes xhatenc = 2;</code>
+     * @return Whether the xhatenc field is set.
      */
     boolean hasXhatenc();
     /**
@@ -9006,6 +9361,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes xhatenc = 2;</code>
+     * @return The xhatenc.
      */
     com.google.protobuf.ByteString getXhatenc();
 
@@ -9015,6 +9371,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes x = 3;</code>
+     * @return Whether the x field is set.
      */
     boolean hasX();
     /**
@@ -9023,6 +9380,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes x = 3;</code>
+     * @return The x.
      */
     com.google.protobuf.ByteString getX();
   }
@@ -9034,7 +9392,7 @@ public final class Calypso {
    *
    * Protobuf type {@code calypso.DecryptKeyReply}
    */
-  public  static final class DecryptKeyReply extends
+  public static final class DecryptKeyReply extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:calypso.DecryptKeyReply)
       DecryptKeyReplyOrBuilder {
@@ -9047,6 +9405,13 @@ public final class Calypso {
       c_ = com.google.protobuf.ByteString.EMPTY;
       xhatenc_ = com.google.protobuf.ByteString.EMPTY;
       x_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new DecryptKeyReply();
     }
 
     @java.lang.Override
@@ -9129,9 +9494,11 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes c = 1;</code>
+     * @return Whether the c field is set.
      */
+    @java.lang.Override
     public boolean hasC() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -9139,7 +9506,9 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes c = 1;</code>
+     * @return The c.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getC() {
       return c_;
     }
@@ -9152,9 +9521,11 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes xhatenc = 2;</code>
+     * @return Whether the xhatenc field is set.
      */
+    @java.lang.Override
     public boolean hasXhatenc() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -9162,7 +9533,9 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes xhatenc = 2;</code>
+     * @return The xhatenc.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getXhatenc() {
       return xhatenc_;
     }
@@ -9175,9 +9548,11 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes x = 3;</code>
+     * @return Whether the x field is set.
      */
+    @java.lang.Override
     public boolean hasX() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -9185,7 +9560,9 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes x = 3;</code>
+     * @return The x.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getX() {
       return x_;
     }
@@ -9216,13 +9593,13 @@ public final class Calypso {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, c_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, xhatenc_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBytes(3, x_);
       }
       unknownFields.writeTo(output);
@@ -9234,15 +9611,15 @@ public final class Calypso {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, c_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, xhatenc_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, x_);
       }
@@ -9261,24 +9638,23 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply other = (ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply) obj;
 
-      boolean result = true;
-      result = result && (hasC() == other.hasC());
+      if (hasC() != other.hasC()) return false;
       if (hasC()) {
-        result = result && getC()
-            .equals(other.getC());
+        if (!getC()
+            .equals(other.getC())) return false;
       }
-      result = result && (hasXhatenc() == other.hasXhatenc());
+      if (hasXhatenc() != other.hasXhatenc()) return false;
       if (hasXhatenc()) {
-        result = result && getXhatenc()
-            .equals(other.getXhatenc());
+        if (!getXhatenc()
+            .equals(other.getXhatenc())) return false;
       }
-      result = result && (hasX() == other.hasX());
+      if (hasX() != other.hasX()) return false;
       if (hasX()) {
-        result = result && getX()
-            .equals(other.getX());
+        if (!getX()
+            .equals(other.getX())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -9472,15 +9848,15 @@ public final class Calypso {
         ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply result = new ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.c_ = c_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.xhatenc_ = xhatenc_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.x_ = x_;
@@ -9491,35 +9867,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -9588,9 +9964,11 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes c = 1;</code>
+       * @return Whether the c field is set.
        */
+      @java.lang.Override
       public boolean hasC() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -9598,7 +9976,9 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes c = 1;</code>
+       * @return The c.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getC() {
         return c_;
       }
@@ -9608,6 +9988,8 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes c = 1;</code>
+       * @param value The c to set.
+       * @return This builder for chaining.
        */
       public Builder setC(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -9624,6 +10006,7 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes c = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearC() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -9639,9 +10022,11 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes xhatenc = 2;</code>
+       * @return Whether the xhatenc field is set.
        */
+      @java.lang.Override
       public boolean hasXhatenc() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -9649,7 +10034,9 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes xhatenc = 2;</code>
+       * @return The xhatenc.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getXhatenc() {
         return xhatenc_;
       }
@@ -9659,6 +10046,8 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes xhatenc = 2;</code>
+       * @param value The xhatenc to set.
+       * @return This builder for chaining.
        */
       public Builder setXhatenc(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -9675,6 +10064,7 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes xhatenc = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearXhatenc() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -9690,9 +10080,11 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes x = 3;</code>
+       * @return Whether the x field is set.
        */
+      @java.lang.Override
       public boolean hasX() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -9700,7 +10092,9 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes x = 3;</code>
+       * @return The x.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getX() {
         return x_;
       }
@@ -9710,6 +10104,8 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes x = 3;</code>
+       * @param value The x to set.
+       * @return This builder for chaining.
        */
       public Builder setX(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -9726,6 +10122,7 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes x = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearX() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -9796,6 +10193,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes ltsid = 1;</code>
+     * @return Whether the ltsid field is set.
      */
     boolean hasLtsid();
     /**
@@ -9804,6 +10202,7 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes ltsid = 1;</code>
+     * @return The ltsid.
      */
     com.google.protobuf.ByteString getLtsid();
   }
@@ -9814,7 +10213,7 @@ public final class Calypso {
    *
    * Protobuf type {@code calypso.GetLTSReply}
    */
-  public  static final class GetLTSReply extends
+  public static final class GetLTSReply extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:calypso.GetLTSReply)
       GetLTSReplyOrBuilder {
@@ -9825,6 +10224,13 @@ public final class Calypso {
     }
     private GetLTSReply() {
       ltsid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetLTSReply();
     }
 
     @java.lang.Override
@@ -9897,9 +10303,11 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes ltsid = 1;</code>
+     * @return Whether the ltsid field is set.
      */
+    @java.lang.Override
     public boolean hasLtsid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -9907,7 +10315,9 @@ public final class Calypso {
      * </pre>
      *
      * <code>required bytes ltsid = 1;</code>
+     * @return The ltsid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getLtsid() {
       return ltsid_;
     }
@@ -9930,7 +10340,7 @@ public final class Calypso {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, ltsid_);
       }
       unknownFields.writeTo(output);
@@ -9942,7 +10352,7 @@ public final class Calypso {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, ltsid_);
       }
@@ -9961,14 +10371,13 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.GetLTSReply other = (ch.epfl.dedis.lib.proto.Calypso.GetLTSReply) obj;
 
-      boolean result = true;
-      result = result && (hasLtsid() == other.hasLtsid());
+      if (hasLtsid() != other.hasLtsid()) return false;
       if (hasLtsid()) {
-        result = result && getLtsid()
-            .equals(other.getLtsid());
+        if (!getLtsid()
+            .equals(other.getLtsid())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -10149,7 +10558,7 @@ public final class Calypso {
         ch.epfl.dedis.lib.proto.Calypso.GetLTSReply result = new ch.epfl.dedis.lib.proto.Calypso.GetLTSReply(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.ltsid_ = ltsid_;
@@ -10160,35 +10569,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -10245,9 +10654,11 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes ltsid = 1;</code>
+       * @return Whether the ltsid field is set.
        */
+      @java.lang.Override
       public boolean hasLtsid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -10255,7 +10666,9 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes ltsid = 1;</code>
+       * @return The ltsid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getLtsid() {
         return ltsid_;
       }
@@ -10265,6 +10678,8 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes ltsid = 1;</code>
+       * @param value The ltsid to set.
+       * @return This builder for chaining.
        */
       public Builder setLtsid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -10281,6 +10696,7 @@ public final class Calypso {
        * </pre>
        *
        * <code>required bytes ltsid = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearLtsid() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -10347,10 +10763,12 @@ public final class Calypso {
 
     /**
      * <code>required .onet.Roster roster = 1;</code>
+     * @return Whether the roster field is set.
      */
     boolean hasRoster();
     /**
      * <code>required .onet.Roster roster = 1;</code>
+     * @return The roster.
      */
     ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster();
     /**
@@ -10365,7 +10783,7 @@ public final class Calypso {
    *
    * Protobuf type {@code calypso.LtsInstanceInfo}
    */
-  public  static final class LtsInstanceInfo extends
+  public static final class LtsInstanceInfo extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:calypso.LtsInstanceInfo)
       LtsInstanceInfoOrBuilder {
@@ -10375,6 +10793,13 @@ public final class Calypso {
       super(builder);
     }
     private LtsInstanceInfo() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new LtsInstanceInfo();
     }
 
     @java.lang.Override
@@ -10403,7 +10828,7 @@ public final class Calypso {
               break;
             case 10: {
               ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = roster_.toBuilder();
               }
               roster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.parser(), extensionRegistry);
@@ -10451,19 +10876,24 @@ public final class Calypso {
     private ch.epfl.dedis.lib.proto.OnetProto.Roster roster_;
     /**
      * <code>required .onet.Roster roster = 1;</code>
+     * @return Whether the roster field is set.
      */
+    @java.lang.Override
     public boolean hasRoster() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required .onet.Roster roster = 1;</code>
+     * @return The roster.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster() {
       return roster_ == null ? ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
     }
     /**
      * <code>required .onet.Roster roster = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder getRosterOrBuilder() {
       return roster_ == null ? ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
     }
@@ -10490,7 +10920,7 @@ public final class Calypso {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getRoster());
       }
       unknownFields.writeTo(output);
@@ -10502,7 +10932,7 @@ public final class Calypso {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getRoster());
       }
@@ -10521,14 +10951,13 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo other = (ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo) obj;
 
-      boolean result = true;
-      result = result && (hasRoster() == other.hasRoster());
+      if (hasRoster() != other.hasRoster()) return false;
       if (hasRoster()) {
-        result = result && getRoster()
-            .equals(other.getRoster());
+        if (!getRoster()
+            .equals(other.getRoster())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -10714,13 +11143,13 @@ public final class Calypso {
         ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo result = new ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (rosterBuilder_ == null) {
+            result.roster_ = roster_;
+          } else {
+            result.roster_ = rosterBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
-        }
-        if (rosterBuilder_ == null) {
-          result.roster_ = roster_;
-        } else {
-          result.roster_ = rosterBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -10729,35 +11158,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -10810,17 +11239,19 @@ public final class Calypso {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.lib.proto.OnetProto.Roster roster_ = null;
+      private ch.epfl.dedis.lib.proto.OnetProto.Roster roster_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder> rosterBuilder_;
       /**
        * <code>required .onet.Roster roster = 1;</code>
+       * @return Whether the roster field is set.
        */
       public boolean hasRoster() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required .onet.Roster roster = 1;</code>
+       * @return The roster.
        */
       public ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster() {
         if (rosterBuilder_ == null) {
@@ -10864,7 +11295,7 @@ public final class Calypso {
        */
       public Builder mergeRoster(ch.epfl.dedis.lib.proto.OnetProto.Roster value) {
         if (rosterBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               roster_ != null &&
               roster_ != ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance()) {
             roster_ =
@@ -11092,20 +11523,12 @@ public final class Calypso {
       "nfo\022\034\n\006roster\030\001 \002(\0132\014.onet.RosterB\"\n\027ch." +
       "epfl.dedis.lib.protoB\007Calypso"
     };
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           ch.epfl.dedis.lib.proto.ByzCoinProto.getDescriptor(),
           ch.epfl.dedis.lib.proto.OnetProto.getDescriptor(),
-        }, assigner);
+        });
     internal_static_calypso_Write_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_calypso_Write_fieldAccessorTable = new

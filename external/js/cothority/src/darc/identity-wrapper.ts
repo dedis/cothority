@@ -3,6 +3,7 @@ import { Message } from "protobufjs/light";
 import { registerMessage } from "../protobuf";
 import IdentityDarc from "./identity-darc";
 import IdentityEd25519 from "./identity-ed25519";
+import IdentityDid from "./identity-did";
 
 /**
  * Protobuf representation of an identity
@@ -12,7 +13,7 @@ export default class IdentityWrapper extends Message<IdentityWrapper> {
      * @see README#Message classes
      */
     static register() {
-        registerMessage("Identity", IdentityWrapper, IdentityEd25519, IdentityDarc);
+      registerMessage("Identity", IdentityWrapper, IdentityEd25519, IdentityDarc, IdentityDid);
     }
 
     /**
@@ -36,6 +37,11 @@ export default class IdentityWrapper extends Message<IdentityWrapper> {
             const id = new IdentityDarc({id: Buffer.from(idStr.slice(5), "hex")});
             return new IdentityWrapper({darc: id});
         }
+        if (idStr.startsWith("did:")) {
+		    const field = idStr.split(":", 3)
+            const id = new IdentityDid({method: Buffer.from(field[1]), did: Buffer.from(field[2]) });
+            return new IdentityWrapper({did: id});
+        }
     }
 
     /**
@@ -47,6 +53,7 @@ export default class IdentityWrapper extends Message<IdentityWrapper> {
 
     readonly ed25519: IdentityEd25519;
     readonly darc: IdentityDarc;
+    readonly did: IdentityDid;
 
     /**
      * Get the inner identity as bytes
@@ -58,6 +65,9 @@ export default class IdentityWrapper extends Message<IdentityWrapper> {
         }
         if (this.darc) {
             return this.darc.toBytes();
+        }
+        if (this.did) {
+            return this.did.toBytes();
         }
 
         return Buffer.from([]);
@@ -73,6 +83,9 @@ export default class IdentityWrapper extends Message<IdentityWrapper> {
         }
         if (this.darc) {
             return this.darc.toString();
+        }
+        if (this.did) {
+            return this.did.toString();
         }
 
         return "empty signer";

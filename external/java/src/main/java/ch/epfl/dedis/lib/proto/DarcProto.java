@@ -25,6 +25,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required uint64 version = 1;</code>
+     * @return Whether the version field is set.
      */
     boolean hasVersion();
     /**
@@ -34,6 +35,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required uint64 version = 1;</code>
+     * @return The version.
      */
     long getVersion();
 
@@ -45,6 +47,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes description = 2;</code>
+     * @return Whether the description field is set.
      */
     boolean hasDescription();
     /**
@@ -55,6 +58,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes description = 2;</code>
+     * @return The description.
      */
     com.google.protobuf.ByteString getDescription();
 
@@ -65,6 +69,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional bytes baseid = 3;</code>
+     * @return Whether the baseid field is set.
      */
     boolean hasBaseid();
     /**
@@ -74,6 +79,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional bytes baseid = 3;</code>
+     * @return The baseid.
      */
     com.google.protobuf.ByteString getBaseid();
 
@@ -83,6 +89,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes previd = 4;</code>
+     * @return Whether the previd field is set.
      */
     boolean hasPrevid();
     /**
@@ -91,6 +98,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes previd = 4;</code>
+     * @return The previd.
      */
     com.google.protobuf.ByteString getPrevid();
 
@@ -100,6 +108,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required .darc.Rules rules = 5;</code>
+     * @return Whether the rules field is set.
      */
     boolean hasRules();
     /**
@@ -108,6 +117,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required .darc.Rules rules = 5;</code>
+     * @return The rules.
      */
     ch.epfl.dedis.lib.proto.DarcProto.Rules getRules();
     /**
@@ -236,7 +246,7 @@ public final class DarcProto {
    *
    * Protobuf type {@code darc.Darc}
    */
-  public  static final class Darc extends
+  public static final class Darc extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:darc.Darc)
       DarcOrBuilder {
@@ -246,12 +256,18 @@ public final class DarcProto {
       super(builder);
     }
     private Darc() {
-      version_ = 0L;
       description_ = com.google.protobuf.ByteString.EMPTY;
       baseid_ = com.google.protobuf.ByteString.EMPTY;
       previd_ = com.google.protobuf.ByteString.EMPTY;
       signatures_ = java.util.Collections.emptyList();
       verificationdarcs_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Darc();
     }
 
     @java.lang.Override
@@ -300,7 +316,7 @@ public final class DarcProto {
             }
             case 42: {
               ch.epfl.dedis.lib.proto.DarcProto.Rules.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000010) == 0x00000010)) {
+              if (((bitField0_ & 0x00000010) != 0)) {
                 subBuilder = rules_.toBuilder();
               }
               rules_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Rules.parser(), extensionRegistry);
@@ -312,7 +328,7 @@ public final class DarcProto {
               break;
             }
             case 50: {
-              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+              if (!((mutable_bitField0_ & 0x00000020) != 0)) {
                 signatures_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.DarcProto.Signature>();
                 mutable_bitField0_ |= 0x00000020;
               }
@@ -321,7 +337,7 @@ public final class DarcProto {
               break;
             }
             case 58: {
-              if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+              if (!((mutable_bitField0_ & 0x00000040) != 0)) {
                 verificationdarcs_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.DarcProto.Darc>();
                 mutable_bitField0_ |= 0x00000040;
               }
@@ -344,10 +360,10 @@ public final class DarcProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((mutable_bitField0_ & 0x00000020) != 0)) {
           signatures_ = java.util.Collections.unmodifiableList(signatures_);
         }
-        if (((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((mutable_bitField0_ & 0x00000040) != 0)) {
           verificationdarcs_ = java.util.Collections.unmodifiableList(verificationdarcs_);
         }
         this.unknownFields = unknownFields.build();
@@ -377,9 +393,11 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required uint64 version = 1;</code>
+     * @return Whether the version field is set.
      */
+    @java.lang.Override
     public boolean hasVersion() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -388,7 +406,9 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required uint64 version = 1;</code>
+     * @return The version.
      */
+    @java.lang.Override
     public long getVersion() {
       return version_;
     }
@@ -403,9 +423,11 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes description = 2;</code>
+     * @return Whether the description field is set.
      */
+    @java.lang.Override
     public boolean hasDescription() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -415,7 +437,9 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes description = 2;</code>
+     * @return The description.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getDescription() {
       return description_;
     }
@@ -429,9 +453,11 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional bytes baseid = 3;</code>
+     * @return Whether the baseid field is set.
      */
+    @java.lang.Override
     public boolean hasBaseid() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -440,7 +466,9 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional bytes baseid = 3;</code>
+     * @return The baseid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getBaseid() {
       return baseid_;
     }
@@ -453,9 +481,11 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes previd = 4;</code>
+     * @return Whether the previd field is set.
      */
+    @java.lang.Override
     public boolean hasPrevid() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <pre>
@@ -463,7 +493,9 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes previd = 4;</code>
+     * @return The previd.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getPrevid() {
       return previd_;
     }
@@ -476,9 +508,11 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required .darc.Rules rules = 5;</code>
+     * @return Whether the rules field is set.
      */
+    @java.lang.Override
     public boolean hasRules() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <pre>
@@ -486,7 +520,9 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required .darc.Rules rules = 5;</code>
+     * @return The rules.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.Rules getRules() {
       return rules_ == null ? ch.epfl.dedis.lib.proto.DarcProto.Rules.getDefaultInstance() : rules_;
     }
@@ -497,6 +533,7 @@ public final class DarcProto {
      *
      * <code>required .darc.Rules rules = 5;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.RulesOrBuilder getRulesOrBuilder() {
       return rules_ == null ? ch.epfl.dedis.lib.proto.DarcProto.Rules.getDefaultInstance() : rules_;
     }
@@ -512,6 +549,7 @@ public final class DarcProto {
      *
      * <code>repeated .darc.Signature signatures = 6;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Signature> getSignaturesList() {
       return signatures_;
     }
@@ -524,6 +562,7 @@ public final class DarcProto {
      *
      * <code>repeated .darc.Signature signatures = 6;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder>
         getSignaturesOrBuilderList() {
       return signatures_;
@@ -537,6 +576,7 @@ public final class DarcProto {
      *
      * <code>repeated .darc.Signature signatures = 6;</code>
      */
+    @java.lang.Override
     public int getSignaturesCount() {
       return signatures_.size();
     }
@@ -549,6 +589,7 @@ public final class DarcProto {
      *
      * <code>repeated .darc.Signature signatures = 6;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.Signature getSignatures(int index) {
       return signatures_.get(index);
     }
@@ -561,6 +602,7 @@ public final class DarcProto {
      *
      * <code>repeated .darc.Signature signatures = 6;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder getSignaturesOrBuilder(
         int index) {
       return signatures_.get(index);
@@ -577,6 +619,7 @@ public final class DarcProto {
      *
      * <code>repeated .darc.Darc verificationdarcs = 7;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Darc> getVerificationdarcsList() {
       return verificationdarcs_;
     }
@@ -589,6 +632,7 @@ public final class DarcProto {
      *
      * <code>repeated .darc.Darc verificationdarcs = 7;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.DarcOrBuilder>
         getVerificationdarcsOrBuilderList() {
       return verificationdarcs_;
@@ -602,6 +646,7 @@ public final class DarcProto {
      *
      * <code>repeated .darc.Darc verificationdarcs = 7;</code>
      */
+    @java.lang.Override
     public int getVerificationdarcsCount() {
       return verificationdarcs_.size();
     }
@@ -614,6 +659,7 @@ public final class DarcProto {
      *
      * <code>repeated .darc.Darc verificationdarcs = 7;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.Darc getVerificationdarcs(int index) {
       return verificationdarcs_.get(index);
     }
@@ -626,6 +672,7 @@ public final class DarcProto {
      *
      * <code>repeated .darc.Darc verificationdarcs = 7;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.DarcOrBuilder getVerificationdarcsOrBuilder(
         int index) {
       return verificationdarcs_.get(index);
@@ -677,19 +724,19 @@ public final class DarcProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeUInt64(1, version_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, description_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBytes(3, baseid_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeBytes(4, previd_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeMessage(5, getRules());
       }
       for (int i = 0; i < signatures_.size(); i++) {
@@ -707,23 +754,23 @@ public final class DarcProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(1, version_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, description_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, baseid_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(4, previd_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(5, getRules());
       }
@@ -750,38 +797,37 @@ public final class DarcProto {
       }
       ch.epfl.dedis.lib.proto.DarcProto.Darc other = (ch.epfl.dedis.lib.proto.DarcProto.Darc) obj;
 
-      boolean result = true;
-      result = result && (hasVersion() == other.hasVersion());
+      if (hasVersion() != other.hasVersion()) return false;
       if (hasVersion()) {
-        result = result && (getVersion()
-            == other.getVersion());
+        if (getVersion()
+            != other.getVersion()) return false;
       }
-      result = result && (hasDescription() == other.hasDescription());
+      if (hasDescription() != other.hasDescription()) return false;
       if (hasDescription()) {
-        result = result && getDescription()
-            .equals(other.getDescription());
+        if (!getDescription()
+            .equals(other.getDescription())) return false;
       }
-      result = result && (hasBaseid() == other.hasBaseid());
+      if (hasBaseid() != other.hasBaseid()) return false;
       if (hasBaseid()) {
-        result = result && getBaseid()
-            .equals(other.getBaseid());
+        if (!getBaseid()
+            .equals(other.getBaseid())) return false;
       }
-      result = result && (hasPrevid() == other.hasPrevid());
+      if (hasPrevid() != other.hasPrevid()) return false;
       if (hasPrevid()) {
-        result = result && getPrevid()
-            .equals(other.getPrevid());
+        if (!getPrevid()
+            .equals(other.getPrevid())) return false;
       }
-      result = result && (hasRules() == other.hasRules());
+      if (hasRules() != other.hasRules()) return false;
       if (hasRules()) {
-        result = result && getRules()
-            .equals(other.getRules());
+        if (!getRules()
+            .equals(other.getRules())) return false;
       }
-      result = result && getSignaturesList()
-          .equals(other.getSignaturesList());
-      result = result && getVerificationdarcsList()
-          .equals(other.getVerificationdarcsList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getSignaturesList()
+          .equals(other.getSignaturesList())) return false;
+      if (!getVerificationdarcsList()
+          .equals(other.getVerificationdarcsList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -1016,32 +1062,32 @@ public final class DarcProto {
         ch.epfl.dedis.lib.proto.DarcProto.Darc result = new ch.epfl.dedis.lib.proto.DarcProto.Darc(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.version_ = version_;
           to_bitField0_ |= 0x00000001;
         }
-        result.version_ = version_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.description_ = description_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.baseid_ = baseid_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
           to_bitField0_ |= 0x00000008;
         }
         result.previd_ = previd_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          if (rulesBuilder_ == null) {
+            result.rules_ = rules_;
+          } else {
+            result.rules_ = rulesBuilder_.build();
+          }
           to_bitField0_ |= 0x00000010;
         }
-        if (rulesBuilder_ == null) {
-          result.rules_ = rules_;
-        } else {
-          result.rules_ = rulesBuilder_.build();
-        }
         if (signaturesBuilder_ == null) {
-          if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          if (((bitField0_ & 0x00000020) != 0)) {
             signatures_ = java.util.Collections.unmodifiableList(signatures_);
             bitField0_ = (bitField0_ & ~0x00000020);
           }
@@ -1050,7 +1096,7 @@ public final class DarcProto {
           result.signatures_ = signaturesBuilder_.build();
         }
         if (verificationdarcsBuilder_ == null) {
-          if (((bitField0_ & 0x00000040) == 0x00000040)) {
+          if (((bitField0_ & 0x00000040) != 0)) {
             verificationdarcs_ = java.util.Collections.unmodifiableList(verificationdarcs_);
             bitField0_ = (bitField0_ & ~0x00000040);
           }
@@ -1065,35 +1111,35 @@ public final class DarcProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -1237,9 +1283,11 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required uint64 version = 1;</code>
+       * @return Whether the version field is set.
        */
+      @java.lang.Override
       public boolean hasVersion() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -1248,7 +1296,9 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required uint64 version = 1;</code>
+       * @return The version.
        */
+      @java.lang.Override
       public long getVersion() {
         return version_;
       }
@@ -1259,6 +1309,8 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required uint64 version = 1;</code>
+       * @param value The version to set.
+       * @return This builder for chaining.
        */
       public Builder setVersion(long value) {
         bitField0_ |= 0x00000001;
@@ -1273,6 +1325,7 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required uint64 version = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearVersion() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -1290,9 +1343,11 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes description = 2;</code>
+       * @return Whether the description field is set.
        */
+      @java.lang.Override
       public boolean hasDescription() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -1302,7 +1357,9 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes description = 2;</code>
+       * @return The description.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getDescription() {
         return description_;
       }
@@ -1314,6 +1371,8 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes description = 2;</code>
+       * @param value The description to set.
+       * @return This builder for chaining.
        */
       public Builder setDescription(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -1332,6 +1391,7 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes description = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearDescription() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -1348,9 +1408,11 @@ public final class DarcProto {
        * </pre>
        *
        * <code>optional bytes baseid = 3;</code>
+       * @return Whether the baseid field is set.
        */
+      @java.lang.Override
       public boolean hasBaseid() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -1359,7 +1421,9 @@ public final class DarcProto {
        * </pre>
        *
        * <code>optional bytes baseid = 3;</code>
+       * @return The baseid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getBaseid() {
         return baseid_;
       }
@@ -1370,6 +1434,8 @@ public final class DarcProto {
        * </pre>
        *
        * <code>optional bytes baseid = 3;</code>
+       * @param value The baseid to set.
+       * @return This builder for chaining.
        */
       public Builder setBaseid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -1387,6 +1453,7 @@ public final class DarcProto {
        * </pre>
        *
        * <code>optional bytes baseid = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearBaseid() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -1402,9 +1469,11 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes previd = 4;</code>
+       * @return Whether the previd field is set.
        */
+      @java.lang.Override
       public boolean hasPrevid() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <pre>
@@ -1412,7 +1481,9 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes previd = 4;</code>
+       * @return The previd.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getPrevid() {
         return previd_;
       }
@@ -1422,6 +1493,8 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes previd = 4;</code>
+       * @param value The previd to set.
+       * @return This builder for chaining.
        */
       public Builder setPrevid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -1438,6 +1511,7 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes previd = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPrevid() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -1446,7 +1520,7 @@ public final class DarcProto {
         return this;
       }
 
-      private ch.epfl.dedis.lib.proto.DarcProto.Rules rules_ = null;
+      private ch.epfl.dedis.lib.proto.DarcProto.Rules rules_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.DarcProto.Rules, ch.epfl.dedis.lib.proto.DarcProto.Rules.Builder, ch.epfl.dedis.lib.proto.DarcProto.RulesOrBuilder> rulesBuilder_;
       /**
@@ -1455,9 +1529,10 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required .darc.Rules rules = 5;</code>
+       * @return Whether the rules field is set.
        */
       public boolean hasRules() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <pre>
@@ -1465,6 +1540,7 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required .darc.Rules rules = 5;</code>
+       * @return The rules.
        */
       public ch.epfl.dedis.lib.proto.DarcProto.Rules getRules() {
         if (rulesBuilder_ == null) {
@@ -1520,7 +1596,7 @@ public final class DarcProto {
        */
       public Builder mergeRules(ch.epfl.dedis.lib.proto.DarcProto.Rules value) {
         if (rulesBuilder_ == null) {
-          if (((bitField0_ & 0x00000010) == 0x00000010) &&
+          if (((bitField0_ & 0x00000010) != 0) &&
               rules_ != null &&
               rules_ != ch.epfl.dedis.lib.proto.DarcProto.Rules.getDefaultInstance()) {
             rules_ =
@@ -1603,7 +1679,7 @@ public final class DarcProto {
       private java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Signature> signatures_ =
         java.util.Collections.emptyList();
       private void ensureSignaturesIsMutable() {
-        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
+        if (!((bitField0_ & 0x00000020) != 0)) {
           signatures_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.DarcProto.Signature>(signatures_);
           bitField0_ |= 0x00000020;
          }
@@ -1940,7 +2016,7 @@ public final class DarcProto {
           signaturesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.DarcProto.Signature, ch.epfl.dedis.lib.proto.DarcProto.Signature.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder>(
                   signatures_,
-                  ((bitField0_ & 0x00000020) == 0x00000020),
+                  ((bitField0_ & 0x00000020) != 0),
                   getParentForChildren(),
                   isClean());
           signatures_ = null;
@@ -1951,7 +2027,7 @@ public final class DarcProto {
       private java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Darc> verificationdarcs_ =
         java.util.Collections.emptyList();
       private void ensureVerificationdarcsIsMutable() {
-        if (!((bitField0_ & 0x00000040) == 0x00000040)) {
+        if (!((bitField0_ & 0x00000040) != 0)) {
           verificationdarcs_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.DarcProto.Darc>(verificationdarcs_);
           bitField0_ |= 0x00000040;
          }
@@ -2288,7 +2364,7 @@ public final class DarcProto {
           verificationdarcsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.DarcProto.Darc, ch.epfl.dedis.lib.proto.DarcProto.Darc.Builder, ch.epfl.dedis.lib.proto.DarcProto.DarcOrBuilder>(
                   verificationdarcs_,
-                  ((bitField0_ & 0x00000040) == 0x00000040),
+                  ((bitField0_ & 0x00000040) != 0),
                   getParentForChildren(),
                   isClean());
           verificationdarcs_ = null;
@@ -2358,6 +2434,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional .darc.IdentityDarc darc = 1;</code>
+     * @return Whether the darc field is set.
      */
     boolean hasDarc();
     /**
@@ -2366,6 +2443,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional .darc.IdentityDarc darc = 1;</code>
+     * @return The darc.
      */
     ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc getDarc();
     /**
@@ -2383,6 +2461,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional .darc.IdentityEd25519 ed25519 = 2;</code>
+     * @return Whether the ed25519 field is set.
      */
     boolean hasEd25519();
     /**
@@ -2391,6 +2470,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional .darc.IdentityEd25519 ed25519 = 2;</code>
+     * @return The ed25519.
      */
     ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519 getEd25519();
     /**
@@ -2408,6 +2488,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional .darc.IdentityX509EC x509ec = 3;</code>
+     * @return Whether the x509ec field is set.
      */
     boolean hasX509Ec();
     /**
@@ -2416,6 +2497,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional .darc.IdentityX509EC x509ec = 3;</code>
+     * @return The x509ec.
      */
     ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC getX509Ec();
     /**
@@ -2433,6 +2515,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional .darc.IdentityProxy proxy = 4;</code>
+     * @return Whether the proxy field is set.
      */
     boolean hasProxy();
     /**
@@ -2441,6 +2524,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional .darc.IdentityProxy proxy = 4;</code>
+     * @return The proxy.
      */
     ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy getProxy();
     /**
@@ -2458,6 +2542,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
+     * @return Whether the evmcontract field is set.
      */
     boolean hasEvmcontract();
     /**
@@ -2466,6 +2551,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
+     * @return The evmcontract.
      */
     ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract getEvmcontract();
     /**
@@ -2476,6 +2562,33 @@ public final class DarcProto {
      * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
      */
     ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContractOrBuilder getEvmcontractOrBuilder();
+
+    /**
+     * <pre>
+     * A claim signed by one of the keys in a DID Doc
+     * </pre>
+     *
+     * <code>optional .darc.IdentityDID did = 6;</code>
+     * @return Whether the did field is set.
+     */
+    boolean hasDid();
+    /**
+     * <pre>
+     * A claim signed by one of the keys in a DID Doc
+     * </pre>
+     *
+     * <code>optional .darc.IdentityDID did = 6;</code>
+     * @return The did.
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.IdentityDID getDid();
+    /**
+     * <pre>
+     * A claim signed by one of the keys in a DID Doc
+     * </pre>
+     *
+     * <code>optional .darc.IdentityDID did = 6;</code>
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.IdentityDIDOrBuilder getDidOrBuilder();
   }
   /**
    * <pre>
@@ -2485,7 +2598,7 @@ public final class DarcProto {
    *
    * Protobuf type {@code darc.Identity}
    */
-  public  static final class Identity extends
+  public static final class Identity extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:darc.Identity)
       IdentityOrBuilder {
@@ -2495,6 +2608,13 @@ public final class DarcProto {
       super(builder);
     }
     private Identity() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Identity();
     }
 
     @java.lang.Override
@@ -2523,7 +2643,7 @@ public final class DarcProto {
               break;
             case 10: {
               ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = darc_.toBuilder();
               }
               darc_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc.parser(), extensionRegistry);
@@ -2536,7 +2656,7 @@ public final class DarcProto {
             }
             case 18: {
               ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = ed25519_.toBuilder();
               }
               ed25519_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519.parser(), extensionRegistry);
@@ -2549,7 +2669,7 @@ public final class DarcProto {
             }
             case 26: {
               ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+              if (((bitField0_ & 0x00000004) != 0)) {
                 subBuilder = x509Ec_.toBuilder();
               }
               x509Ec_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC.parser(), extensionRegistry);
@@ -2562,7 +2682,7 @@ public final class DarcProto {
             }
             case 34: {
               ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000008) == 0x00000008)) {
+              if (((bitField0_ & 0x00000008) != 0)) {
                 subBuilder = proxy_.toBuilder();
               }
               proxy_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy.parser(), extensionRegistry);
@@ -2575,7 +2695,7 @@ public final class DarcProto {
             }
             case 42: {
               ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000010) == 0x00000010)) {
+              if (((bitField0_ & 0x00000010) != 0)) {
                 subBuilder = evmcontract_.toBuilder();
               }
               evmcontract_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.parser(), extensionRegistry);
@@ -2584,6 +2704,19 @@ public final class DarcProto {
                 evmcontract_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000010;
+              break;
+            }
+            case 50: {
+              ch.epfl.dedis.lib.proto.DarcProto.IdentityDID.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000020) != 0)) {
+                subBuilder = did_.toBuilder();
+              }
+              did_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.IdentityDID.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(did_);
+                did_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000020;
               break;
             }
             default: {
@@ -2627,9 +2760,11 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional .darc.IdentityDarc darc = 1;</code>
+     * @return Whether the darc field is set.
      */
+    @java.lang.Override
     public boolean hasDarc() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -2637,7 +2772,9 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional .darc.IdentityDarc darc = 1;</code>
+     * @return The darc.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc getDarc() {
       return darc_ == null ? ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc.getDefaultInstance() : darc_;
     }
@@ -2648,6 +2785,7 @@ public final class DarcProto {
      *
      * <code>optional .darc.IdentityDarc darc = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.IdentityDarcOrBuilder getDarcOrBuilder() {
       return darc_ == null ? ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc.getDefaultInstance() : darc_;
     }
@@ -2660,9 +2798,11 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional .darc.IdentityEd25519 ed25519 = 2;</code>
+     * @return Whether the ed25519 field is set.
      */
+    @java.lang.Override
     public boolean hasEd25519() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -2670,7 +2810,9 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional .darc.IdentityEd25519 ed25519 = 2;</code>
+     * @return The ed25519.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519 getEd25519() {
       return ed25519_ == null ? ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519.getDefaultInstance() : ed25519_;
     }
@@ -2681,6 +2823,7 @@ public final class DarcProto {
      *
      * <code>optional .darc.IdentityEd25519 ed25519 = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519OrBuilder getEd25519OrBuilder() {
       return ed25519_ == null ? ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519.getDefaultInstance() : ed25519_;
     }
@@ -2693,9 +2836,11 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional .darc.IdentityX509EC x509ec = 3;</code>
+     * @return Whether the x509ec field is set.
      */
+    @java.lang.Override
     public boolean hasX509Ec() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -2703,7 +2848,9 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional .darc.IdentityX509EC x509ec = 3;</code>
+     * @return The x509ec.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC getX509Ec() {
       return x509Ec_ == null ? ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC.getDefaultInstance() : x509Ec_;
     }
@@ -2714,6 +2861,7 @@ public final class DarcProto {
      *
      * <code>optional .darc.IdentityX509EC x509ec = 3;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.IdentityX509ECOrBuilder getX509EcOrBuilder() {
       return x509Ec_ == null ? ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC.getDefaultInstance() : x509Ec_;
     }
@@ -2726,9 +2874,11 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional .darc.IdentityProxy proxy = 4;</code>
+     * @return Whether the proxy field is set.
      */
+    @java.lang.Override
     public boolean hasProxy() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <pre>
@@ -2736,7 +2886,9 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional .darc.IdentityProxy proxy = 4;</code>
+     * @return The proxy.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy getProxy() {
       return proxy_ == null ? ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy.getDefaultInstance() : proxy_;
     }
@@ -2747,6 +2899,7 @@ public final class DarcProto {
      *
      * <code>optional .darc.IdentityProxy proxy = 4;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.IdentityProxyOrBuilder getProxyOrBuilder() {
       return proxy_ == null ? ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy.getDefaultInstance() : proxy_;
     }
@@ -2759,9 +2912,11 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
+     * @return Whether the evmcontract field is set.
      */
+    @java.lang.Override
     public boolean hasEvmcontract() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <pre>
@@ -2769,7 +2924,9 @@ public final class DarcProto {
      * </pre>
      *
      * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
+     * @return The evmcontract.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract getEvmcontract() {
       return evmcontract_ == null ? ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.getDefaultInstance() : evmcontract_;
     }
@@ -2780,8 +2937,47 @@ public final class DarcProto {
      *
      * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContractOrBuilder getEvmcontractOrBuilder() {
       return evmcontract_ == null ? ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.getDefaultInstance() : evmcontract_;
+    }
+
+    public static final int DID_FIELD_NUMBER = 6;
+    private ch.epfl.dedis.lib.proto.DarcProto.IdentityDID did_;
+    /**
+     * <pre>
+     * A claim signed by one of the keys in a DID Doc
+     * </pre>
+     *
+     * <code>optional .darc.IdentityDID did = 6;</code>
+     * @return Whether the did field is set.
+     */
+    @java.lang.Override
+    public boolean hasDid() {
+      return ((bitField0_ & 0x00000020) != 0);
+    }
+    /**
+     * <pre>
+     * A claim signed by one of the keys in a DID Doc
+     * </pre>
+     *
+     * <code>optional .darc.IdentityDID did = 6;</code>
+     * @return The did.
+     */
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.DarcProto.IdentityDID getDid() {
+      return did_ == null ? ch.epfl.dedis.lib.proto.DarcProto.IdentityDID.getDefaultInstance() : did_;
+    }
+    /**
+     * <pre>
+     * A claim signed by one of the keys in a DID Doc
+     * </pre>
+     *
+     * <code>optional .darc.IdentityDID did = 6;</code>
+     */
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.DarcProto.IdentityDIDOrBuilder getDidOrBuilder() {
+      return did_ == null ? ch.epfl.dedis.lib.proto.DarcProto.IdentityDID.getDefaultInstance() : did_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -2821,6 +3017,12 @@ public final class DarcProto {
           return false;
         }
       }
+      if (hasDid()) {
+        if (!getDid().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -2828,20 +3030,23 @@ public final class DarcProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getDarc());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getEd25519());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeMessage(3, getX509Ec());
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeMessage(4, getProxy());
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeMessage(5, getEvmcontract());
+      }
+      if (((bitField0_ & 0x00000020) != 0)) {
+        output.writeMessage(6, getDid());
       }
       unknownFields.writeTo(output);
     }
@@ -2852,25 +3057,29 @@ public final class DarcProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getDarc());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getEd25519());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getX509Ec());
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, getProxy());
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(5, getEvmcontract());
+      }
+      if (((bitField0_ & 0x00000020) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(6, getDid());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2887,34 +3096,38 @@ public final class DarcProto {
       }
       ch.epfl.dedis.lib.proto.DarcProto.Identity other = (ch.epfl.dedis.lib.proto.DarcProto.Identity) obj;
 
-      boolean result = true;
-      result = result && (hasDarc() == other.hasDarc());
+      if (hasDarc() != other.hasDarc()) return false;
       if (hasDarc()) {
-        result = result && getDarc()
-            .equals(other.getDarc());
+        if (!getDarc()
+            .equals(other.getDarc())) return false;
       }
-      result = result && (hasEd25519() == other.hasEd25519());
+      if (hasEd25519() != other.hasEd25519()) return false;
       if (hasEd25519()) {
-        result = result && getEd25519()
-            .equals(other.getEd25519());
+        if (!getEd25519()
+            .equals(other.getEd25519())) return false;
       }
-      result = result && (hasX509Ec() == other.hasX509Ec());
+      if (hasX509Ec() != other.hasX509Ec()) return false;
       if (hasX509Ec()) {
-        result = result && getX509Ec()
-            .equals(other.getX509Ec());
+        if (!getX509Ec()
+            .equals(other.getX509Ec())) return false;
       }
-      result = result && (hasProxy() == other.hasProxy());
+      if (hasProxy() != other.hasProxy()) return false;
       if (hasProxy()) {
-        result = result && getProxy()
-            .equals(other.getProxy());
+        if (!getProxy()
+            .equals(other.getProxy())) return false;
       }
-      result = result && (hasEvmcontract() == other.hasEvmcontract());
+      if (hasEvmcontract() != other.hasEvmcontract()) return false;
       if (hasEvmcontract()) {
-        result = result && getEvmcontract()
-            .equals(other.getEvmcontract());
+        if (!getEvmcontract()
+            .equals(other.getEvmcontract())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (hasDid() != other.hasDid()) return false;
+      if (hasDid()) {
+        if (!getDid()
+            .equals(other.getDid())) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -2943,6 +3156,10 @@ public final class DarcProto {
       if (hasEvmcontract()) {
         hash = (37 * hash) + EVMCONTRACT_FIELD_NUMBER;
         hash = (53 * hash) + getEvmcontract().hashCode();
+      }
+      if (hasDid()) {
+        hash = (37 * hash) + DID_FIELD_NUMBER;
+        hash = (53 * hash) + getDid().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -3082,6 +3299,7 @@ public final class DarcProto {
           getX509EcFieldBuilder();
           getProxyFieldBuilder();
           getEvmcontractFieldBuilder();
+          getDidFieldBuilder();
         }
       }
       @java.lang.Override
@@ -3117,6 +3335,12 @@ public final class DarcProto {
           evmcontractBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000010);
+        if (didBuilder_ == null) {
+          did_ = null;
+        } else {
+          didBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
 
@@ -3145,45 +3369,53 @@ public final class DarcProto {
         ch.epfl.dedis.lib.proto.DarcProto.Identity result = new ch.epfl.dedis.lib.proto.DarcProto.Identity(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (darcBuilder_ == null) {
+            result.darc_ = darc_;
+          } else {
+            result.darc_ = darcBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
         }
-        if (darcBuilder_ == null) {
-          result.darc_ = darc_;
-        } else {
-          result.darc_ = darcBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (ed25519Builder_ == null) {
+            result.ed25519_ = ed25519_;
+          } else {
+            result.ed25519_ = ed25519Builder_.build();
+          }
           to_bitField0_ |= 0x00000002;
         }
-        if (ed25519Builder_ == null) {
-          result.ed25519_ = ed25519_;
-        } else {
-          result.ed25519_ = ed25519Builder_.build();
-        }
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          if (x509EcBuilder_ == null) {
+            result.x509Ec_ = x509Ec_;
+          } else {
+            result.x509Ec_ = x509EcBuilder_.build();
+          }
           to_bitField0_ |= 0x00000004;
         }
-        if (x509EcBuilder_ == null) {
-          result.x509Ec_ = x509Ec_;
-        } else {
-          result.x509Ec_ = x509EcBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          if (proxyBuilder_ == null) {
+            result.proxy_ = proxy_;
+          } else {
+            result.proxy_ = proxyBuilder_.build();
+          }
           to_bitField0_ |= 0x00000008;
         }
-        if (proxyBuilder_ == null) {
-          result.proxy_ = proxy_;
-        } else {
-          result.proxy_ = proxyBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          if (evmcontractBuilder_ == null) {
+            result.evmcontract_ = evmcontract_;
+          } else {
+            result.evmcontract_ = evmcontractBuilder_.build();
+          }
           to_bitField0_ |= 0x00000010;
         }
-        if (evmcontractBuilder_ == null) {
-          result.evmcontract_ = evmcontract_;
-        } else {
-          result.evmcontract_ = evmcontractBuilder_.build();
+        if (((from_bitField0_ & 0x00000020) != 0)) {
+          if (didBuilder_ == null) {
+            result.did_ = did_;
+          } else {
+            result.did_ = didBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000020;
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -3192,35 +3424,35 @@ public final class DarcProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -3248,6 +3480,9 @@ public final class DarcProto {
         }
         if (other.hasEvmcontract()) {
           mergeEvmcontract(other.getEvmcontract());
+        }
+        if (other.hasDid()) {
+          mergeDid(other.getDid());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -3281,6 +3516,11 @@ public final class DarcProto {
             return false;
           }
         }
+        if (hasDid()) {
+          if (!getDid().isInitialized()) {
+            return false;
+          }
+        }
         return true;
       }
 
@@ -3304,7 +3544,7 @@ public final class DarcProto {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc darc_ = null;
+      private ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc darc_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc, ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityDarcOrBuilder> darcBuilder_;
       /**
@@ -3313,9 +3553,10 @@ public final class DarcProto {
        * </pre>
        *
        * <code>optional .darc.IdentityDarc darc = 1;</code>
+       * @return Whether the darc field is set.
        */
       public boolean hasDarc() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -3323,6 +3564,7 @@ public final class DarcProto {
        * </pre>
        *
        * <code>optional .darc.IdentityDarc darc = 1;</code>
+       * @return The darc.
        */
       public ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc getDarc() {
         if (darcBuilder_ == null) {
@@ -3378,7 +3620,7 @@ public final class DarcProto {
        */
       public Builder mergeDarc(ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc value) {
         if (darcBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               darc_ != null &&
               darc_ != ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc.getDefaultInstance()) {
             darc_ =
@@ -3458,7 +3700,7 @@ public final class DarcProto {
         return darcBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519 ed25519_ = null;
+      private ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519 ed25519_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519, ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519OrBuilder> ed25519Builder_;
       /**
@@ -3467,9 +3709,10 @@ public final class DarcProto {
        * </pre>
        *
        * <code>optional .darc.IdentityEd25519 ed25519 = 2;</code>
+       * @return Whether the ed25519 field is set.
        */
       public boolean hasEd25519() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -3477,6 +3720,7 @@ public final class DarcProto {
        * </pre>
        *
        * <code>optional .darc.IdentityEd25519 ed25519 = 2;</code>
+       * @return The ed25519.
        */
       public ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519 getEd25519() {
         if (ed25519Builder_ == null) {
@@ -3532,7 +3776,7 @@ public final class DarcProto {
        */
       public Builder mergeEd25519(ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519 value) {
         if (ed25519Builder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               ed25519_ != null &&
               ed25519_ != ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519.getDefaultInstance()) {
             ed25519_ =
@@ -3612,7 +3856,7 @@ public final class DarcProto {
         return ed25519Builder_;
       }
 
-      private ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC x509Ec_ = null;
+      private ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC x509Ec_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC, ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityX509ECOrBuilder> x509EcBuilder_;
       /**
@@ -3621,9 +3865,10 @@ public final class DarcProto {
        * </pre>
        *
        * <code>optional .darc.IdentityX509EC x509ec = 3;</code>
+       * @return Whether the x509ec field is set.
        */
       public boolean hasX509Ec() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -3631,6 +3876,7 @@ public final class DarcProto {
        * </pre>
        *
        * <code>optional .darc.IdentityX509EC x509ec = 3;</code>
+       * @return The x509ec.
        */
       public ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC getX509Ec() {
         if (x509EcBuilder_ == null) {
@@ -3686,7 +3932,7 @@ public final class DarcProto {
        */
       public Builder mergeX509Ec(ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC value) {
         if (x509EcBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+          if (((bitField0_ & 0x00000004) != 0) &&
               x509Ec_ != null &&
               x509Ec_ != ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC.getDefaultInstance()) {
             x509Ec_ =
@@ -3766,7 +4012,7 @@ public final class DarcProto {
         return x509EcBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy proxy_ = null;
+      private ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy proxy_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy, ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityProxyOrBuilder> proxyBuilder_;
       /**
@@ -3775,9 +4021,10 @@ public final class DarcProto {
        * </pre>
        *
        * <code>optional .darc.IdentityProxy proxy = 4;</code>
+       * @return Whether the proxy field is set.
        */
       public boolean hasProxy() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <pre>
@@ -3785,6 +4032,7 @@ public final class DarcProto {
        * </pre>
        *
        * <code>optional .darc.IdentityProxy proxy = 4;</code>
+       * @return The proxy.
        */
       public ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy getProxy() {
         if (proxyBuilder_ == null) {
@@ -3840,7 +4088,7 @@ public final class DarcProto {
        */
       public Builder mergeProxy(ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy value) {
         if (proxyBuilder_ == null) {
-          if (((bitField0_ & 0x00000008) == 0x00000008) &&
+          if (((bitField0_ & 0x00000008) != 0) &&
               proxy_ != null &&
               proxy_ != ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy.getDefaultInstance()) {
             proxy_ =
@@ -3920,7 +4168,7 @@ public final class DarcProto {
         return proxyBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract evmcontract_ = null;
+      private ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract evmcontract_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract, ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContractOrBuilder> evmcontractBuilder_;
       /**
@@ -3929,9 +4177,10 @@ public final class DarcProto {
        * </pre>
        *
        * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
+       * @return Whether the evmcontract field is set.
        */
       public boolean hasEvmcontract() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <pre>
@@ -3939,6 +4188,7 @@ public final class DarcProto {
        * </pre>
        *
        * <code>optional .darc.IdentityEvmContract evmcontract = 5;</code>
+       * @return The evmcontract.
        */
       public ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract getEvmcontract() {
         if (evmcontractBuilder_ == null) {
@@ -3994,7 +4244,7 @@ public final class DarcProto {
        */
       public Builder mergeEvmcontract(ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract value) {
         if (evmcontractBuilder_ == null) {
-          if (((bitField0_ & 0x00000010) == 0x00000010) &&
+          if (((bitField0_ & 0x00000010) != 0) &&
               evmcontract_ != null &&
               evmcontract_ != ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract.getDefaultInstance()) {
             evmcontract_ =
@@ -4073,6 +4323,162 @@ public final class DarcProto {
         }
         return evmcontractBuilder_;
       }
+
+      private ch.epfl.dedis.lib.proto.DarcProto.IdentityDID did_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.IdentityDID, ch.epfl.dedis.lib.proto.DarcProto.IdentityDID.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityDIDOrBuilder> didBuilder_;
+      /**
+       * <pre>
+       * A claim signed by one of the keys in a DID Doc
+       * </pre>
+       *
+       * <code>optional .darc.IdentityDID did = 6;</code>
+       * @return Whether the did field is set.
+       */
+      public boolean hasDid() {
+        return ((bitField0_ & 0x00000020) != 0);
+      }
+      /**
+       * <pre>
+       * A claim signed by one of the keys in a DID Doc
+       * </pre>
+       *
+       * <code>optional .darc.IdentityDID did = 6;</code>
+       * @return The did.
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.IdentityDID getDid() {
+        if (didBuilder_ == null) {
+          return did_ == null ? ch.epfl.dedis.lib.proto.DarcProto.IdentityDID.getDefaultInstance() : did_;
+        } else {
+          return didBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * A claim signed by one of the keys in a DID Doc
+       * </pre>
+       *
+       * <code>optional .darc.IdentityDID did = 6;</code>
+       */
+      public Builder setDid(ch.epfl.dedis.lib.proto.DarcProto.IdentityDID value) {
+        if (didBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          did_ = value;
+          onChanged();
+        } else {
+          didBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000020;
+        return this;
+      }
+      /**
+       * <pre>
+       * A claim signed by one of the keys in a DID Doc
+       * </pre>
+       *
+       * <code>optional .darc.IdentityDID did = 6;</code>
+       */
+      public Builder setDid(
+          ch.epfl.dedis.lib.proto.DarcProto.IdentityDID.Builder builderForValue) {
+        if (didBuilder_ == null) {
+          did_ = builderForValue.build();
+          onChanged();
+        } else {
+          didBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000020;
+        return this;
+      }
+      /**
+       * <pre>
+       * A claim signed by one of the keys in a DID Doc
+       * </pre>
+       *
+       * <code>optional .darc.IdentityDID did = 6;</code>
+       */
+      public Builder mergeDid(ch.epfl.dedis.lib.proto.DarcProto.IdentityDID value) {
+        if (didBuilder_ == null) {
+          if (((bitField0_ & 0x00000020) != 0) &&
+              did_ != null &&
+              did_ != ch.epfl.dedis.lib.proto.DarcProto.IdentityDID.getDefaultInstance()) {
+            did_ =
+              ch.epfl.dedis.lib.proto.DarcProto.IdentityDID.newBuilder(did_).mergeFrom(value).buildPartial();
+          } else {
+            did_ = value;
+          }
+          onChanged();
+        } else {
+          didBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000020;
+        return this;
+      }
+      /**
+       * <pre>
+       * A claim signed by one of the keys in a DID Doc
+       * </pre>
+       *
+       * <code>optional .darc.IdentityDID did = 6;</code>
+       */
+      public Builder clearDid() {
+        if (didBuilder_ == null) {
+          did_ = null;
+          onChanged();
+        } else {
+          didBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000020);
+        return this;
+      }
+      /**
+       * <pre>
+       * A claim signed by one of the keys in a DID Doc
+       * </pre>
+       *
+       * <code>optional .darc.IdentityDID did = 6;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.IdentityDID.Builder getDidBuilder() {
+        bitField0_ |= 0x00000020;
+        onChanged();
+        return getDidFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * A claim signed by one of the keys in a DID Doc
+       * </pre>
+       *
+       * <code>optional .darc.IdentityDID did = 6;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.IdentityDIDOrBuilder getDidOrBuilder() {
+        if (didBuilder_ != null) {
+          return didBuilder_.getMessageOrBuilder();
+        } else {
+          return did_ == null ?
+              ch.epfl.dedis.lib.proto.DarcProto.IdentityDID.getDefaultInstance() : did_;
+        }
+      }
+      /**
+       * <pre>
+       * A claim signed by one of the keys in a DID Doc
+       * </pre>
+       *
+       * <code>optional .darc.IdentityDID did = 6;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.IdentityDID, ch.epfl.dedis.lib.proto.DarcProto.IdentityDID.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityDIDOrBuilder>
+          getDidFieldBuilder() {
+        if (didBuilder_ == null) {
+          didBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.DarcProto.IdentityDID, ch.epfl.dedis.lib.proto.DarcProto.IdentityDID.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityDIDOrBuilder>(
+                  getDid(),
+                  getParentForChildren(),
+                  isClean());
+          did_ = null;
+        }
+        return didBuilder_;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -4132,10 +4538,12 @@ public final class DarcProto {
 
     /**
      * <code>required bytes point = 1;</code>
+     * @return Whether the point field is set.
      */
     boolean hasPoint();
     /**
      * <code>required bytes point = 1;</code>
+     * @return The point.
      */
     com.google.protobuf.ByteString getPoint();
   }
@@ -4146,7 +4554,7 @@ public final class DarcProto {
    *
    * Protobuf type {@code darc.IdentityEd25519}
    */
-  public  static final class IdentityEd25519 extends
+  public static final class IdentityEd25519 extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:darc.IdentityEd25519)
       IdentityEd25519OrBuilder {
@@ -4157,6 +4565,13 @@ public final class DarcProto {
     }
     private IdentityEd25519() {
       point_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new IdentityEd25519();
     }
 
     @java.lang.Override
@@ -4225,13 +4640,17 @@ public final class DarcProto {
     private com.google.protobuf.ByteString point_;
     /**
      * <code>required bytes point = 1;</code>
+     * @return Whether the point field is set.
      */
+    @java.lang.Override
     public boolean hasPoint() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes point = 1;</code>
+     * @return The point.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getPoint() {
       return point_;
     }
@@ -4254,7 +4673,7 @@ public final class DarcProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, point_);
       }
       unknownFields.writeTo(output);
@@ -4266,7 +4685,7 @@ public final class DarcProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, point_);
       }
@@ -4285,14 +4704,13 @@ public final class DarcProto {
       }
       ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519 other = (ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519) obj;
 
-      boolean result = true;
-      result = result && (hasPoint() == other.hasPoint());
+      if (hasPoint() != other.hasPoint()) return false;
       if (hasPoint()) {
-        result = result && getPoint()
-            .equals(other.getPoint());
+        if (!getPoint()
+            .equals(other.getPoint())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -4473,7 +4891,7 @@ public final class DarcProto {
         ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519 result = new ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.point_ = point_;
@@ -4484,35 +4902,35 @@ public final class DarcProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -4565,18 +4983,24 @@ public final class DarcProto {
       private com.google.protobuf.ByteString point_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes point = 1;</code>
+       * @return Whether the point field is set.
        */
+      @java.lang.Override
       public boolean hasPoint() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes point = 1;</code>
+       * @return The point.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getPoint() {
         return point_;
       }
       /**
        * <code>required bytes point = 1;</code>
+       * @param value The point to set.
+       * @return This builder for chaining.
        */
       public Builder setPoint(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -4589,6 +5013,7 @@ public final class DarcProto {
       }
       /**
        * <code>required bytes point = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPoint() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -4655,10 +5080,12 @@ public final class DarcProto {
 
     /**
      * <code>required bytes public = 1;</code>
+     * @return Whether the public field is set.
      */
     boolean hasPublic();
     /**
      * <code>required bytes public = 1;</code>
+     * @return The public.
      */
     com.google.protobuf.ByteString getPublic();
   }
@@ -4669,7 +5096,7 @@ public final class DarcProto {
    *
    * Protobuf type {@code darc.IdentityX509EC}
    */
-  public  static final class IdentityX509EC extends
+  public static final class IdentityX509EC extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:darc.IdentityX509EC)
       IdentityX509ECOrBuilder {
@@ -4680,6 +5107,13 @@ public final class DarcProto {
     }
     private IdentityX509EC() {
       public_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new IdentityX509EC();
     }
 
     @java.lang.Override
@@ -4748,13 +5182,17 @@ public final class DarcProto {
     private com.google.protobuf.ByteString public_;
     /**
      * <code>required bytes public = 1;</code>
+     * @return Whether the public field is set.
      */
+    @java.lang.Override
     public boolean hasPublic() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes public = 1;</code>
+     * @return The public.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getPublic() {
       return public_;
     }
@@ -4777,7 +5215,7 @@ public final class DarcProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, public_);
       }
       unknownFields.writeTo(output);
@@ -4789,7 +5227,7 @@ public final class DarcProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, public_);
       }
@@ -4808,14 +5246,13 @@ public final class DarcProto {
       }
       ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC other = (ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC) obj;
 
-      boolean result = true;
-      result = result && (hasPublic() == other.hasPublic());
+      if (hasPublic() != other.hasPublic()) return false;
       if (hasPublic()) {
-        result = result && getPublic()
-            .equals(other.getPublic());
+        if (!getPublic()
+            .equals(other.getPublic())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -4996,7 +5433,7 @@ public final class DarcProto {
         ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC result = new ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.public_ = public_;
@@ -5007,35 +5444,35 @@ public final class DarcProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -5088,18 +5525,24 @@ public final class DarcProto {
       private com.google.protobuf.ByteString public_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes public = 1;</code>
+       * @return Whether the public field is set.
        */
+      @java.lang.Override
       public boolean hasPublic() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes public = 1;</code>
+       * @return The public.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getPublic() {
         return public_;
       }
       /**
        * <code>required bytes public = 1;</code>
+       * @param value The public to set.
+       * @return This builder for chaining.
        */
       public Builder setPublic(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -5112,6 +5555,7 @@ public final class DarcProto {
       }
       /**
        * <code>required bytes public = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPublic() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -5178,24 +5622,29 @@ public final class DarcProto {
 
     /**
      * <code>required string data = 1;</code>
+     * @return Whether the data field is set.
      */
     boolean hasData();
     /**
      * <code>required string data = 1;</code>
+     * @return The data.
      */
     java.lang.String getData();
     /**
      * <code>required string data = 1;</code>
+     * @return The bytes for data.
      */
     com.google.protobuf.ByteString
         getDataBytes();
 
     /**
      * <code>required bytes public = 2;</code>
+     * @return Whether the public field is set.
      */
     boolean hasPublic();
     /**
      * <code>required bytes public = 2;</code>
+     * @return The public.
      */
     com.google.protobuf.ByteString getPublic();
   }
@@ -5207,7 +5656,7 @@ public final class DarcProto {
    *
    * Protobuf type {@code darc.IdentityProxy}
    */
-  public  static final class IdentityProxy extends
+  public static final class IdentityProxy extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:darc.IdentityProxy)
       IdentityProxyOrBuilder {
@@ -5219,6 +5668,13 @@ public final class DarcProto {
     private IdentityProxy() {
       data_ = "";
       public_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new IdentityProxy();
     }
 
     @java.lang.Override
@@ -5293,13 +5749,17 @@ public final class DarcProto {
     private volatile java.lang.Object data_;
     /**
      * <code>required string data = 1;</code>
+     * @return Whether the data field is set.
      */
+    @java.lang.Override
     public boolean hasData() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required string data = 1;</code>
+     * @return The data.
      */
+    @java.lang.Override
     public java.lang.String getData() {
       java.lang.Object ref = data_;
       if (ref instanceof java.lang.String) {
@@ -5316,7 +5776,9 @@ public final class DarcProto {
     }
     /**
      * <code>required string data = 1;</code>
+     * @return The bytes for data.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getDataBytes() {
       java.lang.Object ref = data_;
@@ -5335,13 +5797,17 @@ public final class DarcProto {
     private com.google.protobuf.ByteString public_;
     /**
      * <code>required bytes public = 2;</code>
+     * @return Whether the public field is set.
      */
+    @java.lang.Override
     public boolean hasPublic() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes public = 2;</code>
+     * @return The public.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getPublic() {
       return public_;
     }
@@ -5368,10 +5834,10 @@ public final class DarcProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, data_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, public_);
       }
       unknownFields.writeTo(output);
@@ -5383,10 +5849,10 @@ public final class DarcProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, data_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, public_);
       }
@@ -5405,19 +5871,18 @@ public final class DarcProto {
       }
       ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy other = (ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy) obj;
 
-      boolean result = true;
-      result = result && (hasData() == other.hasData());
+      if (hasData() != other.hasData()) return false;
       if (hasData()) {
-        result = result && getData()
-            .equals(other.getData());
+        if (!getData()
+            .equals(other.getData())) return false;
       }
-      result = result && (hasPublic() == other.hasPublic());
+      if (hasPublic() != other.hasPublic()) return false;
       if (hasPublic()) {
-        result = result && getPublic()
-            .equals(other.getPublic());
+        if (!getPublic()
+            .equals(other.getPublic())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -5605,11 +6070,11 @@ public final class DarcProto {
         ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy result = new ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.data_ = data_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.public_ = public_;
@@ -5620,35 +6085,35 @@ public final class DarcProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -5709,12 +6174,14 @@ public final class DarcProto {
       private java.lang.Object data_ = "";
       /**
        * <code>required string data = 1;</code>
+       * @return Whether the data field is set.
        */
       public boolean hasData() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required string data = 1;</code>
+       * @return The data.
        */
       public java.lang.String getData() {
         java.lang.Object ref = data_;
@@ -5732,6 +6199,7 @@ public final class DarcProto {
       }
       /**
        * <code>required string data = 1;</code>
+       * @return The bytes for data.
        */
       public com.google.protobuf.ByteString
           getDataBytes() {
@@ -5748,6 +6216,8 @@ public final class DarcProto {
       }
       /**
        * <code>required string data = 1;</code>
+       * @param value The data to set.
+       * @return This builder for chaining.
        */
       public Builder setData(
           java.lang.String value) {
@@ -5761,6 +6231,7 @@ public final class DarcProto {
       }
       /**
        * <code>required string data = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearData() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -5770,6 +6241,8 @@ public final class DarcProto {
       }
       /**
        * <code>required string data = 1;</code>
+       * @param value The bytes for data to set.
+       * @return This builder for chaining.
        */
       public Builder setDataBytes(
           com.google.protobuf.ByteString value) {
@@ -5785,18 +6258,24 @@ public final class DarcProto {
       private com.google.protobuf.ByteString public_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes public = 2;</code>
+       * @return Whether the public field is set.
        */
+      @java.lang.Override
       public boolean hasPublic() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes public = 2;</code>
+       * @return The public.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getPublic() {
         return public_;
       }
       /**
        * <code>required bytes public = 2;</code>
+       * @param value The public to set.
+       * @return This builder for chaining.
        */
       public Builder setPublic(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -5809,6 +6288,7 @@ public final class DarcProto {
       }
       /**
        * <code>required bytes public = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPublic() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -5879,6 +6359,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes id = 1;</code>
+     * @return Whether the id field is set.
      */
     boolean hasId();
     /**
@@ -5887,6 +6368,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes id = 1;</code>
+     * @return The id.
      */
     com.google.protobuf.ByteString getId();
   }
@@ -5898,7 +6380,7 @@ public final class DarcProto {
    *
    * Protobuf type {@code darc.IdentityDarc}
    */
-  public  static final class IdentityDarc extends
+  public static final class IdentityDarc extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:darc.IdentityDarc)
       IdentityDarcOrBuilder {
@@ -5909,6 +6391,13 @@ public final class DarcProto {
     }
     private IdentityDarc() {
       id_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new IdentityDarc();
     }
 
     @java.lang.Override
@@ -5981,9 +6470,11 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes id = 1;</code>
+     * @return Whether the id field is set.
      */
+    @java.lang.Override
     public boolean hasId() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -5991,7 +6482,9 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes id = 1;</code>
+     * @return The id.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getId() {
       return id_;
     }
@@ -6014,7 +6507,7 @@ public final class DarcProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, id_);
       }
       unknownFields.writeTo(output);
@@ -6026,7 +6519,7 @@ public final class DarcProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, id_);
       }
@@ -6045,14 +6538,13 @@ public final class DarcProto {
       }
       ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc other = (ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc) obj;
 
-      boolean result = true;
-      result = result && (hasId() == other.hasId());
+      if (hasId() != other.hasId()) return false;
       if (hasId()) {
-        result = result && getId()
-            .equals(other.getId());
+        if (!getId()
+            .equals(other.getId())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -6234,7 +6726,7 @@ public final class DarcProto {
         ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc result = new ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.id_ = id_;
@@ -6245,35 +6737,35 @@ public final class DarcProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -6330,9 +6822,11 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes id = 1;</code>
+       * @return Whether the id field is set.
        */
+      @java.lang.Override
       public boolean hasId() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -6340,7 +6834,9 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes id = 1;</code>
+       * @return The id.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getId() {
         return id_;
       }
@@ -6350,6 +6846,8 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes id = 1;</code>
+       * @param value The id to set.
+       * @return This builder for chaining.
        */
       public Builder setId(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -6366,6 +6864,7 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes id = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearId() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -6436,6 +6935,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes address = 1;</code>
+     * @return Whether the address field is set.
      */
     boolean hasAddress();
     /**
@@ -6444,6 +6944,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes address = 1;</code>
+     * @return The address.
      */
     com.google.protobuf.ByteString getAddress();
   }
@@ -6454,7 +6955,7 @@ public final class DarcProto {
    *
    * Protobuf type {@code darc.IdentityEvmContract}
    */
-  public  static final class IdentityEvmContract extends
+  public static final class IdentityEvmContract extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:darc.IdentityEvmContract)
       IdentityEvmContractOrBuilder {
@@ -6465,6 +6966,13 @@ public final class DarcProto {
     }
     private IdentityEvmContract() {
       address_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new IdentityEvmContract();
     }
 
     @java.lang.Override
@@ -6537,9 +7045,11 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes address = 1;</code>
+     * @return Whether the address field is set.
      */
+    @java.lang.Override
     public boolean hasAddress() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -6547,7 +7057,9 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes address = 1;</code>
+     * @return The address.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getAddress() {
       return address_;
     }
@@ -6570,7 +7082,7 @@ public final class DarcProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, address_);
       }
       unknownFields.writeTo(output);
@@ -6582,7 +7094,7 @@ public final class DarcProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, address_);
       }
@@ -6601,14 +7113,13 @@ public final class DarcProto {
       }
       ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract other = (ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract) obj;
 
-      boolean result = true;
-      result = result && (hasAddress() == other.hasAddress());
+      if (hasAddress() != other.hasAddress()) return false;
       if (hasAddress()) {
-        result = result && getAddress()
-            .equals(other.getAddress());
+        if (!getAddress()
+            .equals(other.getAddress())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -6789,7 +7300,7 @@ public final class DarcProto {
         ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract result = new ch.epfl.dedis.lib.proto.DarcProto.IdentityEvmContract(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.address_ = address_;
@@ -6800,35 +7311,35 @@ public final class DarcProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -6885,9 +7396,11 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes address = 1;</code>
+       * @return Whether the address field is set.
        */
+      @java.lang.Override
       public boolean hasAddress() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -6895,7 +7408,9 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes address = 1;</code>
+       * @return The address.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getAddress() {
         return address_;
       }
@@ -6905,6 +7420,8 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes address = 1;</code>
+       * @param value The address to set.
+       * @return This builder for chaining.
        */
       public Builder setAddress(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -6921,6 +7438,7 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes address = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearAddress() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -6981,6 +7499,6323 @@ public final class DarcProto {
 
   }
 
+  public interface IdentityDIDOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:darc.IdentityDID)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required string did = 1;</code>
+     * @return Whether the did field is set.
+     */
+    boolean hasDid();
+    /**
+     * <code>required string did = 1;</code>
+     * @return The did.
+     */
+    java.lang.String getDid();
+    /**
+     * <code>required string did = 1;</code>
+     * @return The bytes for did.
+     */
+    com.google.protobuf.ByteString
+        getDidBytes();
+
+    /**
+     * <code>optional .darc.DIDDoc diddoc = 2;</code>
+     * @return Whether the diddoc field is set.
+     */
+    boolean hasDiddoc();
+    /**
+     * <code>optional .darc.DIDDoc diddoc = 2;</code>
+     * @return The diddoc.
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.DIDDoc getDiddoc();
+    /**
+     * <code>optional .darc.DIDDoc diddoc = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.DIDDocOrBuilder getDiddocOrBuilder();
+
+    /**
+     * <code>required string method = 3;</code>
+     * @return Whether the method field is set.
+     */
+    boolean hasMethod();
+    /**
+     * <code>required string method = 3;</code>
+     * @return The method.
+     */
+    java.lang.String getMethod();
+    /**
+     * <code>required string method = 3;</code>
+     * @return The bytes for method.
+     */
+    com.google.protobuf.ByteString
+        getMethodBytes();
+  }
+  /**
+   * <pre>
+   * IdentityDID holds the DID and DIDDoc required to verify a claim
+   * from a decentralized identifier
+   * </pre>
+   *
+   * Protobuf type {@code darc.IdentityDID}
+   */
+  public static final class IdentityDID extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:darc.IdentityDID)
+      IdentityDIDOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use IdentityDID.newBuilder() to construct.
+    private IdentityDID(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private IdentityDID() {
+      did_ = "";
+      method_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new IdentityDID();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private IdentityDID(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000001;
+              did_ = bs;
+              break;
+            }
+            case 18: {
+              ch.epfl.dedis.lib.proto.DarcProto.DIDDoc.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) != 0)) {
+                subBuilder = diddoc_.toBuilder();
+              }
+              diddoc_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.DIDDoc.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(diddoc_);
+                diddoc_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+            case 26: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000004;
+              method_ = bs;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityDID_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityDID_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.DarcProto.IdentityDID.class, ch.epfl.dedis.lib.proto.DarcProto.IdentityDID.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int DID_FIELD_NUMBER = 1;
+    private volatile java.lang.Object did_;
+    /**
+     * <code>required string did = 1;</code>
+     * @return Whether the did field is set.
+     */
+    @java.lang.Override
+    public boolean hasDid() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>required string did = 1;</code>
+     * @return The did.
+     */
+    @java.lang.Override
+    public java.lang.String getDid() {
+      java.lang.Object ref = did_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          did_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string did = 1;</code>
+     * @return The bytes for did.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getDidBytes() {
+      java.lang.Object ref = did_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        did_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int DIDDOC_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.lib.proto.DarcProto.DIDDoc diddoc_;
+    /**
+     * <code>optional .darc.DIDDoc diddoc = 2;</code>
+     * @return Whether the diddoc field is set.
+     */
+    @java.lang.Override
+    public boolean hasDiddoc() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     * <code>optional .darc.DIDDoc diddoc = 2;</code>
+     * @return The diddoc.
+     */
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.DarcProto.DIDDoc getDiddoc() {
+      return diddoc_ == null ? ch.epfl.dedis.lib.proto.DarcProto.DIDDoc.getDefaultInstance() : diddoc_;
+    }
+    /**
+     * <code>optional .darc.DIDDoc diddoc = 2;</code>
+     */
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.DarcProto.DIDDocOrBuilder getDiddocOrBuilder() {
+      return diddoc_ == null ? ch.epfl.dedis.lib.proto.DarcProto.DIDDoc.getDefaultInstance() : diddoc_;
+    }
+
+    public static final int METHOD_FIELD_NUMBER = 3;
+    private volatile java.lang.Object method_;
+    /**
+     * <code>required string method = 3;</code>
+     * @return Whether the method field is set.
+     */
+    @java.lang.Override
+    public boolean hasMethod() {
+      return ((bitField0_ & 0x00000004) != 0);
+    }
+    /**
+     * <code>required string method = 3;</code>
+     * @return The method.
+     */
+    @java.lang.Override
+    public java.lang.String getMethod() {
+      java.lang.Object ref = method_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          method_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string method = 3;</code>
+     * @return The bytes for method.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getMethodBytes() {
+      java.lang.Object ref = method_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        method_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasDid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasMethod()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (hasDiddoc()) {
+        if (!getDiddoc().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, did_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        output.writeMessage(2, getDiddoc());
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, method_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, did_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, getDiddoc());
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, method_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.DarcProto.IdentityDID)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.DarcProto.IdentityDID other = (ch.epfl.dedis.lib.proto.DarcProto.IdentityDID) obj;
+
+      if (hasDid() != other.hasDid()) return false;
+      if (hasDid()) {
+        if (!getDid()
+            .equals(other.getDid())) return false;
+      }
+      if (hasDiddoc() != other.hasDiddoc()) return false;
+      if (hasDiddoc()) {
+        if (!getDiddoc()
+            .equals(other.getDiddoc())) return false;
+      }
+      if (hasMethod() != other.hasMethod()) return false;
+      if (hasMethod()) {
+        if (!getMethod()
+            .equals(other.getMethod())) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasDid()) {
+        hash = (37 * hash) + DID_FIELD_NUMBER;
+        hash = (53 * hash) + getDid().hashCode();
+      }
+      if (hasDiddoc()) {
+        hash = (37 * hash) + DIDDOC_FIELD_NUMBER;
+        hash = (53 * hash) + getDiddoc().hashCode();
+      }
+      if (hasMethod()) {
+        hash = (37 * hash) + METHOD_FIELD_NUMBER;
+        hash = (53 * hash) + getMethod().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityDID parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityDID parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityDID parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityDID parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityDID parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityDID parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityDID parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityDID parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityDID parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityDID parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityDID parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityDID parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.DarcProto.IdentityDID prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * IdentityDID holds the DID and DIDDoc required to verify a claim
+     * from a decentralized identifier
+     * </pre>
+     *
+     * Protobuf type {@code darc.IdentityDID}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:darc.IdentityDID)
+        ch.epfl.dedis.lib.proto.DarcProto.IdentityDIDOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityDID_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityDID_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.DarcProto.IdentityDID.class, ch.epfl.dedis.lib.proto.DarcProto.IdentityDID.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.DarcProto.IdentityDID.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getDiddocFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        did_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (diddocBuilder_ == null) {
+          diddoc_ = null;
+        } else {
+          diddocBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        method_ = "";
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityDID_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.IdentityDID getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.DarcProto.IdentityDID.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.IdentityDID build() {
+        ch.epfl.dedis.lib.proto.DarcProto.IdentityDID result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.IdentityDID buildPartial() {
+        ch.epfl.dedis.lib.proto.DarcProto.IdentityDID result = new ch.epfl.dedis.lib.proto.DarcProto.IdentityDID(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.did_ = did_;
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (diddocBuilder_ == null) {
+            result.diddoc_ = diddoc_;
+          } else {
+            result.diddoc_ = diddocBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000002;
+        }
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.method_ = method_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.DarcProto.IdentityDID) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.DarcProto.IdentityDID)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.DarcProto.IdentityDID other) {
+        if (other == ch.epfl.dedis.lib.proto.DarcProto.IdentityDID.getDefaultInstance()) return this;
+        if (other.hasDid()) {
+          bitField0_ |= 0x00000001;
+          did_ = other.did_;
+          onChanged();
+        }
+        if (other.hasDiddoc()) {
+          mergeDiddoc(other.getDiddoc());
+        }
+        if (other.hasMethod()) {
+          bitField0_ |= 0x00000004;
+          method_ = other.method_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasDid()) {
+          return false;
+        }
+        if (!hasMethod()) {
+          return false;
+        }
+        if (hasDiddoc()) {
+          if (!getDiddoc().isInitialized()) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.DarcProto.IdentityDID parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.DarcProto.IdentityDID) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.lang.Object did_ = "";
+      /**
+       * <code>required string did = 1;</code>
+       * @return Whether the did field is set.
+       */
+      public boolean hasDid() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>required string did = 1;</code>
+       * @return The did.
+       */
+      public java.lang.String getDid() {
+        java.lang.Object ref = did_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            did_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string did = 1;</code>
+       * @return The bytes for did.
+       */
+      public com.google.protobuf.ByteString
+          getDidBytes() {
+        java.lang.Object ref = did_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          did_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string did = 1;</code>
+       * @param value The did to set.
+       * @return This builder for chaining.
+       */
+      public Builder setDid(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        did_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string did = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearDid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        did_ = getDefaultInstance().getDid();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string did = 1;</code>
+       * @param value The bytes for did to set.
+       * @return This builder for chaining.
+       */
+      public Builder setDidBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        did_ = value;
+        onChanged();
+        return this;
+      }
+
+      private ch.epfl.dedis.lib.proto.DarcProto.DIDDoc diddoc_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.DIDDoc, ch.epfl.dedis.lib.proto.DarcProto.DIDDoc.Builder, ch.epfl.dedis.lib.proto.DarcProto.DIDDocOrBuilder> diddocBuilder_;
+      /**
+       * <code>optional .darc.DIDDoc diddoc = 2;</code>
+       * @return Whether the diddoc field is set.
+       */
+      public boolean hasDiddoc() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       * <code>optional .darc.DIDDoc diddoc = 2;</code>
+       * @return The diddoc.
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.DIDDoc getDiddoc() {
+        if (diddocBuilder_ == null) {
+          return diddoc_ == null ? ch.epfl.dedis.lib.proto.DarcProto.DIDDoc.getDefaultInstance() : diddoc_;
+        } else {
+          return diddocBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .darc.DIDDoc diddoc = 2;</code>
+       */
+      public Builder setDiddoc(ch.epfl.dedis.lib.proto.DarcProto.DIDDoc value) {
+        if (diddocBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          diddoc_ = value;
+          onChanged();
+        } else {
+          diddocBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .darc.DIDDoc diddoc = 2;</code>
+       */
+      public Builder setDiddoc(
+          ch.epfl.dedis.lib.proto.DarcProto.DIDDoc.Builder builderForValue) {
+        if (diddocBuilder_ == null) {
+          diddoc_ = builderForValue.build();
+          onChanged();
+        } else {
+          diddocBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .darc.DIDDoc diddoc = 2;</code>
+       */
+      public Builder mergeDiddoc(ch.epfl.dedis.lib.proto.DarcProto.DIDDoc value) {
+        if (diddocBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) != 0) &&
+              diddoc_ != null &&
+              diddoc_ != ch.epfl.dedis.lib.proto.DarcProto.DIDDoc.getDefaultInstance()) {
+            diddoc_ =
+              ch.epfl.dedis.lib.proto.DarcProto.DIDDoc.newBuilder(diddoc_).mergeFrom(value).buildPartial();
+          } else {
+            diddoc_ = value;
+          }
+          onChanged();
+        } else {
+          diddocBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .darc.DIDDoc diddoc = 2;</code>
+       */
+      public Builder clearDiddoc() {
+        if (diddocBuilder_ == null) {
+          diddoc_ = null;
+          onChanged();
+        } else {
+          diddocBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>optional .darc.DIDDoc diddoc = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.DIDDoc.Builder getDiddocBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getDiddocFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .darc.DIDDoc diddoc = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.DIDDocOrBuilder getDiddocOrBuilder() {
+        if (diddocBuilder_ != null) {
+          return diddocBuilder_.getMessageOrBuilder();
+        } else {
+          return diddoc_ == null ?
+              ch.epfl.dedis.lib.proto.DarcProto.DIDDoc.getDefaultInstance() : diddoc_;
+        }
+      }
+      /**
+       * <code>optional .darc.DIDDoc diddoc = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.DIDDoc, ch.epfl.dedis.lib.proto.DarcProto.DIDDoc.Builder, ch.epfl.dedis.lib.proto.DarcProto.DIDDocOrBuilder>
+          getDiddocFieldBuilder() {
+        if (diddocBuilder_ == null) {
+          diddocBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.DarcProto.DIDDoc, ch.epfl.dedis.lib.proto.DarcProto.DIDDoc.Builder, ch.epfl.dedis.lib.proto.DarcProto.DIDDocOrBuilder>(
+                  getDiddoc(),
+                  getParentForChildren(),
+                  isClean());
+          diddoc_ = null;
+        }
+        return diddocBuilder_;
+      }
+
+      private java.lang.Object method_ = "";
+      /**
+       * <code>required string method = 3;</code>
+       * @return Whether the method field is set.
+       */
+      public boolean hasMethod() {
+        return ((bitField0_ & 0x00000004) != 0);
+      }
+      /**
+       * <code>required string method = 3;</code>
+       * @return The method.
+       */
+      public java.lang.String getMethod() {
+        java.lang.Object ref = method_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            method_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string method = 3;</code>
+       * @return The bytes for method.
+       */
+      public com.google.protobuf.ByteString
+          getMethodBytes() {
+        java.lang.Object ref = method_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          method_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string method = 3;</code>
+       * @param value The method to set.
+       * @return This builder for chaining.
+       */
+      public Builder setMethod(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        method_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string method = 3;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearMethod() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        method_ = getDefaultInstance().getMethod();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string method = 3;</code>
+       * @param value The bytes for method to set.
+       * @return This builder for chaining.
+       */
+      public Builder setMethodBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        method_ = value;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:darc.IdentityDID)
+    }
+
+    // @@protoc_insertion_point(class_scope:darc.IdentityDID)
+    private static final ch.epfl.dedis.lib.proto.DarcProto.IdentityDID DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.DarcProto.IdentityDID();
+    }
+
+    public static ch.epfl.dedis.lib.proto.DarcProto.IdentityDID getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<IdentityDID>
+        PARSER = new com.google.protobuf.AbstractParser<IdentityDID>() {
+      @java.lang.Override
+      public IdentityDID parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new IdentityDID(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<IdentityDID> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<IdentityDID> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.DarcProto.IdentityDID getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface DIDDocOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:darc.DIDDoc)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>repeated string context = 1;</code>
+     * @return A list containing the context.
+     */
+    java.util.List<java.lang.String>
+        getContextList();
+    /**
+     * <code>repeated string context = 1;</code>
+     * @return The count of context.
+     */
+    int getContextCount();
+    /**
+     * <code>repeated string context = 1;</code>
+     * @param index The index of the element to return.
+     * @return The context at the given index.
+     */
+    java.lang.String getContext(int index);
+    /**
+     * <code>repeated string context = 1;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the context at the given index.
+     */
+    com.google.protobuf.ByteString
+        getContextBytes(int index);
+
+    /**
+     * <code>required string id = 2;</code>
+     * @return Whether the id field is set.
+     */
+    boolean hasId();
+    /**
+     * <code>required string id = 2;</code>
+     * @return The id.
+     */
+    java.lang.String getId();
+    /**
+     * <code>required string id = 2;</code>
+     * @return The bytes for id.
+     */
+    com.google.protobuf.ByteString
+        getIdBytes();
+
+    /**
+     * <code>repeated .darc.PublicKey publickey = 3;</code>
+     */
+    java.util.List<ch.epfl.dedis.lib.proto.DarcProto.PublicKey>
+        getPublickeyList();
+    /**
+     * <code>repeated .darc.PublicKey publickey = 3;</code>
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.PublicKey getPublickey(int index);
+    /**
+     * <code>repeated .darc.PublicKey publickey = 3;</code>
+     */
+    int getPublickeyCount();
+    /**
+     * <code>repeated .darc.PublicKey publickey = 3;</code>
+     */
+    java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.PublicKeyOrBuilder>
+        getPublickeyOrBuilderList();
+    /**
+     * <code>repeated .darc.PublicKey publickey = 3;</code>
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.PublicKeyOrBuilder getPublickeyOrBuilder(
+        int index);
+
+    /**
+     * <code>repeated .darc.DIDService service = 4;</code>
+     */
+    java.util.List<ch.epfl.dedis.lib.proto.DarcProto.DIDService>
+        getServiceList();
+    /**
+     * <code>repeated .darc.DIDService service = 4;</code>
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.DIDService getService(int index);
+    /**
+     * <code>repeated .darc.DIDService service = 4;</code>
+     */
+    int getServiceCount();
+    /**
+     * <code>repeated .darc.DIDService service = 4;</code>
+     */
+    java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.DIDServiceOrBuilder>
+        getServiceOrBuilderList();
+    /**
+     * <code>repeated .darc.DIDService service = 4;</code>
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.DIDServiceOrBuilder getServiceOrBuilder(
+        int index);
+
+    /**
+     * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+     */
+    java.util.List<ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod>
+        getAuthenticationList();
+    /**
+     * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod getAuthentication(int index);
+    /**
+     * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+     */
+    int getAuthenticationCount();
+    /**
+     * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+     */
+    java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.VerificationMethodOrBuilder>
+        getAuthenticationOrBuilderList();
+    /**
+     * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.VerificationMethodOrBuilder getAuthenticationOrBuilder(
+        int index);
+  }
+  /**
+   * <pre>
+   * DIDDoc stores the DID Document
+   * </pre>
+   *
+   * Protobuf type {@code darc.DIDDoc}
+   */
+  public static final class DIDDoc extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:darc.DIDDoc)
+      DIDDocOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use DIDDoc.newBuilder() to construct.
+    private DIDDoc(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private DIDDoc() {
+      context_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      id_ = "";
+      publickey_ = java.util.Collections.emptyList();
+      service_ = java.util.Collections.emptyList();
+      authentication_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new DIDDoc();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private DIDDoc(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                context_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              context_.add(bs);
+              break;
+            }
+            case 18: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000001;
+              id_ = bs;
+              break;
+            }
+            case 26: {
+              if (!((mutable_bitField0_ & 0x00000004) != 0)) {
+                publickey_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.DarcProto.PublicKey>();
+                mutable_bitField0_ |= 0x00000004;
+              }
+              publickey_.add(
+                  input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.PublicKey.parser(), extensionRegistry));
+              break;
+            }
+            case 34: {
+              if (!((mutable_bitField0_ & 0x00000008) != 0)) {
+                service_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.DarcProto.DIDService>();
+                mutable_bitField0_ |= 0x00000008;
+              }
+              service_.add(
+                  input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.DIDService.parser(), extensionRegistry));
+              break;
+            }
+            case 42: {
+              if (!((mutable_bitField0_ & 0x00000010) != 0)) {
+                authentication_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod>();
+                mutable_bitField0_ |= 0x00000010;
+              }
+              authentication_.add(
+                  input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod.parser(), extensionRegistry));
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
+          context_ = context_.getUnmodifiableView();
+        }
+        if (((mutable_bitField0_ & 0x00000004) != 0)) {
+          publickey_ = java.util.Collections.unmodifiableList(publickey_);
+        }
+        if (((mutable_bitField0_ & 0x00000008) != 0)) {
+          service_ = java.util.Collections.unmodifiableList(service_);
+        }
+        if (((mutable_bitField0_ & 0x00000010) != 0)) {
+          authentication_ = java.util.Collections.unmodifiableList(authentication_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_DIDDoc_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_DIDDoc_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.DarcProto.DIDDoc.class, ch.epfl.dedis.lib.proto.DarcProto.DIDDoc.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int CONTEXT_FIELD_NUMBER = 1;
+    private com.google.protobuf.LazyStringList context_;
+    /**
+     * <code>repeated string context = 1;</code>
+     * @return A list containing the context.
+     */
+    public com.google.protobuf.ProtocolStringList
+        getContextList() {
+      return context_;
+    }
+    /**
+     * <code>repeated string context = 1;</code>
+     * @return The count of context.
+     */
+    public int getContextCount() {
+      return context_.size();
+    }
+    /**
+     * <code>repeated string context = 1;</code>
+     * @param index The index of the element to return.
+     * @return The context at the given index.
+     */
+    public java.lang.String getContext(int index) {
+      return context_.get(index);
+    }
+    /**
+     * <code>repeated string context = 1;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the context at the given index.
+     */
+    public com.google.protobuf.ByteString
+        getContextBytes(int index) {
+      return context_.getByteString(index);
+    }
+
+    public static final int ID_FIELD_NUMBER = 2;
+    private volatile java.lang.Object id_;
+    /**
+     * <code>required string id = 2;</code>
+     * @return Whether the id field is set.
+     */
+    @java.lang.Override
+    public boolean hasId() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>required string id = 2;</code>
+     * @return The id.
+     */
+    @java.lang.Override
+    public java.lang.String getId() {
+      java.lang.Object ref = id_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          id_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string id = 2;</code>
+     * @return The bytes for id.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getIdBytes() {
+      java.lang.Object ref = id_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        id_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int PUBLICKEY_FIELD_NUMBER = 3;
+    private java.util.List<ch.epfl.dedis.lib.proto.DarcProto.PublicKey> publickey_;
+    /**
+     * <code>repeated .darc.PublicKey publickey = 3;</code>
+     */
+    @java.lang.Override
+    public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.PublicKey> getPublickeyList() {
+      return publickey_;
+    }
+    /**
+     * <code>repeated .darc.PublicKey publickey = 3;</code>
+     */
+    @java.lang.Override
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.PublicKeyOrBuilder>
+        getPublickeyOrBuilderList() {
+      return publickey_;
+    }
+    /**
+     * <code>repeated .darc.PublicKey publickey = 3;</code>
+     */
+    @java.lang.Override
+    public int getPublickeyCount() {
+      return publickey_.size();
+    }
+    /**
+     * <code>repeated .darc.PublicKey publickey = 3;</code>
+     */
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.DarcProto.PublicKey getPublickey(int index) {
+      return publickey_.get(index);
+    }
+    /**
+     * <code>repeated .darc.PublicKey publickey = 3;</code>
+     */
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.DarcProto.PublicKeyOrBuilder getPublickeyOrBuilder(
+        int index) {
+      return publickey_.get(index);
+    }
+
+    public static final int SERVICE_FIELD_NUMBER = 4;
+    private java.util.List<ch.epfl.dedis.lib.proto.DarcProto.DIDService> service_;
+    /**
+     * <code>repeated .darc.DIDService service = 4;</code>
+     */
+    @java.lang.Override
+    public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.DIDService> getServiceList() {
+      return service_;
+    }
+    /**
+     * <code>repeated .darc.DIDService service = 4;</code>
+     */
+    @java.lang.Override
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.DIDServiceOrBuilder>
+        getServiceOrBuilderList() {
+      return service_;
+    }
+    /**
+     * <code>repeated .darc.DIDService service = 4;</code>
+     */
+    @java.lang.Override
+    public int getServiceCount() {
+      return service_.size();
+    }
+    /**
+     * <code>repeated .darc.DIDService service = 4;</code>
+     */
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.DarcProto.DIDService getService(int index) {
+      return service_.get(index);
+    }
+    /**
+     * <code>repeated .darc.DIDService service = 4;</code>
+     */
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.DarcProto.DIDServiceOrBuilder getServiceOrBuilder(
+        int index) {
+      return service_.get(index);
+    }
+
+    public static final int AUTHENTICATION_FIELD_NUMBER = 5;
+    private java.util.List<ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod> authentication_;
+    /**
+     * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+     */
+    @java.lang.Override
+    public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod> getAuthenticationList() {
+      return authentication_;
+    }
+    /**
+     * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+     */
+    @java.lang.Override
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.VerificationMethodOrBuilder>
+        getAuthenticationOrBuilderList() {
+      return authentication_;
+    }
+    /**
+     * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+     */
+    @java.lang.Override
+    public int getAuthenticationCount() {
+      return authentication_.size();
+    }
+    /**
+     * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+     */
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod getAuthentication(int index) {
+      return authentication_.get(index);
+    }
+    /**
+     * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+     */
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.DarcProto.VerificationMethodOrBuilder getAuthenticationOrBuilder(
+        int index) {
+      return authentication_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasId()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      for (int i = 0; i < getPublickeyCount(); i++) {
+        if (!getPublickey(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      for (int i = 0; i < getServiceCount(); i++) {
+        if (!getService(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      for (int i = 0; i < getAuthenticationCount(); i++) {
+        if (!getAuthentication(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      for (int i = 0; i < context_.size(); i++) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, context_.getRaw(i));
+      }
+      if (((bitField0_ & 0x00000001) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, id_);
+      }
+      for (int i = 0; i < publickey_.size(); i++) {
+        output.writeMessage(3, publickey_.get(i));
+      }
+      for (int i = 0; i < service_.size(); i++) {
+        output.writeMessage(4, service_.get(i));
+      }
+      for (int i = 0; i < authentication_.size(); i++) {
+        output.writeMessage(5, authentication_.get(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      {
+        int dataSize = 0;
+        for (int i = 0; i < context_.size(); i++) {
+          dataSize += computeStringSizeNoTag(context_.getRaw(i));
+        }
+        size += dataSize;
+        size += 1 * getContextList().size();
+      }
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, id_);
+      }
+      for (int i = 0; i < publickey_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, publickey_.get(i));
+      }
+      for (int i = 0; i < service_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(4, service_.get(i));
+      }
+      for (int i = 0; i < authentication_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, authentication_.get(i));
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.DarcProto.DIDDoc)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.DarcProto.DIDDoc other = (ch.epfl.dedis.lib.proto.DarcProto.DIDDoc) obj;
+
+      if (!getContextList()
+          .equals(other.getContextList())) return false;
+      if (hasId() != other.hasId()) return false;
+      if (hasId()) {
+        if (!getId()
+            .equals(other.getId())) return false;
+      }
+      if (!getPublickeyList()
+          .equals(other.getPublickeyList())) return false;
+      if (!getServiceList()
+          .equals(other.getServiceList())) return false;
+      if (!getAuthenticationList()
+          .equals(other.getAuthenticationList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getContextCount() > 0) {
+        hash = (37 * hash) + CONTEXT_FIELD_NUMBER;
+        hash = (53 * hash) + getContextList().hashCode();
+      }
+      if (hasId()) {
+        hash = (37 * hash) + ID_FIELD_NUMBER;
+        hash = (53 * hash) + getId().hashCode();
+      }
+      if (getPublickeyCount() > 0) {
+        hash = (37 * hash) + PUBLICKEY_FIELD_NUMBER;
+        hash = (53 * hash) + getPublickeyList().hashCode();
+      }
+      if (getServiceCount() > 0) {
+        hash = (37 * hash) + SERVICE_FIELD_NUMBER;
+        hash = (53 * hash) + getServiceList().hashCode();
+      }
+      if (getAuthenticationCount() > 0) {
+        hash = (37 * hash) + AUTHENTICATION_FIELD_NUMBER;
+        hash = (53 * hash) + getAuthenticationList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDDoc parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDDoc parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDDoc parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDDoc parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDDoc parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDDoc parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDDoc parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDDoc parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDDoc parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDDoc parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDDoc parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDDoc parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.DarcProto.DIDDoc prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * DIDDoc stores the DID Document
+     * </pre>
+     *
+     * Protobuf type {@code darc.DIDDoc}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:darc.DIDDoc)
+        ch.epfl.dedis.lib.proto.DarcProto.DIDDocOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_DIDDoc_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_DIDDoc_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.DarcProto.DIDDoc.class, ch.epfl.dedis.lib.proto.DarcProto.DIDDoc.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.DarcProto.DIDDoc.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getPublickeyFieldBuilder();
+          getServiceFieldBuilder();
+          getAuthenticationFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        context_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        id_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        if (publickeyBuilder_ == null) {
+          publickey_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+        } else {
+          publickeyBuilder_.clear();
+        }
+        if (serviceBuilder_ == null) {
+          service_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000008);
+        } else {
+          serviceBuilder_.clear();
+        }
+        if (authenticationBuilder_ == null) {
+          authentication_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000010);
+        } else {
+          authenticationBuilder_.clear();
+        }
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_DIDDoc_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.DIDDoc getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.DarcProto.DIDDoc.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.DIDDoc build() {
+        ch.epfl.dedis.lib.proto.DarcProto.DIDDoc result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.DIDDoc buildPartial() {
+        ch.epfl.dedis.lib.proto.DarcProto.DIDDoc result = new ch.epfl.dedis.lib.proto.DarcProto.DIDDoc(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((bitField0_ & 0x00000001) != 0)) {
+          context_ = context_.getUnmodifiableView();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        }
+        result.context_ = context_;
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.id_ = id_;
+        if (publickeyBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) != 0)) {
+            publickey_ = java.util.Collections.unmodifiableList(publickey_);
+            bitField0_ = (bitField0_ & ~0x00000004);
+          }
+          result.publickey_ = publickey_;
+        } else {
+          result.publickey_ = publickeyBuilder_.build();
+        }
+        if (serviceBuilder_ == null) {
+          if (((bitField0_ & 0x00000008) != 0)) {
+            service_ = java.util.Collections.unmodifiableList(service_);
+            bitField0_ = (bitField0_ & ~0x00000008);
+          }
+          result.service_ = service_;
+        } else {
+          result.service_ = serviceBuilder_.build();
+        }
+        if (authenticationBuilder_ == null) {
+          if (((bitField0_ & 0x00000010) != 0)) {
+            authentication_ = java.util.Collections.unmodifiableList(authentication_);
+            bitField0_ = (bitField0_ & ~0x00000010);
+          }
+          result.authentication_ = authentication_;
+        } else {
+          result.authentication_ = authenticationBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.DarcProto.DIDDoc) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.DarcProto.DIDDoc)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.DarcProto.DIDDoc other) {
+        if (other == ch.epfl.dedis.lib.proto.DarcProto.DIDDoc.getDefaultInstance()) return this;
+        if (!other.context_.isEmpty()) {
+          if (context_.isEmpty()) {
+            context_ = other.context_;
+            bitField0_ = (bitField0_ & ~0x00000001);
+          } else {
+            ensureContextIsMutable();
+            context_.addAll(other.context_);
+          }
+          onChanged();
+        }
+        if (other.hasId()) {
+          bitField0_ |= 0x00000002;
+          id_ = other.id_;
+          onChanged();
+        }
+        if (publickeyBuilder_ == null) {
+          if (!other.publickey_.isEmpty()) {
+            if (publickey_.isEmpty()) {
+              publickey_ = other.publickey_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+            } else {
+              ensurePublickeyIsMutable();
+              publickey_.addAll(other.publickey_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.publickey_.isEmpty()) {
+            if (publickeyBuilder_.isEmpty()) {
+              publickeyBuilder_.dispose();
+              publickeyBuilder_ = null;
+              publickey_ = other.publickey_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+              publickeyBuilder_ =
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getPublickeyFieldBuilder() : null;
+            } else {
+              publickeyBuilder_.addAllMessages(other.publickey_);
+            }
+          }
+        }
+        if (serviceBuilder_ == null) {
+          if (!other.service_.isEmpty()) {
+            if (service_.isEmpty()) {
+              service_ = other.service_;
+              bitField0_ = (bitField0_ & ~0x00000008);
+            } else {
+              ensureServiceIsMutable();
+              service_.addAll(other.service_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.service_.isEmpty()) {
+            if (serviceBuilder_.isEmpty()) {
+              serviceBuilder_.dispose();
+              serviceBuilder_ = null;
+              service_ = other.service_;
+              bitField0_ = (bitField0_ & ~0x00000008);
+              serviceBuilder_ =
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getServiceFieldBuilder() : null;
+            } else {
+              serviceBuilder_.addAllMessages(other.service_);
+            }
+          }
+        }
+        if (authenticationBuilder_ == null) {
+          if (!other.authentication_.isEmpty()) {
+            if (authentication_.isEmpty()) {
+              authentication_ = other.authentication_;
+              bitField0_ = (bitField0_ & ~0x00000010);
+            } else {
+              ensureAuthenticationIsMutable();
+              authentication_.addAll(other.authentication_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.authentication_.isEmpty()) {
+            if (authenticationBuilder_.isEmpty()) {
+              authenticationBuilder_.dispose();
+              authenticationBuilder_ = null;
+              authentication_ = other.authentication_;
+              bitField0_ = (bitField0_ & ~0x00000010);
+              authenticationBuilder_ =
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getAuthenticationFieldBuilder() : null;
+            } else {
+              authenticationBuilder_.addAllMessages(other.authentication_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasId()) {
+          return false;
+        }
+        for (int i = 0; i < getPublickeyCount(); i++) {
+          if (!getPublickey(i).isInitialized()) {
+            return false;
+          }
+        }
+        for (int i = 0; i < getServiceCount(); i++) {
+          if (!getService(i).isInitialized()) {
+            return false;
+          }
+        }
+        for (int i = 0; i < getAuthenticationCount(); i++) {
+          if (!getAuthentication(i).isInitialized()) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.DarcProto.DIDDoc parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.DarcProto.DIDDoc) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.LazyStringList context_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureContextIsMutable() {
+        if (!((bitField0_ & 0x00000001) != 0)) {
+          context_ = new com.google.protobuf.LazyStringArrayList(context_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+      /**
+       * <code>repeated string context = 1;</code>
+       * @return A list containing the context.
+       */
+      public com.google.protobuf.ProtocolStringList
+          getContextList() {
+        return context_.getUnmodifiableView();
+      }
+      /**
+       * <code>repeated string context = 1;</code>
+       * @return The count of context.
+       */
+      public int getContextCount() {
+        return context_.size();
+      }
+      /**
+       * <code>repeated string context = 1;</code>
+       * @param index The index of the element to return.
+       * @return The context at the given index.
+       */
+      public java.lang.String getContext(int index) {
+        return context_.get(index);
+      }
+      /**
+       * <code>repeated string context = 1;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the context at the given index.
+       */
+      public com.google.protobuf.ByteString
+          getContextBytes(int index) {
+        return context_.getByteString(index);
+      }
+      /**
+       * <code>repeated string context = 1;</code>
+       * @param index The index to set the value at.
+       * @param value The context to set.
+       * @return This builder for chaining.
+       */
+      public Builder setContext(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureContextIsMutable();
+        context_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string context = 1;</code>
+       * @param value The context to add.
+       * @return This builder for chaining.
+       */
+      public Builder addContext(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureContextIsMutable();
+        context_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string context = 1;</code>
+       * @param values The context to add.
+       * @return This builder for chaining.
+       */
+      public Builder addAllContext(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureContextIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, context_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string context = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearContext() {
+        context_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string context = 1;</code>
+       * @param value The bytes of the context to add.
+       * @return This builder for chaining.
+       */
+      public Builder addContextBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureContextIsMutable();
+        context_.add(value);
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object id_ = "";
+      /**
+       * <code>required string id = 2;</code>
+       * @return Whether the id field is set.
+       */
+      public boolean hasId() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       * <code>required string id = 2;</code>
+       * @return The id.
+       */
+      public java.lang.String getId() {
+        java.lang.Object ref = id_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            id_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string id = 2;</code>
+       * @return The bytes for id.
+       */
+      public com.google.protobuf.ByteString
+          getIdBytes() {
+        java.lang.Object ref = id_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          id_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string id = 2;</code>
+       * @param value The id to set.
+       * @return This builder for chaining.
+       */
+      public Builder setId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        id_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string id = 2;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearId() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        id_ = getDefaultInstance().getId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string id = 2;</code>
+       * @param value The bytes for id to set.
+       * @return This builder for chaining.
+       */
+      public Builder setIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        id_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.util.List<ch.epfl.dedis.lib.proto.DarcProto.PublicKey> publickey_ =
+        java.util.Collections.emptyList();
+      private void ensurePublickeyIsMutable() {
+        if (!((bitField0_ & 0x00000004) != 0)) {
+          publickey_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.DarcProto.PublicKey>(publickey_);
+          bitField0_ |= 0x00000004;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.PublicKey, ch.epfl.dedis.lib.proto.DarcProto.PublicKey.Builder, ch.epfl.dedis.lib.proto.DarcProto.PublicKeyOrBuilder> publickeyBuilder_;
+
+      /**
+       * <code>repeated .darc.PublicKey publickey = 3;</code>
+       */
+      public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.PublicKey> getPublickeyList() {
+        if (publickeyBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(publickey_);
+        } else {
+          return publickeyBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .darc.PublicKey publickey = 3;</code>
+       */
+      public int getPublickeyCount() {
+        if (publickeyBuilder_ == null) {
+          return publickey_.size();
+        } else {
+          return publickeyBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .darc.PublicKey publickey = 3;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.PublicKey getPublickey(int index) {
+        if (publickeyBuilder_ == null) {
+          return publickey_.get(index);
+        } else {
+          return publickeyBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .darc.PublicKey publickey = 3;</code>
+       */
+      public Builder setPublickey(
+          int index, ch.epfl.dedis.lib.proto.DarcProto.PublicKey value) {
+        if (publickeyBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePublickeyIsMutable();
+          publickey_.set(index, value);
+          onChanged();
+        } else {
+          publickeyBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.PublicKey publickey = 3;</code>
+       */
+      public Builder setPublickey(
+          int index, ch.epfl.dedis.lib.proto.DarcProto.PublicKey.Builder builderForValue) {
+        if (publickeyBuilder_ == null) {
+          ensurePublickeyIsMutable();
+          publickey_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          publickeyBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.PublicKey publickey = 3;</code>
+       */
+      public Builder addPublickey(ch.epfl.dedis.lib.proto.DarcProto.PublicKey value) {
+        if (publickeyBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePublickeyIsMutable();
+          publickey_.add(value);
+          onChanged();
+        } else {
+          publickeyBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.PublicKey publickey = 3;</code>
+       */
+      public Builder addPublickey(
+          int index, ch.epfl.dedis.lib.proto.DarcProto.PublicKey value) {
+        if (publickeyBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePublickeyIsMutable();
+          publickey_.add(index, value);
+          onChanged();
+        } else {
+          publickeyBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.PublicKey publickey = 3;</code>
+       */
+      public Builder addPublickey(
+          ch.epfl.dedis.lib.proto.DarcProto.PublicKey.Builder builderForValue) {
+        if (publickeyBuilder_ == null) {
+          ensurePublickeyIsMutable();
+          publickey_.add(builderForValue.build());
+          onChanged();
+        } else {
+          publickeyBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.PublicKey publickey = 3;</code>
+       */
+      public Builder addPublickey(
+          int index, ch.epfl.dedis.lib.proto.DarcProto.PublicKey.Builder builderForValue) {
+        if (publickeyBuilder_ == null) {
+          ensurePublickeyIsMutable();
+          publickey_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          publickeyBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.PublicKey publickey = 3;</code>
+       */
+      public Builder addAllPublickey(
+          java.lang.Iterable<? extends ch.epfl.dedis.lib.proto.DarcProto.PublicKey> values) {
+        if (publickeyBuilder_ == null) {
+          ensurePublickeyIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, publickey_);
+          onChanged();
+        } else {
+          publickeyBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.PublicKey publickey = 3;</code>
+       */
+      public Builder clearPublickey() {
+        if (publickeyBuilder_ == null) {
+          publickey_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+          onChanged();
+        } else {
+          publickeyBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.PublicKey publickey = 3;</code>
+       */
+      public Builder removePublickey(int index) {
+        if (publickeyBuilder_ == null) {
+          ensurePublickeyIsMutable();
+          publickey_.remove(index);
+          onChanged();
+        } else {
+          publickeyBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.PublicKey publickey = 3;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.PublicKey.Builder getPublickeyBuilder(
+          int index) {
+        return getPublickeyFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .darc.PublicKey publickey = 3;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.PublicKeyOrBuilder getPublickeyOrBuilder(
+          int index) {
+        if (publickeyBuilder_ == null) {
+          return publickey_.get(index);  } else {
+          return publickeyBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .darc.PublicKey publickey = 3;</code>
+       */
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.PublicKeyOrBuilder>
+           getPublickeyOrBuilderList() {
+        if (publickeyBuilder_ != null) {
+          return publickeyBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(publickey_);
+        }
+      }
+      /**
+       * <code>repeated .darc.PublicKey publickey = 3;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.PublicKey.Builder addPublickeyBuilder() {
+        return getPublickeyFieldBuilder().addBuilder(
+            ch.epfl.dedis.lib.proto.DarcProto.PublicKey.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .darc.PublicKey publickey = 3;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.PublicKey.Builder addPublickeyBuilder(
+          int index) {
+        return getPublickeyFieldBuilder().addBuilder(
+            index, ch.epfl.dedis.lib.proto.DarcProto.PublicKey.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .darc.PublicKey publickey = 3;</code>
+       */
+      public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.PublicKey.Builder>
+           getPublickeyBuilderList() {
+        return getPublickeyFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.PublicKey, ch.epfl.dedis.lib.proto.DarcProto.PublicKey.Builder, ch.epfl.dedis.lib.proto.DarcProto.PublicKeyOrBuilder>
+          getPublickeyFieldBuilder() {
+        if (publickeyBuilder_ == null) {
+          publickeyBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.DarcProto.PublicKey, ch.epfl.dedis.lib.proto.DarcProto.PublicKey.Builder, ch.epfl.dedis.lib.proto.DarcProto.PublicKeyOrBuilder>(
+                  publickey_,
+                  ((bitField0_ & 0x00000004) != 0),
+                  getParentForChildren(),
+                  isClean());
+          publickey_ = null;
+        }
+        return publickeyBuilder_;
+      }
+
+      private java.util.List<ch.epfl.dedis.lib.proto.DarcProto.DIDService> service_ =
+        java.util.Collections.emptyList();
+      private void ensureServiceIsMutable() {
+        if (!((bitField0_ & 0x00000008) != 0)) {
+          service_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.DarcProto.DIDService>(service_);
+          bitField0_ |= 0x00000008;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.DIDService, ch.epfl.dedis.lib.proto.DarcProto.DIDService.Builder, ch.epfl.dedis.lib.proto.DarcProto.DIDServiceOrBuilder> serviceBuilder_;
+
+      /**
+       * <code>repeated .darc.DIDService service = 4;</code>
+       */
+      public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.DIDService> getServiceList() {
+        if (serviceBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(service_);
+        } else {
+          return serviceBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .darc.DIDService service = 4;</code>
+       */
+      public int getServiceCount() {
+        if (serviceBuilder_ == null) {
+          return service_.size();
+        } else {
+          return serviceBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .darc.DIDService service = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.DIDService getService(int index) {
+        if (serviceBuilder_ == null) {
+          return service_.get(index);
+        } else {
+          return serviceBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .darc.DIDService service = 4;</code>
+       */
+      public Builder setService(
+          int index, ch.epfl.dedis.lib.proto.DarcProto.DIDService value) {
+        if (serviceBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureServiceIsMutable();
+          service_.set(index, value);
+          onChanged();
+        } else {
+          serviceBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.DIDService service = 4;</code>
+       */
+      public Builder setService(
+          int index, ch.epfl.dedis.lib.proto.DarcProto.DIDService.Builder builderForValue) {
+        if (serviceBuilder_ == null) {
+          ensureServiceIsMutable();
+          service_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          serviceBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.DIDService service = 4;</code>
+       */
+      public Builder addService(ch.epfl.dedis.lib.proto.DarcProto.DIDService value) {
+        if (serviceBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureServiceIsMutable();
+          service_.add(value);
+          onChanged();
+        } else {
+          serviceBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.DIDService service = 4;</code>
+       */
+      public Builder addService(
+          int index, ch.epfl.dedis.lib.proto.DarcProto.DIDService value) {
+        if (serviceBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureServiceIsMutable();
+          service_.add(index, value);
+          onChanged();
+        } else {
+          serviceBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.DIDService service = 4;</code>
+       */
+      public Builder addService(
+          ch.epfl.dedis.lib.proto.DarcProto.DIDService.Builder builderForValue) {
+        if (serviceBuilder_ == null) {
+          ensureServiceIsMutable();
+          service_.add(builderForValue.build());
+          onChanged();
+        } else {
+          serviceBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.DIDService service = 4;</code>
+       */
+      public Builder addService(
+          int index, ch.epfl.dedis.lib.proto.DarcProto.DIDService.Builder builderForValue) {
+        if (serviceBuilder_ == null) {
+          ensureServiceIsMutable();
+          service_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          serviceBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.DIDService service = 4;</code>
+       */
+      public Builder addAllService(
+          java.lang.Iterable<? extends ch.epfl.dedis.lib.proto.DarcProto.DIDService> values) {
+        if (serviceBuilder_ == null) {
+          ensureServiceIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, service_);
+          onChanged();
+        } else {
+          serviceBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.DIDService service = 4;</code>
+       */
+      public Builder clearService() {
+        if (serviceBuilder_ == null) {
+          service_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000008);
+          onChanged();
+        } else {
+          serviceBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.DIDService service = 4;</code>
+       */
+      public Builder removeService(int index) {
+        if (serviceBuilder_ == null) {
+          ensureServiceIsMutable();
+          service_.remove(index);
+          onChanged();
+        } else {
+          serviceBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.DIDService service = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.DIDService.Builder getServiceBuilder(
+          int index) {
+        return getServiceFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .darc.DIDService service = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.DIDServiceOrBuilder getServiceOrBuilder(
+          int index) {
+        if (serviceBuilder_ == null) {
+          return service_.get(index);  } else {
+          return serviceBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .darc.DIDService service = 4;</code>
+       */
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.DIDServiceOrBuilder>
+           getServiceOrBuilderList() {
+        if (serviceBuilder_ != null) {
+          return serviceBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(service_);
+        }
+      }
+      /**
+       * <code>repeated .darc.DIDService service = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.DIDService.Builder addServiceBuilder() {
+        return getServiceFieldBuilder().addBuilder(
+            ch.epfl.dedis.lib.proto.DarcProto.DIDService.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .darc.DIDService service = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.DIDService.Builder addServiceBuilder(
+          int index) {
+        return getServiceFieldBuilder().addBuilder(
+            index, ch.epfl.dedis.lib.proto.DarcProto.DIDService.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .darc.DIDService service = 4;</code>
+       */
+      public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.DIDService.Builder>
+           getServiceBuilderList() {
+        return getServiceFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.DIDService, ch.epfl.dedis.lib.proto.DarcProto.DIDService.Builder, ch.epfl.dedis.lib.proto.DarcProto.DIDServiceOrBuilder>
+          getServiceFieldBuilder() {
+        if (serviceBuilder_ == null) {
+          serviceBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.DarcProto.DIDService, ch.epfl.dedis.lib.proto.DarcProto.DIDService.Builder, ch.epfl.dedis.lib.proto.DarcProto.DIDServiceOrBuilder>(
+                  service_,
+                  ((bitField0_ & 0x00000008) != 0),
+                  getParentForChildren(),
+                  isClean());
+          service_ = null;
+        }
+        return serviceBuilder_;
+      }
+
+      private java.util.List<ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod> authentication_ =
+        java.util.Collections.emptyList();
+      private void ensureAuthenticationIsMutable() {
+        if (!((bitField0_ & 0x00000010) != 0)) {
+          authentication_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod>(authentication_);
+          bitField0_ |= 0x00000010;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod, ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod.Builder, ch.epfl.dedis.lib.proto.DarcProto.VerificationMethodOrBuilder> authenticationBuilder_;
+
+      /**
+       * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+       */
+      public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod> getAuthenticationList() {
+        if (authenticationBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(authentication_);
+        } else {
+          return authenticationBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+       */
+      public int getAuthenticationCount() {
+        if (authenticationBuilder_ == null) {
+          return authentication_.size();
+        } else {
+          return authenticationBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod getAuthentication(int index) {
+        if (authenticationBuilder_ == null) {
+          return authentication_.get(index);
+        } else {
+          return authenticationBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+       */
+      public Builder setAuthentication(
+          int index, ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod value) {
+        if (authenticationBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureAuthenticationIsMutable();
+          authentication_.set(index, value);
+          onChanged();
+        } else {
+          authenticationBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+       */
+      public Builder setAuthentication(
+          int index, ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod.Builder builderForValue) {
+        if (authenticationBuilder_ == null) {
+          ensureAuthenticationIsMutable();
+          authentication_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          authenticationBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+       */
+      public Builder addAuthentication(ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod value) {
+        if (authenticationBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureAuthenticationIsMutable();
+          authentication_.add(value);
+          onChanged();
+        } else {
+          authenticationBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+       */
+      public Builder addAuthentication(
+          int index, ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod value) {
+        if (authenticationBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureAuthenticationIsMutable();
+          authentication_.add(index, value);
+          onChanged();
+        } else {
+          authenticationBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+       */
+      public Builder addAuthentication(
+          ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod.Builder builderForValue) {
+        if (authenticationBuilder_ == null) {
+          ensureAuthenticationIsMutable();
+          authentication_.add(builderForValue.build());
+          onChanged();
+        } else {
+          authenticationBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+       */
+      public Builder addAuthentication(
+          int index, ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod.Builder builderForValue) {
+        if (authenticationBuilder_ == null) {
+          ensureAuthenticationIsMutable();
+          authentication_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          authenticationBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+       */
+      public Builder addAllAuthentication(
+          java.lang.Iterable<? extends ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod> values) {
+        if (authenticationBuilder_ == null) {
+          ensureAuthenticationIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, authentication_);
+          onChanged();
+        } else {
+          authenticationBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+       */
+      public Builder clearAuthentication() {
+        if (authenticationBuilder_ == null) {
+          authentication_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000010);
+          onChanged();
+        } else {
+          authenticationBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+       */
+      public Builder removeAuthentication(int index) {
+        if (authenticationBuilder_ == null) {
+          ensureAuthenticationIsMutable();
+          authentication_.remove(index);
+          onChanged();
+        } else {
+          authenticationBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod.Builder getAuthenticationBuilder(
+          int index) {
+        return getAuthenticationFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.VerificationMethodOrBuilder getAuthenticationOrBuilder(
+          int index) {
+        if (authenticationBuilder_ == null) {
+          return authentication_.get(index);  } else {
+          return authenticationBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+       */
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.VerificationMethodOrBuilder>
+           getAuthenticationOrBuilderList() {
+        if (authenticationBuilder_ != null) {
+          return authenticationBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(authentication_);
+        }
+      }
+      /**
+       * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod.Builder addAuthenticationBuilder() {
+        return getAuthenticationFieldBuilder().addBuilder(
+            ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod.Builder addAuthenticationBuilder(
+          int index) {
+        return getAuthenticationFieldBuilder().addBuilder(
+            index, ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .darc.VerificationMethod authentication = 5;</code>
+       */
+      public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod.Builder>
+           getAuthenticationBuilderList() {
+        return getAuthenticationFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod, ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod.Builder, ch.epfl.dedis.lib.proto.DarcProto.VerificationMethodOrBuilder>
+          getAuthenticationFieldBuilder() {
+        if (authenticationBuilder_ == null) {
+          authenticationBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod, ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod.Builder, ch.epfl.dedis.lib.proto.DarcProto.VerificationMethodOrBuilder>(
+                  authentication_,
+                  ((bitField0_ & 0x00000010) != 0),
+                  getParentForChildren(),
+                  isClean());
+          authentication_ = null;
+        }
+        return authenticationBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:darc.DIDDoc)
+    }
+
+    // @@protoc_insertion_point(class_scope:darc.DIDDoc)
+    private static final ch.epfl.dedis.lib.proto.DarcProto.DIDDoc DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.DarcProto.DIDDoc();
+    }
+
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDDoc getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<DIDDoc>
+        PARSER = new com.google.protobuf.AbstractParser<DIDDoc>() {
+      @java.lang.Override
+      public DIDDoc parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new DIDDoc(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<DIDDoc> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<DIDDoc> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.DarcProto.DIDDoc getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface PublicKeyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:darc.PublicKey)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required string id = 1;</code>
+     * @return Whether the id field is set.
+     */
+    boolean hasId();
+    /**
+     * <code>required string id = 1;</code>
+     * @return The id.
+     */
+    java.lang.String getId();
+    /**
+     * <code>required string id = 1;</code>
+     * @return The bytes for id.
+     */
+    com.google.protobuf.ByteString
+        getIdBytes();
+
+    /**
+     * <code>required string type = 2;</code>
+     * @return Whether the type field is set.
+     */
+    boolean hasType();
+    /**
+     * <code>required string type = 2;</code>
+     * @return The type.
+     */
+    java.lang.String getType();
+    /**
+     * <code>required string type = 2;</code>
+     * @return The bytes for type.
+     */
+    com.google.protobuf.ByteString
+        getTypeBytes();
+
+    /**
+     * <code>required string controller = 3;</code>
+     * @return Whether the controller field is set.
+     */
+    boolean hasController();
+    /**
+     * <code>required string controller = 3;</code>
+     * @return The controller.
+     */
+    java.lang.String getController();
+    /**
+     * <code>required string controller = 3;</code>
+     * @return The bytes for controller.
+     */
+    com.google.protobuf.ByteString
+        getControllerBytes();
+
+    /**
+     * <code>required bytes value = 4;</code>
+     * @return Whether the value field is set.
+     */
+    boolean hasValue();
+    /**
+     * <code>required bytes value = 4;</code>
+     * @return The value.
+     */
+    com.google.protobuf.ByteString getValue();
+  }
+  /**
+   * <pre>
+   * PublicKey DID doc public key
+   * </pre>
+   *
+   * Protobuf type {@code darc.PublicKey}
+   */
+  public static final class PublicKey extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:darc.PublicKey)
+      PublicKeyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use PublicKey.newBuilder() to construct.
+    private PublicKey(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private PublicKey() {
+      id_ = "";
+      type_ = "";
+      controller_ = "";
+      value_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new PublicKey();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private PublicKey(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000001;
+              id_ = bs;
+              break;
+            }
+            case 18: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000002;
+              type_ = bs;
+              break;
+            }
+            case 26: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000004;
+              controller_ = bs;
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000008;
+              value_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_PublicKey_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_PublicKey_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.DarcProto.PublicKey.class, ch.epfl.dedis.lib.proto.DarcProto.PublicKey.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int ID_FIELD_NUMBER = 1;
+    private volatile java.lang.Object id_;
+    /**
+     * <code>required string id = 1;</code>
+     * @return Whether the id field is set.
+     */
+    @java.lang.Override
+    public boolean hasId() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>required string id = 1;</code>
+     * @return The id.
+     */
+    @java.lang.Override
+    public java.lang.String getId() {
+      java.lang.Object ref = id_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          id_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string id = 1;</code>
+     * @return The bytes for id.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getIdBytes() {
+      java.lang.Object ref = id_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        id_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int TYPE_FIELD_NUMBER = 2;
+    private volatile java.lang.Object type_;
+    /**
+     * <code>required string type = 2;</code>
+     * @return Whether the type field is set.
+     */
+    @java.lang.Override
+    public boolean hasType() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     * <code>required string type = 2;</code>
+     * @return The type.
+     */
+    @java.lang.Override
+    public java.lang.String getType() {
+      java.lang.Object ref = type_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          type_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string type = 2;</code>
+     * @return The bytes for type.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getTypeBytes() {
+      java.lang.Object ref = type_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        type_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int CONTROLLER_FIELD_NUMBER = 3;
+    private volatile java.lang.Object controller_;
+    /**
+     * <code>required string controller = 3;</code>
+     * @return Whether the controller field is set.
+     */
+    @java.lang.Override
+    public boolean hasController() {
+      return ((bitField0_ & 0x00000004) != 0);
+    }
+    /**
+     * <code>required string controller = 3;</code>
+     * @return The controller.
+     */
+    @java.lang.Override
+    public java.lang.String getController() {
+      java.lang.Object ref = controller_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          controller_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string controller = 3;</code>
+     * @return The bytes for controller.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getControllerBytes() {
+      java.lang.Object ref = controller_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        controller_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int VALUE_FIELD_NUMBER = 4;
+    private com.google.protobuf.ByteString value_;
+    /**
+     * <code>required bytes value = 4;</code>
+     * @return Whether the value field is set.
+     */
+    @java.lang.Override
+    public boolean hasValue() {
+      return ((bitField0_ & 0x00000008) != 0);
+    }
+    /**
+     * <code>required bytes value = 4;</code>
+     * @return The value.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString getValue() {
+      return value_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasId()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasType()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasController()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasValue()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, id_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, type_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, controller_);
+      }
+      if (((bitField0_ & 0x00000008) != 0)) {
+        output.writeBytes(4, value_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, id_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, type_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, controller_);
+      }
+      if (((bitField0_ & 0x00000008) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, value_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.DarcProto.PublicKey)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.DarcProto.PublicKey other = (ch.epfl.dedis.lib.proto.DarcProto.PublicKey) obj;
+
+      if (hasId() != other.hasId()) return false;
+      if (hasId()) {
+        if (!getId()
+            .equals(other.getId())) return false;
+      }
+      if (hasType() != other.hasType()) return false;
+      if (hasType()) {
+        if (!getType()
+            .equals(other.getType())) return false;
+      }
+      if (hasController() != other.hasController()) return false;
+      if (hasController()) {
+        if (!getController()
+            .equals(other.getController())) return false;
+      }
+      if (hasValue() != other.hasValue()) return false;
+      if (hasValue()) {
+        if (!getValue()
+            .equals(other.getValue())) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasId()) {
+        hash = (37 * hash) + ID_FIELD_NUMBER;
+        hash = (53 * hash) + getId().hashCode();
+      }
+      if (hasType()) {
+        hash = (37 * hash) + TYPE_FIELD_NUMBER;
+        hash = (53 * hash) + getType().hashCode();
+      }
+      if (hasController()) {
+        hash = (37 * hash) + CONTROLLER_FIELD_NUMBER;
+        hash = (53 * hash) + getController().hashCode();
+      }
+      if (hasValue()) {
+        hash = (37 * hash) + VALUE_FIELD_NUMBER;
+        hash = (53 * hash) + getValue().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.DarcProto.PublicKey parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.PublicKey parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.PublicKey parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.PublicKey parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.PublicKey parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.PublicKey parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.PublicKey parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.PublicKey parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.PublicKey parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.PublicKey parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.PublicKey parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.PublicKey parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.DarcProto.PublicKey prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * PublicKey DID doc public key
+     * </pre>
+     *
+     * Protobuf type {@code darc.PublicKey}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:darc.PublicKey)
+        ch.epfl.dedis.lib.proto.DarcProto.PublicKeyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_PublicKey_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_PublicKey_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.DarcProto.PublicKey.class, ch.epfl.dedis.lib.proto.DarcProto.PublicKey.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.DarcProto.PublicKey.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        id_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        type_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        controller_ = "";
+        bitField0_ = (bitField0_ & ~0x00000004);
+        value_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_PublicKey_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.PublicKey getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.DarcProto.PublicKey.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.PublicKey build() {
+        ch.epfl.dedis.lib.proto.DarcProto.PublicKey result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.PublicKey buildPartial() {
+        ch.epfl.dedis.lib.proto.DarcProto.PublicKey result = new ch.epfl.dedis.lib.proto.DarcProto.PublicKey(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.id_ = id_;
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.type_ = type_;
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.controller_ = controller_;
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.value_ = value_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.DarcProto.PublicKey) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.DarcProto.PublicKey)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.DarcProto.PublicKey other) {
+        if (other == ch.epfl.dedis.lib.proto.DarcProto.PublicKey.getDefaultInstance()) return this;
+        if (other.hasId()) {
+          bitField0_ |= 0x00000001;
+          id_ = other.id_;
+          onChanged();
+        }
+        if (other.hasType()) {
+          bitField0_ |= 0x00000002;
+          type_ = other.type_;
+          onChanged();
+        }
+        if (other.hasController()) {
+          bitField0_ |= 0x00000004;
+          controller_ = other.controller_;
+          onChanged();
+        }
+        if (other.hasValue()) {
+          setValue(other.getValue());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasId()) {
+          return false;
+        }
+        if (!hasType()) {
+          return false;
+        }
+        if (!hasController()) {
+          return false;
+        }
+        if (!hasValue()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.DarcProto.PublicKey parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.DarcProto.PublicKey) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.lang.Object id_ = "";
+      /**
+       * <code>required string id = 1;</code>
+       * @return Whether the id field is set.
+       */
+      public boolean hasId() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>required string id = 1;</code>
+       * @return The id.
+       */
+      public java.lang.String getId() {
+        java.lang.Object ref = id_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            id_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string id = 1;</code>
+       * @return The bytes for id.
+       */
+      public com.google.protobuf.ByteString
+          getIdBytes() {
+        java.lang.Object ref = id_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          id_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string id = 1;</code>
+       * @param value The id to set.
+       * @return This builder for chaining.
+       */
+      public Builder setId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        id_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string id = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearId() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        id_ = getDefaultInstance().getId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string id = 1;</code>
+       * @param value The bytes for id to set.
+       * @return This builder for chaining.
+       */
+      public Builder setIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        id_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object type_ = "";
+      /**
+       * <code>required string type = 2;</code>
+       * @return Whether the type field is set.
+       */
+      public boolean hasType() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       * <code>required string type = 2;</code>
+       * @return The type.
+       */
+      public java.lang.String getType() {
+        java.lang.Object ref = type_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            type_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string type = 2;</code>
+       * @return The bytes for type.
+       */
+      public com.google.protobuf.ByteString
+          getTypeBytes() {
+        java.lang.Object ref = type_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          type_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string type = 2;</code>
+       * @param value The type to set.
+       * @return This builder for chaining.
+       */
+      public Builder setType(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        type_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string type = 2;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearType() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        type_ = getDefaultInstance().getType();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string type = 2;</code>
+       * @param value The bytes for type to set.
+       * @return This builder for chaining.
+       */
+      public Builder setTypeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        type_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object controller_ = "";
+      /**
+       * <code>required string controller = 3;</code>
+       * @return Whether the controller field is set.
+       */
+      public boolean hasController() {
+        return ((bitField0_ & 0x00000004) != 0);
+      }
+      /**
+       * <code>required string controller = 3;</code>
+       * @return The controller.
+       */
+      public java.lang.String getController() {
+        java.lang.Object ref = controller_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            controller_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string controller = 3;</code>
+       * @return The bytes for controller.
+       */
+      public com.google.protobuf.ByteString
+          getControllerBytes() {
+        java.lang.Object ref = controller_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          controller_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string controller = 3;</code>
+       * @param value The controller to set.
+       * @return This builder for chaining.
+       */
+      public Builder setController(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        controller_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string controller = 3;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearController() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        controller_ = getDefaultInstance().getController();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string controller = 3;</code>
+       * @param value The bytes for controller to set.
+       * @return This builder for chaining.
+       */
+      public Builder setControllerBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        controller_ = value;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString value_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes value = 4;</code>
+       * @return Whether the value field is set.
+       */
+      @java.lang.Override
+      public boolean hasValue() {
+        return ((bitField0_ & 0x00000008) != 0);
+      }
+      /**
+       * <code>required bytes value = 4;</code>
+       * @return The value.
+       */
+      @java.lang.Override
+      public com.google.protobuf.ByteString getValue() {
+        return value_;
+      }
+      /**
+       * <code>required bytes value = 4;</code>
+       * @param value The value to set.
+       * @return This builder for chaining.
+       */
+      public Builder setValue(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        value_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes value = 4;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearValue() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        value_ = getDefaultInstance().getValue();
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:darc.PublicKey)
+    }
+
+    // @@protoc_insertion_point(class_scope:darc.PublicKey)
+    private static final ch.epfl.dedis.lib.proto.DarcProto.PublicKey DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.DarcProto.PublicKey();
+    }
+
+    public static ch.epfl.dedis.lib.proto.DarcProto.PublicKey getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<PublicKey>
+        PARSER = new com.google.protobuf.AbstractParser<PublicKey>() {
+      @java.lang.Override
+      public PublicKey parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new PublicKey(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<PublicKey> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<PublicKey> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.DarcProto.PublicKey getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface DIDServiceOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:darc.DIDService)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required string id = 1;</code>
+     * @return Whether the id field is set.
+     */
+    boolean hasId();
+    /**
+     * <code>required string id = 1;</code>
+     * @return The id.
+     */
+    java.lang.String getId();
+    /**
+     * <code>required string id = 1;</code>
+     * @return The bytes for id.
+     */
+    com.google.protobuf.ByteString
+        getIdBytes();
+
+    /**
+     * <code>required string type = 2;</code>
+     * @return Whether the type field is set.
+     */
+    boolean hasType();
+    /**
+     * <code>required string type = 2;</code>
+     * @return The type.
+     */
+    java.lang.String getType();
+    /**
+     * <code>required string type = 2;</code>
+     * @return The bytes for type.
+     */
+    com.google.protobuf.ByteString
+        getTypeBytes();
+
+    /**
+     * <code>required sint32 priority = 3;</code>
+     * @return Whether the priority field is set.
+     */
+    boolean hasPriority();
+    /**
+     * <code>required sint32 priority = 3;</code>
+     * @return The priority.
+     */
+    int getPriority();
+
+    /**
+     * <code>repeated string recipientkeys = 4;</code>
+     * @return A list containing the recipientkeys.
+     */
+    java.util.List<java.lang.String>
+        getRecipientkeysList();
+    /**
+     * <code>repeated string recipientkeys = 4;</code>
+     * @return The count of recipientkeys.
+     */
+    int getRecipientkeysCount();
+    /**
+     * <code>repeated string recipientkeys = 4;</code>
+     * @param index The index of the element to return.
+     * @return The recipientkeys at the given index.
+     */
+    java.lang.String getRecipientkeys(int index);
+    /**
+     * <code>repeated string recipientkeys = 4;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the recipientkeys at the given index.
+     */
+    com.google.protobuf.ByteString
+        getRecipientkeysBytes(int index);
+
+    /**
+     * <code>repeated string routingkeys = 5;</code>
+     * @return A list containing the routingkeys.
+     */
+    java.util.List<java.lang.String>
+        getRoutingkeysList();
+    /**
+     * <code>repeated string routingkeys = 5;</code>
+     * @return The count of routingkeys.
+     */
+    int getRoutingkeysCount();
+    /**
+     * <code>repeated string routingkeys = 5;</code>
+     * @param index The index of the element to return.
+     * @return The routingkeys at the given index.
+     */
+    java.lang.String getRoutingkeys(int index);
+    /**
+     * <code>repeated string routingkeys = 5;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the routingkeys at the given index.
+     */
+    com.google.protobuf.ByteString
+        getRoutingkeysBytes(int index);
+
+    /**
+     * <code>required string serviceendpoint = 6;</code>
+     * @return Whether the serviceendpoint field is set.
+     */
+    boolean hasServiceendpoint();
+    /**
+     * <code>required string serviceendpoint = 6;</code>
+     * @return The serviceendpoint.
+     */
+    java.lang.String getServiceendpoint();
+    /**
+     * <code>required string serviceendpoint = 6;</code>
+     * @return The bytes for serviceendpoint.
+     */
+    com.google.protobuf.ByteString
+        getServiceendpointBytes();
+  }
+  /**
+   * <pre>
+   * Service DID doc service
+   * </pre>
+   *
+   * Protobuf type {@code darc.DIDService}
+   */
+  public static final class DIDService extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:darc.DIDService)
+      DIDServiceOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use DIDService.newBuilder() to construct.
+    private DIDService(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private DIDService() {
+      id_ = "";
+      type_ = "";
+      recipientkeys_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      routingkeys_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      serviceendpoint_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new DIDService();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private DIDService(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000001;
+              id_ = bs;
+              break;
+            }
+            case 18: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000002;
+              type_ = bs;
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              priority_ = input.readSInt32();
+              break;
+            }
+            case 34: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              if (!((mutable_bitField0_ & 0x00000008) != 0)) {
+                recipientkeys_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000008;
+              }
+              recipientkeys_.add(bs);
+              break;
+            }
+            case 42: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              if (!((mutable_bitField0_ & 0x00000010) != 0)) {
+                routingkeys_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000010;
+              }
+              routingkeys_.add(bs);
+              break;
+            }
+            case 50: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000008;
+              serviceendpoint_ = bs;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000008) != 0)) {
+          recipientkeys_ = recipientkeys_.getUnmodifiableView();
+        }
+        if (((mutable_bitField0_ & 0x00000010) != 0)) {
+          routingkeys_ = routingkeys_.getUnmodifiableView();
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_DIDService_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_DIDService_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.DarcProto.DIDService.class, ch.epfl.dedis.lib.proto.DarcProto.DIDService.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int ID_FIELD_NUMBER = 1;
+    private volatile java.lang.Object id_;
+    /**
+     * <code>required string id = 1;</code>
+     * @return Whether the id field is set.
+     */
+    @java.lang.Override
+    public boolean hasId() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>required string id = 1;</code>
+     * @return The id.
+     */
+    @java.lang.Override
+    public java.lang.String getId() {
+      java.lang.Object ref = id_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          id_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string id = 1;</code>
+     * @return The bytes for id.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getIdBytes() {
+      java.lang.Object ref = id_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        id_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int TYPE_FIELD_NUMBER = 2;
+    private volatile java.lang.Object type_;
+    /**
+     * <code>required string type = 2;</code>
+     * @return Whether the type field is set.
+     */
+    @java.lang.Override
+    public boolean hasType() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     * <code>required string type = 2;</code>
+     * @return The type.
+     */
+    @java.lang.Override
+    public java.lang.String getType() {
+      java.lang.Object ref = type_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          type_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string type = 2;</code>
+     * @return The bytes for type.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getTypeBytes() {
+      java.lang.Object ref = type_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        type_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int PRIORITY_FIELD_NUMBER = 3;
+    private int priority_;
+    /**
+     * <code>required sint32 priority = 3;</code>
+     * @return Whether the priority field is set.
+     */
+    @java.lang.Override
+    public boolean hasPriority() {
+      return ((bitField0_ & 0x00000004) != 0);
+    }
+    /**
+     * <code>required sint32 priority = 3;</code>
+     * @return The priority.
+     */
+    @java.lang.Override
+    public int getPriority() {
+      return priority_;
+    }
+
+    public static final int RECIPIENTKEYS_FIELD_NUMBER = 4;
+    private com.google.protobuf.LazyStringList recipientkeys_;
+    /**
+     * <code>repeated string recipientkeys = 4;</code>
+     * @return A list containing the recipientkeys.
+     */
+    public com.google.protobuf.ProtocolStringList
+        getRecipientkeysList() {
+      return recipientkeys_;
+    }
+    /**
+     * <code>repeated string recipientkeys = 4;</code>
+     * @return The count of recipientkeys.
+     */
+    public int getRecipientkeysCount() {
+      return recipientkeys_.size();
+    }
+    /**
+     * <code>repeated string recipientkeys = 4;</code>
+     * @param index The index of the element to return.
+     * @return The recipientkeys at the given index.
+     */
+    public java.lang.String getRecipientkeys(int index) {
+      return recipientkeys_.get(index);
+    }
+    /**
+     * <code>repeated string recipientkeys = 4;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the recipientkeys at the given index.
+     */
+    public com.google.protobuf.ByteString
+        getRecipientkeysBytes(int index) {
+      return recipientkeys_.getByteString(index);
+    }
+
+    public static final int ROUTINGKEYS_FIELD_NUMBER = 5;
+    private com.google.protobuf.LazyStringList routingkeys_;
+    /**
+     * <code>repeated string routingkeys = 5;</code>
+     * @return A list containing the routingkeys.
+     */
+    public com.google.protobuf.ProtocolStringList
+        getRoutingkeysList() {
+      return routingkeys_;
+    }
+    /**
+     * <code>repeated string routingkeys = 5;</code>
+     * @return The count of routingkeys.
+     */
+    public int getRoutingkeysCount() {
+      return routingkeys_.size();
+    }
+    /**
+     * <code>repeated string routingkeys = 5;</code>
+     * @param index The index of the element to return.
+     * @return The routingkeys at the given index.
+     */
+    public java.lang.String getRoutingkeys(int index) {
+      return routingkeys_.get(index);
+    }
+    /**
+     * <code>repeated string routingkeys = 5;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the routingkeys at the given index.
+     */
+    public com.google.protobuf.ByteString
+        getRoutingkeysBytes(int index) {
+      return routingkeys_.getByteString(index);
+    }
+
+    public static final int SERVICEENDPOINT_FIELD_NUMBER = 6;
+    private volatile java.lang.Object serviceendpoint_;
+    /**
+     * <code>required string serviceendpoint = 6;</code>
+     * @return Whether the serviceendpoint field is set.
+     */
+    @java.lang.Override
+    public boolean hasServiceendpoint() {
+      return ((bitField0_ & 0x00000008) != 0);
+    }
+    /**
+     * <code>required string serviceendpoint = 6;</code>
+     * @return The serviceendpoint.
+     */
+    @java.lang.Override
+    public java.lang.String getServiceendpoint() {
+      java.lang.Object ref = serviceendpoint_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          serviceendpoint_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string serviceendpoint = 6;</code>
+     * @return The bytes for serviceendpoint.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getServiceendpointBytes() {
+      java.lang.Object ref = serviceendpoint_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        serviceendpoint_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasId()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasType()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasPriority()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasServiceendpoint()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, id_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, type_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        output.writeSInt32(3, priority_);
+      }
+      for (int i = 0; i < recipientkeys_.size(); i++) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 4, recipientkeys_.getRaw(i));
+      }
+      for (int i = 0; i < routingkeys_.size(); i++) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, routingkeys_.getRaw(i));
+      }
+      if (((bitField0_ & 0x00000008) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, serviceendpoint_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, id_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, type_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt32Size(3, priority_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < recipientkeys_.size(); i++) {
+          dataSize += computeStringSizeNoTag(recipientkeys_.getRaw(i));
+        }
+        size += dataSize;
+        size += 1 * getRecipientkeysList().size();
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < routingkeys_.size(); i++) {
+          dataSize += computeStringSizeNoTag(routingkeys_.getRaw(i));
+        }
+        size += dataSize;
+        size += 1 * getRoutingkeysList().size();
+      }
+      if (((bitField0_ & 0x00000008) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, serviceendpoint_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.DarcProto.DIDService)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.DarcProto.DIDService other = (ch.epfl.dedis.lib.proto.DarcProto.DIDService) obj;
+
+      if (hasId() != other.hasId()) return false;
+      if (hasId()) {
+        if (!getId()
+            .equals(other.getId())) return false;
+      }
+      if (hasType() != other.hasType()) return false;
+      if (hasType()) {
+        if (!getType()
+            .equals(other.getType())) return false;
+      }
+      if (hasPriority() != other.hasPriority()) return false;
+      if (hasPriority()) {
+        if (getPriority()
+            != other.getPriority()) return false;
+      }
+      if (!getRecipientkeysList()
+          .equals(other.getRecipientkeysList())) return false;
+      if (!getRoutingkeysList()
+          .equals(other.getRoutingkeysList())) return false;
+      if (hasServiceendpoint() != other.hasServiceendpoint()) return false;
+      if (hasServiceendpoint()) {
+        if (!getServiceendpoint()
+            .equals(other.getServiceendpoint())) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasId()) {
+        hash = (37 * hash) + ID_FIELD_NUMBER;
+        hash = (53 * hash) + getId().hashCode();
+      }
+      if (hasType()) {
+        hash = (37 * hash) + TYPE_FIELD_NUMBER;
+        hash = (53 * hash) + getType().hashCode();
+      }
+      if (hasPriority()) {
+        hash = (37 * hash) + PRIORITY_FIELD_NUMBER;
+        hash = (53 * hash) + getPriority();
+      }
+      if (getRecipientkeysCount() > 0) {
+        hash = (37 * hash) + RECIPIENTKEYS_FIELD_NUMBER;
+        hash = (53 * hash) + getRecipientkeysList().hashCode();
+      }
+      if (getRoutingkeysCount() > 0) {
+        hash = (37 * hash) + ROUTINGKEYS_FIELD_NUMBER;
+        hash = (53 * hash) + getRoutingkeysList().hashCode();
+      }
+      if (hasServiceendpoint()) {
+        hash = (37 * hash) + SERVICEENDPOINT_FIELD_NUMBER;
+        hash = (53 * hash) + getServiceendpoint().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDService parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDService parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDService parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDService parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDService parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDService parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDService parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDService parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDService parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDService parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDService parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDService parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.DarcProto.DIDService prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * Service DID doc service
+     * </pre>
+     *
+     * Protobuf type {@code darc.DIDService}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:darc.DIDService)
+        ch.epfl.dedis.lib.proto.DarcProto.DIDServiceOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_DIDService_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_DIDService_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.DarcProto.DIDService.class, ch.epfl.dedis.lib.proto.DarcProto.DIDService.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.DarcProto.DIDService.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        id_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        type_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        priority_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        recipientkeys_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        routingkeys_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        serviceendpoint_ = "";
+        bitField0_ = (bitField0_ & ~0x00000020);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_DIDService_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.DIDService getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.DarcProto.DIDService.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.DIDService build() {
+        ch.epfl.dedis.lib.proto.DarcProto.DIDService result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.DIDService buildPartial() {
+        ch.epfl.dedis.lib.proto.DarcProto.DIDService result = new ch.epfl.dedis.lib.proto.DarcProto.DIDService(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.id_ = id_;
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.type_ = type_;
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.priority_ = priority_;
+          to_bitField0_ |= 0x00000004;
+        }
+        if (((bitField0_ & 0x00000008) != 0)) {
+          recipientkeys_ = recipientkeys_.getUnmodifiableView();
+          bitField0_ = (bitField0_ & ~0x00000008);
+        }
+        result.recipientkeys_ = recipientkeys_;
+        if (((bitField0_ & 0x00000010) != 0)) {
+          routingkeys_ = routingkeys_.getUnmodifiableView();
+          bitField0_ = (bitField0_ & ~0x00000010);
+        }
+        result.routingkeys_ = routingkeys_;
+        if (((from_bitField0_ & 0x00000020) != 0)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.serviceendpoint_ = serviceendpoint_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.DarcProto.DIDService) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.DarcProto.DIDService)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.DarcProto.DIDService other) {
+        if (other == ch.epfl.dedis.lib.proto.DarcProto.DIDService.getDefaultInstance()) return this;
+        if (other.hasId()) {
+          bitField0_ |= 0x00000001;
+          id_ = other.id_;
+          onChanged();
+        }
+        if (other.hasType()) {
+          bitField0_ |= 0x00000002;
+          type_ = other.type_;
+          onChanged();
+        }
+        if (other.hasPriority()) {
+          setPriority(other.getPriority());
+        }
+        if (!other.recipientkeys_.isEmpty()) {
+          if (recipientkeys_.isEmpty()) {
+            recipientkeys_ = other.recipientkeys_;
+            bitField0_ = (bitField0_ & ~0x00000008);
+          } else {
+            ensureRecipientkeysIsMutable();
+            recipientkeys_.addAll(other.recipientkeys_);
+          }
+          onChanged();
+        }
+        if (!other.routingkeys_.isEmpty()) {
+          if (routingkeys_.isEmpty()) {
+            routingkeys_ = other.routingkeys_;
+            bitField0_ = (bitField0_ & ~0x00000010);
+          } else {
+            ensureRoutingkeysIsMutable();
+            routingkeys_.addAll(other.routingkeys_);
+          }
+          onChanged();
+        }
+        if (other.hasServiceendpoint()) {
+          bitField0_ |= 0x00000020;
+          serviceendpoint_ = other.serviceendpoint_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasId()) {
+          return false;
+        }
+        if (!hasType()) {
+          return false;
+        }
+        if (!hasPriority()) {
+          return false;
+        }
+        if (!hasServiceendpoint()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.DarcProto.DIDService parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.DarcProto.DIDService) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.lang.Object id_ = "";
+      /**
+       * <code>required string id = 1;</code>
+       * @return Whether the id field is set.
+       */
+      public boolean hasId() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>required string id = 1;</code>
+       * @return The id.
+       */
+      public java.lang.String getId() {
+        java.lang.Object ref = id_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            id_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string id = 1;</code>
+       * @return The bytes for id.
+       */
+      public com.google.protobuf.ByteString
+          getIdBytes() {
+        java.lang.Object ref = id_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          id_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string id = 1;</code>
+       * @param value The id to set.
+       * @return This builder for chaining.
+       */
+      public Builder setId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        id_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string id = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearId() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        id_ = getDefaultInstance().getId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string id = 1;</code>
+       * @param value The bytes for id to set.
+       * @return This builder for chaining.
+       */
+      public Builder setIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        id_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object type_ = "";
+      /**
+       * <code>required string type = 2;</code>
+       * @return Whether the type field is set.
+       */
+      public boolean hasType() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       * <code>required string type = 2;</code>
+       * @return The type.
+       */
+      public java.lang.String getType() {
+        java.lang.Object ref = type_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            type_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string type = 2;</code>
+       * @return The bytes for type.
+       */
+      public com.google.protobuf.ByteString
+          getTypeBytes() {
+        java.lang.Object ref = type_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          type_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string type = 2;</code>
+       * @param value The type to set.
+       * @return This builder for chaining.
+       */
+      public Builder setType(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        type_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string type = 2;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearType() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        type_ = getDefaultInstance().getType();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string type = 2;</code>
+       * @param value The bytes for type to set.
+       * @return This builder for chaining.
+       */
+      public Builder setTypeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        type_ = value;
+        onChanged();
+        return this;
+      }
+
+      private int priority_ ;
+      /**
+       * <code>required sint32 priority = 3;</code>
+       * @return Whether the priority field is set.
+       */
+      @java.lang.Override
+      public boolean hasPriority() {
+        return ((bitField0_ & 0x00000004) != 0);
+      }
+      /**
+       * <code>required sint32 priority = 3;</code>
+       * @return The priority.
+       */
+      @java.lang.Override
+      public int getPriority() {
+        return priority_;
+      }
+      /**
+       * <code>required sint32 priority = 3;</code>
+       * @param value The priority to set.
+       * @return This builder for chaining.
+       */
+      public Builder setPriority(int value) {
+        bitField0_ |= 0x00000004;
+        priority_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required sint32 priority = 3;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearPriority() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        priority_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.LazyStringList recipientkeys_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureRecipientkeysIsMutable() {
+        if (!((bitField0_ & 0x00000008) != 0)) {
+          recipientkeys_ = new com.google.protobuf.LazyStringArrayList(recipientkeys_);
+          bitField0_ |= 0x00000008;
+         }
+      }
+      /**
+       * <code>repeated string recipientkeys = 4;</code>
+       * @return A list containing the recipientkeys.
+       */
+      public com.google.protobuf.ProtocolStringList
+          getRecipientkeysList() {
+        return recipientkeys_.getUnmodifiableView();
+      }
+      /**
+       * <code>repeated string recipientkeys = 4;</code>
+       * @return The count of recipientkeys.
+       */
+      public int getRecipientkeysCount() {
+        return recipientkeys_.size();
+      }
+      /**
+       * <code>repeated string recipientkeys = 4;</code>
+       * @param index The index of the element to return.
+       * @return The recipientkeys at the given index.
+       */
+      public java.lang.String getRecipientkeys(int index) {
+        return recipientkeys_.get(index);
+      }
+      /**
+       * <code>repeated string recipientkeys = 4;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the recipientkeys at the given index.
+       */
+      public com.google.protobuf.ByteString
+          getRecipientkeysBytes(int index) {
+        return recipientkeys_.getByteString(index);
+      }
+      /**
+       * <code>repeated string recipientkeys = 4;</code>
+       * @param index The index to set the value at.
+       * @param value The recipientkeys to set.
+       * @return This builder for chaining.
+       */
+      public Builder setRecipientkeys(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureRecipientkeysIsMutable();
+        recipientkeys_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string recipientkeys = 4;</code>
+       * @param value The recipientkeys to add.
+       * @return This builder for chaining.
+       */
+      public Builder addRecipientkeys(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureRecipientkeysIsMutable();
+        recipientkeys_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string recipientkeys = 4;</code>
+       * @param values The recipientkeys to add.
+       * @return This builder for chaining.
+       */
+      public Builder addAllRecipientkeys(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureRecipientkeysIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, recipientkeys_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string recipientkeys = 4;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearRecipientkeys() {
+        recipientkeys_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string recipientkeys = 4;</code>
+       * @param value The bytes of the recipientkeys to add.
+       * @return This builder for chaining.
+       */
+      public Builder addRecipientkeysBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureRecipientkeysIsMutable();
+        recipientkeys_.add(value);
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.LazyStringList routingkeys_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureRoutingkeysIsMutable() {
+        if (!((bitField0_ & 0x00000010) != 0)) {
+          routingkeys_ = new com.google.protobuf.LazyStringArrayList(routingkeys_);
+          bitField0_ |= 0x00000010;
+         }
+      }
+      /**
+       * <code>repeated string routingkeys = 5;</code>
+       * @return A list containing the routingkeys.
+       */
+      public com.google.protobuf.ProtocolStringList
+          getRoutingkeysList() {
+        return routingkeys_.getUnmodifiableView();
+      }
+      /**
+       * <code>repeated string routingkeys = 5;</code>
+       * @return The count of routingkeys.
+       */
+      public int getRoutingkeysCount() {
+        return routingkeys_.size();
+      }
+      /**
+       * <code>repeated string routingkeys = 5;</code>
+       * @param index The index of the element to return.
+       * @return The routingkeys at the given index.
+       */
+      public java.lang.String getRoutingkeys(int index) {
+        return routingkeys_.get(index);
+      }
+      /**
+       * <code>repeated string routingkeys = 5;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the routingkeys at the given index.
+       */
+      public com.google.protobuf.ByteString
+          getRoutingkeysBytes(int index) {
+        return routingkeys_.getByteString(index);
+      }
+      /**
+       * <code>repeated string routingkeys = 5;</code>
+       * @param index The index to set the value at.
+       * @param value The routingkeys to set.
+       * @return This builder for chaining.
+       */
+      public Builder setRoutingkeys(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureRoutingkeysIsMutable();
+        routingkeys_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string routingkeys = 5;</code>
+       * @param value The routingkeys to add.
+       * @return This builder for chaining.
+       */
+      public Builder addRoutingkeys(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureRoutingkeysIsMutable();
+        routingkeys_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string routingkeys = 5;</code>
+       * @param values The routingkeys to add.
+       * @return This builder for chaining.
+       */
+      public Builder addAllRoutingkeys(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureRoutingkeysIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, routingkeys_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string routingkeys = 5;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearRoutingkeys() {
+        routingkeys_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string routingkeys = 5;</code>
+       * @param value The bytes of the routingkeys to add.
+       * @return This builder for chaining.
+       */
+      public Builder addRoutingkeysBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureRoutingkeysIsMutable();
+        routingkeys_.add(value);
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object serviceendpoint_ = "";
+      /**
+       * <code>required string serviceendpoint = 6;</code>
+       * @return Whether the serviceendpoint field is set.
+       */
+      public boolean hasServiceendpoint() {
+        return ((bitField0_ & 0x00000020) != 0);
+      }
+      /**
+       * <code>required string serviceendpoint = 6;</code>
+       * @return The serviceendpoint.
+       */
+      public java.lang.String getServiceendpoint() {
+        java.lang.Object ref = serviceendpoint_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            serviceendpoint_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string serviceendpoint = 6;</code>
+       * @return The bytes for serviceendpoint.
+       */
+      public com.google.protobuf.ByteString
+          getServiceendpointBytes() {
+        java.lang.Object ref = serviceendpoint_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          serviceendpoint_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string serviceendpoint = 6;</code>
+       * @param value The serviceendpoint to set.
+       * @return This builder for chaining.
+       */
+      public Builder setServiceendpoint(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        serviceendpoint_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string serviceendpoint = 6;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearServiceendpoint() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        serviceendpoint_ = getDefaultInstance().getServiceendpoint();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string serviceendpoint = 6;</code>
+       * @param value The bytes for serviceendpoint to set.
+       * @return This builder for chaining.
+       */
+      public Builder setServiceendpointBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        serviceendpoint_ = value;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:darc.DIDService)
+    }
+
+    // @@protoc_insertion_point(class_scope:darc.DIDService)
+    private static final ch.epfl.dedis.lib.proto.DarcProto.DIDService DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.DarcProto.DIDService();
+    }
+
+    public static ch.epfl.dedis.lib.proto.DarcProto.DIDService getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<DIDService>
+        PARSER = new com.google.protobuf.AbstractParser<DIDService>() {
+      @java.lang.Override
+      public DIDService parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new DIDService(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<DIDService> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<DIDService> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.DarcProto.DIDService getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface VerificationMethodOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:darc.VerificationMethod)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required .darc.PublicKey publickey = 1;</code>
+     * @return Whether the publickey field is set.
+     */
+    boolean hasPublickey();
+    /**
+     * <code>required .darc.PublicKey publickey = 1;</code>
+     * @return The publickey.
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.PublicKey getPublickey();
+    /**
+     * <code>required .darc.PublicKey publickey = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.PublicKeyOrBuilder getPublickeyOrBuilder();
+  }
+  /**
+   * <pre>
+   * VerificationMethod authentication verification method
+   * </pre>
+   *
+   * Protobuf type {@code darc.VerificationMethod}
+   */
+  public static final class VerificationMethod extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:darc.VerificationMethod)
+      VerificationMethodOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use VerificationMethod.newBuilder() to construct.
+    private VerificationMethod(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private VerificationMethod() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new VerificationMethod();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private VerificationMethod(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              ch.epfl.dedis.lib.proto.DarcProto.PublicKey.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) != 0)) {
+                subBuilder = publickey_.toBuilder();
+              }
+              publickey_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.PublicKey.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(publickey_);
+                publickey_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000001;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_VerificationMethod_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_VerificationMethod_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod.class, ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int PUBLICKEY_FIELD_NUMBER = 1;
+    private ch.epfl.dedis.lib.proto.DarcProto.PublicKey publickey_;
+    /**
+     * <code>required .darc.PublicKey publickey = 1;</code>
+     * @return Whether the publickey field is set.
+     */
+    @java.lang.Override
+    public boolean hasPublickey() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>required .darc.PublicKey publickey = 1;</code>
+     * @return The publickey.
+     */
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.DarcProto.PublicKey getPublickey() {
+      return publickey_ == null ? ch.epfl.dedis.lib.proto.DarcProto.PublicKey.getDefaultInstance() : publickey_;
+    }
+    /**
+     * <code>required .darc.PublicKey publickey = 1;</code>
+     */
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.DarcProto.PublicKeyOrBuilder getPublickeyOrBuilder() {
+      return publickey_ == null ? ch.epfl.dedis.lib.proto.DarcProto.PublicKey.getDefaultInstance() : publickey_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasPublickey()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getPublickey().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        output.writeMessage(1, getPublickey());
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, getPublickey());
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod other = (ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod) obj;
+
+      if (hasPublickey() != other.hasPublickey()) return false;
+      if (hasPublickey()) {
+        if (!getPublickey()
+            .equals(other.getPublickey())) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasPublickey()) {
+        hash = (37 * hash) + PUBLICKEY_FIELD_NUMBER;
+        hash = (53 * hash) + getPublickey().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * VerificationMethod authentication verification method
+     * </pre>
+     *
+     * Protobuf type {@code darc.VerificationMethod}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:darc.VerificationMethod)
+        ch.epfl.dedis.lib.proto.DarcProto.VerificationMethodOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_VerificationMethod_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_VerificationMethod_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod.class, ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getPublickeyFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        if (publickeyBuilder_ == null) {
+          publickey_ = null;
+        } else {
+          publickeyBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_VerificationMethod_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod build() {
+        ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod buildPartial() {
+        ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod result = new ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (publickeyBuilder_ == null) {
+            result.publickey_ = publickey_;
+          } else {
+            result.publickey_ = publickeyBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000001;
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod other) {
+        if (other == ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod.getDefaultInstance()) return this;
+        if (other.hasPublickey()) {
+          mergePublickey(other.getPublickey());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasPublickey()) {
+          return false;
+        }
+        if (!getPublickey().isInitialized()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private ch.epfl.dedis.lib.proto.DarcProto.PublicKey publickey_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.PublicKey, ch.epfl.dedis.lib.proto.DarcProto.PublicKey.Builder, ch.epfl.dedis.lib.proto.DarcProto.PublicKeyOrBuilder> publickeyBuilder_;
+      /**
+       * <code>required .darc.PublicKey publickey = 1;</code>
+       * @return Whether the publickey field is set.
+       */
+      public boolean hasPublickey() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>required .darc.PublicKey publickey = 1;</code>
+       * @return The publickey.
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.PublicKey getPublickey() {
+        if (publickeyBuilder_ == null) {
+          return publickey_ == null ? ch.epfl.dedis.lib.proto.DarcProto.PublicKey.getDefaultInstance() : publickey_;
+        } else {
+          return publickeyBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>required .darc.PublicKey publickey = 1;</code>
+       */
+      public Builder setPublickey(ch.epfl.dedis.lib.proto.DarcProto.PublicKey value) {
+        if (publickeyBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          publickey_ = value;
+          onChanged();
+        } else {
+          publickeyBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .darc.PublicKey publickey = 1;</code>
+       */
+      public Builder setPublickey(
+          ch.epfl.dedis.lib.proto.DarcProto.PublicKey.Builder builderForValue) {
+        if (publickeyBuilder_ == null) {
+          publickey_ = builderForValue.build();
+          onChanged();
+        } else {
+          publickeyBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .darc.PublicKey publickey = 1;</code>
+       */
+      public Builder mergePublickey(ch.epfl.dedis.lib.proto.DarcProto.PublicKey value) {
+        if (publickeyBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) != 0) &&
+              publickey_ != null &&
+              publickey_ != ch.epfl.dedis.lib.proto.DarcProto.PublicKey.getDefaultInstance()) {
+            publickey_ =
+              ch.epfl.dedis.lib.proto.DarcProto.PublicKey.newBuilder(publickey_).mergeFrom(value).buildPartial();
+          } else {
+            publickey_ = value;
+          }
+          onChanged();
+        } else {
+          publickeyBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .darc.PublicKey publickey = 1;</code>
+       */
+      public Builder clearPublickey() {
+        if (publickeyBuilder_ == null) {
+          publickey_ = null;
+          onChanged();
+        } else {
+          publickeyBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+      /**
+       * <code>required .darc.PublicKey publickey = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.PublicKey.Builder getPublickeyBuilder() {
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return getPublickeyFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .darc.PublicKey publickey = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.PublicKeyOrBuilder getPublickeyOrBuilder() {
+        if (publickeyBuilder_ != null) {
+          return publickeyBuilder_.getMessageOrBuilder();
+        } else {
+          return publickey_ == null ?
+              ch.epfl.dedis.lib.proto.DarcProto.PublicKey.getDefaultInstance() : publickey_;
+        }
+      }
+      /**
+       * <code>required .darc.PublicKey publickey = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.PublicKey, ch.epfl.dedis.lib.proto.DarcProto.PublicKey.Builder, ch.epfl.dedis.lib.proto.DarcProto.PublicKeyOrBuilder>
+          getPublickeyFieldBuilder() {
+        if (publickeyBuilder_ == null) {
+          publickeyBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.DarcProto.PublicKey, ch.epfl.dedis.lib.proto.DarcProto.PublicKey.Builder, ch.epfl.dedis.lib.proto.DarcProto.PublicKeyOrBuilder>(
+                  getPublickey(),
+                  getParentForChildren(),
+                  isClean());
+          publickey_ = null;
+        }
+        return publickeyBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:darc.VerificationMethod)
+    }
+
+    // @@protoc_insertion_point(class_scope:darc.VerificationMethod)
+    private static final ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod();
+    }
+
+    public static ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<VerificationMethod>
+        PARSER = new com.google.protobuf.AbstractParser<VerificationMethod>() {
+      @java.lang.Override
+      public VerificationMethod parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new VerificationMethod(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<VerificationMethod> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<VerificationMethod> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.DarcProto.VerificationMethod getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   public interface SignatureOrBuilder extends
       // @@protoc_insertion_point(interface_extends:darc.Signature)
       com.google.protobuf.MessageOrBuilder {
@@ -6991,6 +13826,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes signature = 1;</code>
+     * @return Whether the signature field is set.
      */
     boolean hasSignature();
     /**
@@ -6999,6 +13835,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes signature = 1;</code>
+     * @return The signature.
      */
     com.google.protobuf.ByteString getSignature();
 
@@ -7008,6 +13845,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required .darc.Identity signer = 2;</code>
+     * @return Whether the signer field is set.
      */
     boolean hasSigner();
     /**
@@ -7016,6 +13854,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required .darc.Identity signer = 2;</code>
+     * @return The signer.
      */
     ch.epfl.dedis.lib.proto.DarcProto.Identity getSigner();
     /**
@@ -7035,7 +13874,7 @@ public final class DarcProto {
    *
    * Protobuf type {@code darc.Signature}
    */
-  public  static final class Signature extends
+  public static final class Signature extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:darc.Signature)
       SignatureOrBuilder {
@@ -7046,6 +13885,13 @@ public final class DarcProto {
     }
     private Signature() {
       signature_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Signature();
     }
 
     @java.lang.Override
@@ -7079,7 +13925,7 @@ public final class DarcProto {
             }
             case 18: {
               ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = signer_.toBuilder();
               }
               signer_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Identity.parser(), extensionRegistry);
@@ -7131,9 +13977,11 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes signature = 1;</code>
+     * @return Whether the signature field is set.
      */
+    @java.lang.Override
     public boolean hasSignature() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -7141,7 +13989,9 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes signature = 1;</code>
+     * @return The signature.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getSignature() {
       return signature_;
     }
@@ -7154,9 +14004,11 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required .darc.Identity signer = 2;</code>
+     * @return Whether the signer field is set.
      */
+    @java.lang.Override
     public boolean hasSigner() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -7164,7 +14016,9 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required .darc.Identity signer = 2;</code>
+     * @return The signer.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.Identity getSigner() {
       return signer_ == null ? ch.epfl.dedis.lib.proto.DarcProto.Identity.getDefaultInstance() : signer_;
     }
@@ -7175,6 +14029,7 @@ public final class DarcProto {
      *
      * <code>required .darc.Identity signer = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder getSignerOrBuilder() {
       return signer_ == null ? ch.epfl.dedis.lib.proto.DarcProto.Identity.getDefaultInstance() : signer_;
     }
@@ -7205,10 +14060,10 @@ public final class DarcProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, signature_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getSigner());
       }
       unknownFields.writeTo(output);
@@ -7220,11 +14075,11 @@ public final class DarcProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, signature_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getSigner());
       }
@@ -7243,19 +14098,18 @@ public final class DarcProto {
       }
       ch.epfl.dedis.lib.proto.DarcProto.Signature other = (ch.epfl.dedis.lib.proto.DarcProto.Signature) obj;
 
-      boolean result = true;
-      result = result && (hasSignature() == other.hasSignature());
+      if (hasSignature() != other.hasSignature()) return false;
       if (hasSignature()) {
-        result = result && getSignature()
-            .equals(other.getSignature());
+        if (!getSignature()
+            .equals(other.getSignature())) return false;
       }
-      result = result && (hasSigner() == other.hasSigner());
+      if (hasSigner() != other.hasSigner()) return false;
       if (hasSigner()) {
-        result = result && getSigner()
-            .equals(other.getSigner());
+        if (!getSigner()
+            .equals(other.getSigner())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -7448,17 +14302,17 @@ public final class DarcProto {
         ch.epfl.dedis.lib.proto.DarcProto.Signature result = new ch.epfl.dedis.lib.proto.DarcProto.Signature(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.signature_ = signature_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (signerBuilder_ == null) {
+            result.signer_ = signer_;
+          } else {
+            result.signer_ = signerBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
-        }
-        if (signerBuilder_ == null) {
-          result.signer_ = signer_;
-        } else {
-          result.signer_ = signerBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -7467,35 +14321,35 @@ public final class DarcProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -7561,9 +14415,11 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes signature = 1;</code>
+       * @return Whether the signature field is set.
        */
+      @java.lang.Override
       public boolean hasSignature() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -7571,7 +14427,9 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes signature = 1;</code>
+       * @return The signature.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getSignature() {
         return signature_;
       }
@@ -7581,6 +14439,8 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes signature = 1;</code>
+       * @param value The signature to set.
+       * @return This builder for chaining.
        */
       public Builder setSignature(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -7597,6 +14457,7 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes signature = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSignature() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -7605,7 +14466,7 @@ public final class DarcProto {
         return this;
       }
 
-      private ch.epfl.dedis.lib.proto.DarcProto.Identity signer_ = null;
+      private ch.epfl.dedis.lib.proto.DarcProto.Identity signer_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> signerBuilder_;
       /**
@@ -7614,9 +14475,10 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required .darc.Identity signer = 2;</code>
+       * @return Whether the signer field is set.
        */
       public boolean hasSigner() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -7624,6 +14486,7 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required .darc.Identity signer = 2;</code>
+       * @return The signer.
        */
       public ch.epfl.dedis.lib.proto.DarcProto.Identity getSigner() {
         if (signerBuilder_ == null) {
@@ -7679,7 +14542,7 @@ public final class DarcProto {
        */
       public Builder mergeSigner(ch.epfl.dedis.lib.proto.DarcProto.Identity value) {
         if (signerBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               signer_ != null &&
               signer_ != ch.epfl.dedis.lib.proto.DarcProto.Identity.getDefaultInstance()) {
             signer_ =
@@ -7817,10 +14680,12 @@ public final class DarcProto {
 
     /**
      * <code>optional .darc.SignerEd25519 ed25519 = 1;</code>
+     * @return Whether the ed25519 field is set.
      */
     boolean hasEd25519();
     /**
      * <code>optional .darc.SignerEd25519 ed25519 = 1;</code>
+     * @return The ed25519.
      */
     ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519 getEd25519();
     /**
@@ -7830,10 +14695,12 @@ public final class DarcProto {
 
     /**
      * <code>optional .darc.SignerX509EC x509ec = 2;</code>
+     * @return Whether the x509ec field is set.
      */
     boolean hasX509Ec();
     /**
      * <code>optional .darc.SignerX509EC x509ec = 2;</code>
+     * @return The x509ec.
      */
     ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC getX509Ec();
     /**
@@ -7843,10 +14710,12 @@ public final class DarcProto {
 
     /**
      * <code>optional .darc.SignerProxy proxy = 3;</code>
+     * @return Whether the proxy field is set.
      */
     boolean hasProxy();
     /**
      * <code>optional .darc.SignerProxy proxy = 3;</code>
+     * @return The proxy.
      */
     ch.epfl.dedis.lib.proto.DarcProto.SignerProxy getProxy();
     /**
@@ -7856,16 +14725,33 @@ public final class DarcProto {
 
     /**
      * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
+     * @return Whether the evmcontract field is set.
      */
     boolean hasEvmcontract();
     /**
      * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
+     * @return The evmcontract.
      */
     ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract getEvmcontract();
     /**
      * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
      */
     ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContractOrBuilder getEvmcontractOrBuilder();
+
+    /**
+     * <code>optional .darc.SignerDID did = 5;</code>
+     * @return Whether the did field is set.
+     */
+    boolean hasDid();
+    /**
+     * <code>optional .darc.SignerDID did = 5;</code>
+     * @return The did.
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.SignerDID getDid();
+    /**
+     * <code>optional .darc.SignerDID did = 5;</code>
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.SignerDIDOrBuilder getDidOrBuilder();
   }
   /**
    * <pre>
@@ -7874,7 +14760,7 @@ public final class DarcProto {
    *
    * Protobuf type {@code darc.Signer}
    */
-  public  static final class Signer extends
+  public static final class Signer extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:darc.Signer)
       SignerOrBuilder {
@@ -7884,6 +14770,13 @@ public final class DarcProto {
       super(builder);
     }
     private Signer() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Signer();
     }
 
     @java.lang.Override
@@ -7912,7 +14805,7 @@ public final class DarcProto {
               break;
             case 10: {
               ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = ed25519_.toBuilder();
               }
               ed25519_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519.parser(), extensionRegistry);
@@ -7925,7 +14818,7 @@ public final class DarcProto {
             }
             case 18: {
               ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = x509Ec_.toBuilder();
               }
               x509Ec_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC.parser(), extensionRegistry);
@@ -7938,7 +14831,7 @@ public final class DarcProto {
             }
             case 26: {
               ch.epfl.dedis.lib.proto.DarcProto.SignerProxy.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+              if (((bitField0_ & 0x00000004) != 0)) {
                 subBuilder = proxy_.toBuilder();
               }
               proxy_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.SignerProxy.parser(), extensionRegistry);
@@ -7951,7 +14844,7 @@ public final class DarcProto {
             }
             case 34: {
               ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000008) == 0x00000008)) {
+              if (((bitField0_ & 0x00000008) != 0)) {
                 subBuilder = evmcontract_.toBuilder();
               }
               evmcontract_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.parser(), extensionRegistry);
@@ -7960,6 +14853,19 @@ public final class DarcProto {
                 evmcontract_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000008;
+              break;
+            }
+            case 42: {
+              ch.epfl.dedis.lib.proto.DarcProto.SignerDID.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000010) != 0)) {
+                subBuilder = did_.toBuilder();
+              }
+              did_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.SignerDID.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(did_);
+                did_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000010;
               break;
             }
             default: {
@@ -7999,19 +14905,24 @@ public final class DarcProto {
     private ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519 ed25519_;
     /**
      * <code>optional .darc.SignerEd25519 ed25519 = 1;</code>
+     * @return Whether the ed25519 field is set.
      */
+    @java.lang.Override
     public boolean hasEd25519() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .darc.SignerEd25519 ed25519 = 1;</code>
+     * @return The ed25519.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519 getEd25519() {
       return ed25519_ == null ? ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519.getDefaultInstance() : ed25519_;
     }
     /**
      * <code>optional .darc.SignerEd25519 ed25519 = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519OrBuilder getEd25519OrBuilder() {
       return ed25519_ == null ? ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519.getDefaultInstance() : ed25519_;
     }
@@ -8020,19 +14931,24 @@ public final class DarcProto {
     private ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC x509Ec_;
     /**
      * <code>optional .darc.SignerX509EC x509ec = 2;</code>
+     * @return Whether the x509ec field is set.
      */
+    @java.lang.Override
     public boolean hasX509Ec() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .darc.SignerX509EC x509ec = 2;</code>
+     * @return The x509ec.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC getX509Ec() {
       return x509Ec_ == null ? ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC.getDefaultInstance() : x509Ec_;
     }
     /**
      * <code>optional .darc.SignerX509EC x509ec = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.SignerX509ECOrBuilder getX509EcOrBuilder() {
       return x509Ec_ == null ? ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC.getDefaultInstance() : x509Ec_;
     }
@@ -8041,19 +14957,24 @@ public final class DarcProto {
     private ch.epfl.dedis.lib.proto.DarcProto.SignerProxy proxy_;
     /**
      * <code>optional .darc.SignerProxy proxy = 3;</code>
+     * @return Whether the proxy field is set.
      */
+    @java.lang.Override
     public boolean hasProxy() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional .darc.SignerProxy proxy = 3;</code>
+     * @return The proxy.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.SignerProxy getProxy() {
       return proxy_ == null ? ch.epfl.dedis.lib.proto.DarcProto.SignerProxy.getDefaultInstance() : proxy_;
     }
     /**
      * <code>optional .darc.SignerProxy proxy = 3;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.SignerProxyOrBuilder getProxyOrBuilder() {
       return proxy_ == null ? ch.epfl.dedis.lib.proto.DarcProto.SignerProxy.getDefaultInstance() : proxy_;
     }
@@ -8062,21 +14983,52 @@ public final class DarcProto {
     private ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract evmcontract_;
     /**
      * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
+     * @return Whether the evmcontract field is set.
      */
+    @java.lang.Override
     public boolean hasEvmcontract() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
+     * @return The evmcontract.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract getEvmcontract() {
       return evmcontract_ == null ? ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.getDefaultInstance() : evmcontract_;
     }
     /**
      * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContractOrBuilder getEvmcontractOrBuilder() {
       return evmcontract_ == null ? ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.getDefaultInstance() : evmcontract_;
+    }
+
+    public static final int DID_FIELD_NUMBER = 5;
+    private ch.epfl.dedis.lib.proto.DarcProto.SignerDID did_;
+    /**
+     * <code>optional .darc.SignerDID did = 5;</code>
+     * @return Whether the did field is set.
+     */
+    @java.lang.Override
+    public boolean hasDid() {
+      return ((bitField0_ & 0x00000010) != 0);
+    }
+    /**
+     * <code>optional .darc.SignerDID did = 5;</code>
+     * @return The did.
+     */
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.DarcProto.SignerDID getDid() {
+      return did_ == null ? ch.epfl.dedis.lib.proto.DarcProto.SignerDID.getDefaultInstance() : did_;
+    }
+    /**
+     * <code>optional .darc.SignerDID did = 5;</code>
+     */
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.DarcProto.SignerDIDOrBuilder getDidOrBuilder() {
+      return did_ == null ? ch.epfl.dedis.lib.proto.DarcProto.SignerDID.getDefaultInstance() : did_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -8110,6 +15062,12 @@ public final class DarcProto {
           return false;
         }
       }
+      if (hasDid()) {
+        if (!getDid().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -8117,17 +15075,20 @@ public final class DarcProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getEd25519());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getX509Ec());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeMessage(3, getProxy());
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeMessage(4, getEvmcontract());
+      }
+      if (((bitField0_ & 0x00000010) != 0)) {
+        output.writeMessage(5, getDid());
       }
       unknownFields.writeTo(output);
     }
@@ -8138,21 +15099,25 @@ public final class DarcProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getEd25519());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getX509Ec());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getProxy());
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, getEvmcontract());
+      }
+      if (((bitField0_ & 0x00000010) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, getDid());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -8169,29 +15134,33 @@ public final class DarcProto {
       }
       ch.epfl.dedis.lib.proto.DarcProto.Signer other = (ch.epfl.dedis.lib.proto.DarcProto.Signer) obj;
 
-      boolean result = true;
-      result = result && (hasEd25519() == other.hasEd25519());
+      if (hasEd25519() != other.hasEd25519()) return false;
       if (hasEd25519()) {
-        result = result && getEd25519()
-            .equals(other.getEd25519());
+        if (!getEd25519()
+            .equals(other.getEd25519())) return false;
       }
-      result = result && (hasX509Ec() == other.hasX509Ec());
+      if (hasX509Ec() != other.hasX509Ec()) return false;
       if (hasX509Ec()) {
-        result = result && getX509Ec()
-            .equals(other.getX509Ec());
+        if (!getX509Ec()
+            .equals(other.getX509Ec())) return false;
       }
-      result = result && (hasProxy() == other.hasProxy());
+      if (hasProxy() != other.hasProxy()) return false;
       if (hasProxy()) {
-        result = result && getProxy()
-            .equals(other.getProxy());
+        if (!getProxy()
+            .equals(other.getProxy())) return false;
       }
-      result = result && (hasEvmcontract() == other.hasEvmcontract());
+      if (hasEvmcontract() != other.hasEvmcontract()) return false;
       if (hasEvmcontract()) {
-        result = result && getEvmcontract()
-            .equals(other.getEvmcontract());
+        if (!getEvmcontract()
+            .equals(other.getEvmcontract())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (hasDid() != other.hasDid()) return false;
+      if (hasDid()) {
+        if (!getDid()
+            .equals(other.getDid())) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -8216,6 +15185,10 @@ public final class DarcProto {
       if (hasEvmcontract()) {
         hash = (37 * hash) + EVMCONTRACT_FIELD_NUMBER;
         hash = (53 * hash) + getEvmcontract().hashCode();
+      }
+      if (hasDid()) {
+        hash = (37 * hash) + DID_FIELD_NUMBER;
+        hash = (53 * hash) + getDid().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -8353,6 +15326,7 @@ public final class DarcProto {
           getX509EcFieldBuilder();
           getProxyFieldBuilder();
           getEvmcontractFieldBuilder();
+          getDidFieldBuilder();
         }
       }
       @java.lang.Override
@@ -8382,6 +15356,12 @@ public final class DarcProto {
           evmcontractBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000008);
+        if (didBuilder_ == null) {
+          did_ = null;
+        } else {
+          didBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
@@ -8410,37 +15390,45 @@ public final class DarcProto {
         ch.epfl.dedis.lib.proto.DarcProto.Signer result = new ch.epfl.dedis.lib.proto.DarcProto.Signer(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (ed25519Builder_ == null) {
+            result.ed25519_ = ed25519_;
+          } else {
+            result.ed25519_ = ed25519Builder_.build();
+          }
           to_bitField0_ |= 0x00000001;
         }
-        if (ed25519Builder_ == null) {
-          result.ed25519_ = ed25519_;
-        } else {
-          result.ed25519_ = ed25519Builder_.build();
-        }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (x509EcBuilder_ == null) {
+            result.x509Ec_ = x509Ec_;
+          } else {
+            result.x509Ec_ = x509EcBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
         }
-        if (x509EcBuilder_ == null) {
-          result.x509Ec_ = x509Ec_;
-        } else {
-          result.x509Ec_ = x509EcBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          if (proxyBuilder_ == null) {
+            result.proxy_ = proxy_;
+          } else {
+            result.proxy_ = proxyBuilder_.build();
+          }
           to_bitField0_ |= 0x00000004;
         }
-        if (proxyBuilder_ == null) {
-          result.proxy_ = proxy_;
-        } else {
-          result.proxy_ = proxyBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          if (evmcontractBuilder_ == null) {
+            result.evmcontract_ = evmcontract_;
+          } else {
+            result.evmcontract_ = evmcontractBuilder_.build();
+          }
           to_bitField0_ |= 0x00000008;
         }
-        if (evmcontractBuilder_ == null) {
-          result.evmcontract_ = evmcontract_;
-        } else {
-          result.evmcontract_ = evmcontractBuilder_.build();
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          if (didBuilder_ == null) {
+            result.did_ = did_;
+          } else {
+            result.did_ = didBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000010;
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -8449,35 +15437,35 @@ public final class DarcProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -8502,6 +15490,9 @@ public final class DarcProto {
         }
         if (other.hasEvmcontract()) {
           mergeEvmcontract(other.getEvmcontract());
+        }
+        if (other.hasDid()) {
+          mergeDid(other.getDid());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -8530,6 +15521,11 @@ public final class DarcProto {
             return false;
           }
         }
+        if (hasDid()) {
+          if (!getDid().isInitialized()) {
+            return false;
+          }
+        }
         return true;
       }
 
@@ -8553,17 +15549,19 @@ public final class DarcProto {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519 ed25519_ = null;
+      private ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519 ed25519_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519, ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519OrBuilder> ed25519Builder_;
       /**
        * <code>optional .darc.SignerEd25519 ed25519 = 1;</code>
+       * @return Whether the ed25519 field is set.
        */
       public boolean hasEd25519() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .darc.SignerEd25519 ed25519 = 1;</code>
+       * @return The ed25519.
        */
       public ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519 getEd25519() {
         if (ed25519Builder_ == null) {
@@ -8607,7 +15605,7 @@ public final class DarcProto {
        */
       public Builder mergeEd25519(ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519 value) {
         if (ed25519Builder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               ed25519_ != null &&
               ed25519_ != ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519.getDefaultInstance()) {
             ed25519_ =
@@ -8671,17 +15669,19 @@ public final class DarcProto {
         return ed25519Builder_;
       }
 
-      private ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC x509Ec_ = null;
+      private ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC x509Ec_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC, ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignerX509ECOrBuilder> x509EcBuilder_;
       /**
        * <code>optional .darc.SignerX509EC x509ec = 2;</code>
+       * @return Whether the x509ec field is set.
        */
       public boolean hasX509Ec() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional .darc.SignerX509EC x509ec = 2;</code>
+       * @return The x509ec.
        */
       public ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC getX509Ec() {
         if (x509EcBuilder_ == null) {
@@ -8725,7 +15725,7 @@ public final class DarcProto {
        */
       public Builder mergeX509Ec(ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC value) {
         if (x509EcBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               x509Ec_ != null &&
               x509Ec_ != ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC.getDefaultInstance()) {
             x509Ec_ =
@@ -8789,17 +15789,19 @@ public final class DarcProto {
         return x509EcBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.DarcProto.SignerProxy proxy_ = null;
+      private ch.epfl.dedis.lib.proto.DarcProto.SignerProxy proxy_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.DarcProto.SignerProxy, ch.epfl.dedis.lib.proto.DarcProto.SignerProxy.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignerProxyOrBuilder> proxyBuilder_;
       /**
        * <code>optional .darc.SignerProxy proxy = 3;</code>
+       * @return Whether the proxy field is set.
        */
       public boolean hasProxy() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional .darc.SignerProxy proxy = 3;</code>
+       * @return The proxy.
        */
       public ch.epfl.dedis.lib.proto.DarcProto.SignerProxy getProxy() {
         if (proxyBuilder_ == null) {
@@ -8843,7 +15845,7 @@ public final class DarcProto {
        */
       public Builder mergeProxy(ch.epfl.dedis.lib.proto.DarcProto.SignerProxy value) {
         if (proxyBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+          if (((bitField0_ & 0x00000004) != 0) &&
               proxy_ != null &&
               proxy_ != ch.epfl.dedis.lib.proto.DarcProto.SignerProxy.getDefaultInstance()) {
             proxy_ =
@@ -8907,17 +15909,19 @@ public final class DarcProto {
         return proxyBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract evmcontract_ = null;
+      private ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract evmcontract_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract, ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContractOrBuilder> evmcontractBuilder_;
       /**
        * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
+       * @return Whether the evmcontract field is set.
        */
       public boolean hasEvmcontract() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>optional .darc.SignerEvmContract evmcontract = 4;</code>
+       * @return The evmcontract.
        */
       public ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract getEvmcontract() {
         if (evmcontractBuilder_ == null) {
@@ -8961,7 +15965,7 @@ public final class DarcProto {
        */
       public Builder mergeEvmcontract(ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract value) {
         if (evmcontractBuilder_ == null) {
-          if (((bitField0_ & 0x00000008) == 0x00000008) &&
+          if (((bitField0_ & 0x00000008) != 0) &&
               evmcontract_ != null &&
               evmcontract_ != ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract.getDefaultInstance()) {
             evmcontract_ =
@@ -9024,6 +16028,126 @@ public final class DarcProto {
         }
         return evmcontractBuilder_;
       }
+
+      private ch.epfl.dedis.lib.proto.DarcProto.SignerDID did_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.SignerDID, ch.epfl.dedis.lib.proto.DarcProto.SignerDID.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignerDIDOrBuilder> didBuilder_;
+      /**
+       * <code>optional .darc.SignerDID did = 5;</code>
+       * @return Whether the did field is set.
+       */
+      public boolean hasDid() {
+        return ((bitField0_ & 0x00000010) != 0);
+      }
+      /**
+       * <code>optional .darc.SignerDID did = 5;</code>
+       * @return The did.
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.SignerDID getDid() {
+        if (didBuilder_ == null) {
+          return did_ == null ? ch.epfl.dedis.lib.proto.DarcProto.SignerDID.getDefaultInstance() : did_;
+        } else {
+          return didBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .darc.SignerDID did = 5;</code>
+       */
+      public Builder setDid(ch.epfl.dedis.lib.proto.DarcProto.SignerDID value) {
+        if (didBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          did_ = value;
+          onChanged();
+        } else {
+          didBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000010;
+        return this;
+      }
+      /**
+       * <code>optional .darc.SignerDID did = 5;</code>
+       */
+      public Builder setDid(
+          ch.epfl.dedis.lib.proto.DarcProto.SignerDID.Builder builderForValue) {
+        if (didBuilder_ == null) {
+          did_ = builderForValue.build();
+          onChanged();
+        } else {
+          didBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000010;
+        return this;
+      }
+      /**
+       * <code>optional .darc.SignerDID did = 5;</code>
+       */
+      public Builder mergeDid(ch.epfl.dedis.lib.proto.DarcProto.SignerDID value) {
+        if (didBuilder_ == null) {
+          if (((bitField0_ & 0x00000010) != 0) &&
+              did_ != null &&
+              did_ != ch.epfl.dedis.lib.proto.DarcProto.SignerDID.getDefaultInstance()) {
+            did_ =
+              ch.epfl.dedis.lib.proto.DarcProto.SignerDID.newBuilder(did_).mergeFrom(value).buildPartial();
+          } else {
+            did_ = value;
+          }
+          onChanged();
+        } else {
+          didBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000010;
+        return this;
+      }
+      /**
+       * <code>optional .darc.SignerDID did = 5;</code>
+       */
+      public Builder clearDid() {
+        if (didBuilder_ == null) {
+          did_ = null;
+          onChanged();
+        } else {
+          didBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000010);
+        return this;
+      }
+      /**
+       * <code>optional .darc.SignerDID did = 5;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.SignerDID.Builder getDidBuilder() {
+        bitField0_ |= 0x00000010;
+        onChanged();
+        return getDidFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .darc.SignerDID did = 5;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.SignerDIDOrBuilder getDidOrBuilder() {
+        if (didBuilder_ != null) {
+          return didBuilder_.getMessageOrBuilder();
+        } else {
+          return did_ == null ?
+              ch.epfl.dedis.lib.proto.DarcProto.SignerDID.getDefaultInstance() : did_;
+        }
+      }
+      /**
+       * <code>optional .darc.SignerDID did = 5;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.SignerDID, ch.epfl.dedis.lib.proto.DarcProto.SignerDID.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignerDIDOrBuilder>
+          getDidFieldBuilder() {
+        if (didBuilder_ == null) {
+          didBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.DarcProto.SignerDID, ch.epfl.dedis.lib.proto.DarcProto.SignerDID.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignerDIDOrBuilder>(
+                  getDid(),
+                  getParentForChildren(),
+                  isClean());
+          did_ = null;
+        }
+        return didBuilder_;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -9083,19 +16207,23 @@ public final class DarcProto {
 
     /**
      * <code>required bytes point = 1;</code>
+     * @return Whether the point field is set.
      */
     boolean hasPoint();
     /**
      * <code>required bytes point = 1;</code>
+     * @return The point.
      */
     com.google.protobuf.ByteString getPoint();
 
     /**
      * <code>required bytes secret = 2;</code>
+     * @return Whether the secret field is set.
      */
     boolean hasSecret();
     /**
      * <code>required bytes secret = 2;</code>
+     * @return The secret.
      */
     com.google.protobuf.ByteString getSecret();
   }
@@ -9106,7 +16234,7 @@ public final class DarcProto {
    *
    * Protobuf type {@code darc.SignerEd25519}
    */
-  public  static final class SignerEd25519 extends
+  public static final class SignerEd25519 extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:darc.SignerEd25519)
       SignerEd25519OrBuilder {
@@ -9118,6 +16246,13 @@ public final class DarcProto {
     private SignerEd25519() {
       point_ = com.google.protobuf.ByteString.EMPTY;
       secret_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new SignerEd25519();
     }
 
     @java.lang.Override
@@ -9191,13 +16326,17 @@ public final class DarcProto {
     private com.google.protobuf.ByteString point_;
     /**
      * <code>required bytes point = 1;</code>
+     * @return Whether the point field is set.
      */
+    @java.lang.Override
     public boolean hasPoint() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes point = 1;</code>
+     * @return The point.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getPoint() {
       return point_;
     }
@@ -9206,13 +16345,17 @@ public final class DarcProto {
     private com.google.protobuf.ByteString secret_;
     /**
      * <code>required bytes secret = 2;</code>
+     * @return Whether the secret field is set.
      */
+    @java.lang.Override
     public boolean hasSecret() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes secret = 2;</code>
+     * @return The secret.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getSecret() {
       return secret_;
     }
@@ -9239,10 +16382,10 @@ public final class DarcProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, point_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, secret_);
       }
       unknownFields.writeTo(output);
@@ -9254,11 +16397,11 @@ public final class DarcProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, point_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, secret_);
       }
@@ -9277,19 +16420,18 @@ public final class DarcProto {
       }
       ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519 other = (ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519) obj;
 
-      boolean result = true;
-      result = result && (hasPoint() == other.hasPoint());
+      if (hasPoint() != other.hasPoint()) return false;
       if (hasPoint()) {
-        result = result && getPoint()
-            .equals(other.getPoint());
+        if (!getPoint()
+            .equals(other.getPoint())) return false;
       }
-      result = result && (hasSecret() == other.hasSecret());
+      if (hasSecret() != other.hasSecret()) return false;
       if (hasSecret()) {
-        result = result && getSecret()
-            .equals(other.getSecret());
+        if (!getSecret()
+            .equals(other.getSecret())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -9476,11 +16618,11 @@ public final class DarcProto {
         ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519 result = new ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.point_ = point_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.secret_ = secret_;
@@ -9491,35 +16633,35 @@ public final class DarcProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -9578,18 +16720,24 @@ public final class DarcProto {
       private com.google.protobuf.ByteString point_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes point = 1;</code>
+       * @return Whether the point field is set.
        */
+      @java.lang.Override
       public boolean hasPoint() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes point = 1;</code>
+       * @return The point.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getPoint() {
         return point_;
       }
       /**
        * <code>required bytes point = 1;</code>
+       * @param value The point to set.
+       * @return This builder for chaining.
        */
       public Builder setPoint(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -9602,6 +16750,7 @@ public final class DarcProto {
       }
       /**
        * <code>required bytes point = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPoint() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -9613,18 +16762,24 @@ public final class DarcProto {
       private com.google.protobuf.ByteString secret_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes secret = 2;</code>
+       * @return Whether the secret field is set.
        */
+      @java.lang.Override
       public boolean hasSecret() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes secret = 2;</code>
+       * @return The secret.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getSecret() {
         return secret_;
       }
       /**
        * <code>required bytes secret = 2;</code>
+       * @param value The secret to set.
+       * @return This builder for chaining.
        */
       public Builder setSecret(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -9637,6 +16792,7 @@ public final class DarcProto {
       }
       /**
        * <code>required bytes secret = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSecret() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -9703,10 +16859,12 @@ public final class DarcProto {
 
     /**
      * <code>required bytes point = 1;</code>
+     * @return Whether the point field is set.
      */
     boolean hasPoint();
     /**
      * <code>required bytes point = 1;</code>
+     * @return The point.
      */
     com.google.protobuf.ByteString getPoint();
   }
@@ -9718,7 +16876,7 @@ public final class DarcProto {
    *
    * Protobuf type {@code darc.SignerX509EC}
    */
-  public  static final class SignerX509EC extends
+  public static final class SignerX509EC extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:darc.SignerX509EC)
       SignerX509ECOrBuilder {
@@ -9729,6 +16887,13 @@ public final class DarcProto {
     }
     private SignerX509EC() {
       point_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new SignerX509EC();
     }
 
     @java.lang.Override
@@ -9797,13 +16962,17 @@ public final class DarcProto {
     private com.google.protobuf.ByteString point_;
     /**
      * <code>required bytes point = 1;</code>
+     * @return Whether the point field is set.
      */
+    @java.lang.Override
     public boolean hasPoint() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes point = 1;</code>
+     * @return The point.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getPoint() {
       return point_;
     }
@@ -9826,7 +16995,7 @@ public final class DarcProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, point_);
       }
       unknownFields.writeTo(output);
@@ -9838,7 +17007,7 @@ public final class DarcProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, point_);
       }
@@ -9857,14 +17026,13 @@ public final class DarcProto {
       }
       ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC other = (ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC) obj;
 
-      boolean result = true;
-      result = result && (hasPoint() == other.hasPoint());
+      if (hasPoint() != other.hasPoint()) return false;
       if (hasPoint()) {
-        result = result && getPoint()
-            .equals(other.getPoint());
+        if (!getPoint()
+            .equals(other.getPoint())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -10046,7 +17214,7 @@ public final class DarcProto {
         ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC result = new ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.point_ = point_;
@@ -10057,35 +17225,35 @@ public final class DarcProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -10138,18 +17306,24 @@ public final class DarcProto {
       private com.google.protobuf.ByteString point_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes point = 1;</code>
+       * @return Whether the point field is set.
        */
+      @java.lang.Override
       public boolean hasPoint() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes point = 1;</code>
+       * @return The point.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getPoint() {
         return point_;
       }
       /**
        * <code>required bytes point = 1;</code>
+       * @param value The point to set.
+       * @return This builder for chaining.
        */
       public Builder setPoint(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -10162,6 +17336,7 @@ public final class DarcProto {
       }
       /**
        * <code>required bytes point = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPoint() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -10228,24 +17403,29 @@ public final class DarcProto {
 
     /**
      * <code>required string data = 1;</code>
+     * @return Whether the data field is set.
      */
     boolean hasData();
     /**
      * <code>required string data = 1;</code>
+     * @return The data.
      */
     java.lang.String getData();
     /**
      * <code>required string data = 1;</code>
+     * @return The bytes for data.
      */
     com.google.protobuf.ByteString
         getDataBytes();
 
     /**
      * <code>required bytes public = 2;</code>
+     * @return Whether the public field is set.
      */
     boolean hasPublic();
     /**
      * <code>required bytes public = 2;</code>
+     * @return The public.
      */
     com.google.protobuf.ByteString getPublic();
   }
@@ -10257,7 +17437,7 @@ public final class DarcProto {
    *
    * Protobuf type {@code darc.SignerProxy}
    */
-  public  static final class SignerProxy extends
+  public static final class SignerProxy extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:darc.SignerProxy)
       SignerProxyOrBuilder {
@@ -10269,6 +17449,13 @@ public final class DarcProto {
     private SignerProxy() {
       data_ = "";
       public_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new SignerProxy();
     }
 
     @java.lang.Override
@@ -10343,13 +17530,17 @@ public final class DarcProto {
     private volatile java.lang.Object data_;
     /**
      * <code>required string data = 1;</code>
+     * @return Whether the data field is set.
      */
+    @java.lang.Override
     public boolean hasData() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required string data = 1;</code>
+     * @return The data.
      */
+    @java.lang.Override
     public java.lang.String getData() {
       java.lang.Object ref = data_;
       if (ref instanceof java.lang.String) {
@@ -10366,7 +17557,9 @@ public final class DarcProto {
     }
     /**
      * <code>required string data = 1;</code>
+     * @return The bytes for data.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getDataBytes() {
       java.lang.Object ref = data_;
@@ -10385,13 +17578,17 @@ public final class DarcProto {
     private com.google.protobuf.ByteString public_;
     /**
      * <code>required bytes public = 2;</code>
+     * @return Whether the public field is set.
      */
+    @java.lang.Override
     public boolean hasPublic() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes public = 2;</code>
+     * @return The public.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getPublic() {
       return public_;
     }
@@ -10418,10 +17615,10 @@ public final class DarcProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, data_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, public_);
       }
       unknownFields.writeTo(output);
@@ -10433,10 +17630,10 @@ public final class DarcProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, data_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, public_);
       }
@@ -10455,19 +17652,18 @@ public final class DarcProto {
       }
       ch.epfl.dedis.lib.proto.DarcProto.SignerProxy other = (ch.epfl.dedis.lib.proto.DarcProto.SignerProxy) obj;
 
-      boolean result = true;
-      result = result && (hasData() == other.hasData());
+      if (hasData() != other.hasData()) return false;
       if (hasData()) {
-        result = result && getData()
-            .equals(other.getData());
+        if (!getData()
+            .equals(other.getData())) return false;
       }
-      result = result && (hasPublic() == other.hasPublic());
+      if (hasPublic() != other.hasPublic()) return false;
       if (hasPublic()) {
-        result = result && getPublic()
-            .equals(other.getPublic());
+        if (!getPublic()
+            .equals(other.getPublic())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -10655,11 +17851,11 @@ public final class DarcProto {
         ch.epfl.dedis.lib.proto.DarcProto.SignerProxy result = new ch.epfl.dedis.lib.proto.DarcProto.SignerProxy(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.data_ = data_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.public_ = public_;
@@ -10670,35 +17866,35 @@ public final class DarcProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -10759,12 +17955,14 @@ public final class DarcProto {
       private java.lang.Object data_ = "";
       /**
        * <code>required string data = 1;</code>
+       * @return Whether the data field is set.
        */
       public boolean hasData() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required string data = 1;</code>
+       * @return The data.
        */
       public java.lang.String getData() {
         java.lang.Object ref = data_;
@@ -10782,6 +17980,7 @@ public final class DarcProto {
       }
       /**
        * <code>required string data = 1;</code>
+       * @return The bytes for data.
        */
       public com.google.protobuf.ByteString
           getDataBytes() {
@@ -10798,6 +17997,8 @@ public final class DarcProto {
       }
       /**
        * <code>required string data = 1;</code>
+       * @param value The data to set.
+       * @return This builder for chaining.
        */
       public Builder setData(
           java.lang.String value) {
@@ -10811,6 +18012,7 @@ public final class DarcProto {
       }
       /**
        * <code>required string data = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearData() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -10820,6 +18022,8 @@ public final class DarcProto {
       }
       /**
        * <code>required string data = 1;</code>
+       * @param value The bytes for data to set.
+       * @return This builder for chaining.
        */
       public Builder setDataBytes(
           com.google.protobuf.ByteString value) {
@@ -10835,18 +18039,24 @@ public final class DarcProto {
       private com.google.protobuf.ByteString public_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes public = 2;</code>
+       * @return Whether the public field is set.
        */
+      @java.lang.Override
       public boolean hasPublic() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes public = 2;</code>
+       * @return The public.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getPublic() {
         return public_;
       }
       /**
        * <code>required bytes public = 2;</code>
+       * @param value The public to set.
+       * @return This builder for chaining.
        */
       public Builder setPublic(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -10859,6 +18069,7 @@ public final class DarcProto {
       }
       /**
        * <code>required bytes public = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPublic() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -10929,6 +18140,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes address = 1;</code>
+     * @return Whether the address field is set.
      */
     boolean hasAddress();
     /**
@@ -10937,6 +18149,7 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes address = 1;</code>
+     * @return The address.
      */
     com.google.protobuf.ByteString getAddress();
   }
@@ -10947,7 +18160,7 @@ public final class DarcProto {
    *
    * Protobuf type {@code darc.SignerEvmContract}
    */
-  public  static final class SignerEvmContract extends
+  public static final class SignerEvmContract extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:darc.SignerEvmContract)
       SignerEvmContractOrBuilder {
@@ -10958,6 +18171,13 @@ public final class DarcProto {
     }
     private SignerEvmContract() {
       address_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new SignerEvmContract();
     }
 
     @java.lang.Override
@@ -11030,9 +18250,11 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes address = 1;</code>
+     * @return Whether the address field is set.
      */
+    @java.lang.Override
     public boolean hasAddress() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -11040,7 +18262,9 @@ public final class DarcProto {
      * </pre>
      *
      * <code>required bytes address = 1;</code>
+     * @return The address.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getAddress() {
       return address_;
     }
@@ -11063,7 +18287,7 @@ public final class DarcProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, address_);
       }
       unknownFields.writeTo(output);
@@ -11075,7 +18299,7 @@ public final class DarcProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, address_);
       }
@@ -11094,14 +18318,13 @@ public final class DarcProto {
       }
       ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract other = (ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract) obj;
 
-      boolean result = true;
-      result = result && (hasAddress() == other.hasAddress());
+      if (hasAddress() != other.hasAddress()) return false;
       if (hasAddress()) {
-        result = result && getAddress()
-            .equals(other.getAddress());
+        if (!getAddress()
+            .equals(other.getAddress())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -11282,7 +18505,7 @@ public final class DarcProto {
         ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract result = new ch.epfl.dedis.lib.proto.DarcProto.SignerEvmContract(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.address_ = address_;
@@ -11293,35 +18516,35 @@ public final class DarcProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -11378,9 +18601,11 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes address = 1;</code>
+       * @return Whether the address field is set.
        */
+      @java.lang.Override
       public boolean hasAddress() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -11388,7 +18613,9 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes address = 1;</code>
+       * @return The address.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getAddress() {
         return address_;
       }
@@ -11398,6 +18625,8 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes address = 1;</code>
+       * @param value The address to set.
+       * @return This builder for chaining.
        */
       public Builder setAddress(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -11414,6 +18643,7 @@ public final class DarcProto {
        * </pre>
        *
        * <code>required bytes address = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearAddress() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -11474,39 +18704,889 @@ public final class DarcProto {
 
   }
 
+  public interface SignerDIDOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:darc.SignerDID)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes public = 1;</code>
+     * @return Whether the public field is set.
+     */
+    boolean hasPublic();
+    /**
+     * <code>required bytes public = 1;</code>
+     * @return The public.
+     */
+    com.google.protobuf.ByteString getPublic();
+
+    /**
+     * <code>required bytes secret = 2;</code>
+     * @return Whether the secret field is set.
+     */
+    boolean hasSecret();
+    /**
+     * <code>required bytes secret = 2;</code>
+     * @return The secret.
+     */
+    com.google.protobuf.ByteString getSecret();
+
+    /**
+     * <code>required string did = 3;</code>
+     * @return Whether the did field is set.
+     */
+    boolean hasDid();
+    /**
+     * <code>required string did = 3;</code>
+     * @return The did.
+     */
+    java.lang.String getDid();
+    /**
+     * <code>required string did = 3;</code>
+     * @return The bytes for did.
+     */
+    com.google.protobuf.ByteString
+        getDidBytes();
+  }
+  /**
+   * <pre>
+   * SignerDID holds public and private keys from a DID Document to sign
+   * Darcs.
+   * </pre>
+   *
+   * Protobuf type {@code darc.SignerDID}
+   */
+  public static final class SignerDID extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:darc.SignerDID)
+      SignerDIDOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use SignerDID.newBuilder() to construct.
+    private SignerDID(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private SignerDID() {
+      public_ = com.google.protobuf.ByteString.EMPTY;
+      secret_ = com.google.protobuf.ByteString.EMPTY;
+      did_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new SignerDID();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private SignerDID(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              public_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              secret_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000004;
+              did_ = bs;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerDID_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerDID_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.DarcProto.SignerDID.class, ch.epfl.dedis.lib.proto.DarcProto.SignerDID.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int PUBLIC_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString public_;
+    /**
+     * <code>required bytes public = 1;</code>
+     * @return Whether the public field is set.
+     */
+    @java.lang.Override
+    public boolean hasPublic() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>required bytes public = 1;</code>
+     * @return The public.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString getPublic() {
+      return public_;
+    }
+
+    public static final int SECRET_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString secret_;
+    /**
+     * <code>required bytes secret = 2;</code>
+     * @return Whether the secret field is set.
+     */
+    @java.lang.Override
+    public boolean hasSecret() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     * <code>required bytes secret = 2;</code>
+     * @return The secret.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString getSecret() {
+      return secret_;
+    }
+
+    public static final int DID_FIELD_NUMBER = 3;
+    private volatile java.lang.Object did_;
+    /**
+     * <code>required string did = 3;</code>
+     * @return Whether the did field is set.
+     */
+    @java.lang.Override
+    public boolean hasDid() {
+      return ((bitField0_ & 0x00000004) != 0);
+    }
+    /**
+     * <code>required string did = 3;</code>
+     * @return The did.
+     */
+    @java.lang.Override
+    public java.lang.String getDid() {
+      java.lang.Object ref = did_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          did_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string did = 3;</code>
+     * @return The bytes for did.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getDidBytes() {
+      java.lang.Object ref = did_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        did_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasPublic()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasSecret()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasDid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        output.writeBytes(1, public_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        output.writeBytes(2, secret_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, did_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, public_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, secret_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, did_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.DarcProto.SignerDID)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.DarcProto.SignerDID other = (ch.epfl.dedis.lib.proto.DarcProto.SignerDID) obj;
+
+      if (hasPublic() != other.hasPublic()) return false;
+      if (hasPublic()) {
+        if (!getPublic()
+            .equals(other.getPublic())) return false;
+      }
+      if (hasSecret() != other.hasSecret()) return false;
+      if (hasSecret()) {
+        if (!getSecret()
+            .equals(other.getSecret())) return false;
+      }
+      if (hasDid() != other.hasDid()) return false;
+      if (hasDid()) {
+        if (!getDid()
+            .equals(other.getDid())) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasPublic()) {
+        hash = (37 * hash) + PUBLIC_FIELD_NUMBER;
+        hash = (53 * hash) + getPublic().hashCode();
+      }
+      if (hasSecret()) {
+        hash = (37 * hash) + SECRET_FIELD_NUMBER;
+        hash = (53 * hash) + getSecret().hashCode();
+      }
+      if (hasDid()) {
+        hash = (37 * hash) + DID_FIELD_NUMBER;
+        hash = (53 * hash) + getDid().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerDID parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerDID parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerDID parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerDID parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerDID parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerDID parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerDID parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerDID parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerDID parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerDID parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerDID parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerDID parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.DarcProto.SignerDID prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * SignerDID holds public and private keys from a DID Document to sign
+     * Darcs.
+     * </pre>
+     *
+     * Protobuf type {@code darc.SignerDID}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:darc.SignerDID)
+        ch.epfl.dedis.lib.proto.DarcProto.SignerDIDOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerDID_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerDID_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.DarcProto.SignerDID.class, ch.epfl.dedis.lib.proto.DarcProto.SignerDID.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.DarcProto.SignerDID.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        public_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        secret_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        did_ = "";
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerDID_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.SignerDID getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.DarcProto.SignerDID.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.SignerDID build() {
+        ch.epfl.dedis.lib.proto.DarcProto.SignerDID result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.DarcProto.SignerDID buildPartial() {
+        ch.epfl.dedis.lib.proto.DarcProto.SignerDID result = new ch.epfl.dedis.lib.proto.DarcProto.SignerDID(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.public_ = public_;
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.secret_ = secret_;
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.did_ = did_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.DarcProto.SignerDID) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.DarcProto.SignerDID)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.DarcProto.SignerDID other) {
+        if (other == ch.epfl.dedis.lib.proto.DarcProto.SignerDID.getDefaultInstance()) return this;
+        if (other.hasPublic()) {
+          setPublic(other.getPublic());
+        }
+        if (other.hasSecret()) {
+          setSecret(other.getSecret());
+        }
+        if (other.hasDid()) {
+          bitField0_ |= 0x00000004;
+          did_ = other.did_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasPublic()) {
+          return false;
+        }
+        if (!hasSecret()) {
+          return false;
+        }
+        if (!hasDid()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.DarcProto.SignerDID parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.DarcProto.SignerDID) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString public_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes public = 1;</code>
+       * @return Whether the public field is set.
+       */
+      @java.lang.Override
+      public boolean hasPublic() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>required bytes public = 1;</code>
+       * @return The public.
+       */
+      @java.lang.Override
+      public com.google.protobuf.ByteString getPublic() {
+        return public_;
+      }
+      /**
+       * <code>required bytes public = 1;</code>
+       * @param value The public to set.
+       * @return This builder for chaining.
+       */
+      public Builder setPublic(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        public_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes public = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearPublic() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        public_ = getDefaultInstance().getPublic();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString secret_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes secret = 2;</code>
+       * @return Whether the secret field is set.
+       */
+      @java.lang.Override
+      public boolean hasSecret() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       * <code>required bytes secret = 2;</code>
+       * @return The secret.
+       */
+      @java.lang.Override
+      public com.google.protobuf.ByteString getSecret() {
+        return secret_;
+      }
+      /**
+       * <code>required bytes secret = 2;</code>
+       * @param value The secret to set.
+       * @return This builder for chaining.
+       */
+      public Builder setSecret(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        secret_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes secret = 2;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearSecret() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        secret_ = getDefaultInstance().getSecret();
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object did_ = "";
+      /**
+       * <code>required string did = 3;</code>
+       * @return Whether the did field is set.
+       */
+      public boolean hasDid() {
+        return ((bitField0_ & 0x00000004) != 0);
+      }
+      /**
+       * <code>required string did = 3;</code>
+       * @return The did.
+       */
+      public java.lang.String getDid() {
+        java.lang.Object ref = did_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            did_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string did = 3;</code>
+       * @return The bytes for did.
+       */
+      public com.google.protobuf.ByteString
+          getDidBytes() {
+        java.lang.Object ref = did_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          did_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string did = 3;</code>
+       * @param value The did to set.
+       * @return This builder for chaining.
+       */
+      public Builder setDid(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        did_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string did = 3;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearDid() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        did_ = getDefaultInstance().getDid();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string did = 3;</code>
+       * @param value The bytes for did to set.
+       * @return This builder for chaining.
+       */
+      public Builder setDidBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        did_ = value;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:darc.SignerDID)
+    }
+
+    // @@protoc_insertion_point(class_scope:darc.SignerDID)
+    private static final ch.epfl.dedis.lib.proto.DarcProto.SignerDID DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.DarcProto.SignerDID();
+    }
+
+    public static ch.epfl.dedis.lib.proto.DarcProto.SignerDID getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<SignerDID>
+        PARSER = new com.google.protobuf.AbstractParser<SignerDID>() {
+      @java.lang.Override
+      public SignerDID parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new SignerDID(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<SignerDID> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<SignerDID> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.DarcProto.SignerDID getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   public interface RequestOrBuilder extends
       // @@protoc_insertion_point(interface_extends:darc.Request)
       com.google.protobuf.MessageOrBuilder {
 
     /**
      * <code>required bytes baseid = 1;</code>
+     * @return Whether the baseid field is set.
      */
     boolean hasBaseid();
     /**
      * <code>required bytes baseid = 1;</code>
+     * @return The baseid.
      */
     com.google.protobuf.ByteString getBaseid();
 
     /**
      * <code>required string action = 2;</code>
+     * @return Whether the action field is set.
      */
     boolean hasAction();
     /**
      * <code>required string action = 2;</code>
+     * @return The action.
      */
     java.lang.String getAction();
     /**
      * <code>required string action = 2;</code>
+     * @return The bytes for action.
      */
     com.google.protobuf.ByteString
         getActionBytes();
 
     /**
      * <code>required bytes msg = 3;</code>
+     * @return Whether the msg field is set.
      */
     boolean hasMsg();
     /**
      * <code>required bytes msg = 3;</code>
+     * @return The msg.
      */
     com.google.protobuf.ByteString getMsg();
 
@@ -11536,14 +19616,18 @@ public final class DarcProto {
 
     /**
      * <code>repeated bytes signatures = 5;</code>
+     * @return A list containing the signatures.
      */
     java.util.List<com.google.protobuf.ByteString> getSignaturesList();
     /**
      * <code>repeated bytes signatures = 5;</code>
+     * @return The count of signatures.
      */
     int getSignaturesCount();
     /**
      * <code>repeated bytes signatures = 5;</code>
+     * @param index The index of the element to return.
+     * @return The signatures at the given index.
      */
     com.google.protobuf.ByteString getSignatures(int index);
   }
@@ -11554,7 +19638,7 @@ public final class DarcProto {
    *
    * Protobuf type {@code darc.Request}
    */
-  public  static final class Request extends
+  public static final class Request extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:darc.Request)
       RequestOrBuilder {
@@ -11569,6 +19653,13 @@ public final class DarcProto {
       msg_ = com.google.protobuf.ByteString.EMPTY;
       identities_ = java.util.Collections.emptyList();
       signatures_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Request();
     }
 
     @java.lang.Override
@@ -11612,7 +19703,7 @@ public final class DarcProto {
               break;
             }
             case 34: {
-              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+              if (!((mutable_bitField0_ & 0x00000008) != 0)) {
                 identities_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.DarcProto.Identity>();
                 mutable_bitField0_ |= 0x00000008;
               }
@@ -11621,7 +19712,7 @@ public final class DarcProto {
               break;
             }
             case 42: {
-              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+              if (!((mutable_bitField0_ & 0x00000010) != 0)) {
                 signatures_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
                 mutable_bitField0_ |= 0x00000010;
               }
@@ -11643,11 +19734,11 @@ public final class DarcProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((mutable_bitField0_ & 0x00000008) != 0)) {
           identities_ = java.util.Collections.unmodifiableList(identities_);
         }
-        if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
-          signatures_ = java.util.Collections.unmodifiableList(signatures_);
+        if (((mutable_bitField0_ & 0x00000010) != 0)) {
+          signatures_ = java.util.Collections.unmodifiableList(signatures_); // C
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -11671,13 +19762,17 @@ public final class DarcProto {
     private com.google.protobuf.ByteString baseid_;
     /**
      * <code>required bytes baseid = 1;</code>
+     * @return Whether the baseid field is set.
      */
+    @java.lang.Override
     public boolean hasBaseid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes baseid = 1;</code>
+     * @return The baseid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getBaseid() {
       return baseid_;
     }
@@ -11686,13 +19781,17 @@ public final class DarcProto {
     private volatile java.lang.Object action_;
     /**
      * <code>required string action = 2;</code>
+     * @return Whether the action field is set.
      */
+    @java.lang.Override
     public boolean hasAction() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required string action = 2;</code>
+     * @return The action.
      */
+    @java.lang.Override
     public java.lang.String getAction() {
       java.lang.Object ref = action_;
       if (ref instanceof java.lang.String) {
@@ -11709,7 +19808,9 @@ public final class DarcProto {
     }
     /**
      * <code>required string action = 2;</code>
+     * @return The bytes for action.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getActionBytes() {
       java.lang.Object ref = action_;
@@ -11728,13 +19829,17 @@ public final class DarcProto {
     private com.google.protobuf.ByteString msg_;
     /**
      * <code>required bytes msg = 3;</code>
+     * @return Whether the msg field is set.
      */
+    @java.lang.Override
     public boolean hasMsg() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>required bytes msg = 3;</code>
+     * @return The msg.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getMsg() {
       return msg_;
     }
@@ -11744,12 +19849,14 @@ public final class DarcProto {
     /**
      * <code>repeated .darc.Identity identities = 4;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity> getIdentitiesList() {
       return identities_;
     }
     /**
      * <code>repeated .darc.Identity identities = 4;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>
         getIdentitiesOrBuilderList() {
       return identities_;
@@ -11757,18 +19864,21 @@ public final class DarcProto {
     /**
      * <code>repeated .darc.Identity identities = 4;</code>
      */
+    @java.lang.Override
     public int getIdentitiesCount() {
       return identities_.size();
     }
     /**
      * <code>repeated .darc.Identity identities = 4;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.Identity getIdentities(int index) {
       return identities_.get(index);
     }
     /**
      * <code>repeated .darc.Identity identities = 4;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder getIdentitiesOrBuilder(
         int index) {
       return identities_.get(index);
@@ -11778,19 +19888,24 @@ public final class DarcProto {
     private java.util.List<com.google.protobuf.ByteString> signatures_;
     /**
      * <code>repeated bytes signatures = 5;</code>
+     * @return A list containing the signatures.
      */
+    @java.lang.Override
     public java.util.List<com.google.protobuf.ByteString>
         getSignaturesList() {
       return signatures_;
     }
     /**
      * <code>repeated bytes signatures = 5;</code>
+     * @return The count of signatures.
      */
     public int getSignaturesCount() {
       return signatures_.size();
     }
     /**
      * <code>repeated bytes signatures = 5;</code>
+     * @param index The index of the element to return.
+     * @return The signatures at the given index.
      */
     public com.google.protobuf.ByteString getSignatures(int index) {
       return signatures_.get(index);
@@ -11828,13 +19943,13 @@ public final class DarcProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, baseid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, action_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBytes(3, msg_);
       }
       for (int i = 0; i < identities_.size(); i++) {
@@ -11852,14 +19967,14 @@ public final class DarcProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, baseid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, action_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, msg_);
       }
@@ -11891,28 +20006,27 @@ public final class DarcProto {
       }
       ch.epfl.dedis.lib.proto.DarcProto.Request other = (ch.epfl.dedis.lib.proto.DarcProto.Request) obj;
 
-      boolean result = true;
-      result = result && (hasBaseid() == other.hasBaseid());
+      if (hasBaseid() != other.hasBaseid()) return false;
       if (hasBaseid()) {
-        result = result && getBaseid()
-            .equals(other.getBaseid());
+        if (!getBaseid()
+            .equals(other.getBaseid())) return false;
       }
-      result = result && (hasAction() == other.hasAction());
+      if (hasAction() != other.hasAction()) return false;
       if (hasAction()) {
-        result = result && getAction()
-            .equals(other.getAction());
+        if (!getAction()
+            .equals(other.getAction())) return false;
       }
-      result = result && (hasMsg() == other.hasMsg());
+      if (hasMsg() != other.hasMsg()) return false;
       if (hasMsg()) {
-        result = result && getMsg()
-            .equals(other.getMsg());
+        if (!getMsg()
+            .equals(other.getMsg())) return false;
       }
-      result = result && getIdentitiesList()
-          .equals(other.getIdentitiesList());
-      result = result && getSignaturesList()
-          .equals(other.getSignaturesList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getIdentitiesList()
+          .equals(other.getIdentitiesList())) return false;
+      if (!getSignaturesList()
+          .equals(other.getSignaturesList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -12122,20 +20236,20 @@ public final class DarcProto {
         ch.epfl.dedis.lib.proto.DarcProto.Request result = new ch.epfl.dedis.lib.proto.DarcProto.Request(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.baseid_ = baseid_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.action_ = action_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.msg_ = msg_;
         if (identitiesBuilder_ == null) {
-          if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          if (((bitField0_ & 0x00000008) != 0)) {
             identities_ = java.util.Collections.unmodifiableList(identities_);
             bitField0_ = (bitField0_ & ~0x00000008);
           }
@@ -12143,7 +20257,7 @@ public final class DarcProto {
         } else {
           result.identities_ = identitiesBuilder_.build();
         }
-        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((bitField0_ & 0x00000010) != 0)) {
           signatures_ = java.util.Collections.unmodifiableList(signatures_);
           bitField0_ = (bitField0_ & ~0x00000010);
         }
@@ -12155,35 +20269,35 @@ public final class DarcProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -12291,18 +20405,24 @@ public final class DarcProto {
       private com.google.protobuf.ByteString baseid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes baseid = 1;</code>
+       * @return Whether the baseid field is set.
        */
+      @java.lang.Override
       public boolean hasBaseid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes baseid = 1;</code>
+       * @return The baseid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getBaseid() {
         return baseid_;
       }
       /**
        * <code>required bytes baseid = 1;</code>
+       * @param value The baseid to set.
+       * @return This builder for chaining.
        */
       public Builder setBaseid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -12315,6 +20435,7 @@ public final class DarcProto {
       }
       /**
        * <code>required bytes baseid = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearBaseid() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -12326,12 +20447,14 @@ public final class DarcProto {
       private java.lang.Object action_ = "";
       /**
        * <code>required string action = 2;</code>
+       * @return Whether the action field is set.
        */
       public boolean hasAction() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required string action = 2;</code>
+       * @return The action.
        */
       public java.lang.String getAction() {
         java.lang.Object ref = action_;
@@ -12349,6 +20472,7 @@ public final class DarcProto {
       }
       /**
        * <code>required string action = 2;</code>
+       * @return The bytes for action.
        */
       public com.google.protobuf.ByteString
           getActionBytes() {
@@ -12365,6 +20489,8 @@ public final class DarcProto {
       }
       /**
        * <code>required string action = 2;</code>
+       * @param value The action to set.
+       * @return This builder for chaining.
        */
       public Builder setAction(
           java.lang.String value) {
@@ -12378,6 +20504,7 @@ public final class DarcProto {
       }
       /**
        * <code>required string action = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearAction() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -12387,6 +20514,8 @@ public final class DarcProto {
       }
       /**
        * <code>required string action = 2;</code>
+       * @param value The bytes for action to set.
+       * @return This builder for chaining.
        */
       public Builder setActionBytes(
           com.google.protobuf.ByteString value) {
@@ -12402,18 +20531,24 @@ public final class DarcProto {
       private com.google.protobuf.ByteString msg_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes msg = 3;</code>
+       * @return Whether the msg field is set.
        */
+      @java.lang.Override
       public boolean hasMsg() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>required bytes msg = 3;</code>
+       * @return The msg.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getMsg() {
         return msg_;
       }
       /**
        * <code>required bytes msg = 3;</code>
+       * @param value The msg to set.
+       * @return This builder for chaining.
        */
       public Builder setMsg(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -12426,6 +20561,7 @@ public final class DarcProto {
       }
       /**
        * <code>required bytes msg = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMsg() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -12437,7 +20573,7 @@ public final class DarcProto {
       private java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity> identities_ =
         java.util.Collections.emptyList();
       private void ensureIdentitiesIsMutable() {
-        if (!((bitField0_ & 0x00000008) == 0x00000008)) {
+        if (!((bitField0_ & 0x00000008) != 0)) {
           identities_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.DarcProto.Identity>(identities_);
           bitField0_ |= 0x00000008;
          }
@@ -12666,7 +20802,7 @@ public final class DarcProto {
           identitiesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>(
                   identities_,
-                  ((bitField0_ & 0x00000008) == 0x00000008),
+                  ((bitField0_ & 0x00000008) != 0),
                   getParentForChildren(),
                   isClean());
           identities_ = null;
@@ -12676,32 +20812,40 @@ public final class DarcProto {
 
       private java.util.List<com.google.protobuf.ByteString> signatures_ = java.util.Collections.emptyList();
       private void ensureSignaturesIsMutable() {
-        if (!((bitField0_ & 0x00000010) == 0x00000010)) {
+        if (!((bitField0_ & 0x00000010) != 0)) {
           signatures_ = new java.util.ArrayList<com.google.protobuf.ByteString>(signatures_);
           bitField0_ |= 0x00000010;
          }
       }
       /**
        * <code>repeated bytes signatures = 5;</code>
+       * @return A list containing the signatures.
        */
       public java.util.List<com.google.protobuf.ByteString>
           getSignaturesList() {
-        return java.util.Collections.unmodifiableList(signatures_);
+        return ((bitField0_ & 0x00000010) != 0) ?
+                 java.util.Collections.unmodifiableList(signatures_) : signatures_;
       }
       /**
        * <code>repeated bytes signatures = 5;</code>
+       * @return The count of signatures.
        */
       public int getSignaturesCount() {
         return signatures_.size();
       }
       /**
        * <code>repeated bytes signatures = 5;</code>
+       * @param index The index of the element to return.
+       * @return The signatures at the given index.
        */
       public com.google.protobuf.ByteString getSignatures(int index) {
         return signatures_.get(index);
       }
       /**
        * <code>repeated bytes signatures = 5;</code>
+       * @param index The index to set the value at.
+       * @param value The signatures to set.
+       * @return This builder for chaining.
        */
       public Builder setSignatures(
           int index, com.google.protobuf.ByteString value) {
@@ -12715,6 +20859,8 @@ public final class DarcProto {
       }
       /**
        * <code>repeated bytes signatures = 5;</code>
+       * @param value The signatures to add.
+       * @return This builder for chaining.
        */
       public Builder addSignatures(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -12727,6 +20873,8 @@ public final class DarcProto {
       }
       /**
        * <code>repeated bytes signatures = 5;</code>
+       * @param values The signatures to add.
+       * @return This builder for chaining.
        */
       public Builder addAllSignatures(
           java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
@@ -12738,6 +20886,7 @@ public final class DarcProto {
       }
       /**
        * <code>repeated bytes signatures = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSignatures() {
         signatures_ = java.util.Collections.emptyList();
@@ -12833,7 +20982,7 @@ public final class DarcProto {
    *
    * Protobuf type {@code darc.Rules}
    */
-  public  static final class Rules extends
+  public static final class Rules extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:darc.Rules)
       RulesOrBuilder {
@@ -12844,6 +20993,13 @@ public final class DarcProto {
     }
     private Rules() {
       list_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Rules();
     }
 
     @java.lang.Override
@@ -12871,7 +21027,7 @@ public final class DarcProto {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 list_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.DarcProto.Rule>();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -12894,7 +21050,7 @@ public final class DarcProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
           list_ = java.util.Collections.unmodifiableList(list_);
         }
         this.unknownFields = unknownFields.build();
@@ -12919,12 +21075,14 @@ public final class DarcProto {
     /**
      * <code>repeated .darc.Rule list = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Rule> getListList() {
       return list_;
     }
     /**
      * <code>repeated .darc.Rule list = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.RuleOrBuilder>
         getListOrBuilderList() {
       return list_;
@@ -12932,18 +21090,21 @@ public final class DarcProto {
     /**
      * <code>repeated .darc.Rule list = 1;</code>
      */
+    @java.lang.Override
     public int getListCount() {
       return list_.size();
     }
     /**
      * <code>repeated .darc.Rule list = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.Rule getList(int index) {
       return list_.get(index);
     }
     /**
      * <code>repeated .darc.Rule list = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.RuleOrBuilder getListOrBuilder(
         int index) {
       return list_.get(index);
@@ -13000,11 +21161,10 @@ public final class DarcProto {
       }
       ch.epfl.dedis.lib.proto.DarcProto.Rules other = (ch.epfl.dedis.lib.proto.DarcProto.Rules) obj;
 
-      boolean result = true;
-      result = result && getListList()
-          .equals(other.getListList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getListList()
+          .equals(other.getListList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -13190,7 +21350,7 @@ public final class DarcProto {
         ch.epfl.dedis.lib.proto.DarcProto.Rules result = new ch.epfl.dedis.lib.proto.DarcProto.Rules(this);
         int from_bitField0_ = bitField0_;
         if (listBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((bitField0_ & 0x00000001) != 0)) {
             list_ = java.util.Collections.unmodifiableList(list_);
             bitField0_ = (bitField0_ & ~0x00000001);
           }
@@ -13204,35 +21364,35 @@ public final class DarcProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -13310,7 +21470,7 @@ public final class DarcProto {
       private java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Rule> list_ =
         java.util.Collections.emptyList();
       private void ensureListIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           list_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.DarcProto.Rule>(list_);
           bitField0_ |= 0x00000001;
          }
@@ -13539,7 +21699,7 @@ public final class DarcProto {
           listBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.DarcProto.Rule, ch.epfl.dedis.lib.proto.DarcProto.Rule.Builder, ch.epfl.dedis.lib.proto.DarcProto.RuleOrBuilder>(
                   list_,
-                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
                   isClean());
           list_ = null;
@@ -13605,24 +21765,29 @@ public final class DarcProto {
 
     /**
      * <code>required string action = 1;</code>
+     * @return Whether the action field is set.
      */
     boolean hasAction();
     /**
      * <code>required string action = 1;</code>
+     * @return The action.
      */
     java.lang.String getAction();
     /**
      * <code>required string action = 1;</code>
+     * @return The bytes for action.
      */
     com.google.protobuf.ByteString
         getActionBytes();
 
     /**
      * <code>required bytes expr = 2;</code>
+     * @return Whether the expr field is set.
      */
     boolean hasExpr();
     /**
      * <code>required bytes expr = 2;</code>
+     * @return The expr.
      */
     com.google.protobuf.ByteString getExpr();
   }
@@ -13633,7 +21798,7 @@ public final class DarcProto {
    *
    * Protobuf type {@code darc.Rule}
    */
-  public  static final class Rule extends
+  public static final class Rule extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:darc.Rule)
       RuleOrBuilder {
@@ -13645,6 +21810,13 @@ public final class DarcProto {
     private Rule() {
       action_ = "";
       expr_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Rule();
     }
 
     @java.lang.Override
@@ -13719,13 +21891,17 @@ public final class DarcProto {
     private volatile java.lang.Object action_;
     /**
      * <code>required string action = 1;</code>
+     * @return Whether the action field is set.
      */
+    @java.lang.Override
     public boolean hasAction() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required string action = 1;</code>
+     * @return The action.
      */
+    @java.lang.Override
     public java.lang.String getAction() {
       java.lang.Object ref = action_;
       if (ref instanceof java.lang.String) {
@@ -13742,7 +21918,9 @@ public final class DarcProto {
     }
     /**
      * <code>required string action = 1;</code>
+     * @return The bytes for action.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getActionBytes() {
       java.lang.Object ref = action_;
@@ -13761,13 +21939,17 @@ public final class DarcProto {
     private com.google.protobuf.ByteString expr_;
     /**
      * <code>required bytes expr = 2;</code>
+     * @return Whether the expr field is set.
      */
+    @java.lang.Override
     public boolean hasExpr() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes expr = 2;</code>
+     * @return The expr.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getExpr() {
       return expr_;
     }
@@ -13794,10 +21976,10 @@ public final class DarcProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, action_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, expr_);
       }
       unknownFields.writeTo(output);
@@ -13809,10 +21991,10 @@ public final class DarcProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, action_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, expr_);
       }
@@ -13831,19 +22013,18 @@ public final class DarcProto {
       }
       ch.epfl.dedis.lib.proto.DarcProto.Rule other = (ch.epfl.dedis.lib.proto.DarcProto.Rule) obj;
 
-      boolean result = true;
-      result = result && (hasAction() == other.hasAction());
+      if (hasAction() != other.hasAction()) return false;
       if (hasAction()) {
-        result = result && getAction()
-            .equals(other.getAction());
+        if (!getAction()
+            .equals(other.getAction())) return false;
       }
-      result = result && (hasExpr() == other.hasExpr());
+      if (hasExpr() != other.hasExpr()) return false;
       if (hasExpr()) {
-        result = result && getExpr()
-            .equals(other.getExpr());
+        if (!getExpr()
+            .equals(other.getExpr())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -14030,11 +22211,11 @@ public final class DarcProto {
         ch.epfl.dedis.lib.proto.DarcProto.Rule result = new ch.epfl.dedis.lib.proto.DarcProto.Rule(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.action_ = action_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.expr_ = expr_;
@@ -14045,35 +22226,35 @@ public final class DarcProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -14134,12 +22315,14 @@ public final class DarcProto {
       private java.lang.Object action_ = "";
       /**
        * <code>required string action = 1;</code>
+       * @return Whether the action field is set.
        */
       public boolean hasAction() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required string action = 1;</code>
+       * @return The action.
        */
       public java.lang.String getAction() {
         java.lang.Object ref = action_;
@@ -14157,6 +22340,7 @@ public final class DarcProto {
       }
       /**
        * <code>required string action = 1;</code>
+       * @return The bytes for action.
        */
       public com.google.protobuf.ByteString
           getActionBytes() {
@@ -14173,6 +22357,8 @@ public final class DarcProto {
       }
       /**
        * <code>required string action = 1;</code>
+       * @param value The action to set.
+       * @return This builder for chaining.
        */
       public Builder setAction(
           java.lang.String value) {
@@ -14186,6 +22372,7 @@ public final class DarcProto {
       }
       /**
        * <code>required string action = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearAction() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -14195,6 +22382,8 @@ public final class DarcProto {
       }
       /**
        * <code>required string action = 1;</code>
+       * @param value The bytes for action to set.
+       * @return This builder for chaining.
        */
       public Builder setActionBytes(
           com.google.protobuf.ByteString value) {
@@ -14210,18 +22399,24 @@ public final class DarcProto {
       private com.google.protobuf.ByteString expr_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes expr = 2;</code>
+       * @return Whether the expr field is set.
        */
+      @java.lang.Override
       public boolean hasExpr() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes expr = 2;</code>
+       * @return The expr.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getExpr() {
         return expr_;
       }
       /**
        * <code>required bytes expr = 2;</code>
+       * @param value The expr to set.
+       * @return This builder for chaining.
        */
       public Builder setExpr(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -14234,6 +22429,7 @@ public final class DarcProto {
       }
       /**
        * <code>required bytes expr = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearExpr() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -14330,6 +22526,31 @@ public final class DarcProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_darc_IdentityEvmContract_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_darc_IdentityDID_descriptor;
+  private static final
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_darc_IdentityDID_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_darc_DIDDoc_descriptor;
+  private static final
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_darc_DIDDoc_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_darc_PublicKey_descriptor;
+  private static final
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_darc_PublicKey_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_darc_DIDService_descriptor;
+  private static final
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_darc_DIDService_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_darc_VerificationMethod_descriptor;
+  private static final
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_darc_VerificationMethod_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_darc_Signature_descriptor;
   private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -14360,6 +22581,11 @@ public final class DarcProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_darc_SignerEvmContract_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_darc_SignerDID_descriptor;
+  private static final
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_darc_SignerDID_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_darc_Request_descriptor;
   private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -14388,45 +22614,52 @@ public final class DarcProto {
       "\014\022\016\n\006previd\030\004 \002(\014\022\032\n\005rules\030\005 \002(\0132\013.darc." +
       "Rules\022#\n\nsignatures\030\006 \003(\0132\017.darc.Signatu" +
       "re\022%\n\021verificationdarcs\030\007 \003(\0132\n.darc.Dar" +
-      "c\"\316\001\n\010Identity\022 \n\004darc\030\001 \001(\0132\022.darc.Iden" +
+      "c\"\356\001\n\010Identity\022 \n\004darc\030\001 \001(\0132\022.darc.Iden" +
       "tityDarc\022&\n\007ed25519\030\002 \001(\0132\025.darc.Identit" +
       "yEd25519\022$\n\006x509ec\030\003 \001(\0132\024.darc.Identity" +
       "X509EC\022\"\n\005proxy\030\004 \001(\0132\023.darc.IdentityPro" +
       "xy\022.\n\013evmcontract\030\005 \001(\0132\031.darc.IdentityE" +
-      "vmContract\" \n\017IdentityEd25519\022\r\n\005point\030\001" +
-      " \002(\014\" \n\016IdentityX509EC\022\016\n\006public\030\001 \002(\014\"-" +
-      "\n\rIdentityProxy\022\014\n\004data\030\001 \002(\t\022\016\n\006public\030" +
-      "\002 \002(\014\"\032\n\014IdentityDarc\022\n\n\002id\030\001 \002(\014\"&\n\023Ide" +
-      "ntityEvmContract\022\017\n\007address\030\001 \002(\014\">\n\tSig" +
-      "nature\022\021\n\tsignature\030\001 \002(\014\022\036\n\006signer\030\002 \002(" +
-      "\0132\016.darc.Identity\"\242\001\n\006Signer\022$\n\007ed25519\030" +
-      "\001 \001(\0132\023.darc.SignerEd25519\022\"\n\006x509ec\030\002 \001" +
-      "(\0132\022.darc.SignerX509EC\022 \n\005proxy\030\003 \001(\0132\021." +
-      "darc.SignerProxy\022,\n\013evmcontract\030\004 \001(\0132\027." +
-      "darc.SignerEvmContract\".\n\rSignerEd25519\022" +
-      "\r\n\005point\030\001 \002(\014\022\016\n\006secret\030\002 \002(\014\"\035\n\014Signer" +
-      "X509EC\022\r\n\005point\030\001 \002(\014\"+\n\013SignerProxy\022\014\n\004" +
-      "data\030\001 \002(\t\022\016\n\006public\030\002 \002(\014\"$\n\021SignerEvmC" +
-      "ontract\022\017\n\007address\030\001 \002(\014\"n\n\007Request\022\016\n\006b" +
-      "aseid\030\001 \002(\014\022\016\n\006action\030\002 \002(\t\022\013\n\003msg\030\003 \002(\014" +
-      "\022\"\n\nidentities\030\004 \003(\0132\016.darc.Identity\022\022\n\n" +
-      "signatures\030\005 \003(\014\"!\n\005Rules\022\030\n\004list\030\001 \003(\0132" +
-      "\n.darc.Rule\"$\n\004Rule\022\016\n\006action\030\001 \002(\t\022\014\n\004e" +
-      "xpr\030\002 \002(\014B$\n\027ch.epfl.dedis.lib.protoB\tDa" +
-      "rcProto"
+      "vmContract\022\036\n\003did\030\006 \001(\0132\021.darc.IdentityD" +
+      "ID\" \n\017IdentityEd25519\022\r\n\005point\030\001 \002(\014\" \n\016" +
+      "IdentityX509EC\022\016\n\006public\030\001 \002(\014\"-\n\rIdenti" +
+      "tyProxy\022\014\n\004data\030\001 \002(\t\022\016\n\006public\030\002 \002(\014\"\032\n" +
+      "\014IdentityDarc\022\n\n\002id\030\001 \002(\014\"&\n\023IdentityEvm" +
+      "Contract\022\017\n\007address\030\001 \002(\014\"H\n\013IdentityDID" +
+      "\022\013\n\003did\030\001 \002(\t\022\034\n\006diddoc\030\002 \001(\0132\014.darc.DID" +
+      "Doc\022\016\n\006method\030\003 \002(\t\"\236\001\n\006DIDDoc\022\017\n\007contex" +
+      "t\030\001 \003(\t\022\n\n\002id\030\002 \002(\t\022\"\n\tpublickey\030\003 \003(\0132\017" +
+      ".darc.PublicKey\022!\n\007service\030\004 \003(\0132\020.darc." +
+      "DIDService\0220\n\016authentication\030\005 \003(\0132\030.dar" +
+      "c.VerificationMethod\"H\n\tPublicKey\022\n\n\002id\030" +
+      "\001 \002(\t\022\014\n\004type\030\002 \002(\t\022\022\n\ncontroller\030\003 \002(\t\022" +
+      "\r\n\005value\030\004 \002(\014\"}\n\nDIDService\022\n\n\002id\030\001 \002(\t" +
+      "\022\014\n\004type\030\002 \002(\t\022\020\n\010priority\030\003 \002(\021\022\025\n\rreci" +
+      "pientkeys\030\004 \003(\t\022\023\n\013routingkeys\030\005 \003(\t\022\027\n\017" +
+      "serviceendpoint\030\006 \002(\t\"8\n\022VerificationMet" +
+      "hod\022\"\n\tpublickey\030\001 \002(\0132\017.darc.PublicKey\"" +
+      ">\n\tSignature\022\021\n\tsignature\030\001 \002(\014\022\036\n\006signe" +
+      "r\030\002 \002(\0132\016.darc.Identity\"\300\001\n\006Signer\022$\n\007ed" +
+      "25519\030\001 \001(\0132\023.darc.SignerEd25519\022\"\n\006x509" +
+      "ec\030\002 \001(\0132\022.darc.SignerX509EC\022 \n\005proxy\030\003 " +
+      "\001(\0132\021.darc.SignerProxy\022,\n\013evmcontract\030\004 " +
+      "\001(\0132\027.darc.SignerEvmContract\022\034\n\003did\030\005 \001(" +
+      "\0132\017.darc.SignerDID\".\n\rSignerEd25519\022\r\n\005p" +
+      "oint\030\001 \002(\014\022\016\n\006secret\030\002 \002(\014\"\035\n\014SignerX509" +
+      "EC\022\r\n\005point\030\001 \002(\014\"+\n\013SignerProxy\022\014\n\004data" +
+      "\030\001 \002(\t\022\016\n\006public\030\002 \002(\014\"$\n\021SignerEvmContr" +
+      "act\022\017\n\007address\030\001 \002(\014\"8\n\tSignerDID\022\016\n\006pub" +
+      "lic\030\001 \002(\014\022\016\n\006secret\030\002 \002(\014\022\013\n\003did\030\003 \002(\t\"n" +
+      "\n\007Request\022\016\n\006baseid\030\001 \002(\014\022\016\n\006action\030\002 \002(" +
+      "\t\022\013\n\003msg\030\003 \002(\014\022\"\n\nidentities\030\004 \003(\0132\016.dar" +
+      "c.Identity\022\022\n\nsignatures\030\005 \003(\014\"!\n\005Rules\022" +
+      "\030\n\004list\030\001 \003(\0132\n.darc.Rule\"$\n\004Rule\022\016\n\006act" +
+      "ion\030\001 \002(\t\022\014\n\004expr\030\002 \002(\014B$\n\027ch.epfl.dedis" +
+      ".lib.protoB\tDarcProto"
     };
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-        }, assigner);
+        });
     internal_static_darc_Darc_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_darc_Darc_fieldAccessorTable = new
@@ -14438,7 +22671,7 @@ public final class DarcProto {
     internal_static_darc_Identity_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_darc_Identity_descriptor,
-        new java.lang.String[] { "Darc", "Ed25519", "X509Ec", "Proxy", "Evmcontract", });
+        new java.lang.String[] { "Darc", "Ed25519", "X509Ec", "Proxy", "Evmcontract", "Did", });
     internal_static_darc_IdentityEd25519_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_darc_IdentityEd25519_fieldAccessorTable = new
@@ -14469,56 +22702,92 @@ public final class DarcProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_darc_IdentityEvmContract_descriptor,
         new java.lang.String[] { "Address", });
-    internal_static_darc_Signature_descriptor =
+    internal_static_darc_IdentityDID_descriptor =
       getDescriptor().getMessageTypes().get(7);
+    internal_static_darc_IdentityDID_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_darc_IdentityDID_descriptor,
+        new java.lang.String[] { "Did", "Diddoc", "Method", });
+    internal_static_darc_DIDDoc_descriptor =
+      getDescriptor().getMessageTypes().get(8);
+    internal_static_darc_DIDDoc_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_darc_DIDDoc_descriptor,
+        new java.lang.String[] { "Context", "Id", "Publickey", "Service", "Authentication", });
+    internal_static_darc_PublicKey_descriptor =
+      getDescriptor().getMessageTypes().get(9);
+    internal_static_darc_PublicKey_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_darc_PublicKey_descriptor,
+        new java.lang.String[] { "Id", "Type", "Controller", "Value", });
+    internal_static_darc_DIDService_descriptor =
+      getDescriptor().getMessageTypes().get(10);
+    internal_static_darc_DIDService_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_darc_DIDService_descriptor,
+        new java.lang.String[] { "Id", "Type", "Priority", "Recipientkeys", "Routingkeys", "Serviceendpoint", });
+    internal_static_darc_VerificationMethod_descriptor =
+      getDescriptor().getMessageTypes().get(11);
+    internal_static_darc_VerificationMethod_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_darc_VerificationMethod_descriptor,
+        new java.lang.String[] { "Publickey", });
+    internal_static_darc_Signature_descriptor =
+      getDescriptor().getMessageTypes().get(12);
     internal_static_darc_Signature_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_darc_Signature_descriptor,
         new java.lang.String[] { "Signature", "Signer", });
     internal_static_darc_Signer_descriptor =
-      getDescriptor().getMessageTypes().get(8);
+      getDescriptor().getMessageTypes().get(13);
     internal_static_darc_Signer_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_darc_Signer_descriptor,
-        new java.lang.String[] { "Ed25519", "X509Ec", "Proxy", "Evmcontract", });
+        new java.lang.String[] { "Ed25519", "X509Ec", "Proxy", "Evmcontract", "Did", });
     internal_static_darc_SignerEd25519_descriptor =
-      getDescriptor().getMessageTypes().get(9);
+      getDescriptor().getMessageTypes().get(14);
     internal_static_darc_SignerEd25519_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_darc_SignerEd25519_descriptor,
         new java.lang.String[] { "Point", "Secret", });
     internal_static_darc_SignerX509EC_descriptor =
-      getDescriptor().getMessageTypes().get(10);
+      getDescriptor().getMessageTypes().get(15);
     internal_static_darc_SignerX509EC_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_darc_SignerX509EC_descriptor,
         new java.lang.String[] { "Point", });
     internal_static_darc_SignerProxy_descriptor =
-      getDescriptor().getMessageTypes().get(11);
+      getDescriptor().getMessageTypes().get(16);
     internal_static_darc_SignerProxy_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_darc_SignerProxy_descriptor,
         new java.lang.String[] { "Data", "Public", });
     internal_static_darc_SignerEvmContract_descriptor =
-      getDescriptor().getMessageTypes().get(12);
+      getDescriptor().getMessageTypes().get(17);
     internal_static_darc_SignerEvmContract_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_darc_SignerEvmContract_descriptor,
         new java.lang.String[] { "Address", });
+    internal_static_darc_SignerDID_descriptor =
+      getDescriptor().getMessageTypes().get(18);
+    internal_static_darc_SignerDID_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_darc_SignerDID_descriptor,
+        new java.lang.String[] { "Public", "Secret", "Did", });
     internal_static_darc_Request_descriptor =
-      getDescriptor().getMessageTypes().get(13);
+      getDescriptor().getMessageTypes().get(19);
     internal_static_darc_Request_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_darc_Request_descriptor,
         new java.lang.String[] { "Baseid", "Action", "Msg", "Identities", "Signatures", });
     internal_static_darc_Rules_descriptor =
-      getDescriptor().getMessageTypes().get(14);
+      getDescriptor().getMessageTypes().get(20);
     internal_static_darc_Rules_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_darc_Rules_descriptor,
         new java.lang.String[] { "List", });
     internal_static_darc_Rule_descriptor =
-      getDescriptor().getMessageTypes().get(15);
+      getDescriptor().getMessageTypes().get(21);
     internal_static_darc_Rule_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_darc_Rule_descriptor,

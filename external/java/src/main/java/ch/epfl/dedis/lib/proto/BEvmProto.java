@@ -20,46 +20,56 @@ public final class BEvmProto {
 
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return Whether the byzcoinid field is set.
      */
     boolean hasByzcoinid();
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return The byzcoinid.
      */
     com.google.protobuf.ByteString getByzcoinid();
 
     /**
      * <code>required bytes bevminstanceid = 2;</code>
+     * @return Whether the bevminstanceid field is set.
      */
     boolean hasBevminstanceid();
     /**
      * <code>required bytes bevminstanceid = 2;</code>
+     * @return The bevminstanceid.
      */
     com.google.protobuf.ByteString getBevminstanceid();
 
     /**
      * <code>required bytes accountaddress = 3;</code>
+     * @return Whether the accountaddress field is set.
      */
     boolean hasAccountaddress();
     /**
      * <code>required bytes accountaddress = 3;</code>
+     * @return The accountaddress.
      */
     com.google.protobuf.ByteString getAccountaddress();
 
     /**
      * <code>required bytes contractaddress = 4;</code>
+     * @return Whether the contractaddress field is set.
      */
     boolean hasContractaddress();
     /**
      * <code>required bytes contractaddress = 4;</code>
+     * @return The contractaddress.
      */
     com.google.protobuf.ByteString getContractaddress();
 
     /**
      * <code>required bytes calldata = 5;</code>
+     * @return Whether the calldata field is set.
      */
     boolean hasCalldata();
     /**
      * <code>required bytes calldata = 5;</code>
+     * @return The calldata.
      */
     com.google.protobuf.ByteString getCalldata();
   }
@@ -70,7 +80,7 @@ public final class BEvmProto {
    *
    * Protobuf type {@code bevm.ViewCallRequest}
    */
-  public  static final class ViewCallRequest extends
+  public static final class ViewCallRequest extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:bevm.ViewCallRequest)
       ViewCallRequestOrBuilder {
@@ -85,6 +95,13 @@ public final class BEvmProto {
       accountaddress_ = com.google.protobuf.ByteString.EMPTY;
       contractaddress_ = com.google.protobuf.ByteString.EMPTY;
       calldata_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new ViewCallRequest();
     }
 
     @java.lang.Override
@@ -173,13 +190,17 @@ public final class BEvmProto {
     private com.google.protobuf.ByteString byzcoinid_;
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return Whether the byzcoinid field is set.
      */
+    @java.lang.Override
     public boolean hasByzcoinid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return The byzcoinid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getByzcoinid() {
       return byzcoinid_;
     }
@@ -188,13 +209,17 @@ public final class BEvmProto {
     private com.google.protobuf.ByteString bevminstanceid_;
     /**
      * <code>required bytes bevminstanceid = 2;</code>
+     * @return Whether the bevminstanceid field is set.
      */
+    @java.lang.Override
     public boolean hasBevminstanceid() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes bevminstanceid = 2;</code>
+     * @return The bevminstanceid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getBevminstanceid() {
       return bevminstanceid_;
     }
@@ -203,13 +228,17 @@ public final class BEvmProto {
     private com.google.protobuf.ByteString accountaddress_;
     /**
      * <code>required bytes accountaddress = 3;</code>
+     * @return Whether the accountaddress field is set.
      */
+    @java.lang.Override
     public boolean hasAccountaddress() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>required bytes accountaddress = 3;</code>
+     * @return The accountaddress.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getAccountaddress() {
       return accountaddress_;
     }
@@ -218,13 +247,17 @@ public final class BEvmProto {
     private com.google.protobuf.ByteString contractaddress_;
     /**
      * <code>required bytes contractaddress = 4;</code>
+     * @return Whether the contractaddress field is set.
      */
+    @java.lang.Override
     public boolean hasContractaddress() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <code>required bytes contractaddress = 4;</code>
+     * @return The contractaddress.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getContractaddress() {
       return contractaddress_;
     }
@@ -233,13 +266,17 @@ public final class BEvmProto {
     private com.google.protobuf.ByteString calldata_;
     /**
      * <code>required bytes calldata = 5;</code>
+     * @return Whether the calldata field is set.
      */
+    @java.lang.Override
     public boolean hasCalldata() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <code>required bytes calldata = 5;</code>
+     * @return The calldata.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getCalldata() {
       return calldata_;
     }
@@ -278,19 +315,19 @@ public final class BEvmProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, byzcoinid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, bevminstanceid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBytes(3, accountaddress_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeBytes(4, contractaddress_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeBytes(5, calldata_);
       }
       unknownFields.writeTo(output);
@@ -302,23 +339,23 @@ public final class BEvmProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, byzcoinid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, bevminstanceid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, accountaddress_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(4, contractaddress_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(5, calldata_);
       }
@@ -337,34 +374,33 @@ public final class BEvmProto {
       }
       ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest other = (ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest) obj;
 
-      boolean result = true;
-      result = result && (hasByzcoinid() == other.hasByzcoinid());
+      if (hasByzcoinid() != other.hasByzcoinid()) return false;
       if (hasByzcoinid()) {
-        result = result && getByzcoinid()
-            .equals(other.getByzcoinid());
+        if (!getByzcoinid()
+            .equals(other.getByzcoinid())) return false;
       }
-      result = result && (hasBevminstanceid() == other.hasBevminstanceid());
+      if (hasBevminstanceid() != other.hasBevminstanceid()) return false;
       if (hasBevminstanceid()) {
-        result = result && getBevminstanceid()
-            .equals(other.getBevminstanceid());
+        if (!getBevminstanceid()
+            .equals(other.getBevminstanceid())) return false;
       }
-      result = result && (hasAccountaddress() == other.hasAccountaddress());
+      if (hasAccountaddress() != other.hasAccountaddress()) return false;
       if (hasAccountaddress()) {
-        result = result && getAccountaddress()
-            .equals(other.getAccountaddress());
+        if (!getAccountaddress()
+            .equals(other.getAccountaddress())) return false;
       }
-      result = result && (hasContractaddress() == other.hasContractaddress());
+      if (hasContractaddress() != other.hasContractaddress()) return false;
       if (hasContractaddress()) {
-        result = result && getContractaddress()
-            .equals(other.getContractaddress());
+        if (!getContractaddress()
+            .equals(other.getContractaddress())) return false;
       }
-      result = result && (hasCalldata() == other.hasCalldata());
+      if (hasCalldata() != other.hasCalldata()) return false;
       if (hasCalldata()) {
-        result = result && getCalldata()
-            .equals(other.getCalldata());
+        if (!getCalldata()
+            .equals(other.getCalldata())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -569,23 +605,23 @@ public final class BEvmProto {
         ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest result = new ch.epfl.dedis.lib.proto.BEvmProto.ViewCallRequest(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.byzcoinid_ = byzcoinid_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.bevminstanceid_ = bevminstanceid_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.accountaddress_ = accountaddress_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
           to_bitField0_ |= 0x00000008;
         }
         result.contractaddress_ = contractaddress_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
           to_bitField0_ |= 0x00000010;
         }
         result.calldata_ = calldata_;
@@ -596,35 +632,35 @@ public final class BEvmProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -701,18 +737,24 @@ public final class BEvmProto {
       private com.google.protobuf.ByteString byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @return Whether the byzcoinid field is set.
        */
+      @java.lang.Override
       public boolean hasByzcoinid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @return The byzcoinid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getByzcoinid() {
         return byzcoinid_;
       }
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @param value The byzcoinid to set.
+       * @return This builder for chaining.
        */
       public Builder setByzcoinid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -725,6 +767,7 @@ public final class BEvmProto {
       }
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearByzcoinid() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -736,18 +779,24 @@ public final class BEvmProto {
       private com.google.protobuf.ByteString bevminstanceid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes bevminstanceid = 2;</code>
+       * @return Whether the bevminstanceid field is set.
        */
+      @java.lang.Override
       public boolean hasBevminstanceid() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes bevminstanceid = 2;</code>
+       * @return The bevminstanceid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getBevminstanceid() {
         return bevminstanceid_;
       }
       /**
        * <code>required bytes bevminstanceid = 2;</code>
+       * @param value The bevminstanceid to set.
+       * @return This builder for chaining.
        */
       public Builder setBevminstanceid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -760,6 +809,7 @@ public final class BEvmProto {
       }
       /**
        * <code>required bytes bevminstanceid = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearBevminstanceid() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -771,18 +821,24 @@ public final class BEvmProto {
       private com.google.protobuf.ByteString accountaddress_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes accountaddress = 3;</code>
+       * @return Whether the accountaddress field is set.
        */
+      @java.lang.Override
       public boolean hasAccountaddress() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>required bytes accountaddress = 3;</code>
+       * @return The accountaddress.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getAccountaddress() {
         return accountaddress_;
       }
       /**
        * <code>required bytes accountaddress = 3;</code>
+       * @param value The accountaddress to set.
+       * @return This builder for chaining.
        */
       public Builder setAccountaddress(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -795,6 +851,7 @@ public final class BEvmProto {
       }
       /**
        * <code>required bytes accountaddress = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearAccountaddress() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -806,18 +863,24 @@ public final class BEvmProto {
       private com.google.protobuf.ByteString contractaddress_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes contractaddress = 4;</code>
+       * @return Whether the contractaddress field is set.
        */
+      @java.lang.Override
       public boolean hasContractaddress() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>required bytes contractaddress = 4;</code>
+       * @return The contractaddress.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getContractaddress() {
         return contractaddress_;
       }
       /**
        * <code>required bytes contractaddress = 4;</code>
+       * @param value The contractaddress to set.
+       * @return This builder for chaining.
        */
       public Builder setContractaddress(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -830,6 +893,7 @@ public final class BEvmProto {
       }
       /**
        * <code>required bytes contractaddress = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearContractaddress() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -841,18 +905,24 @@ public final class BEvmProto {
       private com.google.protobuf.ByteString calldata_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes calldata = 5;</code>
+       * @return Whether the calldata field is set.
        */
+      @java.lang.Override
       public boolean hasCalldata() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <code>required bytes calldata = 5;</code>
+       * @return The calldata.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getCalldata() {
         return calldata_;
       }
       /**
        * <code>required bytes calldata = 5;</code>
+       * @param value The calldata to set.
+       * @return This builder for chaining.
        */
       public Builder setCalldata(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -865,6 +935,7 @@ public final class BEvmProto {
       }
       /**
        * <code>required bytes calldata = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearCalldata() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -931,10 +1002,12 @@ public final class BEvmProto {
 
     /**
      * <code>required bytes result = 1;</code>
+     * @return Whether the result field is set.
      */
     boolean hasResult();
     /**
      * <code>required bytes result = 1;</code>
+     * @return The result.
      */
     com.google.protobuf.ByteString getResult();
   }
@@ -946,7 +1019,7 @@ public final class BEvmProto {
    *
    * Protobuf type {@code bevm.ViewCallResponse}
    */
-  public  static final class ViewCallResponse extends
+  public static final class ViewCallResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:bevm.ViewCallResponse)
       ViewCallResponseOrBuilder {
@@ -957,6 +1030,13 @@ public final class BEvmProto {
     }
     private ViewCallResponse() {
       result_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new ViewCallResponse();
     }
 
     @java.lang.Override
@@ -1025,13 +1105,17 @@ public final class BEvmProto {
     private com.google.protobuf.ByteString result_;
     /**
      * <code>required bytes result = 1;</code>
+     * @return Whether the result field is set.
      */
+    @java.lang.Override
     public boolean hasResult() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes result = 1;</code>
+     * @return The result.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getResult() {
       return result_;
     }
@@ -1054,7 +1138,7 @@ public final class BEvmProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, result_);
       }
       unknownFields.writeTo(output);
@@ -1066,7 +1150,7 @@ public final class BEvmProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, result_);
       }
@@ -1085,14 +1169,13 @@ public final class BEvmProto {
       }
       ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse other = (ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse) obj;
 
-      boolean result = true;
-      result = result && (hasResult() == other.hasResult());
+      if (hasResult() != other.hasResult()) return false;
       if (hasResult()) {
-        result = result && getResult()
-            .equals(other.getResult());
+        if (!getResult()
+            .equals(other.getResult())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -1274,7 +1357,7 @@ public final class BEvmProto {
         ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse result = new ch.epfl.dedis.lib.proto.BEvmProto.ViewCallResponse(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.result_ = result_;
@@ -1285,35 +1368,35 @@ public final class BEvmProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -1366,18 +1449,24 @@ public final class BEvmProto {
       private com.google.protobuf.ByteString result_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes result = 1;</code>
+       * @return Whether the result field is set.
        */
+      @java.lang.Override
       public boolean hasResult() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes result = 1;</code>
+       * @return The result.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getResult() {
         return result_;
       }
       /**
        * <code>required bytes result = 1;</code>
+       * @param value The result to set.
+       * @return This builder for chaining.
        */
       public Builder setResult(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -1390,6 +1479,7 @@ public final class BEvmProto {
       }
       /**
        * <code>required bytes result = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearResult() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -1476,18 +1566,10 @@ public final class BEvmProto {
       "esponse\022\016\n\006result\030\001 \002(\014B$\n\027ch.epfl.dedis" +
       ".lib.protoB\tBEvmProto"
     };
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-        }, assigner);
+        });
     internal_static_bevm_ViewCallRequest_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_bevm_ViewCallRequest_fieldAccessorTable = new

@@ -25,7 +25,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.GetAllByzCoinIDsRequest}
    */
-  public  static final class GetAllByzCoinIDsRequest extends
+  public static final class GetAllByzCoinIDsRequest extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.GetAllByzCoinIDsRequest)
       GetAllByzCoinIDsRequestOrBuilder {
@@ -35,6 +35,13 @@ public final class ByzCoinProto {
       super(builder);
     }
     private GetAllByzCoinIDsRequest() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetAllByzCoinIDsRequest();
     }
 
     @java.lang.Override
@@ -130,9 +137,8 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllByzCoinIDsRequest other = (ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllByzCoinIDsRequest) obj;
 
-      boolean result = true;
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -311,35 +317,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -440,14 +446,18 @@ public final class ByzCoinProto {
 
     /**
      * <code>repeated bytes ids = 1;</code>
+     * @return A list containing the ids.
      */
     java.util.List<com.google.protobuf.ByteString> getIdsList();
     /**
      * <code>repeated bytes ids = 1;</code>
+     * @return The count of ids.
      */
     int getIdsCount();
     /**
      * <code>repeated bytes ids = 1;</code>
+     * @param index The index of the element to return.
+     * @return The ids at the given index.
      */
     com.google.protobuf.ByteString getIds(int index);
   }
@@ -458,7 +468,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.GetAllByzCoinIDsResponse}
    */
-  public  static final class GetAllByzCoinIDsResponse extends
+  public static final class GetAllByzCoinIDsResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.GetAllByzCoinIDsResponse)
       GetAllByzCoinIDsResponseOrBuilder {
@@ -469,6 +479,13 @@ public final class ByzCoinProto {
     }
     private GetAllByzCoinIDsResponse() {
       ids_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetAllByzCoinIDsResponse();
     }
 
     @java.lang.Override
@@ -496,7 +513,7 @@ public final class ByzCoinProto {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 ids_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -518,8 +535,8 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-          ids_ = java.util.Collections.unmodifiableList(ids_);
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
+          ids_ = java.util.Collections.unmodifiableList(ids_); // C
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -542,19 +559,24 @@ public final class ByzCoinProto {
     private java.util.List<com.google.protobuf.ByteString> ids_;
     /**
      * <code>repeated bytes ids = 1;</code>
+     * @return A list containing the ids.
      */
+    @java.lang.Override
     public java.util.List<com.google.protobuf.ByteString>
         getIdsList() {
       return ids_;
     }
     /**
      * <code>repeated bytes ids = 1;</code>
+     * @return The count of ids.
      */
     public int getIdsCount() {
       return ids_.size();
     }
     /**
      * <code>repeated bytes ids = 1;</code>
+     * @param index The index of the element to return.
+     * @return The ids at the given index.
      */
     public com.google.protobuf.ByteString getIds(int index) {
       return ids_.get(index);
@@ -610,11 +632,10 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllByzCoinIDsResponse other = (ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllByzCoinIDsResponse) obj;
 
-      boolean result = true;
-      result = result && getIdsList()
-          .equals(other.getIdsList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getIdsList()
+          .equals(other.getIdsList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -794,7 +815,7 @@ public final class ByzCoinProto {
       public ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllByzCoinIDsResponse buildPartial() {
         ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllByzCoinIDsResponse result = new ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllByzCoinIDsResponse(this);
         int from_bitField0_ = bitField0_;
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((bitField0_ & 0x00000001) != 0)) {
           ids_ = java.util.Collections.unmodifiableList(ids_);
           bitField0_ = (bitField0_ & ~0x00000001);
         }
@@ -805,35 +826,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -889,32 +910,40 @@ public final class ByzCoinProto {
 
       private java.util.List<com.google.protobuf.ByteString> ids_ = java.util.Collections.emptyList();
       private void ensureIdsIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           ids_ = new java.util.ArrayList<com.google.protobuf.ByteString>(ids_);
           bitField0_ |= 0x00000001;
          }
       }
       /**
        * <code>repeated bytes ids = 1;</code>
+       * @return A list containing the ids.
        */
       public java.util.List<com.google.protobuf.ByteString>
           getIdsList() {
-        return java.util.Collections.unmodifiableList(ids_);
+        return ((bitField0_ & 0x00000001) != 0) ?
+                 java.util.Collections.unmodifiableList(ids_) : ids_;
       }
       /**
        * <code>repeated bytes ids = 1;</code>
+       * @return The count of ids.
        */
       public int getIdsCount() {
         return ids_.size();
       }
       /**
        * <code>repeated bytes ids = 1;</code>
+       * @param index The index of the element to return.
+       * @return The ids at the given index.
        */
       public com.google.protobuf.ByteString getIds(int index) {
         return ids_.get(index);
       }
       /**
        * <code>repeated bytes ids = 1;</code>
+       * @param index The index to set the value at.
+       * @param value The ids to set.
+       * @return This builder for chaining.
        */
       public Builder setIds(
           int index, com.google.protobuf.ByteString value) {
@@ -928,6 +957,8 @@ public final class ByzCoinProto {
       }
       /**
        * <code>repeated bytes ids = 1;</code>
+       * @param value The ids to add.
+       * @return This builder for chaining.
        */
       public Builder addIds(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -940,6 +971,8 @@ public final class ByzCoinProto {
       }
       /**
        * <code>repeated bytes ids = 1;</code>
+       * @param values The ids to add.
+       * @return This builder for chaining.
        */
       public Builder addAllIds(
           java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
@@ -951,6 +984,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>repeated bytes ids = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearIds() {
         ids_ = java.util.Collections.emptyList();
@@ -1022,6 +1056,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes trieroot = 1;</code>
+     * @return Whether the trieroot field is set.
      */
     boolean hasTrieroot();
     /**
@@ -1031,6 +1066,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes trieroot = 1;</code>
+     * @return The trieroot.
      */
     com.google.protobuf.ByteString getTrieroot();
 
@@ -1040,6 +1076,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes clienttransactionhash = 2;</code>
+     * @return Whether the clienttransactionhash field is set.
      */
     boolean hasClienttransactionhash();
     /**
@@ -1048,6 +1085,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes clienttransactionhash = 2;</code>
+     * @return The clienttransactionhash.
      */
     com.google.protobuf.ByteString getClienttransactionhash();
 
@@ -1058,6 +1096,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes statechangeshash = 3;</code>
+     * @return Whether the statechangeshash field is set.
      */
     boolean hasStatechangeshash();
     /**
@@ -1067,6 +1106,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes statechangeshash = 3;</code>
+     * @return The statechangeshash.
      */
     com.google.protobuf.ByteString getStatechangeshash();
 
@@ -1076,6 +1116,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint64 timestamp = 4;</code>
+     * @return Whether the timestamp field is set.
      */
     boolean hasTimestamp();
     /**
@@ -1084,6 +1125,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint64 timestamp = 4;</code>
+     * @return The timestamp.
      */
     long getTimestamp();
 
@@ -1093,6 +1135,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional sint32 version = 5;</code>
+     * @return Whether the version field is set.
      */
     boolean hasVersion();
     /**
@@ -1101,6 +1144,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional sint32 version = 5;</code>
+     * @return The version.
      */
     int getVersion();
   }
@@ -1111,7 +1155,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.DataHeader}
    */
-  public  static final class DataHeader extends
+  public static final class DataHeader extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.DataHeader)
       DataHeaderOrBuilder {
@@ -1124,8 +1168,13 @@ public final class ByzCoinProto {
       trieroot_ = com.google.protobuf.ByteString.EMPTY;
       clienttransactionhash_ = com.google.protobuf.ByteString.EMPTY;
       statechangeshash_ = com.google.protobuf.ByteString.EMPTY;
-      timestamp_ = 0L;
-      version_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new DataHeader();
     }
 
     @java.lang.Override
@@ -1219,9 +1268,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes trieroot = 1;</code>
+     * @return Whether the trieroot field is set.
      */
+    @java.lang.Override
     public boolean hasTrieroot() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -1230,7 +1281,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes trieroot = 1;</code>
+     * @return The trieroot.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getTrieroot() {
       return trieroot_;
     }
@@ -1243,9 +1296,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes clienttransactionhash = 2;</code>
+     * @return Whether the clienttransactionhash field is set.
      */
+    @java.lang.Override
     public boolean hasClienttransactionhash() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -1253,7 +1308,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes clienttransactionhash = 2;</code>
+     * @return The clienttransactionhash.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getClienttransactionhash() {
       return clienttransactionhash_;
     }
@@ -1267,9 +1324,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes statechangeshash = 3;</code>
+     * @return Whether the statechangeshash field is set.
      */
+    @java.lang.Override
     public boolean hasStatechangeshash() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -1278,7 +1337,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes statechangeshash = 3;</code>
+     * @return The statechangeshash.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getStatechangeshash() {
       return statechangeshash_;
     }
@@ -1291,9 +1352,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint64 timestamp = 4;</code>
+     * @return Whether the timestamp field is set.
      */
+    @java.lang.Override
     public boolean hasTimestamp() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <pre>
@@ -1301,7 +1364,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint64 timestamp = 4;</code>
+     * @return The timestamp.
      */
+    @java.lang.Override
     public long getTimestamp() {
       return timestamp_;
     }
@@ -1314,9 +1379,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional sint32 version = 5;</code>
+     * @return Whether the version field is set.
      */
+    @java.lang.Override
     public boolean hasVersion() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <pre>
@@ -1324,7 +1391,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional sint32 version = 5;</code>
+     * @return The version.
      */
+    @java.lang.Override
     public int getVersion() {
       return version_;
     }
@@ -1359,19 +1428,19 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, trieroot_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, clienttransactionhash_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBytes(3, statechangeshash_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeSInt64(4, timestamp_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeSInt32(5, version_);
       }
       unknownFields.writeTo(output);
@@ -1383,23 +1452,23 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, trieroot_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, clienttransactionhash_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, statechangeshash_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt64Size(4, timestamp_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(5, version_);
       }
@@ -1418,34 +1487,33 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.DataHeader other = (ch.epfl.dedis.lib.proto.ByzCoinProto.DataHeader) obj;
 
-      boolean result = true;
-      result = result && (hasTrieroot() == other.hasTrieroot());
+      if (hasTrieroot() != other.hasTrieroot()) return false;
       if (hasTrieroot()) {
-        result = result && getTrieroot()
-            .equals(other.getTrieroot());
+        if (!getTrieroot()
+            .equals(other.getTrieroot())) return false;
       }
-      result = result && (hasClienttransactionhash() == other.hasClienttransactionhash());
+      if (hasClienttransactionhash() != other.hasClienttransactionhash()) return false;
       if (hasClienttransactionhash()) {
-        result = result && getClienttransactionhash()
-            .equals(other.getClienttransactionhash());
+        if (!getClienttransactionhash()
+            .equals(other.getClienttransactionhash())) return false;
       }
-      result = result && (hasStatechangeshash() == other.hasStatechangeshash());
+      if (hasStatechangeshash() != other.hasStatechangeshash()) return false;
       if (hasStatechangeshash()) {
-        result = result && getStatechangeshash()
-            .equals(other.getStatechangeshash());
+        if (!getStatechangeshash()
+            .equals(other.getStatechangeshash())) return false;
       }
-      result = result && (hasTimestamp() == other.hasTimestamp());
+      if (hasTimestamp() != other.hasTimestamp()) return false;
       if (hasTimestamp()) {
-        result = result && (getTimestamp()
-            == other.getTimestamp());
+        if (getTimestamp()
+            != other.getTimestamp()) return false;
       }
-      result = result && (hasVersion() == other.hasVersion());
+      if (hasVersion() != other.hasVersion()) return false;
       if (hasVersion()) {
-        result = result && (getVersion()
-            == other.getVersion());
+        if (getVersion()
+            != other.getVersion()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -1651,26 +1719,26 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.DataHeader result = new ch.epfl.dedis.lib.proto.ByzCoinProto.DataHeader(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.trieroot_ = trieroot_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.clienttransactionhash_ = clienttransactionhash_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.statechangeshash_ = statechangeshash_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.timestamp_ = timestamp_;
           to_bitField0_ |= 0x00000008;
         }
-        result.timestamp_ = timestamp_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          result.version_ = version_;
           to_bitField0_ |= 0x00000010;
         }
-        result.version_ = version_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1678,35 +1746,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -1785,9 +1853,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes trieroot = 1;</code>
+       * @return Whether the trieroot field is set.
        */
+      @java.lang.Override
       public boolean hasTrieroot() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -1796,7 +1866,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes trieroot = 1;</code>
+       * @return The trieroot.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getTrieroot() {
         return trieroot_;
       }
@@ -1807,6 +1879,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes trieroot = 1;</code>
+       * @param value The trieroot to set.
+       * @return This builder for chaining.
        */
       public Builder setTrieroot(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -1824,6 +1898,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes trieroot = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTrieroot() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -1839,9 +1914,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes clienttransactionhash = 2;</code>
+       * @return Whether the clienttransactionhash field is set.
        */
+      @java.lang.Override
       public boolean hasClienttransactionhash() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -1849,7 +1926,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes clienttransactionhash = 2;</code>
+       * @return The clienttransactionhash.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getClienttransactionhash() {
         return clienttransactionhash_;
       }
@@ -1859,6 +1938,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes clienttransactionhash = 2;</code>
+       * @param value The clienttransactionhash to set.
+       * @return This builder for chaining.
        */
       public Builder setClienttransactionhash(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -1875,6 +1956,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes clienttransactionhash = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearClienttransactionhash() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -1891,9 +1973,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes statechangeshash = 3;</code>
+       * @return Whether the statechangeshash field is set.
        */
+      @java.lang.Override
       public boolean hasStatechangeshash() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -1902,7 +1986,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes statechangeshash = 3;</code>
+       * @return The statechangeshash.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getStatechangeshash() {
         return statechangeshash_;
       }
@@ -1913,6 +1999,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes statechangeshash = 3;</code>
+       * @param value The statechangeshash to set.
+       * @return This builder for chaining.
        */
       public Builder setStatechangeshash(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -1930,6 +2018,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes statechangeshash = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearStatechangeshash() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -1945,9 +2034,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint64 timestamp = 4;</code>
+       * @return Whether the timestamp field is set.
        */
+      @java.lang.Override
       public boolean hasTimestamp() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <pre>
@@ -1955,7 +2046,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint64 timestamp = 4;</code>
+       * @return The timestamp.
        */
+      @java.lang.Override
       public long getTimestamp() {
         return timestamp_;
       }
@@ -1965,6 +2058,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint64 timestamp = 4;</code>
+       * @param value The timestamp to set.
+       * @return This builder for chaining.
        */
       public Builder setTimestamp(long value) {
         bitField0_ |= 0x00000008;
@@ -1978,6 +2073,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint64 timestamp = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTimestamp() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -1993,9 +2089,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional sint32 version = 5;</code>
+       * @return Whether the version field is set.
        */
+      @java.lang.Override
       public boolean hasVersion() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <pre>
@@ -2003,7 +2101,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional sint32 version = 5;</code>
+       * @return The version.
        */
+      @java.lang.Override
       public int getVersion() {
         return version_;
       }
@@ -2013,6 +2113,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional sint32 version = 5;</code>
+       * @param value The version to set.
+       * @return This builder for chaining.
        */
       public Builder setVersion(int value) {
         bitField0_ |= 0x00000010;
@@ -2026,6 +2128,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional sint32 version = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearVersion() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -2122,7 +2225,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.DataBody}
    */
-  public  static final class DataBody extends
+  public static final class DataBody extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.DataBody)
       DataBodyOrBuilder {
@@ -2133,6 +2236,13 @@ public final class ByzCoinProto {
     }
     private DataBody() {
       txresults_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new DataBody();
     }
 
     @java.lang.Override
@@ -2160,7 +2270,7 @@ public final class ByzCoinProto {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 txresults_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.TxResult>();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -2183,7 +2293,7 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
           txresults_ = java.util.Collections.unmodifiableList(txresults_);
         }
         this.unknownFields = unknownFields.build();
@@ -2208,12 +2318,14 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.TxResult txresults = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.TxResult> getTxresultsList() {
       return txresults_;
     }
     /**
      * <code>repeated .byzcoin.TxResult txresults = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.TxResultOrBuilder>
         getTxresultsOrBuilderList() {
       return txresults_;
@@ -2221,18 +2333,21 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.TxResult txresults = 1;</code>
      */
+    @java.lang.Override
     public int getTxresultsCount() {
       return txresults_.size();
     }
     /**
      * <code>repeated .byzcoin.TxResult txresults = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.TxResult getTxresults(int index) {
       return txresults_.get(index);
     }
     /**
      * <code>repeated .byzcoin.TxResult txresults = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.TxResultOrBuilder getTxresultsOrBuilder(
         int index) {
       return txresults_.get(index);
@@ -2289,11 +2404,10 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.DataBody other = (ch.epfl.dedis.lib.proto.ByzCoinProto.DataBody) obj;
 
-      boolean result = true;
-      result = result && getTxresultsList()
-          .equals(other.getTxresultsList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getTxresultsList()
+          .equals(other.getTxresultsList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -2480,7 +2594,7 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.DataBody result = new ch.epfl.dedis.lib.proto.ByzCoinProto.DataBody(this);
         int from_bitField0_ = bitField0_;
         if (txresultsBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((bitField0_ & 0x00000001) != 0)) {
             txresults_ = java.util.Collections.unmodifiableList(txresults_);
             bitField0_ = (bitField0_ & ~0x00000001);
           }
@@ -2494,35 +2608,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -2600,7 +2714,7 @@ public final class ByzCoinProto {
       private java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.TxResult> txresults_ =
         java.util.Collections.emptyList();
       private void ensureTxresultsIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           txresults_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.TxResult>(txresults_);
           bitField0_ |= 0x00000001;
          }
@@ -2829,7 +2943,7 @@ public final class ByzCoinProto {
           txresultsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.ByzCoinProto.TxResult, ch.epfl.dedis.lib.proto.ByzCoinProto.TxResult.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.TxResultOrBuilder>(
                   txresults_,
-                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
                   isClean());
           txresults_ = null;
@@ -2899,6 +3013,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return Whether the version field is set.
      */
     boolean hasVersion();
     /**
@@ -2907,6 +3022,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return The version.
      */
     int getVersion();
 
@@ -2916,6 +3032,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .onet.Roster roster = 2;</code>
+     * @return Whether the roster field is set.
      */
     boolean hasRoster();
     /**
@@ -2924,6 +3041,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .onet.Roster roster = 2;</code>
+     * @return The roster.
      */
     ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster();
     /**
@@ -2941,6 +3059,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .darc.Darc genesisdarc = 3;</code>
+     * @return Whether the genesisdarc field is set.
      */
     boolean hasGenesisdarc();
     /**
@@ -2949,6 +3068,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .darc.Darc genesisdarc = 3;</code>
+     * @return The genesisdarc.
      */
     ch.epfl.dedis.lib.proto.DarcProto.Darc getGenesisdarc();
     /**
@@ -2972,6 +3092,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint64 blockinterval = 4;</code>
+     * @return Whether the blockinterval field is set.
      */
     boolean hasBlockinterval();
     /**
@@ -2986,6 +3107,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint64 blockinterval = 4;</code>
+     * @return The blockinterval.
      */
     long getBlockinterval();
 
@@ -2995,6 +3117,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional sint32 maxblocksize = 5;</code>
+     * @return Whether the maxblocksize field is set.
      */
     boolean hasMaxblocksize();
     /**
@@ -3003,6 +3126,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional sint32 maxblocksize = 5;</code>
+     * @return The maxblocksize.
      */
     int getMaxblocksize();
 
@@ -3013,6 +3137,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated string darccontractids = 6;</code>
+     * @return A list containing the darccontractids.
      */
     java.util.List<java.lang.String>
         getDarccontractidsList();
@@ -3023,6 +3148,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated string darccontractids = 6;</code>
+     * @return The count of darccontractids.
      */
     int getDarccontractidsCount();
     /**
@@ -3032,6 +3158,8 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated string darccontractids = 6;</code>
+     * @param index The index of the element to return.
+     * @return The darccontractids at the given index.
      */
     java.lang.String getDarccontractids(int index);
     /**
@@ -3041,6 +3169,8 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated string darccontractids = 6;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the darccontractids at the given index.
      */
     com.google.protobuf.ByteString
         getDarccontractidsBytes(int index);
@@ -3052,7 +3182,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.CreateGenesisBlock}
    */
-  public  static final class CreateGenesisBlock extends
+  public static final class CreateGenesisBlock extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.CreateGenesisBlock)
       CreateGenesisBlockOrBuilder {
@@ -3062,10 +3192,14 @@ public final class ByzCoinProto {
       super(builder);
     }
     private CreateGenesisBlock() {
-      version_ = 0;
-      blockinterval_ = 0L;
-      maxblocksize_ = 0;
       darccontractids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new CreateGenesisBlock();
     }
 
     @java.lang.Override
@@ -3099,7 +3233,7 @@ public final class ByzCoinProto {
             }
             case 18: {
               ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = roster_.toBuilder();
               }
               roster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.parser(), extensionRegistry);
@@ -3112,7 +3246,7 @@ public final class ByzCoinProto {
             }
             case 26: {
               ch.epfl.dedis.lib.proto.DarcProto.Darc.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+              if (((bitField0_ & 0x00000004) != 0)) {
                 subBuilder = genesisdarc_.toBuilder();
               }
               genesisdarc_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Darc.parser(), extensionRegistry);
@@ -3135,7 +3269,7 @@ public final class ByzCoinProto {
             }
             case 50: {
               com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+              if (!((mutable_bitField0_ & 0x00000020) != 0)) {
                 darccontractids_ = new com.google.protobuf.LazyStringArrayList();
                 mutable_bitField0_ |= 0x00000020;
               }
@@ -3157,7 +3291,7 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((mutable_bitField0_ & 0x00000020) != 0)) {
           darccontractids_ = darccontractids_.getUnmodifiableView();
         }
         this.unknownFields = unknownFields.build();
@@ -3186,9 +3320,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return Whether the version field is set.
      */
+    @java.lang.Override
     public boolean hasVersion() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -3196,7 +3332,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return The version.
      */
+    @java.lang.Override
     public int getVersion() {
       return version_;
     }
@@ -3209,9 +3347,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .onet.Roster roster = 2;</code>
+     * @return Whether the roster field is set.
      */
+    @java.lang.Override
     public boolean hasRoster() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -3219,7 +3359,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .onet.Roster roster = 2;</code>
+     * @return The roster.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster() {
       return roster_ == null ? ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
     }
@@ -3230,6 +3372,7 @@ public final class ByzCoinProto {
      *
      * <code>required .onet.Roster roster = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder getRosterOrBuilder() {
       return roster_ == null ? ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
     }
@@ -3242,9 +3385,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .darc.Darc genesisdarc = 3;</code>
+     * @return Whether the genesisdarc field is set.
      */
+    @java.lang.Override
     public boolean hasGenesisdarc() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -3252,7 +3397,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .darc.Darc genesisdarc = 3;</code>
+     * @return The genesisdarc.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.Darc getGenesisdarc() {
       return genesisdarc_ == null ? ch.epfl.dedis.lib.proto.DarcProto.Darc.getDefaultInstance() : genesisdarc_;
     }
@@ -3263,6 +3410,7 @@ public final class ByzCoinProto {
      *
      * <code>required .darc.Darc genesisdarc = 3;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.DarcOrBuilder getGenesisdarcOrBuilder() {
       return genesisdarc_ == null ? ch.epfl.dedis.lib.proto.DarcProto.Darc.getDefaultInstance() : genesisdarc_;
     }
@@ -3281,9 +3429,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint64 blockinterval = 4;</code>
+     * @return Whether the blockinterval field is set.
      */
+    @java.lang.Override
     public boolean hasBlockinterval() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <pre>
@@ -3297,7 +3447,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint64 blockinterval = 4;</code>
+     * @return The blockinterval.
      */
+    @java.lang.Override
     public long getBlockinterval() {
       return blockinterval_;
     }
@@ -3310,9 +3462,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional sint32 maxblocksize = 5;</code>
+     * @return Whether the maxblocksize field is set.
      */
+    @java.lang.Override
     public boolean hasMaxblocksize() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <pre>
@@ -3320,7 +3474,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional sint32 maxblocksize = 5;</code>
+     * @return The maxblocksize.
      */
+    @java.lang.Override
     public int getMaxblocksize() {
       return maxblocksize_;
     }
@@ -3334,6 +3490,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated string darccontractids = 6;</code>
+     * @return A list containing the darccontractids.
      */
     public com.google.protobuf.ProtocolStringList
         getDarccontractidsList() {
@@ -3346,6 +3503,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated string darccontractids = 6;</code>
+     * @return The count of darccontractids.
      */
     public int getDarccontractidsCount() {
       return darccontractids_.size();
@@ -3357,6 +3515,8 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated string darccontractids = 6;</code>
+     * @param index The index of the element to return.
+     * @return The darccontractids at the given index.
      */
     public java.lang.String getDarccontractids(int index) {
       return darccontractids_.get(index);
@@ -3368,6 +3528,8 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated string darccontractids = 6;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the darccontractids at the given index.
      */
     public com.google.protobuf.ByteString
         getDarccontractidsBytes(int index) {
@@ -3412,19 +3574,19 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeSInt32(1, version_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getRoster());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeMessage(3, getGenesisdarc());
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeSInt64(4, blockinterval_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeSInt32(5, maxblocksize_);
       }
       for (int i = 0; i < darccontractids_.size(); i++) {
@@ -3439,23 +3601,23 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(1, version_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getRoster());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getGenesisdarc());
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt64Size(4, blockinterval_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(5, maxblocksize_);
       }
@@ -3482,36 +3644,35 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.CreateGenesisBlock other = (ch.epfl.dedis.lib.proto.ByzCoinProto.CreateGenesisBlock) obj;
 
-      boolean result = true;
-      result = result && (hasVersion() == other.hasVersion());
+      if (hasVersion() != other.hasVersion()) return false;
       if (hasVersion()) {
-        result = result && (getVersion()
-            == other.getVersion());
+        if (getVersion()
+            != other.getVersion()) return false;
       }
-      result = result && (hasRoster() == other.hasRoster());
+      if (hasRoster() != other.hasRoster()) return false;
       if (hasRoster()) {
-        result = result && getRoster()
-            .equals(other.getRoster());
+        if (!getRoster()
+            .equals(other.getRoster())) return false;
       }
-      result = result && (hasGenesisdarc() == other.hasGenesisdarc());
+      if (hasGenesisdarc() != other.hasGenesisdarc()) return false;
       if (hasGenesisdarc()) {
-        result = result && getGenesisdarc()
-            .equals(other.getGenesisdarc());
+        if (!getGenesisdarc()
+            .equals(other.getGenesisdarc())) return false;
       }
-      result = result && (hasBlockinterval() == other.hasBlockinterval());
+      if (hasBlockinterval() != other.hasBlockinterval()) return false;
       if (hasBlockinterval()) {
-        result = result && (getBlockinterval()
-            == other.getBlockinterval());
+        if (getBlockinterval()
+            != other.getBlockinterval()) return false;
       }
-      result = result && (hasMaxblocksize() == other.hasMaxblocksize());
+      if (hasMaxblocksize() != other.hasMaxblocksize()) return false;
       if (hasMaxblocksize()) {
-        result = result && (getMaxblocksize()
-            == other.getMaxblocksize());
+        if (getMaxblocksize()
+            != other.getMaxblocksize()) return false;
       }
-      result = result && getDarccontractidsList()
-          .equals(other.getDarccontractidsList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getDarccontractidsList()
+          .equals(other.getDarccontractidsList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -3733,35 +3894,35 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.CreateGenesisBlock result = new ch.epfl.dedis.lib.proto.ByzCoinProto.CreateGenesisBlock(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.version_ = version_;
           to_bitField0_ |= 0x00000001;
         }
-        result.version_ = version_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (rosterBuilder_ == null) {
+            result.roster_ = roster_;
+          } else {
+            result.roster_ = rosterBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
         }
-        if (rosterBuilder_ == null) {
-          result.roster_ = roster_;
-        } else {
-          result.roster_ = rosterBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          if (genesisdarcBuilder_ == null) {
+            result.genesisdarc_ = genesisdarc_;
+          } else {
+            result.genesisdarc_ = genesisdarcBuilder_.build();
+          }
           to_bitField0_ |= 0x00000004;
         }
-        if (genesisdarcBuilder_ == null) {
-          result.genesisdarc_ = genesisdarc_;
-        } else {
-          result.genesisdarc_ = genesisdarcBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.blockinterval_ = blockinterval_;
           to_bitField0_ |= 0x00000008;
         }
-        result.blockinterval_ = blockinterval_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          result.maxblocksize_ = maxblocksize_;
           to_bitField0_ |= 0x00000010;
         }
-        result.maxblocksize_ = maxblocksize_;
-        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((bitField0_ & 0x00000020) != 0)) {
           darccontractids_ = darccontractids_.getUnmodifiableView();
           bitField0_ = (bitField0_ & ~0x00000020);
         }
@@ -3773,35 +3934,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -3895,9 +4056,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @return Whether the version field is set.
        */
+      @java.lang.Override
       public boolean hasVersion() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -3905,7 +4068,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @return The version.
        */
+      @java.lang.Override
       public int getVersion() {
         return version_;
       }
@@ -3915,6 +4080,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @param value The version to set.
+       * @return This builder for chaining.
        */
       public Builder setVersion(int value) {
         bitField0_ |= 0x00000001;
@@ -3928,6 +4095,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearVersion() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -3936,7 +4104,7 @@ public final class ByzCoinProto {
         return this;
       }
 
-      private ch.epfl.dedis.lib.proto.OnetProto.Roster roster_ = null;
+      private ch.epfl.dedis.lib.proto.OnetProto.Roster roster_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder> rosterBuilder_;
       /**
@@ -3945,9 +4113,10 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required .onet.Roster roster = 2;</code>
+       * @return Whether the roster field is set.
        */
       public boolean hasRoster() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -3955,6 +4124,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required .onet.Roster roster = 2;</code>
+       * @return The roster.
        */
       public ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster() {
         if (rosterBuilder_ == null) {
@@ -4010,7 +4180,7 @@ public final class ByzCoinProto {
        */
       public Builder mergeRoster(ch.epfl.dedis.lib.proto.OnetProto.Roster value) {
         if (rosterBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               roster_ != null &&
               roster_ != ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance()) {
             roster_ =
@@ -4090,7 +4260,7 @@ public final class ByzCoinProto {
         return rosterBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.DarcProto.Darc genesisdarc_ = null;
+      private ch.epfl.dedis.lib.proto.DarcProto.Darc genesisdarc_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.DarcProto.Darc, ch.epfl.dedis.lib.proto.DarcProto.Darc.Builder, ch.epfl.dedis.lib.proto.DarcProto.DarcOrBuilder> genesisdarcBuilder_;
       /**
@@ -4099,9 +4269,10 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required .darc.Darc genesisdarc = 3;</code>
+       * @return Whether the genesisdarc field is set.
        */
       public boolean hasGenesisdarc() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -4109,6 +4280,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required .darc.Darc genesisdarc = 3;</code>
+       * @return The genesisdarc.
        */
       public ch.epfl.dedis.lib.proto.DarcProto.Darc getGenesisdarc() {
         if (genesisdarcBuilder_ == null) {
@@ -4164,7 +4336,7 @@ public final class ByzCoinProto {
        */
       public Builder mergeGenesisdarc(ch.epfl.dedis.lib.proto.DarcProto.Darc value) {
         if (genesisdarcBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+          if (((bitField0_ & 0x00000004) != 0) &&
               genesisdarc_ != null &&
               genesisdarc_ != ch.epfl.dedis.lib.proto.DarcProto.Darc.getDefaultInstance()) {
             genesisdarc_ =
@@ -4257,9 +4429,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint64 blockinterval = 4;</code>
+       * @return Whether the blockinterval field is set.
        */
+      @java.lang.Override
       public boolean hasBlockinterval() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <pre>
@@ -4273,7 +4447,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint64 blockinterval = 4;</code>
+       * @return The blockinterval.
        */
+      @java.lang.Override
       public long getBlockinterval() {
         return blockinterval_;
       }
@@ -4289,6 +4465,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint64 blockinterval = 4;</code>
+       * @param value The blockinterval to set.
+       * @return This builder for chaining.
        */
       public Builder setBlockinterval(long value) {
         bitField0_ |= 0x00000008;
@@ -4308,6 +4486,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint64 blockinterval = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearBlockinterval() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -4323,9 +4502,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional sint32 maxblocksize = 5;</code>
+       * @return Whether the maxblocksize field is set.
        */
+      @java.lang.Override
       public boolean hasMaxblocksize() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <pre>
@@ -4333,7 +4514,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional sint32 maxblocksize = 5;</code>
+       * @return The maxblocksize.
        */
+      @java.lang.Override
       public int getMaxblocksize() {
         return maxblocksize_;
       }
@@ -4343,6 +4526,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional sint32 maxblocksize = 5;</code>
+       * @param value The maxblocksize to set.
+       * @return This builder for chaining.
        */
       public Builder setMaxblocksize(int value) {
         bitField0_ |= 0x00000010;
@@ -4356,6 +4541,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional sint32 maxblocksize = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMaxblocksize() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -4366,7 +4552,7 @@ public final class ByzCoinProto {
 
       private com.google.protobuf.LazyStringList darccontractids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureDarccontractidsIsMutable() {
-        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
+        if (!((bitField0_ & 0x00000020) != 0)) {
           darccontractids_ = new com.google.protobuf.LazyStringArrayList(darccontractids_);
           bitField0_ |= 0x00000020;
          }
@@ -4378,6 +4564,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated string darccontractids = 6;</code>
+       * @return A list containing the darccontractids.
        */
       public com.google.protobuf.ProtocolStringList
           getDarccontractidsList() {
@@ -4390,6 +4577,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated string darccontractids = 6;</code>
+       * @return The count of darccontractids.
        */
       public int getDarccontractidsCount() {
         return darccontractids_.size();
@@ -4401,6 +4589,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated string darccontractids = 6;</code>
+       * @param index The index of the element to return.
+       * @return The darccontractids at the given index.
        */
       public java.lang.String getDarccontractids(int index) {
         return darccontractids_.get(index);
@@ -4412,6 +4602,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated string darccontractids = 6;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the darccontractids at the given index.
        */
       public com.google.protobuf.ByteString
           getDarccontractidsBytes(int index) {
@@ -4424,6 +4616,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated string darccontractids = 6;</code>
+       * @param index The index to set the value at.
+       * @param value The darccontractids to set.
+       * @return This builder for chaining.
        */
       public Builder setDarccontractids(
           int index, java.lang.String value) {
@@ -4442,6 +4637,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated string darccontractids = 6;</code>
+       * @param value The darccontractids to add.
+       * @return This builder for chaining.
        */
       public Builder addDarccontractids(
           java.lang.String value) {
@@ -4460,6 +4657,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated string darccontractids = 6;</code>
+       * @param values The darccontractids to add.
+       * @return This builder for chaining.
        */
       public Builder addAllDarccontractids(
           java.lang.Iterable<java.lang.String> values) {
@@ -4476,6 +4675,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated string darccontractids = 6;</code>
+       * @return This builder for chaining.
        */
       public Builder clearDarccontractids() {
         darccontractids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -4490,6 +4690,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated string darccontractids = 6;</code>
+       * @param value The bytes of the darccontractids to add.
+       * @return This builder for chaining.
        */
       public Builder addDarccontractidsBytes(
           com.google.protobuf.ByteString value) {
@@ -4564,6 +4766,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return Whether the version field is set.
      */
     boolean hasVersion();
     /**
@@ -4572,6 +4775,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return The version.
      */
     int getVersion();
 
@@ -4581,6 +4785,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional .skipchain.SkipBlock skipblock = 2;</code>
+     * @return Whether the skipblock field is set.
      */
     boolean hasSkipblock();
     /**
@@ -4589,6 +4794,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional .skipchain.SkipBlock skipblock = 2;</code>
+     * @return The skipblock.
      */
     ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getSkipblock();
     /**
@@ -4607,7 +4813,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.CreateGenesisBlockResponse}
    */
-  public  static final class CreateGenesisBlockResponse extends
+  public static final class CreateGenesisBlockResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.CreateGenesisBlockResponse)
       CreateGenesisBlockResponseOrBuilder {
@@ -4617,7 +4823,13 @@ public final class ByzCoinProto {
       super(builder);
     }
     private CreateGenesisBlockResponse() {
-      version_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new CreateGenesisBlockResponse();
     }
 
     @java.lang.Override
@@ -4651,7 +4863,7 @@ public final class ByzCoinProto {
             }
             case 18: {
               ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = skipblock_.toBuilder();
               }
               skipblock_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.parser(), extensionRegistry);
@@ -4703,9 +4915,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return Whether the version field is set.
      */
+    @java.lang.Override
     public boolean hasVersion() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -4713,7 +4927,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return The version.
      */
+    @java.lang.Override
     public int getVersion() {
       return version_;
     }
@@ -4726,9 +4942,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional .skipchain.SkipBlock skipblock = 2;</code>
+     * @return Whether the skipblock field is set.
      */
+    @java.lang.Override
     public boolean hasSkipblock() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -4736,7 +4954,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional .skipchain.SkipBlock skipblock = 2;</code>
+     * @return The skipblock.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getSkipblock() {
       return skipblock_ == null ? ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance() : skipblock_;
     }
@@ -4747,6 +4967,7 @@ public final class ByzCoinProto {
      *
      * <code>optional .skipchain.SkipBlock skipblock = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder getSkipblockOrBuilder() {
       return skipblock_ == null ? ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance() : skipblock_;
     }
@@ -4775,10 +4996,10 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeSInt32(1, version_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getSkipblock());
       }
       unknownFields.writeTo(output);
@@ -4790,11 +5011,11 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(1, version_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getSkipblock());
       }
@@ -4813,19 +5034,18 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.CreateGenesisBlockResponse other = (ch.epfl.dedis.lib.proto.ByzCoinProto.CreateGenesisBlockResponse) obj;
 
-      boolean result = true;
-      result = result && (hasVersion() == other.hasVersion());
+      if (hasVersion() != other.hasVersion()) return false;
       if (hasVersion()) {
-        result = result && (getVersion()
-            == other.getVersion());
+        if (getVersion()
+            != other.getVersion()) return false;
       }
-      result = result && (hasSkipblock() == other.hasSkipblock());
+      if (hasSkipblock() != other.hasSkipblock()) return false;
       if (hasSkipblock()) {
-        result = result && getSkipblock()
-            .equals(other.getSkipblock());
+        if (!getSkipblock()
+            .equals(other.getSkipblock())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -5017,17 +5237,17 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.CreateGenesisBlockResponse result = new ch.epfl.dedis.lib.proto.ByzCoinProto.CreateGenesisBlockResponse(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.version_ = version_;
           to_bitField0_ |= 0x00000001;
         }
-        result.version_ = version_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (skipblockBuilder_ == null) {
+            result.skipblock_ = skipblock_;
+          } else {
+            result.skipblock_ = skipblockBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
-        }
-        if (skipblockBuilder_ == null) {
-          result.skipblock_ = skipblock_;
-        } else {
-          result.skipblock_ = skipblockBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -5036,35 +5256,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -5129,9 +5349,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @return Whether the version field is set.
        */
+      @java.lang.Override
       public boolean hasVersion() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -5139,7 +5361,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @return The version.
        */
+      @java.lang.Override
       public int getVersion() {
         return version_;
       }
@@ -5149,6 +5373,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @param value The version to set.
+       * @return This builder for chaining.
        */
       public Builder setVersion(int value) {
         bitField0_ |= 0x00000001;
@@ -5162,6 +5388,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearVersion() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -5170,7 +5397,7 @@ public final class ByzCoinProto {
         return this;
       }
 
-      private ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock skipblock_ = null;
+      private ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock skipblock_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> skipblockBuilder_;
       /**
@@ -5179,9 +5406,10 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional .skipchain.SkipBlock skipblock = 2;</code>
+       * @return Whether the skipblock field is set.
        */
       public boolean hasSkipblock() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -5189,6 +5417,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional .skipchain.SkipBlock skipblock = 2;</code>
+       * @return The skipblock.
        */
       public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getSkipblock() {
         if (skipblockBuilder_ == null) {
@@ -5244,7 +5473,7 @@ public final class ByzCoinProto {
        */
       public Builder mergeSkipblock(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock value) {
         if (skipblockBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               skipblock_ != null &&
               skipblock_ != ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance()) {
             skipblock_ =
@@ -5386,6 +5615,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return Whether the version field is set.
      */
     boolean hasVersion();
     /**
@@ -5394,6 +5624,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return The version.
      */
     int getVersion();
 
@@ -5403,6 +5634,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes skipchainid = 2;</code>
+     * @return Whether the skipchainid field is set.
      */
     boolean hasSkipchainid();
     /**
@@ -5411,6 +5643,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes skipchainid = 2;</code>
+     * @return The skipchainid.
      */
     com.google.protobuf.ByteString getSkipchainid();
 
@@ -5420,6 +5653,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .byzcoin.ClientTransaction transaction = 3;</code>
+     * @return Whether the transaction field is set.
      */
     boolean hasTransaction();
     /**
@@ -5428,6 +5662,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .byzcoin.ClientTransaction transaction = 3;</code>
+     * @return The transaction.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction getTransaction();
     /**
@@ -5446,6 +5681,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional sint32 inclusionwait = 4;</code>
+     * @return Whether the inclusionwait field is set.
      */
     boolean hasInclusionwait();
     /**
@@ -5455,6 +5691,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional sint32 inclusionwait = 4;</code>
+     * @return The inclusionwait.
      */
     int getInclusionwait();
 
@@ -5466,6 +5703,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional bytes prooffrom = 5;</code>
+     * @return Whether the prooffrom field is set.
      */
     boolean hasProoffrom();
     /**
@@ -5476,6 +5714,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional bytes prooffrom = 5;</code>
+     * @return The prooffrom.
      */
     com.google.protobuf.ByteString getProoffrom();
 
@@ -5487,6 +5726,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional sint32 flags = 6;</code>
+     * @return Whether the flags field is set.
      */
     boolean hasFlags();
     /**
@@ -5497,6 +5737,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional sint32 flags = 6;</code>
+     * @return The flags.
      */
     int getFlags();
   }
@@ -5507,7 +5748,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.AddTxRequest}
    */
-  public  static final class AddTxRequest extends
+  public static final class AddTxRequest extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.AddTxRequest)
       AddTxRequestOrBuilder {
@@ -5517,11 +5758,15 @@ public final class ByzCoinProto {
       super(builder);
     }
     private AddTxRequest() {
-      version_ = 0;
       skipchainid_ = com.google.protobuf.ByteString.EMPTY;
-      inclusionwait_ = 0;
       prooffrom_ = com.google.protobuf.ByteString.EMPTY;
-      flags_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new AddTxRequest();
     }
 
     @java.lang.Override
@@ -5560,7 +5805,7 @@ public final class ByzCoinProto {
             }
             case 26: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+              if (((bitField0_ & 0x00000004) != 0)) {
                 subBuilder = transaction_.toBuilder();
               }
               transaction_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction.parser(), extensionRegistry);
@@ -5627,9 +5872,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return Whether the version field is set.
      */
+    @java.lang.Override
     public boolean hasVersion() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -5637,7 +5884,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return The version.
      */
+    @java.lang.Override
     public int getVersion() {
       return version_;
     }
@@ -5650,9 +5899,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes skipchainid = 2;</code>
+     * @return Whether the skipchainid field is set.
      */
+    @java.lang.Override
     public boolean hasSkipchainid() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -5660,7 +5911,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes skipchainid = 2;</code>
+     * @return The skipchainid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getSkipchainid() {
       return skipchainid_;
     }
@@ -5673,9 +5926,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .byzcoin.ClientTransaction transaction = 3;</code>
+     * @return Whether the transaction field is set.
      */
+    @java.lang.Override
     public boolean hasTransaction() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -5683,7 +5938,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .byzcoin.ClientTransaction transaction = 3;</code>
+     * @return The transaction.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction getTransaction() {
       return transaction_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction.getDefaultInstance() : transaction_;
     }
@@ -5694,6 +5951,7 @@ public final class ByzCoinProto {
      *
      * <code>required .byzcoin.ClientTransaction transaction = 3;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransactionOrBuilder getTransactionOrBuilder() {
       return transaction_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction.getDefaultInstance() : transaction_;
     }
@@ -5707,9 +5965,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional sint32 inclusionwait = 4;</code>
+     * @return Whether the inclusionwait field is set.
      */
+    @java.lang.Override
     public boolean hasInclusionwait() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <pre>
@@ -5718,7 +5978,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional sint32 inclusionwait = 4;</code>
+     * @return The inclusionwait.
      */
+    @java.lang.Override
     public int getInclusionwait() {
       return inclusionwait_;
     }
@@ -5733,9 +5995,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional bytes prooffrom = 5;</code>
+     * @return Whether the prooffrom field is set.
      */
+    @java.lang.Override
     public boolean hasProoffrom() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <pre>
@@ -5745,7 +6009,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional bytes prooffrom = 5;</code>
+     * @return The prooffrom.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getProoffrom() {
       return prooffrom_;
     }
@@ -5760,9 +6026,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional sint32 flags = 6;</code>
+     * @return Whether the flags field is set.
      */
+    @java.lang.Override
     public boolean hasFlags() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000020) != 0);
     }
     /**
      * <pre>
@@ -5772,7 +6040,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional sint32 flags = 6;</code>
+     * @return The flags.
      */
+    @java.lang.Override
     public int getFlags() {
       return flags_;
     }
@@ -5807,22 +6077,22 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeSInt32(1, version_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, skipchainid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeMessage(3, getTransaction());
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeSInt32(4, inclusionwait_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeBytes(5, prooffrom_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         output.writeSInt32(6, flags_);
       }
       unknownFields.writeTo(output);
@@ -5834,27 +6104,27 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(1, version_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, skipchainid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getTransaction());
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(4, inclusionwait_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(5, prooffrom_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(6, flags_);
       }
@@ -5873,39 +6143,38 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.AddTxRequest other = (ch.epfl.dedis.lib.proto.ByzCoinProto.AddTxRequest) obj;
 
-      boolean result = true;
-      result = result && (hasVersion() == other.hasVersion());
+      if (hasVersion() != other.hasVersion()) return false;
       if (hasVersion()) {
-        result = result && (getVersion()
-            == other.getVersion());
+        if (getVersion()
+            != other.getVersion()) return false;
       }
-      result = result && (hasSkipchainid() == other.hasSkipchainid());
+      if (hasSkipchainid() != other.hasSkipchainid()) return false;
       if (hasSkipchainid()) {
-        result = result && getSkipchainid()
-            .equals(other.getSkipchainid());
+        if (!getSkipchainid()
+            .equals(other.getSkipchainid())) return false;
       }
-      result = result && (hasTransaction() == other.hasTransaction());
+      if (hasTransaction() != other.hasTransaction()) return false;
       if (hasTransaction()) {
-        result = result && getTransaction()
-            .equals(other.getTransaction());
+        if (!getTransaction()
+            .equals(other.getTransaction())) return false;
       }
-      result = result && (hasInclusionwait() == other.hasInclusionwait());
+      if (hasInclusionwait() != other.hasInclusionwait()) return false;
       if (hasInclusionwait()) {
-        result = result && (getInclusionwait()
-            == other.getInclusionwait());
+        if (getInclusionwait()
+            != other.getInclusionwait()) return false;
       }
-      result = result && (hasProoffrom() == other.hasProoffrom());
+      if (hasProoffrom() != other.hasProoffrom()) return false;
       if (hasProoffrom()) {
-        result = result && getProoffrom()
-            .equals(other.getProoffrom());
+        if (!getProoffrom()
+            .equals(other.getProoffrom())) return false;
       }
-      result = result && (hasFlags() == other.hasFlags());
+      if (hasFlags() != other.hasFlags()) return false;
       if (hasFlags()) {
-        result = result && (getFlags()
-            == other.getFlags());
+        if (getFlags()
+            != other.getFlags()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -6121,34 +6390,34 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.AddTxRequest result = new ch.epfl.dedis.lib.proto.ByzCoinProto.AddTxRequest(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.version_ = version_;
           to_bitField0_ |= 0x00000001;
         }
-        result.version_ = version_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.skipchainid_ = skipchainid_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          if (transactionBuilder_ == null) {
+            result.transaction_ = transaction_;
+          } else {
+            result.transaction_ = transactionBuilder_.build();
+          }
           to_bitField0_ |= 0x00000004;
         }
-        if (transactionBuilder_ == null) {
-          result.transaction_ = transaction_;
-        } else {
-          result.transaction_ = transactionBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.inclusionwait_ = inclusionwait_;
           to_bitField0_ |= 0x00000008;
         }
-        result.inclusionwait_ = inclusionwait_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
           to_bitField0_ |= 0x00000010;
         }
         result.prooffrom_ = prooffrom_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((from_bitField0_ & 0x00000020) != 0)) {
+          result.flags_ = flags_;
           to_bitField0_ |= 0x00000020;
         }
-        result.flags_ = flags_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -6156,35 +6425,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -6265,9 +6534,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @return Whether the version field is set.
        */
+      @java.lang.Override
       public boolean hasVersion() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -6275,7 +6546,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @return The version.
        */
+      @java.lang.Override
       public int getVersion() {
         return version_;
       }
@@ -6285,6 +6558,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @param value The version to set.
+       * @return This builder for chaining.
        */
       public Builder setVersion(int value) {
         bitField0_ |= 0x00000001;
@@ -6298,6 +6573,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearVersion() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -6313,9 +6589,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes skipchainid = 2;</code>
+       * @return Whether the skipchainid field is set.
        */
+      @java.lang.Override
       public boolean hasSkipchainid() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -6323,7 +6601,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes skipchainid = 2;</code>
+       * @return The skipchainid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getSkipchainid() {
         return skipchainid_;
       }
@@ -6333,6 +6613,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes skipchainid = 2;</code>
+       * @param value The skipchainid to set.
+       * @return This builder for chaining.
        */
       public Builder setSkipchainid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -6349,6 +6631,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes skipchainid = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSkipchainid() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -6357,7 +6640,7 @@ public final class ByzCoinProto {
         return this;
       }
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction transaction_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction transaction_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction, ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransactionOrBuilder> transactionBuilder_;
       /**
@@ -6366,9 +6649,10 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required .byzcoin.ClientTransaction transaction = 3;</code>
+       * @return Whether the transaction field is set.
        */
       public boolean hasTransaction() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -6376,6 +6660,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required .byzcoin.ClientTransaction transaction = 3;</code>
+       * @return The transaction.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction getTransaction() {
         if (transactionBuilder_ == null) {
@@ -6431,7 +6716,7 @@ public final class ByzCoinProto {
        */
       public Builder mergeTransaction(ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction value) {
         if (transactionBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+          if (((bitField0_ & 0x00000004) != 0) &&
               transaction_ != null &&
               transaction_ != ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction.getDefaultInstance()) {
             transaction_ =
@@ -6519,9 +6804,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional sint32 inclusionwait = 4;</code>
+       * @return Whether the inclusionwait field is set.
        */
+      @java.lang.Override
       public boolean hasInclusionwait() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <pre>
@@ -6530,7 +6817,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional sint32 inclusionwait = 4;</code>
+       * @return The inclusionwait.
        */
+      @java.lang.Override
       public int getInclusionwait() {
         return inclusionwait_;
       }
@@ -6541,6 +6830,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional sint32 inclusionwait = 4;</code>
+       * @param value The inclusionwait to set.
+       * @return This builder for chaining.
        */
       public Builder setInclusionwait(int value) {
         bitField0_ |= 0x00000008;
@@ -6555,6 +6846,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional sint32 inclusionwait = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearInclusionwait() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -6572,9 +6864,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional bytes prooffrom = 5;</code>
+       * @return Whether the prooffrom field is set.
        */
+      @java.lang.Override
       public boolean hasProoffrom() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <pre>
@@ -6584,7 +6878,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional bytes prooffrom = 5;</code>
+       * @return The prooffrom.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getProoffrom() {
         return prooffrom_;
       }
@@ -6596,6 +6892,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional bytes prooffrom = 5;</code>
+       * @param value The prooffrom to set.
+       * @return This builder for chaining.
        */
       public Builder setProoffrom(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -6614,6 +6912,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional bytes prooffrom = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearProoffrom() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -6631,9 +6930,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional sint32 flags = 6;</code>
+       * @return Whether the flags field is set.
        */
+      @java.lang.Override
       public boolean hasFlags() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000020) != 0);
       }
       /**
        * <pre>
@@ -6643,7 +6944,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional sint32 flags = 6;</code>
+       * @return The flags.
        */
+      @java.lang.Override
       public int getFlags() {
         return flags_;
       }
@@ -6655,6 +6958,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional sint32 flags = 6;</code>
+       * @param value The flags to set.
+       * @return This builder for chaining.
        */
       public Builder setFlags(int value) {
         bitField0_ |= 0x00000020;
@@ -6670,6 +6975,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional sint32 flags = 6;</code>
+       * @return This builder for chaining.
        */
       public Builder clearFlags() {
         bitField0_ = (bitField0_ & ~0x00000020);
@@ -6740,6 +7046,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return Whether the version field is set.
      */
     boolean hasVersion();
     /**
@@ -6748,6 +7055,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return The version.
      */
     int getVersion();
 
@@ -6757,6 +7065,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional string error = 2;</code>
+     * @return Whether the error field is set.
      */
     boolean hasError();
     /**
@@ -6765,6 +7074,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional string error = 2;</code>
+     * @return The error.
      */
     java.lang.String getError();
     /**
@@ -6773,6 +7083,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional string error = 2;</code>
+     * @return The bytes for error.
      */
     com.google.protobuf.ByteString
         getErrorBytes();
@@ -6783,6 +7094,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional .byzcoin.Proof proof = 3;</code>
+     * @return Whether the proof field is set.
      */
     boolean hasProof();
     /**
@@ -6791,6 +7103,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional .byzcoin.Proof proof = 3;</code>
+     * @return The proof.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof();
     /**
@@ -6809,7 +7122,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.AddTxResponse}
    */
-  public  static final class AddTxResponse extends
+  public static final class AddTxResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.AddTxResponse)
       AddTxResponseOrBuilder {
@@ -6819,8 +7132,14 @@ public final class ByzCoinProto {
       super(builder);
     }
     private AddTxResponse() {
-      version_ = 0;
       error_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new AddTxResponse();
     }
 
     @java.lang.Override
@@ -6860,7 +7179,7 @@ public final class ByzCoinProto {
             }
             case 26: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+              if (((bitField0_ & 0x00000004) != 0)) {
                 subBuilder = proof_.toBuilder();
               }
               proof_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.parser(), extensionRegistry);
@@ -6912,9 +7231,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return Whether the version field is set.
      */
+    @java.lang.Override
     public boolean hasVersion() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -6922,7 +7243,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return The version.
      */
+    @java.lang.Override
     public int getVersion() {
       return version_;
     }
@@ -6935,9 +7258,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional string error = 2;</code>
+     * @return Whether the error field is set.
      */
+    @java.lang.Override
     public boolean hasError() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -6945,7 +7270,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional string error = 2;</code>
+     * @return The error.
      */
+    @java.lang.Override
     public java.lang.String getError() {
       java.lang.Object ref = error_;
       if (ref instanceof java.lang.String) {
@@ -6966,7 +7293,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional string error = 2;</code>
+     * @return The bytes for error.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getErrorBytes() {
       java.lang.Object ref = error_;
@@ -6989,9 +7318,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional .byzcoin.Proof proof = 3;</code>
+     * @return Whether the proof field is set.
      */
+    @java.lang.Override
     public boolean hasProof() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -6999,7 +7330,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional .byzcoin.Proof proof = 3;</code>
+     * @return The proof.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof() {
       return proof_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
     }
@@ -7010,6 +7343,7 @@ public final class ByzCoinProto {
      *
      * <code>optional .byzcoin.Proof proof = 3;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getProofOrBuilder() {
       return proof_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
     }
@@ -7038,13 +7372,13 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeSInt32(1, version_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, error_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeMessage(3, getProof());
       }
       unknownFields.writeTo(output);
@@ -7056,14 +7390,14 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(1, version_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, error_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getProof());
       }
@@ -7082,24 +7416,23 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.AddTxResponse other = (ch.epfl.dedis.lib.proto.ByzCoinProto.AddTxResponse) obj;
 
-      boolean result = true;
-      result = result && (hasVersion() == other.hasVersion());
+      if (hasVersion() != other.hasVersion()) return false;
       if (hasVersion()) {
-        result = result && (getVersion()
-            == other.getVersion());
+        if (getVersion()
+            != other.getVersion()) return false;
       }
-      result = result && (hasError() == other.hasError());
+      if (hasError() != other.hasError()) return false;
       if (hasError()) {
-        result = result && getError()
-            .equals(other.getError());
+        if (!getError()
+            .equals(other.getError())) return false;
       }
-      result = result && (hasProof() == other.hasProof());
+      if (hasProof() != other.hasProof()) return false;
       if (hasProof()) {
-        result = result && getProof()
-            .equals(other.getProof());
+        if (!getProof()
+            .equals(other.getProof())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -7297,21 +7630,21 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.AddTxResponse result = new ch.epfl.dedis.lib.proto.ByzCoinProto.AddTxResponse(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.version_ = version_;
           to_bitField0_ |= 0x00000001;
         }
-        result.version_ = version_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.error_ = error_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          if (proofBuilder_ == null) {
+            result.proof_ = proof_;
+          } else {
+            result.proof_ = proofBuilder_.build();
+          }
           to_bitField0_ |= 0x00000004;
-        }
-        if (proofBuilder_ == null) {
-          result.proof_ = proof_;
-        } else {
-          result.proof_ = proofBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -7320,35 +7653,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -7418,9 +7751,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @return Whether the version field is set.
        */
+      @java.lang.Override
       public boolean hasVersion() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -7428,7 +7763,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @return The version.
        */
+      @java.lang.Override
       public int getVersion() {
         return version_;
       }
@@ -7438,6 +7775,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @param value The version to set.
+       * @return This builder for chaining.
        */
       public Builder setVersion(int value) {
         bitField0_ |= 0x00000001;
@@ -7451,6 +7790,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearVersion() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -7466,9 +7806,10 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional string error = 2;</code>
+       * @return Whether the error field is set.
        */
       public boolean hasError() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -7476,6 +7817,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional string error = 2;</code>
+       * @return The error.
        */
       public java.lang.String getError() {
         java.lang.Object ref = error_;
@@ -7497,6 +7839,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional string error = 2;</code>
+       * @return The bytes for error.
        */
       public com.google.protobuf.ByteString
           getErrorBytes() {
@@ -7517,6 +7860,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional string error = 2;</code>
+       * @param value The error to set.
+       * @return This builder for chaining.
        */
       public Builder setError(
           java.lang.String value) {
@@ -7534,6 +7879,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional string error = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearError() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -7547,6 +7893,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional string error = 2;</code>
+       * @param value The bytes for error to set.
+       * @return This builder for chaining.
        */
       public Builder setErrorBytes(
           com.google.protobuf.ByteString value) {
@@ -7559,7 +7907,7 @@ public final class ByzCoinProto {
         return this;
       }
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> proofBuilder_;
       /**
@@ -7568,9 +7916,10 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional .byzcoin.Proof proof = 3;</code>
+       * @return Whether the proof field is set.
        */
       public boolean hasProof() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -7578,6 +7927,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional .byzcoin.Proof proof = 3;</code>
+       * @return The proof.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof() {
         if (proofBuilder_ == null) {
@@ -7633,7 +7983,7 @@ public final class ByzCoinProto {
        */
       public Builder mergeProof(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof value) {
         if (proofBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+          if (((bitField0_ & 0x00000004) != 0) &&
               proof_ != null &&
               proof_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance()) {
             proof_ =
@@ -7775,6 +8125,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return Whether the version field is set.
      */
     boolean hasVersion();
     /**
@@ -7783,6 +8134,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return The version.
      */
     int getVersion();
 
@@ -7792,6 +8144,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes key = 2;</code>
+     * @return Whether the key field is set.
      */
     boolean hasKey();
     /**
@@ -7800,6 +8153,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes key = 2;</code>
+     * @return The key.
      */
     com.google.protobuf.ByteString getKey();
 
@@ -7810,6 +8164,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes id = 3;</code>
+     * @return Whether the id field is set.
      */
     boolean hasId();
     /**
@@ -7819,6 +8174,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes id = 3;</code>
+     * @return The id.
      */
     com.google.protobuf.ByteString getId();
 
@@ -7829,6 +8185,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional bytes mustcontainblock = 4;</code>
+     * @return Whether the mustcontainblock field is set.
      */
     boolean hasMustcontainblock();
     /**
@@ -7838,6 +8195,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional bytes mustcontainblock = 4;</code>
+     * @return The mustcontainblock.
      */
     com.google.protobuf.ByteString getMustcontainblock();
   }
@@ -7848,7 +8206,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.GetProof}
    */
-  public  static final class GetProof extends
+  public static final class GetProof extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.GetProof)
       GetProofOrBuilder {
@@ -7858,10 +8216,16 @@ public final class ByzCoinProto {
       super(builder);
     }
     private GetProof() {
-      version_ = 0;
       key_ = com.google.protobuf.ByteString.EMPTY;
       id_ = com.google.protobuf.ByteString.EMPTY;
       mustcontainblock_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetProof();
     }
 
     @java.lang.Override
@@ -7949,9 +8313,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return Whether the version field is set.
      */
+    @java.lang.Override
     public boolean hasVersion() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -7959,7 +8325,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return The version.
      */
+    @java.lang.Override
     public int getVersion() {
       return version_;
     }
@@ -7972,9 +8340,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes key = 2;</code>
+     * @return Whether the key field is set.
      */
+    @java.lang.Override
     public boolean hasKey() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -7982,7 +8352,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes key = 2;</code>
+     * @return The key.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getKey() {
       return key_;
     }
@@ -7996,9 +8368,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes id = 3;</code>
+     * @return Whether the id field is set.
      */
+    @java.lang.Override
     public boolean hasId() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -8007,7 +8381,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes id = 3;</code>
+     * @return The id.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getId() {
       return id_;
     }
@@ -8021,9 +8397,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional bytes mustcontainblock = 4;</code>
+     * @return Whether the mustcontainblock field is set.
      */
+    @java.lang.Override
     public boolean hasMustcontainblock() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <pre>
@@ -8032,7 +8410,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional bytes mustcontainblock = 4;</code>
+     * @return The mustcontainblock.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getMustcontainblock() {
       return mustcontainblock_;
     }
@@ -8063,16 +8443,16 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeSInt32(1, version_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, key_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBytes(3, id_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeBytes(4, mustcontainblock_);
       }
       unknownFields.writeTo(output);
@@ -8084,19 +8464,19 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(1, version_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, key_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, id_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(4, mustcontainblock_);
       }
@@ -8115,29 +8495,28 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.GetProof other = (ch.epfl.dedis.lib.proto.ByzCoinProto.GetProof) obj;
 
-      boolean result = true;
-      result = result && (hasVersion() == other.hasVersion());
+      if (hasVersion() != other.hasVersion()) return false;
       if (hasVersion()) {
-        result = result && (getVersion()
-            == other.getVersion());
+        if (getVersion()
+            != other.getVersion()) return false;
       }
-      result = result && (hasKey() == other.hasKey());
+      if (hasKey() != other.hasKey()) return false;
       if (hasKey()) {
-        result = result && getKey()
-            .equals(other.getKey());
+        if (!getKey()
+            .equals(other.getKey())) return false;
       }
-      result = result && (hasId() == other.hasId());
+      if (hasId() != other.hasId()) return false;
       if (hasId()) {
-        result = result && getId()
-            .equals(other.getId());
+        if (!getId()
+            .equals(other.getId())) return false;
       }
-      result = result && (hasMustcontainblock() == other.hasMustcontainblock());
+      if (hasMustcontainblock() != other.hasMustcontainblock()) return false;
       if (hasMustcontainblock()) {
-        result = result && getMustcontainblock()
-            .equals(other.getMustcontainblock());
+        if (!getMustcontainblock()
+            .equals(other.getMustcontainblock())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -8336,19 +8715,19 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.GetProof result = new ch.epfl.dedis.lib.proto.ByzCoinProto.GetProof(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.version_ = version_;
           to_bitField0_ |= 0x00000001;
         }
-        result.version_ = version_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.key_ = key_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.id_ = id_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
           to_bitField0_ |= 0x00000008;
         }
         result.mustcontainblock_ = mustcontainblock_;
@@ -8359,35 +8738,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -8459,9 +8838,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @return Whether the version field is set.
        */
+      @java.lang.Override
       public boolean hasVersion() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -8469,7 +8850,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @return The version.
        */
+      @java.lang.Override
       public int getVersion() {
         return version_;
       }
@@ -8479,6 +8862,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @param value The version to set.
+       * @return This builder for chaining.
        */
       public Builder setVersion(int value) {
         bitField0_ |= 0x00000001;
@@ -8492,6 +8877,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearVersion() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -8507,9 +8893,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes key = 2;</code>
+       * @return Whether the key field is set.
        */
+      @java.lang.Override
       public boolean hasKey() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -8517,7 +8905,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes key = 2;</code>
+       * @return The key.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getKey() {
         return key_;
       }
@@ -8527,6 +8917,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes key = 2;</code>
+       * @param value The key to set.
+       * @return This builder for chaining.
        */
       public Builder setKey(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -8543,6 +8935,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes key = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearKey() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -8559,9 +8952,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes id = 3;</code>
+       * @return Whether the id field is set.
        */
+      @java.lang.Override
       public boolean hasId() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -8570,7 +8965,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes id = 3;</code>
+       * @return The id.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getId() {
         return id_;
       }
@@ -8581,6 +8978,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes id = 3;</code>
+       * @param value The id to set.
+       * @return This builder for chaining.
        */
       public Builder setId(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -8598,6 +8997,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes id = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearId() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -8614,9 +9014,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional bytes mustcontainblock = 4;</code>
+       * @return Whether the mustcontainblock field is set.
        */
+      @java.lang.Override
       public boolean hasMustcontainblock() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <pre>
@@ -8625,7 +9027,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional bytes mustcontainblock = 4;</code>
+       * @return The mustcontainblock.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getMustcontainblock() {
         return mustcontainblock_;
       }
@@ -8636,6 +9040,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional bytes mustcontainblock = 4;</code>
+       * @param value The mustcontainblock to set.
+       * @return This builder for chaining.
        */
       public Builder setMustcontainblock(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -8653,6 +9059,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional bytes mustcontainblock = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMustcontainblock() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -8723,6 +9130,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return Whether the version field is set.
      */
     boolean hasVersion();
     /**
@@ -8731,6 +9139,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return The version.
      */
     int getVersion();
 
@@ -8741,6 +9150,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .byzcoin.Proof proof = 2;</code>
+     * @return Whether the proof field is set.
      */
     boolean hasProof();
     /**
@@ -8750,6 +9160,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .byzcoin.Proof proof = 2;</code>
+     * @return The proof.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof();
     /**
@@ -8770,7 +9181,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.GetProofResponse}
    */
-  public  static final class GetProofResponse extends
+  public static final class GetProofResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.GetProofResponse)
       GetProofResponseOrBuilder {
@@ -8780,7 +9191,13 @@ public final class ByzCoinProto {
       super(builder);
     }
     private GetProofResponse() {
-      version_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetProofResponse();
     }
 
     @java.lang.Override
@@ -8814,7 +9231,7 @@ public final class ByzCoinProto {
             }
             case 18: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = proof_.toBuilder();
               }
               proof_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.parser(), extensionRegistry);
@@ -8866,9 +9283,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return Whether the version field is set.
      */
+    @java.lang.Override
     public boolean hasVersion() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -8876,7 +9295,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return The version.
      */
+    @java.lang.Override
     public int getVersion() {
       return version_;
     }
@@ -8890,9 +9311,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .byzcoin.Proof proof = 2;</code>
+     * @return Whether the proof field is set.
      */
+    @java.lang.Override
     public boolean hasProof() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -8901,7 +9324,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .byzcoin.Proof proof = 2;</code>
+     * @return The proof.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof() {
       return proof_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
     }
@@ -8913,6 +9338,7 @@ public final class ByzCoinProto {
      *
      * <code>required .byzcoin.Proof proof = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getProofOrBuilder() {
       return proof_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
     }
@@ -8943,10 +9369,10 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeSInt32(1, version_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getProof());
       }
       unknownFields.writeTo(output);
@@ -8958,11 +9384,11 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(1, version_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getProof());
       }
@@ -8981,19 +9407,18 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.GetProofResponse other = (ch.epfl.dedis.lib.proto.ByzCoinProto.GetProofResponse) obj;
 
-      boolean result = true;
-      result = result && (hasVersion() == other.hasVersion());
+      if (hasVersion() != other.hasVersion()) return false;
       if (hasVersion()) {
-        result = result && (getVersion()
-            == other.getVersion());
+        if (getVersion()
+            != other.getVersion()) return false;
       }
-      result = result && (hasProof() == other.hasProof());
+      if (hasProof() != other.hasProof()) return false;
       if (hasProof()) {
-        result = result && getProof()
-            .equals(other.getProof());
+        if (!getProof()
+            .equals(other.getProof())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -9186,17 +9611,17 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.GetProofResponse result = new ch.epfl.dedis.lib.proto.ByzCoinProto.GetProofResponse(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.version_ = version_;
           to_bitField0_ |= 0x00000001;
         }
-        result.version_ = version_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (proofBuilder_ == null) {
+            result.proof_ = proof_;
+          } else {
+            result.proof_ = proofBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
-        }
-        if (proofBuilder_ == null) {
-          result.proof_ = proof_;
-        } else {
-          result.proof_ = proofBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -9205,35 +9630,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -9299,9 +9724,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @return Whether the version field is set.
        */
+      @java.lang.Override
       public boolean hasVersion() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -9309,7 +9736,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @return The version.
        */
+      @java.lang.Override
       public int getVersion() {
         return version_;
       }
@@ -9319,6 +9748,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @param value The version to set.
+       * @return This builder for chaining.
        */
       public Builder setVersion(int value) {
         bitField0_ |= 0x00000001;
@@ -9332,6 +9763,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearVersion() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -9340,7 +9772,7 @@ public final class ByzCoinProto {
         return this;
       }
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> proofBuilder_;
       /**
@@ -9350,9 +9782,10 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required .byzcoin.Proof proof = 2;</code>
+       * @return Whether the proof field is set.
        */
       public boolean hasProof() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -9361,6 +9794,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required .byzcoin.Proof proof = 2;</code>
+       * @return The proof.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof() {
         if (proofBuilder_ == null) {
@@ -9419,7 +9853,7 @@ public final class ByzCoinProto {
        */
       public Builder mergeProof(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof value) {
         if (proofBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               proof_ != null &&
               proof_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance()) {
             proof_ =
@@ -9565,6 +9999,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return Whether the version field is set.
      */
     boolean hasVersion();
     /**
@@ -9573,6 +10008,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return The version.
      */
     int getVersion();
 
@@ -9582,6 +10018,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes byzcoinid = 2;</code>
+     * @return Whether the byzcoinid field is set.
      */
     boolean hasByzcoinid();
     /**
@@ -9590,6 +10027,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes byzcoinid = 2;</code>
+     * @return The byzcoinid.
      */
     com.google.protobuf.ByteString getByzcoinid();
 
@@ -9599,6 +10037,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes darcid = 3;</code>
+     * @return Whether the darcid field is set.
      */
     boolean hasDarcid();
     /**
@@ -9607,6 +10046,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes darcid = 3;</code>
+     * @return The darcid.
      */
     com.google.protobuf.ByteString getDarcid();
 
@@ -9662,7 +10102,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.CheckAuthorization}
    */
-  public  static final class CheckAuthorization extends
+  public static final class CheckAuthorization extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.CheckAuthorization)
       CheckAuthorizationOrBuilder {
@@ -9672,10 +10112,16 @@ public final class ByzCoinProto {
       super(builder);
     }
     private CheckAuthorization() {
-      version_ = 0;
       byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
       darcid_ = com.google.protobuf.ByteString.EMPTY;
       identities_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new CheckAuthorization();
     }
 
     @java.lang.Override
@@ -9718,7 +10164,7 @@ public final class ByzCoinProto {
               break;
             }
             case 34: {
-              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+              if (!((mutable_bitField0_ & 0x00000008) != 0)) {
                 identities_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.DarcProto.Identity>();
                 mutable_bitField0_ |= 0x00000008;
               }
@@ -9741,7 +10187,7 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((mutable_bitField0_ & 0x00000008) != 0)) {
           identities_ = java.util.Collections.unmodifiableList(identities_);
         }
         this.unknownFields = unknownFields.build();
@@ -9770,9 +10216,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return Whether the version field is set.
      */
+    @java.lang.Override
     public boolean hasVersion() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -9780,7 +10228,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 version = 1;</code>
+     * @return The version.
      */
+    @java.lang.Override
     public int getVersion() {
       return version_;
     }
@@ -9793,9 +10243,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes byzcoinid = 2;</code>
+     * @return Whether the byzcoinid field is set.
      */
+    @java.lang.Override
     public boolean hasByzcoinid() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -9803,7 +10255,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes byzcoinid = 2;</code>
+     * @return The byzcoinid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getByzcoinid() {
       return byzcoinid_;
     }
@@ -9816,9 +10270,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes darcid = 3;</code>
+     * @return Whether the darcid field is set.
      */
+    @java.lang.Override
     public boolean hasDarcid() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -9826,7 +10282,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes darcid = 3;</code>
+     * @return The darcid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getDarcid() {
       return darcid_;
     }
@@ -9840,6 +10298,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .darc.Identity identities = 4;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity> getIdentitiesList() {
       return identities_;
     }
@@ -9850,6 +10309,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .darc.Identity identities = 4;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>
         getIdentitiesOrBuilderList() {
       return identities_;
@@ -9861,6 +10321,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .darc.Identity identities = 4;</code>
      */
+    @java.lang.Override
     public int getIdentitiesCount() {
       return identities_.size();
     }
@@ -9871,6 +10332,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .darc.Identity identities = 4;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.Identity getIdentities(int index) {
       return identities_.get(index);
     }
@@ -9881,6 +10343,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .darc.Identity identities = 4;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder getIdentitiesOrBuilder(
         int index) {
       return identities_.get(index);
@@ -9918,13 +10381,13 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeSInt32(1, version_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, byzcoinid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBytes(3, darcid_);
       }
       for (int i = 0; i < identities_.size(); i++) {
@@ -9939,15 +10402,15 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(1, version_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, byzcoinid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, darcid_);
       }
@@ -9970,26 +10433,25 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.CheckAuthorization other = (ch.epfl.dedis.lib.proto.ByzCoinProto.CheckAuthorization) obj;
 
-      boolean result = true;
-      result = result && (hasVersion() == other.hasVersion());
+      if (hasVersion() != other.hasVersion()) return false;
       if (hasVersion()) {
-        result = result && (getVersion()
-            == other.getVersion());
+        if (getVersion()
+            != other.getVersion()) return false;
       }
-      result = result && (hasByzcoinid() == other.hasByzcoinid());
+      if (hasByzcoinid() != other.hasByzcoinid()) return false;
       if (hasByzcoinid()) {
-        result = result && getByzcoinid()
-            .equals(other.getByzcoinid());
+        if (!getByzcoinid()
+            .equals(other.getByzcoinid())) return false;
       }
-      result = result && (hasDarcid() == other.hasDarcid());
+      if (hasDarcid() != other.hasDarcid()) return false;
       if (hasDarcid()) {
-        result = result && getDarcid()
-            .equals(other.getDarcid());
+        if (!getDarcid()
+            .equals(other.getDarcid())) return false;
       }
-      result = result && getIdentitiesList()
-          .equals(other.getIdentitiesList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getIdentitiesList()
+          .equals(other.getIdentitiesList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -10194,20 +10656,20 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.CheckAuthorization result = new ch.epfl.dedis.lib.proto.ByzCoinProto.CheckAuthorization(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.version_ = version_;
           to_bitField0_ |= 0x00000001;
         }
-        result.version_ = version_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.byzcoinid_ = byzcoinid_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.darcid_ = darcid_;
         if (identitiesBuilder_ == null) {
-          if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          if (((bitField0_ & 0x00000008) != 0)) {
             identities_ = java.util.Collections.unmodifiableList(identities_);
             bitField0_ = (bitField0_ & ~0x00000008);
           }
@@ -10222,35 +10684,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -10350,9 +10812,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @return Whether the version field is set.
        */
+      @java.lang.Override
       public boolean hasVersion() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -10360,7 +10824,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @return The version.
        */
+      @java.lang.Override
       public int getVersion() {
         return version_;
       }
@@ -10370,6 +10836,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @param value The version to set.
+       * @return This builder for chaining.
        */
       public Builder setVersion(int value) {
         bitField0_ |= 0x00000001;
@@ -10383,6 +10851,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 version = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearVersion() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -10398,9 +10867,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes byzcoinid = 2;</code>
+       * @return Whether the byzcoinid field is set.
        */
+      @java.lang.Override
       public boolean hasByzcoinid() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -10408,7 +10879,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes byzcoinid = 2;</code>
+       * @return The byzcoinid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getByzcoinid() {
         return byzcoinid_;
       }
@@ -10418,6 +10891,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes byzcoinid = 2;</code>
+       * @param value The byzcoinid to set.
+       * @return This builder for chaining.
        */
       public Builder setByzcoinid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -10434,6 +10909,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes byzcoinid = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearByzcoinid() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -10449,9 +10925,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes darcid = 3;</code>
+       * @return Whether the darcid field is set.
        */
+      @java.lang.Override
       public boolean hasDarcid() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -10459,7 +10937,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes darcid = 3;</code>
+       * @return The darcid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getDarcid() {
         return darcid_;
       }
@@ -10469,6 +10949,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes darcid = 3;</code>
+       * @param value The darcid to set.
+       * @return This builder for chaining.
        */
       public Builder setDarcid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -10485,6 +10967,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes darcid = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearDarcid() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -10496,7 +10979,7 @@ public final class ByzCoinProto {
       private java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity> identities_ =
         java.util.Collections.emptyList();
       private void ensureIdentitiesIsMutable() {
-        if (!((bitField0_ & 0x00000008) == 0x00000008)) {
+        if (!((bitField0_ & 0x00000008) != 0)) {
           identities_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.DarcProto.Identity>(identities_);
           bitField0_ |= 0x00000008;
          }
@@ -10797,7 +11280,7 @@ public final class ByzCoinProto {
           identitiesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>(
                   identities_,
-                  ((bitField0_ & 0x00000008) == 0x00000008),
+                  ((bitField0_ & 0x00000008) != 0),
                   getParentForChildren(),
                   isClean());
           identities_ = null;
@@ -10863,19 +11346,25 @@ public final class ByzCoinProto {
 
     /**
      * <code>repeated string actions = 1;</code>
+     * @return A list containing the actions.
      */
     java.util.List<java.lang.String>
         getActionsList();
     /**
      * <code>repeated string actions = 1;</code>
+     * @return The count of actions.
      */
     int getActionsCount();
     /**
      * <code>repeated string actions = 1;</code>
+     * @param index The index of the element to return.
+     * @return The actions at the given index.
      */
     java.lang.String getActions(int index);
     /**
      * <code>repeated string actions = 1;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the actions at the given index.
      */
     com.google.protobuf.ByteString
         getActionsBytes(int index);
@@ -10889,7 +11378,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.CheckAuthorizationResponse}
    */
-  public  static final class CheckAuthorizationResponse extends
+  public static final class CheckAuthorizationResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.CheckAuthorizationResponse)
       CheckAuthorizationResponseOrBuilder {
@@ -10900,6 +11389,13 @@ public final class ByzCoinProto {
     }
     private CheckAuthorizationResponse() {
       actions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new CheckAuthorizationResponse();
     }
 
     @java.lang.Override
@@ -10928,7 +11424,7 @@ public final class ByzCoinProto {
               break;
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 actions_ = new com.google.protobuf.LazyStringArrayList();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -10950,7 +11446,7 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
           actions_ = actions_.getUnmodifiableView();
         }
         this.unknownFields = unknownFields.build();
@@ -10974,6 +11470,7 @@ public final class ByzCoinProto {
     private com.google.protobuf.LazyStringList actions_;
     /**
      * <code>repeated string actions = 1;</code>
+     * @return A list containing the actions.
      */
     public com.google.protobuf.ProtocolStringList
         getActionsList() {
@@ -10981,18 +11478,23 @@ public final class ByzCoinProto {
     }
     /**
      * <code>repeated string actions = 1;</code>
+     * @return The count of actions.
      */
     public int getActionsCount() {
       return actions_.size();
     }
     /**
      * <code>repeated string actions = 1;</code>
+     * @param index The index of the element to return.
+     * @return The actions at the given index.
      */
     public java.lang.String getActions(int index) {
       return actions_.get(index);
     }
     /**
      * <code>repeated string actions = 1;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the actions at the given index.
      */
     public com.google.protobuf.ByteString
         getActionsBytes(int index) {
@@ -11048,11 +11550,10 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.CheckAuthorizationResponse other = (ch.epfl.dedis.lib.proto.ByzCoinProto.CheckAuthorizationResponse) obj;
 
-      boolean result = true;
-      result = result && getActionsList()
-          .equals(other.getActionsList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getActionsList()
+          .equals(other.getActionsList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -11234,7 +11735,7 @@ public final class ByzCoinProto {
       public ch.epfl.dedis.lib.proto.ByzCoinProto.CheckAuthorizationResponse buildPartial() {
         ch.epfl.dedis.lib.proto.ByzCoinProto.CheckAuthorizationResponse result = new ch.epfl.dedis.lib.proto.ByzCoinProto.CheckAuthorizationResponse(this);
         int from_bitField0_ = bitField0_;
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((bitField0_ & 0x00000001) != 0)) {
           actions_ = actions_.getUnmodifiableView();
           bitField0_ = (bitField0_ & ~0x00000001);
         }
@@ -11245,35 +11746,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -11329,13 +11830,14 @@ public final class ByzCoinProto {
 
       private com.google.protobuf.LazyStringList actions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureActionsIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           actions_ = new com.google.protobuf.LazyStringArrayList(actions_);
           bitField0_ |= 0x00000001;
          }
       }
       /**
        * <code>repeated string actions = 1;</code>
+       * @return A list containing the actions.
        */
       public com.google.protobuf.ProtocolStringList
           getActionsList() {
@@ -11343,18 +11845,23 @@ public final class ByzCoinProto {
       }
       /**
        * <code>repeated string actions = 1;</code>
+       * @return The count of actions.
        */
       public int getActionsCount() {
         return actions_.size();
       }
       /**
        * <code>repeated string actions = 1;</code>
+       * @param index The index of the element to return.
+       * @return The actions at the given index.
        */
       public java.lang.String getActions(int index) {
         return actions_.get(index);
       }
       /**
        * <code>repeated string actions = 1;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the actions at the given index.
        */
       public com.google.protobuf.ByteString
           getActionsBytes(int index) {
@@ -11362,6 +11869,9 @@ public final class ByzCoinProto {
       }
       /**
        * <code>repeated string actions = 1;</code>
+       * @param index The index to set the value at.
+       * @param value The actions to set.
+       * @return This builder for chaining.
        */
       public Builder setActions(
           int index, java.lang.String value) {
@@ -11375,6 +11885,8 @@ public final class ByzCoinProto {
       }
       /**
        * <code>repeated string actions = 1;</code>
+       * @param value The actions to add.
+       * @return This builder for chaining.
        */
       public Builder addActions(
           java.lang.String value) {
@@ -11388,6 +11900,8 @@ public final class ByzCoinProto {
       }
       /**
        * <code>repeated string actions = 1;</code>
+       * @param values The actions to add.
+       * @return This builder for chaining.
        */
       public Builder addAllActions(
           java.lang.Iterable<java.lang.String> values) {
@@ -11399,6 +11913,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>repeated string actions = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearActions() {
         actions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -11408,6 +11923,8 @@ public final class ByzCoinProto {
       }
       /**
        * <code>repeated string actions = 1;</code>
+       * @param value The bytes of the actions to add.
+       * @return This builder for chaining.
        */
       public Builder addActionsBytes(
           com.google.protobuf.ByteString value) {
@@ -11478,19 +11995,23 @@ public final class ByzCoinProto {
 
     /**
      * <code>required sint64 blockinterval = 1;</code>
+     * @return Whether the blockinterval field is set.
      */
     boolean hasBlockinterval();
     /**
      * <code>required sint64 blockinterval = 1;</code>
+     * @return The blockinterval.
      */
     long getBlockinterval();
 
     /**
      * <code>required .onet.Roster roster = 2;</code>
+     * @return Whether the roster field is set.
      */
     boolean hasRoster();
     /**
      * <code>required .onet.Roster roster = 2;</code>
+     * @return The roster.
      */
     ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster();
     /**
@@ -11500,28 +12021,36 @@ public final class ByzCoinProto {
 
     /**
      * <code>required sint32 maxblocksize = 3;</code>
+     * @return Whether the maxblocksize field is set.
      */
     boolean hasMaxblocksize();
     /**
      * <code>required sint32 maxblocksize = 3;</code>
+     * @return The maxblocksize.
      */
     int getMaxblocksize();
 
     /**
      * <code>repeated string darccontractids = 4;</code>
+     * @return A list containing the darccontractids.
      */
     java.util.List<java.lang.String>
         getDarccontractidsList();
     /**
      * <code>repeated string darccontractids = 4;</code>
+     * @return The count of darccontractids.
      */
     int getDarccontractidsCount();
     /**
      * <code>repeated string darccontractids = 4;</code>
+     * @param index The index of the element to return.
+     * @return The darccontractids at the given index.
      */
     java.lang.String getDarccontractids(int index);
     /**
      * <code>repeated string darccontractids = 4;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the darccontractids at the given index.
      */
     com.google.protobuf.ByteString
         getDarccontractidsBytes(int index);
@@ -11534,7 +12063,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.ChainConfig}
    */
-  public  static final class ChainConfig extends
+  public static final class ChainConfig extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.ChainConfig)
       ChainConfigOrBuilder {
@@ -11544,9 +12073,14 @@ public final class ByzCoinProto {
       super(builder);
     }
     private ChainConfig() {
-      blockinterval_ = 0L;
-      maxblocksize_ = 0;
       darccontractids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new ChainConfig();
     }
 
     @java.lang.Override
@@ -11580,7 +12114,7 @@ public final class ByzCoinProto {
             }
             case 18: {
               ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = roster_.toBuilder();
               }
               roster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.parser(), extensionRegistry);
@@ -11598,7 +12132,7 @@ public final class ByzCoinProto {
             }
             case 34: {
               com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+              if (!((mutable_bitField0_ & 0x00000008) != 0)) {
                 darccontractids_ = new com.google.protobuf.LazyStringArrayList();
                 mutable_bitField0_ |= 0x00000008;
               }
@@ -11620,7 +12154,7 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((mutable_bitField0_ & 0x00000008) != 0)) {
           darccontractids_ = darccontractids_.getUnmodifiableView();
         }
         this.unknownFields = unknownFields.build();
@@ -11645,13 +12179,17 @@ public final class ByzCoinProto {
     private long blockinterval_;
     /**
      * <code>required sint64 blockinterval = 1;</code>
+     * @return Whether the blockinterval field is set.
      */
+    @java.lang.Override
     public boolean hasBlockinterval() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required sint64 blockinterval = 1;</code>
+     * @return The blockinterval.
      */
+    @java.lang.Override
     public long getBlockinterval() {
       return blockinterval_;
     }
@@ -11660,19 +12198,24 @@ public final class ByzCoinProto {
     private ch.epfl.dedis.lib.proto.OnetProto.Roster roster_;
     /**
      * <code>required .onet.Roster roster = 2;</code>
+     * @return Whether the roster field is set.
      */
+    @java.lang.Override
     public boolean hasRoster() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required .onet.Roster roster = 2;</code>
+     * @return The roster.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster() {
       return roster_ == null ? ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
     }
     /**
      * <code>required .onet.Roster roster = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder getRosterOrBuilder() {
       return roster_ == null ? ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
     }
@@ -11681,13 +12224,17 @@ public final class ByzCoinProto {
     private int maxblocksize_;
     /**
      * <code>required sint32 maxblocksize = 3;</code>
+     * @return Whether the maxblocksize field is set.
      */
+    @java.lang.Override
     public boolean hasMaxblocksize() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>required sint32 maxblocksize = 3;</code>
+     * @return The maxblocksize.
      */
+    @java.lang.Override
     public int getMaxblocksize() {
       return maxblocksize_;
     }
@@ -11696,6 +12243,7 @@ public final class ByzCoinProto {
     private com.google.protobuf.LazyStringList darccontractids_;
     /**
      * <code>repeated string darccontractids = 4;</code>
+     * @return A list containing the darccontractids.
      */
     public com.google.protobuf.ProtocolStringList
         getDarccontractidsList() {
@@ -11703,18 +12251,23 @@ public final class ByzCoinProto {
     }
     /**
      * <code>repeated string darccontractids = 4;</code>
+     * @return The count of darccontractids.
      */
     public int getDarccontractidsCount() {
       return darccontractids_.size();
     }
     /**
      * <code>repeated string darccontractids = 4;</code>
+     * @param index The index of the element to return.
+     * @return The darccontractids at the given index.
      */
     public java.lang.String getDarccontractids(int index) {
       return darccontractids_.get(index);
     }
     /**
      * <code>repeated string darccontractids = 4;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the darccontractids at the given index.
      */
     public com.google.protobuf.ByteString
         getDarccontractidsBytes(int index) {
@@ -11751,13 +12304,13 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeSInt64(1, blockinterval_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getRoster());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeSInt32(3, maxblocksize_);
       }
       for (int i = 0; i < darccontractids_.size(); i++) {
@@ -11772,15 +12325,15 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt64Size(1, blockinterval_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getRoster());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(3, maxblocksize_);
       }
@@ -11807,26 +12360,25 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.ChainConfig other = (ch.epfl.dedis.lib.proto.ByzCoinProto.ChainConfig) obj;
 
-      boolean result = true;
-      result = result && (hasBlockinterval() == other.hasBlockinterval());
+      if (hasBlockinterval() != other.hasBlockinterval()) return false;
       if (hasBlockinterval()) {
-        result = result && (getBlockinterval()
-            == other.getBlockinterval());
+        if (getBlockinterval()
+            != other.getBlockinterval()) return false;
       }
-      result = result && (hasRoster() == other.hasRoster());
+      if (hasRoster() != other.hasRoster()) return false;
       if (hasRoster()) {
-        result = result && getRoster()
-            .equals(other.getRoster());
+        if (!getRoster()
+            .equals(other.getRoster())) return false;
       }
-      result = result && (hasMaxblocksize() == other.hasMaxblocksize());
+      if (hasMaxblocksize() != other.hasMaxblocksize()) return false;
       if (hasMaxblocksize()) {
-        result = result && (getMaxblocksize()
-            == other.getMaxblocksize());
+        if (getMaxblocksize()
+            != other.getMaxblocksize()) return false;
       }
-      result = result && getDarccontractidsList()
-          .equals(other.getDarccontractidsList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getDarccontractidsList()
+          .equals(other.getDarccontractidsList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -12032,23 +12584,23 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.ChainConfig result = new ch.epfl.dedis.lib.proto.ByzCoinProto.ChainConfig(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.blockinterval_ = blockinterval_;
           to_bitField0_ |= 0x00000001;
         }
-        result.blockinterval_ = blockinterval_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (rosterBuilder_ == null) {
+            result.roster_ = roster_;
+          } else {
+            result.roster_ = rosterBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
         }
-        if (rosterBuilder_ == null) {
-          result.roster_ = roster_;
-        } else {
-          result.roster_ = rosterBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.maxblocksize_ = maxblocksize_;
           to_bitField0_ |= 0x00000004;
         }
-        result.maxblocksize_ = maxblocksize_;
-        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((bitField0_ & 0x00000008) != 0)) {
           darccontractids_ = darccontractids_.getUnmodifiableView();
           bitField0_ = (bitField0_ & ~0x00000008);
         }
@@ -12060,35 +12612,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -12166,18 +12718,24 @@ public final class ByzCoinProto {
       private long blockinterval_ ;
       /**
        * <code>required sint64 blockinterval = 1;</code>
+       * @return Whether the blockinterval field is set.
        */
+      @java.lang.Override
       public boolean hasBlockinterval() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required sint64 blockinterval = 1;</code>
+       * @return The blockinterval.
        */
+      @java.lang.Override
       public long getBlockinterval() {
         return blockinterval_;
       }
       /**
        * <code>required sint64 blockinterval = 1;</code>
+       * @param value The blockinterval to set.
+       * @return This builder for chaining.
        */
       public Builder setBlockinterval(long value) {
         bitField0_ |= 0x00000001;
@@ -12187,6 +12745,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required sint64 blockinterval = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearBlockinterval() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -12195,17 +12754,19 @@ public final class ByzCoinProto {
         return this;
       }
 
-      private ch.epfl.dedis.lib.proto.OnetProto.Roster roster_ = null;
+      private ch.epfl.dedis.lib.proto.OnetProto.Roster roster_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder> rosterBuilder_;
       /**
        * <code>required .onet.Roster roster = 2;</code>
+       * @return Whether the roster field is set.
        */
       public boolean hasRoster() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required .onet.Roster roster = 2;</code>
+       * @return The roster.
        */
       public ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster() {
         if (rosterBuilder_ == null) {
@@ -12249,7 +12810,7 @@ public final class ByzCoinProto {
        */
       public Builder mergeRoster(ch.epfl.dedis.lib.proto.OnetProto.Roster value) {
         if (rosterBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               roster_ != null &&
               roster_ != ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance()) {
             roster_ =
@@ -12316,18 +12877,24 @@ public final class ByzCoinProto {
       private int maxblocksize_ ;
       /**
        * <code>required sint32 maxblocksize = 3;</code>
+       * @return Whether the maxblocksize field is set.
        */
+      @java.lang.Override
       public boolean hasMaxblocksize() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>required sint32 maxblocksize = 3;</code>
+       * @return The maxblocksize.
        */
+      @java.lang.Override
       public int getMaxblocksize() {
         return maxblocksize_;
       }
       /**
        * <code>required sint32 maxblocksize = 3;</code>
+       * @param value The maxblocksize to set.
+       * @return This builder for chaining.
        */
       public Builder setMaxblocksize(int value) {
         bitField0_ |= 0x00000004;
@@ -12337,6 +12904,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required sint32 maxblocksize = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMaxblocksize() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -12347,13 +12915,14 @@ public final class ByzCoinProto {
 
       private com.google.protobuf.LazyStringList darccontractids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureDarccontractidsIsMutable() {
-        if (!((bitField0_ & 0x00000008) == 0x00000008)) {
+        if (!((bitField0_ & 0x00000008) != 0)) {
           darccontractids_ = new com.google.protobuf.LazyStringArrayList(darccontractids_);
           bitField0_ |= 0x00000008;
          }
       }
       /**
        * <code>repeated string darccontractids = 4;</code>
+       * @return A list containing the darccontractids.
        */
       public com.google.protobuf.ProtocolStringList
           getDarccontractidsList() {
@@ -12361,18 +12930,23 @@ public final class ByzCoinProto {
       }
       /**
        * <code>repeated string darccontractids = 4;</code>
+       * @return The count of darccontractids.
        */
       public int getDarccontractidsCount() {
         return darccontractids_.size();
       }
       /**
        * <code>repeated string darccontractids = 4;</code>
+       * @param index The index of the element to return.
+       * @return The darccontractids at the given index.
        */
       public java.lang.String getDarccontractids(int index) {
         return darccontractids_.get(index);
       }
       /**
        * <code>repeated string darccontractids = 4;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the darccontractids at the given index.
        */
       public com.google.protobuf.ByteString
           getDarccontractidsBytes(int index) {
@@ -12380,6 +12954,9 @@ public final class ByzCoinProto {
       }
       /**
        * <code>repeated string darccontractids = 4;</code>
+       * @param index The index to set the value at.
+       * @param value The darccontractids to set.
+       * @return This builder for chaining.
        */
       public Builder setDarccontractids(
           int index, java.lang.String value) {
@@ -12393,6 +12970,8 @@ public final class ByzCoinProto {
       }
       /**
        * <code>repeated string darccontractids = 4;</code>
+       * @param value The darccontractids to add.
+       * @return This builder for chaining.
        */
       public Builder addDarccontractids(
           java.lang.String value) {
@@ -12406,6 +12985,8 @@ public final class ByzCoinProto {
       }
       /**
        * <code>repeated string darccontractids = 4;</code>
+       * @param values The darccontractids to add.
+       * @return This builder for chaining.
        */
       public Builder addAllDarccontractids(
           java.lang.Iterable<java.lang.String> values) {
@@ -12417,6 +12998,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>repeated string darccontractids = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearDarccontractids() {
         darccontractids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -12426,6 +13008,8 @@ public final class ByzCoinProto {
       }
       /**
        * <code>repeated string darccontractids = 4;</code>
+       * @param value The bytes of the darccontractids to add.
+       * @return This builder for chaining.
        */
       public Builder addDarccontractidsBytes(
           com.google.protobuf.ByteString value) {
@@ -12500,6 +13084,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .trie.Proof inclusionproof = 1;</code>
+     * @return Whether the inclusionproof field is set.
      */
     boolean hasInclusionproof();
     /**
@@ -12508,6 +13093,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .trie.Proof inclusionproof = 1;</code>
+     * @return The inclusionproof.
      */
     ch.epfl.dedis.lib.proto.TrieProto.Proof getInclusionproof();
     /**
@@ -12525,6 +13111,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .skipchain.SkipBlock latest = 2;</code>
+     * @return Whether the latest field is set.
      */
     boolean hasLatest();
     /**
@@ -12533,6 +13120,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .skipchain.SkipBlock latest = 2;</code>
+     * @return The latest.
      */
     ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getLatest();
     /**
@@ -12612,7 +13200,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.Proof}
    */
-  public  static final class Proof extends
+  public static final class Proof extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.Proof)
       ProofOrBuilder {
@@ -12623,6 +13211,13 @@ public final class ByzCoinProto {
     }
     private Proof() {
       links_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Proof();
     }
 
     @java.lang.Override
@@ -12651,7 +13246,7 @@ public final class ByzCoinProto {
               break;
             case 10: {
               ch.epfl.dedis.lib.proto.TrieProto.Proof.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = inclusionproof_.toBuilder();
               }
               inclusionproof_ = input.readMessage(ch.epfl.dedis.lib.proto.TrieProto.Proof.parser(), extensionRegistry);
@@ -12664,7 +13259,7 @@ public final class ByzCoinProto {
             }
             case 18: {
               ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = latest_.toBuilder();
               }
               latest_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.parser(), extensionRegistry);
@@ -12676,7 +13271,7 @@ public final class ByzCoinProto {
               break;
             }
             case 26: {
-              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+              if (!((mutable_bitField0_ & 0x00000004) != 0)) {
                 links_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink>();
                 mutable_bitField0_ |= 0x00000004;
               }
@@ -12699,7 +13294,7 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((mutable_bitField0_ & 0x00000004) != 0)) {
           links_ = java.util.Collections.unmodifiableList(links_);
         }
         this.unknownFields = unknownFields.build();
@@ -12728,9 +13323,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .trie.Proof inclusionproof = 1;</code>
+     * @return Whether the inclusionproof field is set.
      */
+    @java.lang.Override
     public boolean hasInclusionproof() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -12738,7 +13335,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .trie.Proof inclusionproof = 1;</code>
+     * @return The inclusionproof.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.TrieProto.Proof getInclusionproof() {
       return inclusionproof_ == null ? ch.epfl.dedis.lib.proto.TrieProto.Proof.getDefaultInstance() : inclusionproof_;
     }
@@ -12749,6 +13348,7 @@ public final class ByzCoinProto {
      *
      * <code>required .trie.Proof inclusionproof = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.TrieProto.ProofOrBuilder getInclusionproofOrBuilder() {
       return inclusionproof_ == null ? ch.epfl.dedis.lib.proto.TrieProto.Proof.getDefaultInstance() : inclusionproof_;
     }
@@ -12761,9 +13361,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .skipchain.SkipBlock latest = 2;</code>
+     * @return Whether the latest field is set.
      */
+    @java.lang.Override
     public boolean hasLatest() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -12771,7 +13373,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required .skipchain.SkipBlock latest = 2;</code>
+     * @return The latest.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getLatest() {
       return latest_ == null ? ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance() : latest_;
     }
@@ -12782,6 +13386,7 @@ public final class ByzCoinProto {
      *
      * <code>required .skipchain.SkipBlock latest = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder getLatestOrBuilder() {
       return latest_ == null ? ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance() : latest_;
     }
@@ -12797,6 +13402,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .skipchain.ForwardLink links = 3;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink> getLinksList() {
       return links_;
     }
@@ -12809,6 +13415,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .skipchain.ForwardLink links = 3;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder>
         getLinksOrBuilderList() {
       return links_;
@@ -12822,6 +13429,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .skipchain.ForwardLink links = 3;</code>
      */
+    @java.lang.Override
     public int getLinksCount() {
       return links_.size();
     }
@@ -12834,6 +13442,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .skipchain.ForwardLink links = 3;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink getLinks(int index) {
       return links_.get(index);
     }
@@ -12846,6 +13455,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .skipchain.ForwardLink links = 3;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder getLinksOrBuilder(
         int index) {
       return links_.get(index);
@@ -12887,10 +13497,10 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getInclusionproof());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getLatest());
       }
       for (int i = 0; i < links_.size(); i++) {
@@ -12905,11 +13515,11 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getInclusionproof());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getLatest());
       }
@@ -12932,21 +13542,20 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.Proof other = (ch.epfl.dedis.lib.proto.ByzCoinProto.Proof) obj;
 
-      boolean result = true;
-      result = result && (hasInclusionproof() == other.hasInclusionproof());
+      if (hasInclusionproof() != other.hasInclusionproof()) return false;
       if (hasInclusionproof()) {
-        result = result && getInclusionproof()
-            .equals(other.getInclusionproof());
+        if (!getInclusionproof()
+            .equals(other.getInclusionproof())) return false;
       }
-      result = result && (hasLatest() == other.hasLatest());
+      if (hasLatest() != other.hasLatest()) return false;
       if (hasLatest()) {
-        result = result && getLatest()
-            .equals(other.getLatest());
+        if (!getLatest()
+            .equals(other.getLatest())) return false;
       }
-      result = result && getLinksList()
-          .equals(other.getLinksList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getLinksList()
+          .equals(other.getLinksList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -13161,24 +13770,24 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.Proof result = new ch.epfl.dedis.lib.proto.ByzCoinProto.Proof(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (inclusionproofBuilder_ == null) {
+            result.inclusionproof_ = inclusionproof_;
+          } else {
+            result.inclusionproof_ = inclusionproofBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
         }
-        if (inclusionproofBuilder_ == null) {
-          result.inclusionproof_ = inclusionproof_;
-        } else {
-          result.inclusionproof_ = inclusionproofBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (latestBuilder_ == null) {
+            result.latest_ = latest_;
+          } else {
+            result.latest_ = latestBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
         }
-        if (latestBuilder_ == null) {
-          result.latest_ = latest_;
-        } else {
-          result.latest_ = latestBuilder_.build();
-        }
         if (linksBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          if (((bitField0_ & 0x00000004) != 0)) {
             links_ = java.util.Collections.unmodifiableList(links_);
             bitField0_ = (bitField0_ & ~0x00000004);
           }
@@ -13193,35 +13802,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -13314,7 +13923,7 @@ public final class ByzCoinProto {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.lib.proto.TrieProto.Proof inclusionproof_ = null;
+      private ch.epfl.dedis.lib.proto.TrieProto.Proof inclusionproof_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.TrieProto.Proof, ch.epfl.dedis.lib.proto.TrieProto.Proof.Builder, ch.epfl.dedis.lib.proto.TrieProto.ProofOrBuilder> inclusionproofBuilder_;
       /**
@@ -13323,9 +13932,10 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required .trie.Proof inclusionproof = 1;</code>
+       * @return Whether the inclusionproof field is set.
        */
       public boolean hasInclusionproof() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -13333,6 +13943,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required .trie.Proof inclusionproof = 1;</code>
+       * @return The inclusionproof.
        */
       public ch.epfl.dedis.lib.proto.TrieProto.Proof getInclusionproof() {
         if (inclusionproofBuilder_ == null) {
@@ -13388,7 +13999,7 @@ public final class ByzCoinProto {
        */
       public Builder mergeInclusionproof(ch.epfl.dedis.lib.proto.TrieProto.Proof value) {
         if (inclusionproofBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               inclusionproof_ != null &&
               inclusionproof_ != ch.epfl.dedis.lib.proto.TrieProto.Proof.getDefaultInstance()) {
             inclusionproof_ =
@@ -13468,7 +14079,7 @@ public final class ByzCoinProto {
         return inclusionproofBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock latest_ = null;
+      private ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock latest_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> latestBuilder_;
       /**
@@ -13477,9 +14088,10 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required .skipchain.SkipBlock latest = 2;</code>
+       * @return Whether the latest field is set.
        */
       public boolean hasLatest() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -13487,6 +14099,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required .skipchain.SkipBlock latest = 2;</code>
+       * @return The latest.
        */
       public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getLatest() {
         if (latestBuilder_ == null) {
@@ -13542,7 +14155,7 @@ public final class ByzCoinProto {
        */
       public Builder mergeLatest(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock value) {
         if (latestBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               latest_ != null &&
               latest_ != ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance()) {
             latest_ =
@@ -13625,7 +14238,7 @@ public final class ByzCoinProto {
       private java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink> links_ =
         java.util.Collections.emptyList();
       private void ensureLinksIsMutable() {
-        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+        if (!((bitField0_ & 0x00000004) != 0)) {
           links_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink>(links_);
           bitField0_ |= 0x00000004;
          }
@@ -13962,7 +14575,7 @@ public final class ByzCoinProto {
           linksBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink, ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder>(
                   links_,
-                  ((bitField0_ & 0x00000004) == 0x00000004),
+                  ((bitField0_ & 0x00000004) != 0),
                   getParentForChildren(),
                   isClean());
           links_ = null;
@@ -14033,6 +14646,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes instanceid = 1;</code>
+     * @return Whether the instanceid field is set.
      */
     boolean hasInstanceid();
     /**
@@ -14042,6 +14656,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes instanceid = 1;</code>
+     * @return The instanceid.
      */
     com.google.protobuf.ByteString getInstanceid();
 
@@ -14051,6 +14666,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional .byzcoin.Spawn spawn = 2;</code>
+     * @return Whether the spawn field is set.
      */
     boolean hasSpawn();
     /**
@@ -14059,6 +14675,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional .byzcoin.Spawn spawn = 2;</code>
+     * @return The spawn.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.Spawn getSpawn();
     /**
@@ -14076,6 +14693,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional .byzcoin.Invoke invoke = 3;</code>
+     * @return Whether the invoke field is set.
      */
     boolean hasInvoke();
     /**
@@ -14084,6 +14702,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional .byzcoin.Invoke invoke = 3;</code>
+     * @return The invoke.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke getInvoke();
     /**
@@ -14101,6 +14720,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional .byzcoin.Delete delete = 4;</code>
+     * @return Whether the delete field is set.
      */
     boolean hasDelete();
     /**
@@ -14109,6 +14729,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional .byzcoin.Delete delete = 4;</code>
+     * @return The delete.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.Delete getDelete();
     /**
@@ -14129,6 +14750,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated uint64 signercounter = 5 [packed = true];</code>
+     * @return A list containing the signercounter.
      */
     java.util.List<java.lang.Long> getSignercounterList();
     /**
@@ -14140,6 +14762,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated uint64 signercounter = 5 [packed = true];</code>
+     * @return The count of signercounter.
      */
     int getSignercounterCount();
     /**
@@ -14151,6 +14774,8 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated uint64 signercounter = 5 [packed = true];</code>
+     * @param index The index of the element to return.
+     * @return The signercounter at the given index.
      */
     long getSignercounter(int index);
 
@@ -14205,6 +14830,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated bytes signatures = 7;</code>
+     * @return A list containing the signatures.
      */
     java.util.List<com.google.protobuf.ByteString> getSignaturesList();
     /**
@@ -14214,6 +14840,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated bytes signatures = 7;</code>
+     * @return The count of signatures.
      */
     int getSignaturesCount();
     /**
@@ -14223,6 +14850,8 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated bytes signatures = 7;</code>
+     * @param index The index of the element to return.
+     * @return The signatures at the given index.
      */
     com.google.protobuf.ByteString getSignatures(int index);
   }
@@ -14233,7 +14862,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.Instruction}
    */
-  public  static final class Instruction extends
+  public static final class Instruction extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.Instruction)
       InstructionOrBuilder {
@@ -14244,9 +14873,16 @@ public final class ByzCoinProto {
     }
     private Instruction() {
       instanceid_ = com.google.protobuf.ByteString.EMPTY;
-      signercounter_ = java.util.Collections.emptyList();
+      signercounter_ = emptyLongList();
       signeridentities_ = java.util.Collections.emptyList();
       signatures_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Instruction();
     }
 
     @java.lang.Override
@@ -14280,7 +14916,7 @@ public final class ByzCoinProto {
             }
             case 18: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Spawn.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = spawn_.toBuilder();
               }
               spawn_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Spawn.parser(), extensionRegistry);
@@ -14293,7 +14929,7 @@ public final class ByzCoinProto {
             }
             case 26: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+              if (((bitField0_ & 0x00000004) != 0)) {
                 subBuilder = invoke_.toBuilder();
               }
               invoke_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke.parser(), extensionRegistry);
@@ -14306,7 +14942,7 @@ public final class ByzCoinProto {
             }
             case 34: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Delete.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000008) == 0x00000008)) {
+              if (((bitField0_ & 0x00000008) != 0)) {
                 subBuilder = delete_.toBuilder();
               }
               delete_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Delete.parser(), extensionRegistry);
@@ -14318,28 +14954,28 @@ public final class ByzCoinProto {
               break;
             }
             case 40: {
-              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
-                signercounter_ = new java.util.ArrayList<java.lang.Long>();
+              if (!((mutable_bitField0_ & 0x00000010) != 0)) {
+                signercounter_ = newLongList();
                 mutable_bitField0_ |= 0x00000010;
               }
-              signercounter_.add(input.readUInt64());
+              signercounter_.addLong(input.readUInt64());
               break;
             }
             case 42: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010) && input.getBytesUntilLimit() > 0) {
-                signercounter_ = new java.util.ArrayList<java.lang.Long>();
+              if (!((mutable_bitField0_ & 0x00000010) != 0) && input.getBytesUntilLimit() > 0) {
+                signercounter_ = newLongList();
                 mutable_bitField0_ |= 0x00000010;
               }
               while (input.getBytesUntilLimit() > 0) {
-                signercounter_.add(input.readUInt64());
+                signercounter_.addLong(input.readUInt64());
               }
               input.popLimit(limit);
               break;
             }
             case 50: {
-              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+              if (!((mutable_bitField0_ & 0x00000020) != 0)) {
                 signeridentities_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.DarcProto.Identity>();
                 mutable_bitField0_ |= 0x00000020;
               }
@@ -14348,7 +14984,7 @@ public final class ByzCoinProto {
               break;
             }
             case 58: {
-              if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+              if (!((mutable_bitField0_ & 0x00000040) != 0)) {
                 signatures_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
                 mutable_bitField0_ |= 0x00000040;
               }
@@ -14370,14 +15006,14 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
-          signercounter_ = java.util.Collections.unmodifiableList(signercounter_);
+        if (((mutable_bitField0_ & 0x00000010) != 0)) {
+          signercounter_.makeImmutable(); // C
         }
-        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((mutable_bitField0_ & 0x00000020) != 0)) {
           signeridentities_ = java.util.Collections.unmodifiableList(signeridentities_);
         }
-        if (((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
-          signatures_ = java.util.Collections.unmodifiableList(signatures_);
+        if (((mutable_bitField0_ & 0x00000040) != 0)) {
+          signatures_ = java.util.Collections.unmodifiableList(signatures_); // C
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -14406,9 +15042,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes instanceid = 1;</code>
+     * @return Whether the instanceid field is set.
      */
+    @java.lang.Override
     public boolean hasInstanceid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -14417,7 +15055,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes instanceid = 1;</code>
+     * @return The instanceid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getInstanceid() {
       return instanceid_;
     }
@@ -14430,9 +15070,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional .byzcoin.Spawn spawn = 2;</code>
+     * @return Whether the spawn field is set.
      */
+    @java.lang.Override
     public boolean hasSpawn() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -14440,7 +15082,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional .byzcoin.Spawn spawn = 2;</code>
+     * @return The spawn.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Spawn getSpawn() {
       return spawn_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Spawn.getDefaultInstance() : spawn_;
     }
@@ -14451,6 +15095,7 @@ public final class ByzCoinProto {
      *
      * <code>optional .byzcoin.Spawn spawn = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.SpawnOrBuilder getSpawnOrBuilder() {
       return spawn_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Spawn.getDefaultInstance() : spawn_;
     }
@@ -14463,9 +15108,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional .byzcoin.Invoke invoke = 3;</code>
+     * @return Whether the invoke field is set.
      */
+    @java.lang.Override
     public boolean hasInvoke() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -14473,7 +15120,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional .byzcoin.Invoke invoke = 3;</code>
+     * @return The invoke.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke getInvoke() {
       return invoke_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke.getDefaultInstance() : invoke_;
     }
@@ -14484,6 +15133,7 @@ public final class ByzCoinProto {
      *
      * <code>optional .byzcoin.Invoke invoke = 3;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.InvokeOrBuilder getInvokeOrBuilder() {
       return invoke_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke.getDefaultInstance() : invoke_;
     }
@@ -14496,9 +15146,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional .byzcoin.Delete delete = 4;</code>
+     * @return Whether the delete field is set.
      */
+    @java.lang.Override
     public boolean hasDelete() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <pre>
@@ -14506,7 +15158,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional .byzcoin.Delete delete = 4;</code>
+     * @return The delete.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Delete getDelete() {
       return delete_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Delete.getDefaultInstance() : delete_;
     }
@@ -14517,12 +15171,13 @@ public final class ByzCoinProto {
      *
      * <code>optional .byzcoin.Delete delete = 4;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.DeleteOrBuilder getDeleteOrBuilder() {
       return delete_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Delete.getDefaultInstance() : delete_;
     }
 
     public static final int SIGNERCOUNTER_FIELD_NUMBER = 5;
-    private java.util.List<java.lang.Long> signercounter_;
+    private com.google.protobuf.Internal.LongList signercounter_;
     /**
      * <pre>
      * SignerCounter must be set to a value that is one greater than what
@@ -14532,7 +15187,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated uint64 signercounter = 5 [packed = true];</code>
+     * @return A list containing the signercounter.
      */
+    @java.lang.Override
     public java.util.List<java.lang.Long>
         getSignercounterList() {
       return signercounter_;
@@ -14546,6 +15203,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated uint64 signercounter = 5 [packed = true];</code>
+     * @return The count of signercounter.
      */
     public int getSignercounterCount() {
       return signercounter_.size();
@@ -14559,9 +15217,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated uint64 signercounter = 5 [packed = true];</code>
+     * @param index The index of the element to return.
+     * @return The signercounter at the given index.
      */
     public long getSignercounter(int index) {
-      return signercounter_.get(index);
+      return signercounter_.getLong(index);
     }
     private int signercounterMemoizedSerializedSize = -1;
 
@@ -14574,6 +15234,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .darc.Identity signeridentities = 6;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity> getSigneridentitiesList() {
       return signeridentities_;
     }
@@ -14584,6 +15245,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .darc.Identity signeridentities = 6;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>
         getSigneridentitiesOrBuilderList() {
       return signeridentities_;
@@ -14595,6 +15257,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .darc.Identity signeridentities = 6;</code>
      */
+    @java.lang.Override
     public int getSigneridentitiesCount() {
       return signeridentities_.size();
     }
@@ -14605,6 +15268,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .darc.Identity signeridentities = 6;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.Identity getSigneridentities(int index) {
       return signeridentities_.get(index);
     }
@@ -14615,6 +15279,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .darc.Identity signeridentities = 6;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder getSigneridentitiesOrBuilder(
         int index) {
       return signeridentities_.get(index);
@@ -14629,7 +15294,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated bytes signatures = 7;</code>
+     * @return A list containing the signatures.
      */
+    @java.lang.Override
     public java.util.List<com.google.protobuf.ByteString>
         getSignaturesList() {
       return signatures_;
@@ -14641,6 +15308,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated bytes signatures = 7;</code>
+     * @return The count of signatures.
      */
     public int getSignaturesCount() {
       return signatures_.size();
@@ -14652,6 +15320,8 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated bytes signatures = 7;</code>
+     * @param index The index of the element to return.
+     * @return The signatures at the given index.
      */
     public com.google.protobuf.ByteString getSignatures(int index) {
       return signatures_.get(index);
@@ -14700,16 +15370,16 @@ public final class ByzCoinProto {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       getSerializedSize();
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, instanceid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getSpawn());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeMessage(3, getInvoke());
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeMessage(4, getDelete());
       }
       if (getSignercounterList().size() > 0) {
@@ -14717,7 +15387,7 @@ public final class ByzCoinProto {
         output.writeUInt32NoTag(signercounterMemoizedSerializedSize);
       }
       for (int i = 0; i < signercounter_.size(); i++) {
-        output.writeUInt64NoTag(signercounter_.get(i));
+        output.writeUInt64NoTag(signercounter_.getLong(i));
       }
       for (int i = 0; i < signeridentities_.size(); i++) {
         output.writeMessage(6, signeridentities_.get(i));
@@ -14734,19 +15404,19 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, instanceid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getSpawn());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getInvoke());
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, getDelete());
       }
@@ -14754,7 +15424,7 @@ public final class ByzCoinProto {
         int dataSize = 0;
         for (int i = 0; i < signercounter_.size(); i++) {
           dataSize += com.google.protobuf.CodedOutputStream
-            .computeUInt64SizeNoTag(signercounter_.get(i));
+            .computeUInt64SizeNoTag(signercounter_.getLong(i));
         }
         size += dataSize;
         if (!getSignercounterList().isEmpty()) {
@@ -14792,35 +15462,34 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.Instruction other = (ch.epfl.dedis.lib.proto.ByzCoinProto.Instruction) obj;
 
-      boolean result = true;
-      result = result && (hasInstanceid() == other.hasInstanceid());
+      if (hasInstanceid() != other.hasInstanceid()) return false;
       if (hasInstanceid()) {
-        result = result && getInstanceid()
-            .equals(other.getInstanceid());
+        if (!getInstanceid()
+            .equals(other.getInstanceid())) return false;
       }
-      result = result && (hasSpawn() == other.hasSpawn());
+      if (hasSpawn() != other.hasSpawn()) return false;
       if (hasSpawn()) {
-        result = result && getSpawn()
-            .equals(other.getSpawn());
+        if (!getSpawn()
+            .equals(other.getSpawn())) return false;
       }
-      result = result && (hasInvoke() == other.hasInvoke());
+      if (hasInvoke() != other.hasInvoke()) return false;
       if (hasInvoke()) {
-        result = result && getInvoke()
-            .equals(other.getInvoke());
+        if (!getInvoke()
+            .equals(other.getInvoke())) return false;
       }
-      result = result && (hasDelete() == other.hasDelete());
+      if (hasDelete() != other.hasDelete()) return false;
       if (hasDelete()) {
-        result = result && getDelete()
-            .equals(other.getDelete());
+        if (!getDelete()
+            .equals(other.getDelete())) return false;
       }
-      result = result && getSignercounterList()
-          .equals(other.getSignercounterList());
-      result = result && getSigneridentitiesList()
-          .equals(other.getSigneridentitiesList());
-      result = result && getSignaturesList()
-          .equals(other.getSignaturesList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getSignercounterList()
+          .equals(other.getSignercounterList())) return false;
+      if (!getSigneridentitiesList()
+          .equals(other.getSigneridentitiesList())) return false;
+      if (!getSignaturesList()
+          .equals(other.getSignaturesList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -15019,7 +15688,7 @@ public final class ByzCoinProto {
           deleteBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000008);
-        signercounter_ = java.util.Collections.emptyList();
+        signercounter_ = emptyLongList();
         bitField0_ = (bitField0_ & ~0x00000010);
         if (signeridentitiesBuilder_ == null) {
           signeridentities_ = java.util.Collections.emptyList();
@@ -15057,41 +15726,41 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.Instruction result = new ch.epfl.dedis.lib.proto.ByzCoinProto.Instruction(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.instanceid_ = instanceid_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (spawnBuilder_ == null) {
+            result.spawn_ = spawn_;
+          } else {
+            result.spawn_ = spawnBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
         }
-        if (spawnBuilder_ == null) {
-          result.spawn_ = spawn_;
-        } else {
-          result.spawn_ = spawnBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          if (invokeBuilder_ == null) {
+            result.invoke_ = invoke_;
+          } else {
+            result.invoke_ = invokeBuilder_.build();
+          }
           to_bitField0_ |= 0x00000004;
         }
-        if (invokeBuilder_ == null) {
-          result.invoke_ = invoke_;
-        } else {
-          result.invoke_ = invokeBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          if (deleteBuilder_ == null) {
+            result.delete_ = delete_;
+          } else {
+            result.delete_ = deleteBuilder_.build();
+          }
           to_bitField0_ |= 0x00000008;
         }
-        if (deleteBuilder_ == null) {
-          result.delete_ = delete_;
-        } else {
-          result.delete_ = deleteBuilder_.build();
-        }
-        if (((bitField0_ & 0x00000010) == 0x00000010)) {
-          signercounter_ = java.util.Collections.unmodifiableList(signercounter_);
+        if (((bitField0_ & 0x00000010) != 0)) {
+          signercounter_.makeImmutable();
           bitField0_ = (bitField0_ & ~0x00000010);
         }
         result.signercounter_ = signercounter_;
         if (signeridentitiesBuilder_ == null) {
-          if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          if (((bitField0_ & 0x00000020) != 0)) {
             signeridentities_ = java.util.Collections.unmodifiableList(signeridentities_);
             bitField0_ = (bitField0_ & ~0x00000020);
           }
@@ -15099,7 +15768,7 @@ public final class ByzCoinProto {
         } else {
           result.signeridentities_ = signeridentitiesBuilder_.build();
         }
-        if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((bitField0_ & 0x00000040) != 0)) {
           signatures_ = java.util.Collections.unmodifiableList(signatures_);
           bitField0_ = (bitField0_ & ~0x00000040);
         }
@@ -15111,35 +15780,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -15272,9 +15941,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes instanceid = 1;</code>
+       * @return Whether the instanceid field is set.
        */
+      @java.lang.Override
       public boolean hasInstanceid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -15283,7 +15954,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes instanceid = 1;</code>
+       * @return The instanceid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getInstanceid() {
         return instanceid_;
       }
@@ -15294,6 +15967,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes instanceid = 1;</code>
+       * @param value The instanceid to set.
+       * @return This builder for chaining.
        */
       public Builder setInstanceid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -15311,6 +15986,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes instanceid = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearInstanceid() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -15319,7 +15995,7 @@ public final class ByzCoinProto {
         return this;
       }
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Spawn spawn_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Spawn spawn_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Spawn, ch.epfl.dedis.lib.proto.ByzCoinProto.Spawn.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.SpawnOrBuilder> spawnBuilder_;
       /**
@@ -15328,9 +16004,10 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional .byzcoin.Spawn spawn = 2;</code>
+       * @return Whether the spawn field is set.
        */
       public boolean hasSpawn() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -15338,6 +16015,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional .byzcoin.Spawn spawn = 2;</code>
+       * @return The spawn.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Spawn getSpawn() {
         if (spawnBuilder_ == null) {
@@ -15393,7 +16071,7 @@ public final class ByzCoinProto {
        */
       public Builder mergeSpawn(ch.epfl.dedis.lib.proto.ByzCoinProto.Spawn value) {
         if (spawnBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               spawn_ != null &&
               spawn_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Spawn.getDefaultInstance()) {
             spawn_ =
@@ -15473,7 +16151,7 @@ public final class ByzCoinProto {
         return spawnBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke invoke_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke invoke_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke, ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.InvokeOrBuilder> invokeBuilder_;
       /**
@@ -15482,9 +16160,10 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional .byzcoin.Invoke invoke = 3;</code>
+       * @return Whether the invoke field is set.
        */
       public boolean hasInvoke() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -15492,6 +16171,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional .byzcoin.Invoke invoke = 3;</code>
+       * @return The invoke.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke getInvoke() {
         if (invokeBuilder_ == null) {
@@ -15547,7 +16227,7 @@ public final class ByzCoinProto {
        */
       public Builder mergeInvoke(ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke value) {
         if (invokeBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+          if (((bitField0_ & 0x00000004) != 0) &&
               invoke_ != null &&
               invoke_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke.getDefaultInstance()) {
             invoke_ =
@@ -15627,7 +16307,7 @@ public final class ByzCoinProto {
         return invokeBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Delete delete_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Delete delete_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Delete, ch.epfl.dedis.lib.proto.ByzCoinProto.Delete.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.DeleteOrBuilder> deleteBuilder_;
       /**
@@ -15636,9 +16316,10 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional .byzcoin.Delete delete = 4;</code>
+       * @return Whether the delete field is set.
        */
       public boolean hasDelete() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <pre>
@@ -15646,6 +16327,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional .byzcoin.Delete delete = 4;</code>
+       * @return The delete.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Delete getDelete() {
         if (deleteBuilder_ == null) {
@@ -15701,7 +16383,7 @@ public final class ByzCoinProto {
        */
       public Builder mergeDelete(ch.epfl.dedis.lib.proto.ByzCoinProto.Delete value) {
         if (deleteBuilder_ == null) {
-          if (((bitField0_ & 0x00000008) == 0x00000008) &&
+          if (((bitField0_ & 0x00000008) != 0) &&
               delete_ != null &&
               delete_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Delete.getDefaultInstance()) {
             delete_ =
@@ -15781,10 +16463,10 @@ public final class ByzCoinProto {
         return deleteBuilder_;
       }
 
-      private java.util.List<java.lang.Long> signercounter_ = java.util.Collections.emptyList();
+      private com.google.protobuf.Internal.LongList signercounter_ = emptyLongList();
       private void ensureSignercounterIsMutable() {
-        if (!((bitField0_ & 0x00000010) == 0x00000010)) {
-          signercounter_ = new java.util.ArrayList<java.lang.Long>(signercounter_);
+        if (!((bitField0_ & 0x00000010) != 0)) {
+          signercounter_ = mutableCopy(signercounter_);
           bitField0_ |= 0x00000010;
          }
       }
@@ -15797,10 +16479,12 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated uint64 signercounter = 5 [packed = true];</code>
+       * @return A list containing the signercounter.
        */
       public java.util.List<java.lang.Long>
           getSignercounterList() {
-        return java.util.Collections.unmodifiableList(signercounter_);
+        return ((bitField0_ & 0x00000010) != 0) ?
+                 java.util.Collections.unmodifiableList(signercounter_) : signercounter_;
       }
       /**
        * <pre>
@@ -15811,6 +16495,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated uint64 signercounter = 5 [packed = true];</code>
+       * @return The count of signercounter.
        */
       public int getSignercounterCount() {
         return signercounter_.size();
@@ -15824,9 +16509,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated uint64 signercounter = 5 [packed = true];</code>
+       * @param index The index of the element to return.
+       * @return The signercounter at the given index.
        */
       public long getSignercounter(int index) {
-        return signercounter_.get(index);
+        return signercounter_.getLong(index);
       }
       /**
        * <pre>
@@ -15837,11 +16524,14 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated uint64 signercounter = 5 [packed = true];</code>
+       * @param index The index to set the value at.
+       * @param value The signercounter to set.
+       * @return This builder for chaining.
        */
       public Builder setSignercounter(
           int index, long value) {
         ensureSignercounterIsMutable();
-        signercounter_.set(index, value);
+        signercounter_.setLong(index, value);
         onChanged();
         return this;
       }
@@ -15854,10 +16544,12 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated uint64 signercounter = 5 [packed = true];</code>
+       * @param value The signercounter to add.
+       * @return This builder for chaining.
        */
       public Builder addSignercounter(long value) {
         ensureSignercounterIsMutable();
-        signercounter_.add(value);
+        signercounter_.addLong(value);
         onChanged();
         return this;
       }
@@ -15870,6 +16562,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated uint64 signercounter = 5 [packed = true];</code>
+       * @param values The signercounter to add.
+       * @return This builder for chaining.
        */
       public Builder addAllSignercounter(
           java.lang.Iterable<? extends java.lang.Long> values) {
@@ -15888,9 +16582,10 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated uint64 signercounter = 5 [packed = true];</code>
+       * @return This builder for chaining.
        */
       public Builder clearSignercounter() {
-        signercounter_ = java.util.Collections.emptyList();
+        signercounter_ = emptyLongList();
         bitField0_ = (bitField0_ & ~0x00000010);
         onChanged();
         return this;
@@ -15899,7 +16594,7 @@ public final class ByzCoinProto {
       private java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity> signeridentities_ =
         java.util.Collections.emptyList();
       private void ensureSigneridentitiesIsMutable() {
-        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
+        if (!((bitField0_ & 0x00000020) != 0)) {
           signeridentities_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.DarcProto.Identity>(signeridentities_);
           bitField0_ |= 0x00000020;
          }
@@ -16200,7 +16895,7 @@ public final class ByzCoinProto {
           signeridentitiesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>(
                   signeridentities_,
-                  ((bitField0_ & 0x00000020) == 0x00000020),
+                  ((bitField0_ & 0x00000020) != 0),
                   getParentForChildren(),
                   isClean());
           signeridentities_ = null;
@@ -16210,7 +16905,7 @@ public final class ByzCoinProto {
 
       private java.util.List<com.google.protobuf.ByteString> signatures_ = java.util.Collections.emptyList();
       private void ensureSignaturesIsMutable() {
-        if (!((bitField0_ & 0x00000040) == 0x00000040)) {
+        if (!((bitField0_ & 0x00000040) != 0)) {
           signatures_ = new java.util.ArrayList<com.google.protobuf.ByteString>(signatures_);
           bitField0_ |= 0x00000040;
          }
@@ -16222,10 +16917,12 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated bytes signatures = 7;</code>
+       * @return A list containing the signatures.
        */
       public java.util.List<com.google.protobuf.ByteString>
           getSignaturesList() {
-        return java.util.Collections.unmodifiableList(signatures_);
+        return ((bitField0_ & 0x00000040) != 0) ?
+                 java.util.Collections.unmodifiableList(signatures_) : signatures_;
       }
       /**
        * <pre>
@@ -16234,6 +16931,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated bytes signatures = 7;</code>
+       * @return The count of signatures.
        */
       public int getSignaturesCount() {
         return signatures_.size();
@@ -16245,6 +16943,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated bytes signatures = 7;</code>
+       * @param index The index of the element to return.
+       * @return The signatures at the given index.
        */
       public com.google.protobuf.ByteString getSignatures(int index) {
         return signatures_.get(index);
@@ -16256,6 +16956,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated bytes signatures = 7;</code>
+       * @param index The index to set the value at.
+       * @param value The signatures to set.
+       * @return This builder for chaining.
        */
       public Builder setSignatures(
           int index, com.google.protobuf.ByteString value) {
@@ -16274,6 +16977,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated bytes signatures = 7;</code>
+       * @param value The signatures to add.
+       * @return This builder for chaining.
        */
       public Builder addSignatures(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -16291,6 +16996,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated bytes signatures = 7;</code>
+       * @param values The signatures to add.
+       * @return This builder for chaining.
        */
       public Builder addAllSignatures(
           java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
@@ -16307,6 +17014,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated bytes signatures = 7;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSignatures() {
         signatures_ = java.util.Collections.emptyList();
@@ -16377,6 +17085,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 1;</code>
+     * @return Whether the contractid field is set.
      */
     boolean hasContractid();
     /**
@@ -16385,6 +17094,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 1;</code>
+     * @return The contractid.
      */
     java.lang.String getContractid();
     /**
@@ -16393,6 +17103,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 1;</code>
+     * @return The bytes for contractid.
      */
     com.google.protobuf.ByteString
         getContractidBytes();
@@ -16448,7 +17159,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.Spawn}
    */
-  public  static final class Spawn extends
+  public static final class Spawn extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.Spawn)
       SpawnOrBuilder {
@@ -16460,6 +17171,13 @@ public final class ByzCoinProto {
     private Spawn() {
       contractid_ = "";
       args_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Spawn();
     }
 
     @java.lang.Override
@@ -16493,7 +17211,7 @@ public final class ByzCoinProto {
               break;
             }
             case 18: {
-              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                 args_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument>();
                 mutable_bitField0_ |= 0x00000002;
               }
@@ -16516,7 +17234,7 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((mutable_bitField0_ & 0x00000002) != 0)) {
           args_ = java.util.Collections.unmodifiableList(args_);
         }
         this.unknownFields = unknownFields.build();
@@ -16545,9 +17263,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 1;</code>
+     * @return Whether the contractid field is set.
      */
+    @java.lang.Override
     public boolean hasContractid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -16555,7 +17275,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 1;</code>
+     * @return The contractid.
      */
+    @java.lang.Override
     public java.lang.String getContractid() {
       java.lang.Object ref = contractid_;
       if (ref instanceof java.lang.String) {
@@ -16576,7 +17298,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 1;</code>
+     * @return The bytes for contractid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getContractidBytes() {
       java.lang.Object ref = contractid_;
@@ -16600,6 +17324,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 2;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument> getArgsList() {
       return args_;
     }
@@ -16610,6 +17335,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 2;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder>
         getArgsOrBuilderList() {
       return args_;
@@ -16621,6 +17347,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 2;</code>
      */
+    @java.lang.Override
     public int getArgsCount() {
       return args_.size();
     }
@@ -16631,6 +17358,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Argument getArgs(int index) {
       return args_.get(index);
     }
@@ -16641,6 +17369,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder getArgsOrBuilder(
         int index) {
       return args_.get(index);
@@ -16670,7 +17399,7 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, contractid_);
       }
       for (int i = 0; i < args_.size(); i++) {
@@ -16685,7 +17414,7 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, contractid_);
       }
       for (int i = 0; i < args_.size(); i++) {
@@ -16707,16 +17436,15 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.Spawn other = (ch.epfl.dedis.lib.proto.ByzCoinProto.Spawn) obj;
 
-      boolean result = true;
-      result = result && (hasContractid() == other.hasContractid());
+      if (hasContractid() != other.hasContractid()) return false;
       if (hasContractid()) {
-        result = result && getContractid()
-            .equals(other.getContractid());
+        if (!getContractid()
+            .equals(other.getContractid())) return false;
       }
-      result = result && getArgsList()
-          .equals(other.getArgsList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getArgsList()
+          .equals(other.getArgsList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -16908,12 +17636,12 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.Spawn result = new ch.epfl.dedis.lib.proto.ByzCoinProto.Spawn(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.contractid_ = contractid_;
         if (argsBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          if (((bitField0_ & 0x00000002) != 0)) {
             args_ = java.util.Collections.unmodifiableList(args_);
             bitField0_ = (bitField0_ & ~0x00000002);
           }
@@ -16928,35 +17656,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -17046,9 +17774,10 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 1;</code>
+       * @return Whether the contractid field is set.
        */
       public boolean hasContractid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -17056,6 +17785,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 1;</code>
+       * @return The contractid.
        */
       public java.lang.String getContractid() {
         java.lang.Object ref = contractid_;
@@ -17077,6 +17807,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 1;</code>
+       * @return The bytes for contractid.
        */
       public com.google.protobuf.ByteString
           getContractidBytes() {
@@ -17097,6 +17828,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 1;</code>
+       * @param value The contractid to set.
+       * @return This builder for chaining.
        */
       public Builder setContractid(
           java.lang.String value) {
@@ -17114,6 +17847,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearContractid() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -17127,6 +17861,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 1;</code>
+       * @param value The bytes for contractid to set.
+       * @return This builder for chaining.
        */
       public Builder setContractidBytes(
           com.google.protobuf.ByteString value) {
@@ -17142,7 +17878,7 @@ public final class ByzCoinProto {
       private java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument> args_ =
         java.util.Collections.emptyList();
       private void ensureArgsIsMutable() {
-        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+        if (!((bitField0_ & 0x00000002) != 0)) {
           args_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument>(args_);
           bitField0_ |= 0x00000002;
          }
@@ -17443,7 +18179,7 @@ public final class ByzCoinProto {
           argsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.ByzCoinProto.Argument, ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder>(
                   args_,
-                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  ((bitField0_ & 0x00000002) != 0),
                   getParentForChildren(),
                   isClean());
           args_ = null;
@@ -17513,6 +18249,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 1;</code>
+     * @return Whether the contractid field is set.
      */
     boolean hasContractid();
     /**
@@ -17521,6 +18258,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 1;</code>
+     * @return The contractid.
      */
     java.lang.String getContractid();
     /**
@@ -17529,6 +18267,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 1;</code>
+     * @return The bytes for contractid.
      */
     com.google.protobuf.ByteString
         getContractidBytes();
@@ -17539,6 +18278,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string command = 2;</code>
+     * @return Whether the command field is set.
      */
     boolean hasCommand();
     /**
@@ -17547,6 +18287,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string command = 2;</code>
+     * @return The command.
      */
     java.lang.String getCommand();
     /**
@@ -17555,6 +18296,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string command = 2;</code>
+     * @return The bytes for command.
      */
     com.google.protobuf.ByteString
         getCommandBytes();
@@ -17611,7 +18353,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.Invoke}
    */
-  public  static final class Invoke extends
+  public static final class Invoke extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.Invoke)
       InvokeOrBuilder {
@@ -17624,6 +18366,13 @@ public final class ByzCoinProto {
       contractid_ = "";
       command_ = "";
       args_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Invoke();
     }
 
     @java.lang.Override
@@ -17663,7 +18412,7 @@ public final class ByzCoinProto {
               break;
             }
             case 26: {
-              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+              if (!((mutable_bitField0_ & 0x00000004) != 0)) {
                 args_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument>();
                 mutable_bitField0_ |= 0x00000004;
               }
@@ -17686,7 +18435,7 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((mutable_bitField0_ & 0x00000004) != 0)) {
           args_ = java.util.Collections.unmodifiableList(args_);
         }
         this.unknownFields = unknownFields.build();
@@ -17715,9 +18464,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 1;</code>
+     * @return Whether the contractid field is set.
      */
+    @java.lang.Override
     public boolean hasContractid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -17725,7 +18476,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 1;</code>
+     * @return The contractid.
      */
+    @java.lang.Override
     public java.lang.String getContractid() {
       java.lang.Object ref = contractid_;
       if (ref instanceof java.lang.String) {
@@ -17746,7 +18499,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 1;</code>
+     * @return The bytes for contractid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getContractidBytes() {
       java.lang.Object ref = contractid_;
@@ -17769,9 +18524,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string command = 2;</code>
+     * @return Whether the command field is set.
      */
+    @java.lang.Override
     public boolean hasCommand() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -17779,7 +18536,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string command = 2;</code>
+     * @return The command.
      */
+    @java.lang.Override
     public java.lang.String getCommand() {
       java.lang.Object ref = command_;
       if (ref instanceof java.lang.String) {
@@ -17800,7 +18559,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string command = 2;</code>
+     * @return The bytes for command.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getCommandBytes() {
       java.lang.Object ref = command_;
@@ -17824,6 +18585,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 3;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument> getArgsList() {
       return args_;
     }
@@ -17834,6 +18596,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 3;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder>
         getArgsOrBuilderList() {
       return args_;
@@ -17845,6 +18608,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 3;</code>
      */
+    @java.lang.Override
     public int getArgsCount() {
       return args_.size();
     }
@@ -17855,6 +18619,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 3;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Argument getArgs(int index) {
       return args_.get(index);
     }
@@ -17865,6 +18630,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 3;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder getArgsOrBuilder(
         int index) {
       return args_.get(index);
@@ -17898,10 +18664,10 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, contractid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, command_);
       }
       for (int i = 0; i < args_.size(); i++) {
@@ -17916,10 +18682,10 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, contractid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, command_);
       }
       for (int i = 0; i < args_.size(); i++) {
@@ -17941,21 +18707,20 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke other = (ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke) obj;
 
-      boolean result = true;
-      result = result && (hasContractid() == other.hasContractid());
+      if (hasContractid() != other.hasContractid()) return false;
       if (hasContractid()) {
-        result = result && getContractid()
-            .equals(other.getContractid());
+        if (!getContractid()
+            .equals(other.getContractid())) return false;
       }
-      result = result && (hasCommand() == other.hasCommand());
+      if (hasCommand() != other.hasCommand()) return false;
       if (hasCommand()) {
-        result = result && getCommand()
-            .equals(other.getCommand());
+        if (!getCommand()
+            .equals(other.getCommand())) return false;
       }
-      result = result && getArgsList()
-          .equals(other.getArgsList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getArgsList()
+          .equals(other.getArgsList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -18154,16 +18919,16 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke result = new ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.contractid_ = contractid_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.command_ = command_;
         if (argsBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          if (((bitField0_ & 0x00000004) != 0)) {
             args_ = java.util.Collections.unmodifiableList(args_);
             bitField0_ = (bitField0_ & ~0x00000004);
           }
@@ -18178,35 +18943,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -18304,9 +19069,10 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 1;</code>
+       * @return Whether the contractid field is set.
        */
       public boolean hasContractid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -18314,6 +19080,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 1;</code>
+       * @return The contractid.
        */
       public java.lang.String getContractid() {
         java.lang.Object ref = contractid_;
@@ -18335,6 +19102,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 1;</code>
+       * @return The bytes for contractid.
        */
       public com.google.protobuf.ByteString
           getContractidBytes() {
@@ -18355,6 +19123,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 1;</code>
+       * @param value The contractid to set.
+       * @return This builder for chaining.
        */
       public Builder setContractid(
           java.lang.String value) {
@@ -18372,6 +19142,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearContractid() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -18385,6 +19156,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 1;</code>
+       * @param value The bytes for contractid to set.
+       * @return This builder for chaining.
        */
       public Builder setContractidBytes(
           com.google.protobuf.ByteString value) {
@@ -18404,9 +19177,10 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string command = 2;</code>
+       * @return Whether the command field is set.
        */
       public boolean hasCommand() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -18414,6 +19188,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string command = 2;</code>
+       * @return The command.
        */
       public java.lang.String getCommand() {
         java.lang.Object ref = command_;
@@ -18435,6 +19210,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string command = 2;</code>
+       * @return The bytes for command.
        */
       public com.google.protobuf.ByteString
           getCommandBytes() {
@@ -18455,6 +19231,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string command = 2;</code>
+       * @param value The command to set.
+       * @return This builder for chaining.
        */
       public Builder setCommand(
           java.lang.String value) {
@@ -18472,6 +19250,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string command = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearCommand() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -18485,6 +19264,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string command = 2;</code>
+       * @param value The bytes for command to set.
+       * @return This builder for chaining.
        */
       public Builder setCommandBytes(
           com.google.protobuf.ByteString value) {
@@ -18500,7 +19281,7 @@ public final class ByzCoinProto {
       private java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument> args_ =
         java.util.Collections.emptyList();
       private void ensureArgsIsMutable() {
-        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+        if (!((bitField0_ & 0x00000004) != 0)) {
           args_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument>(args_);
           bitField0_ |= 0x00000004;
          }
@@ -18801,7 +19582,7 @@ public final class ByzCoinProto {
           argsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.ByzCoinProto.Argument, ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder>(
                   args_,
-                  ((bitField0_ & 0x00000004) == 0x00000004),
+                  ((bitField0_ & 0x00000004) != 0),
                   getParentForChildren(),
                   isClean());
           args_ = null;
@@ -18871,6 +19652,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 1;</code>
+     * @return Whether the contractid field is set.
      */
     boolean hasContractid();
     /**
@@ -18879,6 +19661,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 1;</code>
+     * @return The contractid.
      */
     java.lang.String getContractid();
     /**
@@ -18887,6 +19670,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 1;</code>
+     * @return The bytes for contractid.
      */
     com.google.protobuf.ByteString
         getContractidBytes();
@@ -18943,7 +19727,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.Delete}
    */
-  public  static final class Delete extends
+  public static final class Delete extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.Delete)
       DeleteOrBuilder {
@@ -18955,6 +19739,13 @@ public final class ByzCoinProto {
     private Delete() {
       contractid_ = "";
       args_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Delete();
     }
 
     @java.lang.Override
@@ -18988,7 +19779,7 @@ public final class ByzCoinProto {
               break;
             }
             case 18: {
-              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                 args_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument>();
                 mutable_bitField0_ |= 0x00000002;
               }
@@ -19011,7 +19802,7 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((mutable_bitField0_ & 0x00000002) != 0)) {
           args_ = java.util.Collections.unmodifiableList(args_);
         }
         this.unknownFields = unknownFields.build();
@@ -19040,9 +19831,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 1;</code>
+     * @return Whether the contractid field is set.
      */
+    @java.lang.Override
     public boolean hasContractid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -19050,7 +19843,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 1;</code>
+     * @return The contractid.
      */
+    @java.lang.Override
     public java.lang.String getContractid() {
       java.lang.Object ref = contractid_;
       if (ref instanceof java.lang.String) {
@@ -19071,7 +19866,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 1;</code>
+     * @return The bytes for contractid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getContractidBytes() {
       java.lang.Object ref = contractid_;
@@ -19095,6 +19892,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 2;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument> getArgsList() {
       return args_;
     }
@@ -19105,6 +19903,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 2;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder>
         getArgsOrBuilderList() {
       return args_;
@@ -19116,6 +19915,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 2;</code>
      */
+    @java.lang.Override
     public int getArgsCount() {
       return args_.size();
     }
@@ -19126,6 +19926,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Argument getArgs(int index) {
       return args_.get(index);
     }
@@ -19136,6 +19937,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.Argument args = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder getArgsOrBuilder(
         int index) {
       return args_.get(index);
@@ -19165,7 +19967,7 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, contractid_);
       }
       for (int i = 0; i < args_.size(); i++) {
@@ -19180,7 +19982,7 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, contractid_);
       }
       for (int i = 0; i < args_.size(); i++) {
@@ -19202,16 +20004,15 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.Delete other = (ch.epfl.dedis.lib.proto.ByzCoinProto.Delete) obj;
 
-      boolean result = true;
-      result = result && (hasContractid() == other.hasContractid());
+      if (hasContractid() != other.hasContractid()) return false;
       if (hasContractid()) {
-        result = result && getContractid()
-            .equals(other.getContractid());
+        if (!getContractid()
+            .equals(other.getContractid())) return false;
       }
-      result = result && getArgsList()
-          .equals(other.getArgsList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getArgsList()
+          .equals(other.getArgsList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -19404,12 +20205,12 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.Delete result = new ch.epfl.dedis.lib.proto.ByzCoinProto.Delete(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.contractid_ = contractid_;
         if (argsBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          if (((bitField0_ & 0x00000002) != 0)) {
             args_ = java.util.Collections.unmodifiableList(args_);
             bitField0_ = (bitField0_ & ~0x00000002);
           }
@@ -19424,35 +20225,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -19542,9 +20343,10 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 1;</code>
+       * @return Whether the contractid field is set.
        */
       public boolean hasContractid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -19552,6 +20354,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 1;</code>
+       * @return The contractid.
        */
       public java.lang.String getContractid() {
         java.lang.Object ref = contractid_;
@@ -19573,6 +20376,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 1;</code>
+       * @return The bytes for contractid.
        */
       public com.google.protobuf.ByteString
           getContractidBytes() {
@@ -19593,6 +20397,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 1;</code>
+       * @param value The contractid to set.
+       * @return This builder for chaining.
        */
       public Builder setContractid(
           java.lang.String value) {
@@ -19610,6 +20416,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearContractid() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -19623,6 +20430,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 1;</code>
+       * @param value The bytes for contractid to set.
+       * @return This builder for chaining.
        */
       public Builder setContractidBytes(
           com.google.protobuf.ByteString value) {
@@ -19638,7 +20447,7 @@ public final class ByzCoinProto {
       private java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument> args_ =
         java.util.Collections.emptyList();
       private void ensureArgsIsMutable() {
-        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+        if (!((bitField0_ & 0x00000002) != 0)) {
           args_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument>(args_);
           bitField0_ |= 0x00000002;
          }
@@ -19939,7 +20748,7 @@ public final class ByzCoinProto {
           argsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.ByzCoinProto.Argument, ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder>(
                   args_,
-                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  ((bitField0_ & 0x00000002) != 0),
                   getParentForChildren(),
                   isClean());
           args_ = null;
@@ -20009,6 +20818,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string name = 1;</code>
+     * @return Whether the name field is set.
      */
     boolean hasName();
     /**
@@ -20017,6 +20827,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string name = 1;</code>
+     * @return The name.
      */
     java.lang.String getName();
     /**
@@ -20025,6 +20836,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string name = 1;</code>
+     * @return The bytes for name.
      */
     com.google.protobuf.ByteString
         getNameBytes();
@@ -20035,6 +20847,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes value = 2;</code>
+     * @return Whether the value field is set.
      */
     boolean hasValue();
     /**
@@ -20043,6 +20856,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes value = 2;</code>
+     * @return The value.
      */
     com.google.protobuf.ByteString getValue();
   }
@@ -20053,7 +20867,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.Argument}
    */
-  public  static final class Argument extends
+  public static final class Argument extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.Argument)
       ArgumentOrBuilder {
@@ -20065,6 +20879,13 @@ public final class ByzCoinProto {
     private Argument() {
       name_ = "";
       value_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Argument();
     }
 
     @java.lang.Override
@@ -20143,9 +20964,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string name = 1;</code>
+     * @return Whether the name field is set.
      */
+    @java.lang.Override
     public boolean hasName() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -20153,7 +20976,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string name = 1;</code>
+     * @return The name.
      */
+    @java.lang.Override
     public java.lang.String getName() {
       java.lang.Object ref = name_;
       if (ref instanceof java.lang.String) {
@@ -20174,7 +20999,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string name = 1;</code>
+     * @return The bytes for name.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getNameBytes() {
       java.lang.Object ref = name_;
@@ -20197,9 +21024,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes value = 2;</code>
+     * @return Whether the value field is set.
      */
+    @java.lang.Override
     public boolean hasValue() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -20207,7 +21036,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes value = 2;</code>
+     * @return The value.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getValue() {
       return value_;
     }
@@ -20234,10 +21065,10 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, name_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, value_);
       }
       unknownFields.writeTo(output);
@@ -20249,10 +21080,10 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, name_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, value_);
       }
@@ -20271,19 +21102,18 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.Argument other = (ch.epfl.dedis.lib.proto.ByzCoinProto.Argument) obj;
 
-      boolean result = true;
-      result = result && (hasName() == other.hasName());
+      if (hasName() != other.hasName()) return false;
       if (hasName()) {
-        result = result && getName()
-            .equals(other.getName());
+        if (!getName()
+            .equals(other.getName())) return false;
       }
-      result = result && (hasValue() == other.hasValue());
+      if (hasValue() != other.hasValue()) return false;
       if (hasValue()) {
-        result = result && getValue()
-            .equals(other.getValue());
+        if (!getValue()
+            .equals(other.getValue())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -20470,11 +21300,11 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.Argument result = new ch.epfl.dedis.lib.proto.ByzCoinProto.Argument(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.name_ = name_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.value_ = value_;
@@ -20485,35 +21315,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -20578,9 +21408,10 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string name = 1;</code>
+       * @return Whether the name field is set.
        */
       public boolean hasName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -20588,6 +21419,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string name = 1;</code>
+       * @return The name.
        */
       public java.lang.String getName() {
         java.lang.Object ref = name_;
@@ -20609,6 +21441,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string name = 1;</code>
+       * @return The bytes for name.
        */
       public com.google.protobuf.ByteString
           getNameBytes() {
@@ -20629,6 +21462,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string name = 1;</code>
+       * @param value The name to set.
+       * @return This builder for chaining.
        */
       public Builder setName(
           java.lang.String value) {
@@ -20646,6 +21481,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string name = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearName() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -20659,6 +21495,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string name = 1;</code>
+       * @param value The bytes for name to set.
+       * @return This builder for chaining.
        */
       public Builder setNameBytes(
           com.google.protobuf.ByteString value) {
@@ -20678,9 +21516,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes value = 2;</code>
+       * @return Whether the value field is set.
        */
+      @java.lang.Override
       public boolean hasValue() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -20688,7 +21528,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes value = 2;</code>
+       * @return The value.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getValue() {
         return value_;
       }
@@ -20698,6 +21540,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes value = 2;</code>
+       * @param value The value to set.
+       * @return This builder for chaining.
        */
       public Builder setValue(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -20714,6 +21558,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes value = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearValue() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -20813,7 +21658,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.ClientTransaction}
    */
-  public  static final class ClientTransaction extends
+  public static final class ClientTransaction extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.ClientTransaction)
       ClientTransactionOrBuilder {
@@ -20824,6 +21669,13 @@ public final class ByzCoinProto {
     }
     private ClientTransaction() {
       instructions_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new ClientTransaction();
     }
 
     @java.lang.Override
@@ -20851,7 +21703,7 @@ public final class ByzCoinProto {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 instructions_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.Instruction>();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -20874,7 +21726,7 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
           instructions_ = java.util.Collections.unmodifiableList(instructions_);
         }
         this.unknownFields = unknownFields.build();
@@ -20899,12 +21751,14 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.Instruction instructions = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Instruction> getInstructionsList() {
       return instructions_;
     }
     /**
      * <code>repeated .byzcoin.Instruction instructions = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.InstructionOrBuilder>
         getInstructionsOrBuilderList() {
       return instructions_;
@@ -20912,18 +21766,21 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.Instruction instructions = 1;</code>
      */
+    @java.lang.Override
     public int getInstructionsCount() {
       return instructions_.size();
     }
     /**
      * <code>repeated .byzcoin.Instruction instructions = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Instruction getInstructions(int index) {
       return instructions_.get(index);
     }
     /**
      * <code>repeated .byzcoin.Instruction instructions = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.InstructionOrBuilder getInstructionsOrBuilder(
         int index) {
       return instructions_.get(index);
@@ -20980,11 +21837,10 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction other = (ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction) obj;
 
-      boolean result = true;
-      result = result && getInstructionsList()
-          .equals(other.getInstructionsList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getInstructionsList()
+          .equals(other.getInstructionsList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -21174,7 +22030,7 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction result = new ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction(this);
         int from_bitField0_ = bitField0_;
         if (instructionsBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((bitField0_ & 0x00000001) != 0)) {
             instructions_ = java.util.Collections.unmodifiableList(instructions_);
             bitField0_ = (bitField0_ & ~0x00000001);
           }
@@ -21188,35 +22044,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -21294,7 +22150,7 @@ public final class ByzCoinProto {
       private java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Instruction> instructions_ =
         java.util.Collections.emptyList();
       private void ensureInstructionsIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           instructions_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.Instruction>(instructions_);
           bitField0_ |= 0x00000001;
          }
@@ -21523,7 +22379,7 @@ public final class ByzCoinProto {
           instructionsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.ByzCoinProto.Instruction, ch.epfl.dedis.lib.proto.ByzCoinProto.Instruction.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.InstructionOrBuilder>(
                   instructions_,
-                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
                   isClean());
           instructions_ = null;
@@ -21589,10 +22445,12 @@ public final class ByzCoinProto {
 
     /**
      * <code>required .byzcoin.ClientTransaction clienttransaction = 1;</code>
+     * @return Whether the clienttransaction field is set.
      */
     boolean hasClienttransaction();
     /**
      * <code>required .byzcoin.ClientTransaction clienttransaction = 1;</code>
+     * @return The clienttransaction.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction getClienttransaction();
     /**
@@ -21602,10 +22460,12 @@ public final class ByzCoinProto {
 
     /**
      * <code>required bool accepted = 2;</code>
+     * @return Whether the accepted field is set.
      */
     boolean hasAccepted();
     /**
      * <code>required bool accepted = 2;</code>
+     * @return The accepted.
      */
     boolean getAccepted();
   }
@@ -21616,7 +22476,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.TxResult}
    */
-  public  static final class TxResult extends
+  public static final class TxResult extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.TxResult)
       TxResultOrBuilder {
@@ -21626,7 +22486,13 @@ public final class ByzCoinProto {
       super(builder);
     }
     private TxResult() {
-      accepted_ = false;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new TxResult();
     }
 
     @java.lang.Override
@@ -21655,7 +22521,7 @@ public final class ByzCoinProto {
               break;
             case 10: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = clienttransaction_.toBuilder();
               }
               clienttransaction_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction.parser(), extensionRegistry);
@@ -21708,19 +22574,24 @@ public final class ByzCoinProto {
     private ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction clienttransaction_;
     /**
      * <code>required .byzcoin.ClientTransaction clienttransaction = 1;</code>
+     * @return Whether the clienttransaction field is set.
      */
+    @java.lang.Override
     public boolean hasClienttransaction() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required .byzcoin.ClientTransaction clienttransaction = 1;</code>
+     * @return The clienttransaction.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction getClienttransaction() {
       return clienttransaction_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction.getDefaultInstance() : clienttransaction_;
     }
     /**
      * <code>required .byzcoin.ClientTransaction clienttransaction = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransactionOrBuilder getClienttransactionOrBuilder() {
       return clienttransaction_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction.getDefaultInstance() : clienttransaction_;
     }
@@ -21729,13 +22600,17 @@ public final class ByzCoinProto {
     private boolean accepted_;
     /**
      * <code>required bool accepted = 2;</code>
+     * @return Whether the accepted field is set.
      */
+    @java.lang.Override
     public boolean hasAccepted() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bool accepted = 2;</code>
+     * @return The accepted.
      */
+    @java.lang.Override
     public boolean getAccepted() {
       return accepted_;
     }
@@ -21766,10 +22641,10 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getClienttransaction());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBool(2, accepted_);
       }
       unknownFields.writeTo(output);
@@ -21781,11 +22656,11 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getClienttransaction());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(2, accepted_);
       }
@@ -21804,19 +22679,18 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.TxResult other = (ch.epfl.dedis.lib.proto.ByzCoinProto.TxResult) obj;
 
-      boolean result = true;
-      result = result && (hasClienttransaction() == other.hasClienttransaction());
+      if (hasClienttransaction() != other.hasClienttransaction()) return false;
       if (hasClienttransaction()) {
-        result = result && getClienttransaction()
-            .equals(other.getClienttransaction());
+        if (!getClienttransaction()
+            .equals(other.getClienttransaction())) return false;
       }
-      result = result && (hasAccepted() == other.hasAccepted());
+      if (hasAccepted() != other.hasAccepted()) return false;
       if (hasAccepted()) {
-        result = result && (getAccepted()
-            == other.getAccepted());
+        if (getAccepted()
+            != other.getAccepted()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -22009,18 +22883,18 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.TxResult result = new ch.epfl.dedis.lib.proto.ByzCoinProto.TxResult(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (clienttransactionBuilder_ == null) {
+            result.clienttransaction_ = clienttransaction_;
+          } else {
+            result.clienttransaction_ = clienttransactionBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
         }
-        if (clienttransactionBuilder_ == null) {
-          result.clienttransaction_ = clienttransaction_;
-        } else {
-          result.clienttransaction_ = clienttransactionBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.accepted_ = accepted_;
           to_bitField0_ |= 0x00000002;
         }
-        result.accepted_ = accepted_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -22028,35 +22902,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -22115,17 +22989,19 @@ public final class ByzCoinProto {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction clienttransaction_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction clienttransaction_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction, ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransactionOrBuilder> clienttransactionBuilder_;
       /**
        * <code>required .byzcoin.ClientTransaction clienttransaction = 1;</code>
+       * @return Whether the clienttransaction field is set.
        */
       public boolean hasClienttransaction() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required .byzcoin.ClientTransaction clienttransaction = 1;</code>
+       * @return The clienttransaction.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction getClienttransaction() {
         if (clienttransactionBuilder_ == null) {
@@ -22169,7 +23045,7 @@ public final class ByzCoinProto {
        */
       public Builder mergeClienttransaction(ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction value) {
         if (clienttransactionBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               clienttransaction_ != null &&
               clienttransaction_ != ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction.getDefaultInstance()) {
             clienttransaction_ =
@@ -22236,18 +23112,24 @@ public final class ByzCoinProto {
       private boolean accepted_ ;
       /**
        * <code>required bool accepted = 2;</code>
+       * @return Whether the accepted field is set.
        */
+      @java.lang.Override
       public boolean hasAccepted() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bool accepted = 2;</code>
+       * @return The accepted.
        */
+      @java.lang.Override
       public boolean getAccepted() {
         return accepted_;
       }
       /**
        * <code>required bool accepted = 2;</code>
+       * @param value The accepted to set.
+       * @return This builder for chaining.
        */
       public Builder setAccepted(boolean value) {
         bitField0_ |= 0x00000002;
@@ -22257,6 +23139,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bool accepted = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearAccepted() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -22327,6 +23210,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 stateaction = 1;</code>
+     * @return Whether the stateaction field is set.
      */
     boolean hasStateaction();
     /**
@@ -22335,6 +23219,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 stateaction = 1;</code>
+     * @return The stateaction.
      */
     int getStateaction();
 
@@ -22344,6 +23229,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes instanceid = 2;</code>
+     * @return Whether the instanceid field is set.
      */
     boolean hasInstanceid();
     /**
@@ -22352,6 +23238,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes instanceid = 2;</code>
+     * @return The instanceid.
      */
     com.google.protobuf.ByteString getInstanceid();
 
@@ -22361,6 +23248,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 3;</code>
+     * @return Whether the contractid field is set.
      */
     boolean hasContractid();
     /**
@@ -22369,6 +23257,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 3;</code>
+     * @return The contractid.
      */
     java.lang.String getContractid();
     /**
@@ -22377,6 +23266,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 3;</code>
+     * @return The bytes for contractid.
      */
     com.google.protobuf.ByteString
         getContractidBytes();
@@ -22387,6 +23277,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes value = 4;</code>
+     * @return Whether the value field is set.
      */
     boolean hasValue();
     /**
@@ -22395,6 +23286,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes value = 4;</code>
+     * @return The value.
      */
     com.google.protobuf.ByteString getValue();
 
@@ -22404,6 +23296,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes darcid = 5;</code>
+     * @return Whether the darcid field is set.
      */
     boolean hasDarcid();
     /**
@@ -22412,6 +23305,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes darcid = 5;</code>
+     * @return The darcid.
      */
     com.google.protobuf.ByteString getDarcid();
 
@@ -22421,6 +23315,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 version = 6;</code>
+     * @return Whether the version field is set.
      */
     boolean hasVersion();
     /**
@@ -22429,6 +23324,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 version = 6;</code>
+     * @return The version.
      */
     long getVersion();
   }
@@ -22439,7 +23335,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.StateChange}
    */
-  public  static final class StateChange extends
+  public static final class StateChange extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.StateChange)
       StateChangeOrBuilder {
@@ -22449,12 +23345,17 @@ public final class ByzCoinProto {
       super(builder);
     }
     private StateChange() {
-      stateaction_ = 0;
       instanceid_ = com.google.protobuf.ByteString.EMPTY;
       contractid_ = "";
       value_ = com.google.protobuf.ByteString.EMPTY;
       darcid_ = com.google.protobuf.ByteString.EMPTY;
-      version_ = 0L;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new StateChange();
     }
 
     @java.lang.Override
@@ -22553,9 +23454,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 stateaction = 1;</code>
+     * @return Whether the stateaction field is set.
      */
+    @java.lang.Override
     public boolean hasStateaction() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -22563,7 +23466,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 stateaction = 1;</code>
+     * @return The stateaction.
      */
+    @java.lang.Override
     public int getStateaction() {
       return stateaction_;
     }
@@ -22576,9 +23481,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes instanceid = 2;</code>
+     * @return Whether the instanceid field is set.
      */
+    @java.lang.Override
     public boolean hasInstanceid() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -22586,7 +23493,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes instanceid = 2;</code>
+     * @return The instanceid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getInstanceid() {
       return instanceid_;
     }
@@ -22599,9 +23508,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 3;</code>
+     * @return Whether the contractid field is set.
      */
+    @java.lang.Override
     public boolean hasContractid() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -22609,7 +23520,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 3;</code>
+     * @return The contractid.
      */
+    @java.lang.Override
     public java.lang.String getContractid() {
       java.lang.Object ref = contractid_;
       if (ref instanceof java.lang.String) {
@@ -22630,7 +23543,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required string contractid = 3;</code>
+     * @return The bytes for contractid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getContractidBytes() {
       java.lang.Object ref = contractid_;
@@ -22653,9 +23568,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes value = 4;</code>
+     * @return Whether the value field is set.
      */
+    @java.lang.Override
     public boolean hasValue() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <pre>
@@ -22663,7 +23580,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes value = 4;</code>
+     * @return The value.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getValue() {
       return value_;
     }
@@ -22676,9 +23595,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes darcid = 5;</code>
+     * @return Whether the darcid field is set.
      */
+    @java.lang.Override
     public boolean hasDarcid() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <pre>
@@ -22686,7 +23607,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes darcid = 5;</code>
+     * @return The darcid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getDarcid() {
       return darcid_;
     }
@@ -22699,9 +23622,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 version = 6;</code>
+     * @return Whether the version field is set.
      */
+    @java.lang.Override
     public boolean hasVersion() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000020) != 0);
     }
     /**
      * <pre>
@@ -22709,7 +23634,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 version = 6;</code>
+     * @return The version.
      */
+    @java.lang.Override
     public long getVersion() {
       return version_;
     }
@@ -22752,22 +23679,22 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeSInt32(1, stateaction_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, instanceid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 3, contractid_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeBytes(4, value_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeBytes(5, darcid_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         output.writeUInt64(6, version_);
       }
       unknownFields.writeTo(output);
@@ -22779,26 +23706,26 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(1, stateaction_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, instanceid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, contractid_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(4, value_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(5, darcid_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(6, version_);
       }
@@ -22817,39 +23744,38 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange other = (ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange) obj;
 
-      boolean result = true;
-      result = result && (hasStateaction() == other.hasStateaction());
+      if (hasStateaction() != other.hasStateaction()) return false;
       if (hasStateaction()) {
-        result = result && (getStateaction()
-            == other.getStateaction());
+        if (getStateaction()
+            != other.getStateaction()) return false;
       }
-      result = result && (hasInstanceid() == other.hasInstanceid());
+      if (hasInstanceid() != other.hasInstanceid()) return false;
       if (hasInstanceid()) {
-        result = result && getInstanceid()
-            .equals(other.getInstanceid());
+        if (!getInstanceid()
+            .equals(other.getInstanceid())) return false;
       }
-      result = result && (hasContractid() == other.hasContractid());
+      if (hasContractid() != other.hasContractid()) return false;
       if (hasContractid()) {
-        result = result && getContractid()
-            .equals(other.getContractid());
+        if (!getContractid()
+            .equals(other.getContractid())) return false;
       }
-      result = result && (hasValue() == other.hasValue());
+      if (hasValue() != other.hasValue()) return false;
       if (hasValue()) {
-        result = result && getValue()
-            .equals(other.getValue());
+        if (!getValue()
+            .equals(other.getValue())) return false;
       }
-      result = result && (hasDarcid() == other.hasDarcid());
+      if (hasDarcid() != other.hasDarcid()) return false;
       if (hasDarcid()) {
-        result = result && getDarcid()
-            .equals(other.getDarcid());
+        if (!getDarcid()
+            .equals(other.getDarcid())) return false;
       }
-      result = result && (hasVersion() == other.hasVersion());
+      if (hasVersion() != other.hasVersion()) return false;
       if (hasVersion()) {
-        result = result && (getVersion()
-            == other.getVersion());
+        if (getVersion()
+            != other.getVersion()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -23061,30 +23987,30 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange result = new ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.stateaction_ = stateaction_;
           to_bitField0_ |= 0x00000001;
         }
-        result.stateaction_ = stateaction_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.instanceid_ = instanceid_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.contractid_ = contractid_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
           to_bitField0_ |= 0x00000008;
         }
         result.value_ = value_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
           to_bitField0_ |= 0x00000010;
         }
         result.darcid_ = darcid_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((from_bitField0_ & 0x00000020) != 0)) {
+          result.version_ = version_;
           to_bitField0_ |= 0x00000020;
         }
-        result.version_ = version_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -23092,35 +24018,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -23209,9 +24135,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 stateaction = 1;</code>
+       * @return Whether the stateaction field is set.
        */
+      @java.lang.Override
       public boolean hasStateaction() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -23219,7 +24147,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 stateaction = 1;</code>
+       * @return The stateaction.
        */
+      @java.lang.Override
       public int getStateaction() {
         return stateaction_;
       }
@@ -23229,6 +24159,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 stateaction = 1;</code>
+       * @param value The stateaction to set.
+       * @return This builder for chaining.
        */
       public Builder setStateaction(int value) {
         bitField0_ |= 0x00000001;
@@ -23242,6 +24174,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 stateaction = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearStateaction() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -23257,9 +24190,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes instanceid = 2;</code>
+       * @return Whether the instanceid field is set.
        */
+      @java.lang.Override
       public boolean hasInstanceid() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -23267,7 +24202,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes instanceid = 2;</code>
+       * @return The instanceid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getInstanceid() {
         return instanceid_;
       }
@@ -23277,6 +24214,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes instanceid = 2;</code>
+       * @param value The instanceid to set.
+       * @return This builder for chaining.
        */
       public Builder setInstanceid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -23293,6 +24232,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes instanceid = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearInstanceid() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -23308,9 +24248,10 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 3;</code>
+       * @return Whether the contractid field is set.
        */
       public boolean hasContractid() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -23318,6 +24259,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 3;</code>
+       * @return The contractid.
        */
       public java.lang.String getContractid() {
         java.lang.Object ref = contractid_;
@@ -23339,6 +24281,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 3;</code>
+       * @return The bytes for contractid.
        */
       public com.google.protobuf.ByteString
           getContractidBytes() {
@@ -23359,6 +24302,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 3;</code>
+       * @param value The contractid to set.
+       * @return This builder for chaining.
        */
       public Builder setContractid(
           java.lang.String value) {
@@ -23376,6 +24321,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearContractid() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -23389,6 +24335,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required string contractid = 3;</code>
+       * @param value The bytes for contractid to set.
+       * @return This builder for chaining.
        */
       public Builder setContractidBytes(
           com.google.protobuf.ByteString value) {
@@ -23408,9 +24356,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes value = 4;</code>
+       * @return Whether the value field is set.
        */
+      @java.lang.Override
       public boolean hasValue() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <pre>
@@ -23418,7 +24368,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes value = 4;</code>
+       * @return The value.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getValue() {
         return value_;
       }
@@ -23428,6 +24380,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes value = 4;</code>
+       * @param value The value to set.
+       * @return This builder for chaining.
        */
       public Builder setValue(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -23444,6 +24398,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes value = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearValue() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -23459,9 +24414,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes darcid = 5;</code>
+       * @return Whether the darcid field is set.
        */
+      @java.lang.Override
       public boolean hasDarcid() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <pre>
@@ -23469,7 +24426,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes darcid = 5;</code>
+       * @return The darcid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getDarcid() {
         return darcid_;
       }
@@ -23479,6 +24438,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes darcid = 5;</code>
+       * @param value The darcid to set.
+       * @return This builder for chaining.
        */
       public Builder setDarcid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -23495,6 +24456,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes darcid = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearDarcid() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -23510,9 +24472,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 version = 6;</code>
+       * @return Whether the version field is set.
        */
+      @java.lang.Override
       public boolean hasVersion() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000020) != 0);
       }
       /**
        * <pre>
@@ -23520,7 +24484,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 version = 6;</code>
+       * @return The version.
        */
+      @java.lang.Override
       public long getVersion() {
         return version_;
       }
@@ -23530,6 +24496,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 version = 6;</code>
+       * @param value The version to set.
+       * @return This builder for chaining.
        */
       public Builder setVersion(long value) {
         bitField0_ |= 0x00000020;
@@ -23543,6 +24511,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 version = 6;</code>
+       * @return This builder for chaining.
        */
       public Builder clearVersion() {
         bitField0_ = (bitField0_ & ~0x00000020);
@@ -23613,6 +24582,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes name = 1;</code>
+     * @return Whether the name field is set.
      */
     boolean hasName();
     /**
@@ -23621,6 +24591,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes name = 1;</code>
+     * @return The name.
      */
     com.google.protobuf.ByteString getName();
 
@@ -23630,6 +24601,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 value = 2;</code>
+     * @return Whether the value field is set.
      */
     boolean hasValue();
     /**
@@ -23638,6 +24610,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 value = 2;</code>
+     * @return The value.
      */
     long getValue();
   }
@@ -23649,7 +24622,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.Coin}
    */
-  public  static final class Coin extends
+  public static final class Coin extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.Coin)
       CoinOrBuilder {
@@ -23660,7 +24633,13 @@ public final class ByzCoinProto {
     }
     private Coin() {
       name_ = com.google.protobuf.ByteString.EMPTY;
-      value_ = 0L;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Coin();
     }
 
     @java.lang.Override
@@ -23738,9 +24717,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes name = 1;</code>
+     * @return Whether the name field is set.
      */
+    @java.lang.Override
     public boolean hasName() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -23748,7 +24729,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes name = 1;</code>
+     * @return The name.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getName() {
       return name_;
     }
@@ -23761,9 +24744,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 value = 2;</code>
+     * @return Whether the value field is set.
      */
+    @java.lang.Override
     public boolean hasValue() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -23771,7 +24756,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 value = 2;</code>
+     * @return The value.
      */
+    @java.lang.Override
     public long getValue() {
       return value_;
     }
@@ -23798,10 +24785,10 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, name_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeUInt64(2, value_);
       }
       unknownFields.writeTo(output);
@@ -23813,11 +24800,11 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, name_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(2, value_);
       }
@@ -23836,19 +24823,18 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.Coin other = (ch.epfl.dedis.lib.proto.ByzCoinProto.Coin) obj;
 
-      boolean result = true;
-      result = result && (hasName() == other.hasName());
+      if (hasName() != other.hasName()) return false;
       if (hasName()) {
-        result = result && getName()
-            .equals(other.getName());
+        if (!getName()
+            .equals(other.getName())) return false;
       }
-      result = result && (hasValue() == other.hasValue());
+      if (hasValue() != other.hasValue()) return false;
       if (hasValue()) {
-        result = result && (getValue()
-            == other.getValue());
+        if (getValue()
+            != other.getValue()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -24037,14 +25023,14 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.Coin result = new ch.epfl.dedis.lib.proto.ByzCoinProto.Coin(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.name_ = name_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.value_ = value_;
           to_bitField0_ |= 0x00000002;
         }
-        result.value_ = value_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -24052,35 +25038,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -24143,9 +25129,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes name = 1;</code>
+       * @return Whether the name field is set.
        */
+      @java.lang.Override
       public boolean hasName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -24153,7 +25141,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes name = 1;</code>
+       * @return The name.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getName() {
         return name_;
       }
@@ -24163,6 +25153,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes name = 1;</code>
+       * @param value The name to set.
+       * @return This builder for chaining.
        */
       public Builder setName(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -24179,6 +25171,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes name = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearName() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -24194,9 +25187,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 value = 2;</code>
+       * @return Whether the value field is set.
        */
+      @java.lang.Override
       public boolean hasValue() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -24204,7 +25199,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 value = 2;</code>
+       * @return The value.
        */
+      @java.lang.Override
       public long getValue() {
         return value_;
       }
@@ -24214,6 +25211,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 value = 2;</code>
+       * @param value The value to set.
+       * @return This builder for chaining.
        */
       public Builder setValue(long value) {
         bitField0_ |= 0x00000002;
@@ -24227,6 +25226,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 value = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearValue() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -24293,10 +25293,12 @@ public final class ByzCoinProto {
 
     /**
      * <code>required bytes id = 1;</code>
+     * @return Whether the id field is set.
      */
     boolean hasId();
     /**
      * <code>required bytes id = 1;</code>
+     * @return The id.
      */
     com.google.protobuf.ByteString getId();
   }
@@ -24308,7 +25310,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.StreamingRequest}
    */
-  public  static final class StreamingRequest extends
+  public static final class StreamingRequest extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.StreamingRequest)
       StreamingRequestOrBuilder {
@@ -24319,6 +25321,13 @@ public final class ByzCoinProto {
     }
     private StreamingRequest() {
       id_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new StreamingRequest();
     }
 
     @java.lang.Override
@@ -24387,13 +25396,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString id_;
     /**
      * <code>required bytes id = 1;</code>
+     * @return Whether the id field is set.
      */
+    @java.lang.Override
     public boolean hasId() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes id = 1;</code>
+     * @return The id.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getId() {
       return id_;
     }
@@ -24416,7 +25429,7 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, id_);
       }
       unknownFields.writeTo(output);
@@ -24428,7 +25441,7 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, id_);
       }
@@ -24447,14 +25460,13 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.StreamingRequest other = (ch.epfl.dedis.lib.proto.ByzCoinProto.StreamingRequest) obj;
 
-      boolean result = true;
-      result = result && (hasId() == other.hasId());
+      if (hasId() != other.hasId()) return false;
       if (hasId()) {
-        result = result && getId()
-            .equals(other.getId());
+        if (!getId()
+            .equals(other.getId())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -24636,7 +25648,7 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.StreamingRequest result = new ch.epfl.dedis.lib.proto.ByzCoinProto.StreamingRequest(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.id_ = id_;
@@ -24647,35 +25659,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -24728,18 +25740,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString id_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes id = 1;</code>
+       * @return Whether the id field is set.
        */
+      @java.lang.Override
       public boolean hasId() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes id = 1;</code>
+       * @return The id.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getId() {
         return id_;
       }
       /**
        * <code>required bytes id = 1;</code>
+       * @param value The id to set.
+       * @return This builder for chaining.
        */
       public Builder setId(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -24752,6 +25770,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes id = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearId() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -24818,10 +25837,12 @@ public final class ByzCoinProto {
 
     /**
      * <code>optional .skipchain.SkipBlock block = 1;</code>
+     * @return Whether the block field is set.
      */
     boolean hasBlock();
     /**
      * <code>optional .skipchain.SkipBlock block = 1;</code>
+     * @return The block.
      */
     ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getBlock();
     /**
@@ -24836,7 +25857,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.StreamingResponse}
    */
-  public  static final class StreamingResponse extends
+  public static final class StreamingResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.StreamingResponse)
       StreamingResponseOrBuilder {
@@ -24846,6 +25867,13 @@ public final class ByzCoinProto {
       super(builder);
     }
     private StreamingResponse() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new StreamingResponse();
     }
 
     @java.lang.Override
@@ -24874,7 +25902,7 @@ public final class ByzCoinProto {
               break;
             case 10: {
               ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = block_.toBuilder();
               }
               block_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.parser(), extensionRegistry);
@@ -24922,19 +25950,24 @@ public final class ByzCoinProto {
     private ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock block_;
     /**
      * <code>optional .skipchain.SkipBlock block = 1;</code>
+     * @return Whether the block field is set.
      */
+    @java.lang.Override
     public boolean hasBlock() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .skipchain.SkipBlock block = 1;</code>
+     * @return The block.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getBlock() {
       return block_ == null ? ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance() : block_;
     }
     /**
      * <code>optional .skipchain.SkipBlock block = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder getBlockOrBuilder() {
       return block_ == null ? ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance() : block_;
     }
@@ -24959,7 +25992,7 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getBlock());
       }
       unknownFields.writeTo(output);
@@ -24971,7 +26004,7 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getBlock());
       }
@@ -24990,14 +26023,13 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.StreamingResponse other = (ch.epfl.dedis.lib.proto.ByzCoinProto.StreamingResponse) obj;
 
-      boolean result = true;
-      result = result && (hasBlock() == other.hasBlock());
+      if (hasBlock() != other.hasBlock()) return false;
       if (hasBlock()) {
-        result = result && getBlock()
-            .equals(other.getBlock());
+        if (!getBlock()
+            .equals(other.getBlock())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -25183,13 +26215,13 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.StreamingResponse result = new ch.epfl.dedis.lib.proto.ByzCoinProto.StreamingResponse(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (blockBuilder_ == null) {
+            result.block_ = block_;
+          } else {
+            result.block_ = blockBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
-        }
-        if (blockBuilder_ == null) {
-          result.block_ = block_;
-        } else {
-          result.block_ = blockBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -25198,35 +26230,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -25278,17 +26310,19 @@ public final class ByzCoinProto {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock block_ = null;
+      private ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock block_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> blockBuilder_;
       /**
        * <code>optional .skipchain.SkipBlock block = 1;</code>
+       * @return Whether the block field is set.
        */
       public boolean hasBlock() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .skipchain.SkipBlock block = 1;</code>
+       * @return The block.
        */
       public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getBlock() {
         if (blockBuilder_ == null) {
@@ -25332,7 +26366,7 @@ public final class ByzCoinProto {
        */
       public Builder mergeBlock(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock value) {
         if (blockBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               block_ != null &&
               block_ != ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance()) {
             block_ =
@@ -25458,6 +26492,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes startid = 1;</code>
+     * @return Whether the startid field is set.
      */
     boolean hasStartid();
     /**
@@ -25466,6 +26501,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes startid = 1;</code>
+     * @return The startid.
      */
     com.google.protobuf.ByteString getStartid();
 
@@ -25476,6 +26512,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 pagesize = 2;</code>
+     * @return Whether the pagesize field is set.
      */
     boolean hasPagesize();
     /**
@@ -25485,6 +26522,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 pagesize = 2;</code>
+     * @return The pagesize.
      */
     long getPagesize();
 
@@ -25495,6 +26533,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 numpages = 3;</code>
+     * @return Whether the numpages field is set.
      */
     boolean hasNumpages();
     /**
@@ -25504,6 +26543,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 numpages = 3;</code>
+     * @return The numpages.
      */
     long getNumpages();
 
@@ -25514,6 +26554,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bool backward = 4;</code>
+     * @return Whether the backward field is set.
      */
     boolean hasBackward();
     /**
@@ -25523,6 +26564,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bool backward = 4;</code>
+     * @return The backward.
      */
     boolean getBackward();
   }
@@ -25534,7 +26576,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.PaginateRequest}
    */
-  public  static final class PaginateRequest extends
+  public static final class PaginateRequest extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.PaginateRequest)
       PaginateRequestOrBuilder {
@@ -25545,9 +26587,13 @@ public final class ByzCoinProto {
     }
     private PaginateRequest() {
       startid_ = com.google.protobuf.ByteString.EMPTY;
-      pagesize_ = 0L;
-      numpages_ = 0L;
-      backward_ = false;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new PaginateRequest();
     }
 
     @java.lang.Override
@@ -25635,9 +26681,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes startid = 1;</code>
+     * @return Whether the startid field is set.
      */
+    @java.lang.Override
     public boolean hasStartid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -25645,7 +26693,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes startid = 1;</code>
+     * @return The startid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getStartid() {
       return startid_;
     }
@@ -25659,9 +26709,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 pagesize = 2;</code>
+     * @return Whether the pagesize field is set.
      */
+    @java.lang.Override
     public boolean hasPagesize() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -25670,7 +26722,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 pagesize = 2;</code>
+     * @return The pagesize.
      */
+    @java.lang.Override
     public long getPagesize() {
       return pagesize_;
     }
@@ -25684,9 +26738,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 numpages = 3;</code>
+     * @return Whether the numpages field is set.
      */
+    @java.lang.Override
     public boolean hasNumpages() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -25695,7 +26751,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 numpages = 3;</code>
+     * @return The numpages.
      */
+    @java.lang.Override
     public long getNumpages() {
       return numpages_;
     }
@@ -25709,9 +26767,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bool backward = 4;</code>
+     * @return Whether the backward field is set.
      */
+    @java.lang.Override
     public boolean hasBackward() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <pre>
@@ -25720,7 +26780,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bool backward = 4;</code>
+     * @return The backward.
      */
+    @java.lang.Override
     public boolean getBackward() {
       return backward_;
     }
@@ -25755,16 +26817,16 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, startid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeUInt64(2, pagesize_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeUInt64(3, numpages_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeBool(4, backward_);
       }
       unknownFields.writeTo(output);
@@ -25776,19 +26838,19 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, startid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(2, pagesize_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(3, numpages_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(4, backward_);
       }
@@ -25807,29 +26869,28 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest other = (ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest) obj;
 
-      boolean result = true;
-      result = result && (hasStartid() == other.hasStartid());
+      if (hasStartid() != other.hasStartid()) return false;
       if (hasStartid()) {
-        result = result && getStartid()
-            .equals(other.getStartid());
+        if (!getStartid()
+            .equals(other.getStartid())) return false;
       }
-      result = result && (hasPagesize() == other.hasPagesize());
+      if (hasPagesize() != other.hasPagesize()) return false;
       if (hasPagesize()) {
-        result = result && (getPagesize()
-            == other.getPagesize());
+        if (getPagesize()
+            != other.getPagesize()) return false;
       }
-      result = result && (hasNumpages() == other.hasNumpages());
+      if (hasNumpages() != other.hasNumpages()) return false;
       if (hasNumpages()) {
-        result = result && (getNumpages()
-            == other.getNumpages());
+        if (getNumpages()
+            != other.getNumpages()) return false;
       }
-      result = result && (hasBackward() == other.hasBackward());
+      if (hasBackward() != other.hasBackward()) return false;
       if (hasBackward()) {
-        result = result && (getBackward()
-            == other.getBackward());
+        if (getBackward()
+            != other.getBackward()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -26032,22 +27093,22 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest result = new ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.startid_ = startid_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.pagesize_ = pagesize_;
           to_bitField0_ |= 0x00000002;
         }
-        result.pagesize_ = pagesize_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.numpages_ = numpages_;
           to_bitField0_ |= 0x00000004;
         }
-        result.numpages_ = numpages_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.backward_ = backward_;
           to_bitField0_ |= 0x00000008;
         }
-        result.backward_ = backward_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -26055,35 +27116,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -26158,9 +27219,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes startid = 1;</code>
+       * @return Whether the startid field is set.
        */
+      @java.lang.Override
       public boolean hasStartid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -26168,7 +27231,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes startid = 1;</code>
+       * @return The startid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getStartid() {
         return startid_;
       }
@@ -26178,6 +27243,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes startid = 1;</code>
+       * @param value The startid to set.
+       * @return This builder for chaining.
        */
       public Builder setStartid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -26194,6 +27261,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes startid = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearStartid() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -26210,9 +27278,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 pagesize = 2;</code>
+       * @return Whether the pagesize field is set.
        */
+      @java.lang.Override
       public boolean hasPagesize() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -26221,7 +27291,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 pagesize = 2;</code>
+       * @return The pagesize.
        */
+      @java.lang.Override
       public long getPagesize() {
         return pagesize_;
       }
@@ -26232,6 +27304,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 pagesize = 2;</code>
+       * @param value The pagesize to set.
+       * @return This builder for chaining.
        */
       public Builder setPagesize(long value) {
         bitField0_ |= 0x00000002;
@@ -26246,6 +27320,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 pagesize = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPagesize() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -26262,9 +27337,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 numpages = 3;</code>
+       * @return Whether the numpages field is set.
        */
+      @java.lang.Override
       public boolean hasNumpages() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -26273,7 +27350,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 numpages = 3;</code>
+       * @return The numpages.
        */
+      @java.lang.Override
       public long getNumpages() {
         return numpages_;
       }
@@ -26284,6 +27363,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 numpages = 3;</code>
+       * @param value The numpages to set.
+       * @return This builder for chaining.
        */
       public Builder setNumpages(long value) {
         bitField0_ |= 0x00000004;
@@ -26298,6 +27379,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 numpages = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearNumpages() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -26314,9 +27396,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bool backward = 4;</code>
+       * @return Whether the backward field is set.
        */
+      @java.lang.Override
       public boolean hasBackward() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <pre>
@@ -26325,7 +27409,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bool backward = 4;</code>
+       * @return The backward.
        */
+      @java.lang.Override
       public boolean getBackward() {
         return backward_;
       }
@@ -26336,6 +27422,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bool backward = 4;</code>
+       * @param value The backward to set.
+       * @return This builder for chaining.
        */
       public Builder setBackward(boolean value) {
         bitField0_ |= 0x00000008;
@@ -26350,6 +27438,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bool backward = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearBackward() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -26465,6 +27554,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 pagenumber = 2;</code>
+     * @return Whether the pagenumber field is set.
      */
     boolean hasPagenumber();
     /**
@@ -26474,6 +27564,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 pagenumber = 2;</code>
+     * @return The pagenumber.
      */
     long getPagenumber();
 
@@ -26483,6 +27574,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bool backward = 3;</code>
+     * @return Whether the backward field is set.
      */
     boolean hasBackward();
     /**
@@ -26491,6 +27583,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bool backward = 3;</code>
+     * @return The backward.
      */
     boolean getBackward();
 
@@ -26501,6 +27594,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 errorcode = 4;</code>
+     * @return Whether the errorcode field is set.
      */
     boolean hasErrorcode();
     /**
@@ -26510,6 +27604,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 errorcode = 4;</code>
+     * @return The errorcode.
      */
     long getErrorcode();
 
@@ -26519,6 +27614,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated string errortext = 5;</code>
+     * @return A list containing the errortext.
      */
     java.util.List<java.lang.String>
         getErrortextList();
@@ -26528,6 +27624,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated string errortext = 5;</code>
+     * @return The count of errortext.
      */
     int getErrortextCount();
     /**
@@ -26536,6 +27633,8 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated string errortext = 5;</code>
+     * @param index The index of the element to return.
+     * @return The errortext at the given index.
      */
     java.lang.String getErrortext(int index);
     /**
@@ -26544,6 +27643,8 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated string errortext = 5;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the errortext at the given index.
      */
     com.google.protobuf.ByteString
         getErrortextBytes(int index);
@@ -26555,7 +27656,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.PaginateResponse}
    */
-  public  static final class PaginateResponse extends
+  public static final class PaginateResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.PaginateResponse)
       PaginateResponseOrBuilder {
@@ -26566,10 +27667,14 @@ public final class ByzCoinProto {
     }
     private PaginateResponse() {
       blocks_ = java.util.Collections.emptyList();
-      pagenumber_ = 0L;
-      backward_ = false;
-      errorcode_ = 0L;
       errortext_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new PaginateResponse();
     }
 
     @java.lang.Override
@@ -26597,7 +27702,7 @@ public final class ByzCoinProto {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 blocks_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock>();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -26622,7 +27727,7 @@ public final class ByzCoinProto {
             }
             case 42: {
               com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+              if (!((mutable_bitField0_ & 0x00000010) != 0)) {
                 errortext_ = new com.google.protobuf.LazyStringArrayList();
                 mutable_bitField0_ |= 0x00000010;
               }
@@ -26644,10 +27749,10 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
           blocks_ = java.util.Collections.unmodifiableList(blocks_);
         }
-        if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((mutable_bitField0_ & 0x00000010) != 0)) {
           errortext_ = errortext_.getUnmodifiableView();
         }
         this.unknownFields = unknownFields.build();
@@ -26677,6 +27782,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock> getBlocksList() {
       return blocks_;
     }
@@ -26687,6 +27793,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>
         getBlocksOrBuilderList() {
       return blocks_;
@@ -26698,6 +27805,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
      */
+    @java.lang.Override
     public int getBlocksCount() {
       return blocks_.size();
     }
@@ -26708,6 +27816,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getBlocks(int index) {
       return blocks_.get(index);
     }
@@ -26718,6 +27827,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder getBlocksOrBuilder(
         int index) {
       return blocks_.get(index);
@@ -26732,9 +27842,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 pagenumber = 2;</code>
+     * @return Whether the pagenumber field is set.
      */
+    @java.lang.Override
     public boolean hasPagenumber() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -26743,7 +27855,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 pagenumber = 2;</code>
+     * @return The pagenumber.
      */
+    @java.lang.Override
     public long getPagenumber() {
       return pagenumber_;
     }
@@ -26756,9 +27870,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bool backward = 3;</code>
+     * @return Whether the backward field is set.
      */
+    @java.lang.Override
     public boolean hasBackward() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -26766,7 +27882,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bool backward = 3;</code>
+     * @return The backward.
      */
+    @java.lang.Override
     public boolean getBackward() {
       return backward_;
     }
@@ -26780,9 +27898,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 errorcode = 4;</code>
+     * @return Whether the errorcode field is set.
      */
+    @java.lang.Override
     public boolean hasErrorcode() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -26791,7 +27911,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 errorcode = 4;</code>
+     * @return The errorcode.
      */
+    @java.lang.Override
     public long getErrorcode() {
       return errorcode_;
     }
@@ -26804,6 +27926,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated string errortext = 5;</code>
+     * @return A list containing the errortext.
      */
     public com.google.protobuf.ProtocolStringList
         getErrortextList() {
@@ -26815,6 +27938,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated string errortext = 5;</code>
+     * @return The count of errortext.
      */
     public int getErrortextCount() {
       return errortext_.size();
@@ -26825,6 +27949,8 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated string errortext = 5;</code>
+     * @param index The index of the element to return.
+     * @return The errortext at the given index.
      */
     public java.lang.String getErrortext(int index) {
       return errortext_.get(index);
@@ -26835,6 +27961,8 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>repeated string errortext = 5;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the errortext at the given index.
      */
     public com.google.protobuf.ByteString
         getErrortextBytes(int index) {
@@ -26876,13 +28004,13 @@ public final class ByzCoinProto {
       for (int i = 0; i < blocks_.size(); i++) {
         output.writeMessage(1, blocks_.get(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeUInt64(2, pagenumber_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBool(3, backward_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeUInt64(4, errorcode_);
       }
       for (int i = 0; i < errortext_.size(); i++) {
@@ -26901,15 +28029,15 @@ public final class ByzCoinProto {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, blocks_.get(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(2, pagenumber_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(3, backward_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(4, errorcode_);
       }
@@ -26936,28 +28064,27 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse other = (ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse) obj;
 
-      boolean result = true;
-      result = result && getBlocksList()
-          .equals(other.getBlocksList());
-      result = result && (hasPagenumber() == other.hasPagenumber());
+      if (!getBlocksList()
+          .equals(other.getBlocksList())) return false;
+      if (hasPagenumber() != other.hasPagenumber()) return false;
       if (hasPagenumber()) {
-        result = result && (getPagenumber()
-            == other.getPagenumber());
+        if (getPagenumber()
+            != other.getPagenumber()) return false;
       }
-      result = result && (hasBackward() == other.hasBackward());
+      if (hasBackward() != other.hasBackward()) return false;
       if (hasBackward()) {
-        result = result && (getBackward()
-            == other.getBackward());
+        if (getBackward()
+            != other.getBackward()) return false;
       }
-      result = result && (hasErrorcode() == other.hasErrorcode());
+      if (hasErrorcode() != other.hasErrorcode()) return false;
       if (hasErrorcode()) {
-        result = result && (getErrorcode()
-            == other.getErrorcode());
+        if (getErrorcode()
+            != other.getErrorcode()) return false;
       }
-      result = result && getErrortextList()
-          .equals(other.getErrortextList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getErrortextList()
+          .equals(other.getErrortextList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -27171,7 +28298,7 @@ public final class ByzCoinProto {
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (blocksBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((bitField0_ & 0x00000001) != 0)) {
             blocks_ = java.util.Collections.unmodifiableList(blocks_);
             bitField0_ = (bitField0_ & ~0x00000001);
           }
@@ -27179,19 +28306,19 @@ public final class ByzCoinProto {
         } else {
           result.blocks_ = blocksBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.pagenumber_ = pagenumber_;
           to_bitField0_ |= 0x00000001;
         }
-        result.pagenumber_ = pagenumber_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.backward_ = backward_;
           to_bitField0_ |= 0x00000002;
         }
-        result.backward_ = backward_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.errorcode_ = errorcode_;
           to_bitField0_ |= 0x00000004;
         }
-        result.errorcode_ = errorcode_;
-        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((bitField0_ & 0x00000010) != 0)) {
           errortext_ = errortext_.getUnmodifiableView();
           bitField0_ = (bitField0_ & ~0x00000010);
         }
@@ -27203,35 +28330,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -27337,7 +28464,7 @@ public final class ByzCoinProto {
       private java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock> blocks_ =
         java.util.Collections.emptyList();
       private void ensureBlocksIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           blocks_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock>(blocks_);
           bitField0_ |= 0x00000001;
          }
@@ -27638,7 +28765,7 @@ public final class ByzCoinProto {
           blocksBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>(
                   blocks_,
-                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
                   isClean());
           blocks_ = null;
@@ -27654,9 +28781,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 pagenumber = 2;</code>
+       * @return Whether the pagenumber field is set.
        */
+      @java.lang.Override
       public boolean hasPagenumber() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -27665,7 +28794,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 pagenumber = 2;</code>
+       * @return The pagenumber.
        */
+      @java.lang.Override
       public long getPagenumber() {
         return pagenumber_;
       }
@@ -27676,6 +28807,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 pagenumber = 2;</code>
+       * @param value The pagenumber to set.
+       * @return This builder for chaining.
        */
       public Builder setPagenumber(long value) {
         bitField0_ |= 0x00000002;
@@ -27690,6 +28823,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 pagenumber = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPagenumber() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -27705,9 +28839,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bool backward = 3;</code>
+       * @return Whether the backward field is set.
        */
+      @java.lang.Override
       public boolean hasBackward() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -27715,7 +28851,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bool backward = 3;</code>
+       * @return The backward.
        */
+      @java.lang.Override
       public boolean getBackward() {
         return backward_;
       }
@@ -27725,6 +28863,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bool backward = 3;</code>
+       * @param value The backward to set.
+       * @return This builder for chaining.
        */
       public Builder setBackward(boolean value) {
         bitField0_ |= 0x00000004;
@@ -27738,6 +28878,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bool backward = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearBackward() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -27754,9 +28895,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 errorcode = 4;</code>
+       * @return Whether the errorcode field is set.
        */
+      @java.lang.Override
       public boolean hasErrorcode() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <pre>
@@ -27765,7 +28908,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 errorcode = 4;</code>
+       * @return The errorcode.
        */
+      @java.lang.Override
       public long getErrorcode() {
         return errorcode_;
       }
@@ -27776,6 +28921,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 errorcode = 4;</code>
+       * @param value The errorcode to set.
+       * @return This builder for chaining.
        */
       public Builder setErrorcode(long value) {
         bitField0_ |= 0x00000008;
@@ -27790,6 +28937,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 errorcode = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearErrorcode() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -27800,7 +28948,7 @@ public final class ByzCoinProto {
 
       private com.google.protobuf.LazyStringList errortext_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureErrortextIsMutable() {
-        if (!((bitField0_ & 0x00000010) == 0x00000010)) {
+        if (!((bitField0_ & 0x00000010) != 0)) {
           errortext_ = new com.google.protobuf.LazyStringArrayList(errortext_);
           bitField0_ |= 0x00000010;
          }
@@ -27811,6 +28959,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated string errortext = 5;</code>
+       * @return A list containing the errortext.
        */
       public com.google.protobuf.ProtocolStringList
           getErrortextList() {
@@ -27822,6 +28971,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated string errortext = 5;</code>
+       * @return The count of errortext.
        */
       public int getErrortextCount() {
         return errortext_.size();
@@ -27832,6 +28982,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated string errortext = 5;</code>
+       * @param index The index of the element to return.
+       * @return The errortext at the given index.
        */
       public java.lang.String getErrortext(int index) {
         return errortext_.get(index);
@@ -27842,6 +28994,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated string errortext = 5;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the errortext at the given index.
        */
       public com.google.protobuf.ByteString
           getErrortextBytes(int index) {
@@ -27853,6 +29007,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated string errortext = 5;</code>
+       * @param index The index to set the value at.
+       * @param value The errortext to set.
+       * @return This builder for chaining.
        */
       public Builder setErrortext(
           int index, java.lang.String value) {
@@ -27870,6 +29027,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated string errortext = 5;</code>
+       * @param value The errortext to add.
+       * @return This builder for chaining.
        */
       public Builder addErrortext(
           java.lang.String value) {
@@ -27887,6 +29046,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated string errortext = 5;</code>
+       * @param values The errortext to add.
+       * @return This builder for chaining.
        */
       public Builder addAllErrortext(
           java.lang.Iterable<java.lang.String> values) {
@@ -27902,6 +29063,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated string errortext = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearErrortext() {
         errortext_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -27915,6 +29077,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>repeated string errortext = 5;</code>
+       * @param value The bytes of the errortext to add.
+       * @return This builder for chaining.
        */
       public Builder addErrortextBytes(
           com.google.protobuf.ByteString value) {
@@ -27989,6 +29153,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes byzcoinid = 1;</code>
+     * @return Whether the byzcoinid field is set.
      */
     boolean hasByzcoinid();
     /**
@@ -27997,6 +29162,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes byzcoinid = 1;</code>
+     * @return The byzcoinid.
      */
     com.google.protobuf.ByteString getByzcoinid();
 
@@ -28011,6 +29177,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 nonce = 2;</code>
+     * @return Whether the nonce field is set.
      */
     boolean hasNonce();
     /**
@@ -28024,6 +29191,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 nonce = 2;</code>
+     * @return The nonce.
      */
     long getNonce();
 
@@ -28033,6 +29201,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 length = 3;</code>
+     * @return Whether the length field is set.
      */
     boolean hasLength();
     /**
@@ -28041,6 +29210,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 length = 3;</code>
+     * @return The length.
      */
     int getLength();
   }
@@ -28054,7 +29224,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.DownloadState}
    */
-  public  static final class DownloadState extends
+  public static final class DownloadState extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.DownloadState)
       DownloadStateOrBuilder {
@@ -28065,8 +29235,13 @@ public final class ByzCoinProto {
     }
     private DownloadState() {
       byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
-      nonce_ = 0L;
-      length_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new DownloadState();
     }
 
     @java.lang.Override
@@ -28149,9 +29324,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes byzcoinid = 1;</code>
+     * @return Whether the byzcoinid field is set.
      */
+    @java.lang.Override
     public boolean hasByzcoinid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -28159,7 +29336,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required bytes byzcoinid = 1;</code>
+     * @return The byzcoinid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getByzcoinid() {
       return byzcoinid_;
     }
@@ -28177,9 +29356,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 nonce = 2;</code>
+     * @return Whether the nonce field is set.
      */
+    @java.lang.Override
     public boolean hasNonce() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -28192,7 +29373,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 nonce = 2;</code>
+     * @return The nonce.
      */
+    @java.lang.Override
     public long getNonce() {
       return nonce_;
     }
@@ -28205,9 +29388,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 length = 3;</code>
+     * @return Whether the length field is set.
      */
+    @java.lang.Override
     public boolean hasLength() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -28215,7 +29400,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required sint32 length = 3;</code>
+     * @return The length.
      */
+    @java.lang.Override
     public int getLength() {
       return length_;
     }
@@ -28246,13 +29433,13 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, byzcoinid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeUInt64(2, nonce_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeSInt32(3, length_);
       }
       unknownFields.writeTo(output);
@@ -28264,15 +29451,15 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, byzcoinid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(2, nonce_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(3, length_);
       }
@@ -28291,24 +29478,23 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.DownloadState other = (ch.epfl.dedis.lib.proto.ByzCoinProto.DownloadState) obj;
 
-      boolean result = true;
-      result = result && (hasByzcoinid() == other.hasByzcoinid());
+      if (hasByzcoinid() != other.hasByzcoinid()) return false;
       if (hasByzcoinid()) {
-        result = result && getByzcoinid()
-            .equals(other.getByzcoinid());
+        if (!getByzcoinid()
+            .equals(other.getByzcoinid())) return false;
       }
-      result = result && (hasNonce() == other.hasNonce());
+      if (hasNonce() != other.hasNonce()) return false;
       if (hasNonce()) {
-        result = result && (getNonce()
-            == other.getNonce());
+        if (getNonce()
+            != other.getNonce()) return false;
       }
-      result = result && (hasLength() == other.hasLength());
+      if (hasLength() != other.hasLength()) return false;
       if (hasLength()) {
-        result = result && (getLength()
-            == other.getLength());
+        if (getLength()
+            != other.getLength()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -28505,18 +29691,18 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.DownloadState result = new ch.epfl.dedis.lib.proto.ByzCoinProto.DownloadState(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.byzcoinid_ = byzcoinid_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.nonce_ = nonce_;
           to_bitField0_ |= 0x00000002;
         }
-        result.nonce_ = nonce_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.length_ = length_;
           to_bitField0_ |= 0x00000004;
         }
-        result.length_ = length_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -28524,35 +29710,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -28621,9 +29807,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes byzcoinid = 1;</code>
+       * @return Whether the byzcoinid field is set.
        */
+      @java.lang.Override
       public boolean hasByzcoinid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -28631,7 +29819,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes byzcoinid = 1;</code>
+       * @return The byzcoinid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getByzcoinid() {
         return byzcoinid_;
       }
@@ -28641,6 +29831,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes byzcoinid = 1;</code>
+       * @param value The byzcoinid to set.
+       * @return This builder for chaining.
        */
       public Builder setByzcoinid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -28657,6 +29849,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required bytes byzcoinid = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearByzcoinid() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -28677,9 +29870,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 nonce = 2;</code>
+       * @return Whether the nonce field is set.
        */
+      @java.lang.Override
       public boolean hasNonce() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -28692,7 +29887,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 nonce = 2;</code>
+       * @return The nonce.
        */
+      @java.lang.Override
       public long getNonce() {
         return nonce_;
       }
@@ -28707,6 +29904,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 nonce = 2;</code>
+       * @param value The nonce to set.
+       * @return This builder for chaining.
        */
       public Builder setNonce(long value) {
         bitField0_ |= 0x00000002;
@@ -28725,6 +29924,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 nonce = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearNonce() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -28740,9 +29940,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 length = 3;</code>
+       * @return Whether the length field is set.
        */
+      @java.lang.Override
       public boolean hasLength() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -28750,7 +29952,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 length = 3;</code>
+       * @return The length.
        */
+      @java.lang.Override
       public int getLength() {
         return length_;
       }
@@ -28760,6 +29964,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 length = 3;</code>
+       * @param value The length to set.
+       * @return This builder for chaining.
        */
       public Builder setLength(int value) {
         bitField0_ |= 0x00000004;
@@ -28773,6 +29979,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required sint32 length = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearLength() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -28894,6 +30101,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 nonce = 2;</code>
+     * @return Whether the nonce field is set.
      */
     boolean hasNonce();
     /**
@@ -28904,6 +30112,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 nonce = 2;</code>
+     * @return The nonce.
      */
     long getNonce();
 
@@ -28913,6 +30122,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional sint32 total = 3;</code>
+     * @return Whether the total field is set.
      */
     boolean hasTotal();
     /**
@@ -28921,6 +30131,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional sint32 total = 3;</code>
+     * @return The total.
      */
     int getTotal();
   }
@@ -28932,7 +30143,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.DownloadStateResponse}
    */
-  public  static final class DownloadStateResponse extends
+  public static final class DownloadStateResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.DownloadStateResponse)
       DownloadStateResponseOrBuilder {
@@ -28943,8 +30154,13 @@ public final class ByzCoinProto {
     }
     private DownloadStateResponse() {
       keyvalues_ = java.util.Collections.emptyList();
-      nonce_ = 0L;
-      total_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new DownloadStateResponse();
     }
 
     @java.lang.Override
@@ -28972,7 +30188,7 @@ public final class ByzCoinProto {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 keyvalues_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValue>();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -29005,7 +30221,7 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
           keyvalues_ = java.util.Collections.unmodifiableList(keyvalues_);
         }
         this.unknownFields = unknownFields.build();
@@ -29036,6 +30252,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.DBKeyValue keyvalues = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValue> getKeyvaluesList() {
       return keyvalues_;
     }
@@ -29047,6 +30264,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.DBKeyValue keyvalues = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValueOrBuilder>
         getKeyvaluesOrBuilderList() {
       return keyvalues_;
@@ -29059,6 +30277,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.DBKeyValue keyvalues = 1;</code>
      */
+    @java.lang.Override
     public int getKeyvaluesCount() {
       return keyvalues_.size();
     }
@@ -29070,6 +30289,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.DBKeyValue keyvalues = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValue getKeyvalues(int index) {
       return keyvalues_.get(index);
     }
@@ -29081,6 +30301,7 @@ public final class ByzCoinProto {
      *
      * <code>repeated .byzcoin.DBKeyValue keyvalues = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValueOrBuilder getKeyvaluesOrBuilder(
         int index) {
       return keyvalues_.get(index);
@@ -29096,9 +30317,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 nonce = 2;</code>
+     * @return Whether the nonce field is set.
      */
+    @java.lang.Override
     public boolean hasNonce() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -29108,7 +30331,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>required uint64 nonce = 2;</code>
+     * @return The nonce.
      */
+    @java.lang.Override
     public long getNonce() {
       return nonce_;
     }
@@ -29121,9 +30346,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional sint32 total = 3;</code>
+     * @return Whether the total field is set.
      */
+    @java.lang.Override
     public boolean hasTotal() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -29131,7 +30358,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional sint32 total = 3;</code>
+     * @return The total.
      */
+    @java.lang.Override
     public int getTotal() {
       return total_;
     }
@@ -29163,10 +30392,10 @@ public final class ByzCoinProto {
       for (int i = 0; i < keyvalues_.size(); i++) {
         output.writeMessage(1, keyvalues_.get(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeUInt64(2, nonce_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeSInt32(3, total_);
       }
       unknownFields.writeTo(output);
@@ -29182,11 +30411,11 @@ public final class ByzCoinProto {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, keyvalues_.get(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(2, nonce_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(3, total_);
       }
@@ -29205,21 +30434,20 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.DownloadStateResponse other = (ch.epfl.dedis.lib.proto.ByzCoinProto.DownloadStateResponse) obj;
 
-      boolean result = true;
-      result = result && getKeyvaluesList()
-          .equals(other.getKeyvaluesList());
-      result = result && (hasNonce() == other.hasNonce());
+      if (!getKeyvaluesList()
+          .equals(other.getKeyvaluesList())) return false;
+      if (hasNonce() != other.hasNonce()) return false;
       if (hasNonce()) {
-        result = result && (getNonce()
-            == other.getNonce());
+        if (getNonce()
+            != other.getNonce()) return false;
       }
-      result = result && (hasTotal() == other.hasTotal());
+      if (hasTotal() != other.hasTotal()) return false;
       if (hasTotal()) {
-        result = result && (getTotal()
-            == other.getTotal());
+        if (getTotal()
+            != other.getTotal()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -29420,7 +30648,7 @@ public final class ByzCoinProto {
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (keyvaluesBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((bitField0_ & 0x00000001) != 0)) {
             keyvalues_ = java.util.Collections.unmodifiableList(keyvalues_);
             bitField0_ = (bitField0_ & ~0x00000001);
           }
@@ -29428,14 +30656,14 @@ public final class ByzCoinProto {
         } else {
           result.keyvalues_ = keyvaluesBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.nonce_ = nonce_;
           to_bitField0_ |= 0x00000001;
         }
-        result.nonce_ = nonce_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.total_ = total_;
           to_bitField0_ |= 0x00000002;
         }
-        result.total_ = total_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -29443,35 +30671,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -29558,7 +30786,7 @@ public final class ByzCoinProto {
       private java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValue> keyvalues_ =
         java.util.Collections.emptyList();
       private void ensureKeyvaluesIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           keyvalues_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValue>(keyvalues_);
           bitField0_ |= 0x00000001;
          }
@@ -29877,7 +31105,7 @@ public final class ByzCoinProto {
           keyvaluesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValue, ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValue.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValueOrBuilder>(
                   keyvalues_,
-                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
                   isClean());
           keyvalues_ = null;
@@ -29894,9 +31122,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 nonce = 2;</code>
+       * @return Whether the nonce field is set.
        */
+      @java.lang.Override
       public boolean hasNonce() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -29906,7 +31136,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 nonce = 2;</code>
+       * @return The nonce.
        */
+      @java.lang.Override
       public long getNonce() {
         return nonce_;
       }
@@ -29918,6 +31150,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 nonce = 2;</code>
+       * @param value The nonce to set.
+       * @return This builder for chaining.
        */
       public Builder setNonce(long value) {
         bitField0_ |= 0x00000002;
@@ -29933,6 +31167,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>required uint64 nonce = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearNonce() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -29948,9 +31183,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional sint32 total = 3;</code>
+       * @return Whether the total field is set.
        */
+      @java.lang.Override
       public boolean hasTotal() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -29958,7 +31195,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional sint32 total = 3;</code>
+       * @return The total.
        */
+      @java.lang.Override
       public int getTotal() {
         return total_;
       }
@@ -29968,6 +31207,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional sint32 total = 3;</code>
+       * @param value The total to set.
+       * @return This builder for chaining.
        */
       public Builder setTotal(int value) {
         bitField0_ |= 0x00000004;
@@ -29981,6 +31222,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional sint32 total = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTotal() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -30047,19 +31289,23 @@ public final class ByzCoinProto {
 
     /**
      * <code>required bytes key = 1;</code>
+     * @return Whether the key field is set.
      */
     boolean hasKey();
     /**
      * <code>required bytes key = 1;</code>
+     * @return The key.
      */
     com.google.protobuf.ByteString getKey();
 
     /**
      * <code>required bytes value = 2;</code>
+     * @return Whether the value field is set.
      */
     boolean hasValue();
     /**
      * <code>required bytes value = 2;</code>
+     * @return The value.
      */
     com.google.protobuf.ByteString getValue();
   }
@@ -30070,7 +31316,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.DBKeyValue}
    */
-  public  static final class DBKeyValue extends
+  public static final class DBKeyValue extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.DBKeyValue)
       DBKeyValueOrBuilder {
@@ -30082,6 +31328,13 @@ public final class ByzCoinProto {
     private DBKeyValue() {
       key_ = com.google.protobuf.ByteString.EMPTY;
       value_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new DBKeyValue();
     }
 
     @java.lang.Override
@@ -30155,13 +31408,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString key_;
     /**
      * <code>required bytes key = 1;</code>
+     * @return Whether the key field is set.
      */
+    @java.lang.Override
     public boolean hasKey() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes key = 1;</code>
+     * @return The key.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getKey() {
       return key_;
     }
@@ -30170,13 +31427,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString value_;
     /**
      * <code>required bytes value = 2;</code>
+     * @return Whether the value field is set.
      */
+    @java.lang.Override
     public boolean hasValue() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes value = 2;</code>
+     * @return The value.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getValue() {
       return value_;
     }
@@ -30203,10 +31464,10 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, key_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, value_);
       }
       unknownFields.writeTo(output);
@@ -30218,11 +31479,11 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, key_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, value_);
       }
@@ -30241,19 +31502,18 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValue other = (ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValue) obj;
 
-      boolean result = true;
-      result = result && (hasKey() == other.hasKey());
+      if (hasKey() != other.hasKey()) return false;
       if (hasKey()) {
-        result = result && getKey()
-            .equals(other.getKey());
+        if (!getKey()
+            .equals(other.getKey())) return false;
       }
-      result = result && (hasValue() == other.hasValue());
+      if (hasValue() != other.hasValue()) return false;
       if (hasValue()) {
-        result = result && getValue()
-            .equals(other.getValue());
+        if (!getValue()
+            .equals(other.getValue())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -30440,11 +31700,11 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValue result = new ch.epfl.dedis.lib.proto.ByzCoinProto.DBKeyValue(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.key_ = key_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.value_ = value_;
@@ -30455,35 +31715,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -30542,18 +31802,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString key_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes key = 1;</code>
+       * @return Whether the key field is set.
        */
+      @java.lang.Override
       public boolean hasKey() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes key = 1;</code>
+       * @return The key.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getKey() {
         return key_;
       }
       /**
        * <code>required bytes key = 1;</code>
+       * @param value The key to set.
+       * @return This builder for chaining.
        */
       public Builder setKey(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -30566,6 +31832,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes key = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearKey() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -30577,18 +31844,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString value_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes value = 2;</code>
+       * @return Whether the value field is set.
        */
+      @java.lang.Override
       public boolean hasValue() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes value = 2;</code>
+       * @return The value.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getValue() {
         return value_;
       }
       /**
        * <code>required bytes value = 2;</code>
+       * @param value The value to set.
+       * @return This builder for chaining.
        */
       public Builder setValue(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -30601,6 +31874,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes value = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearValue() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -30667,51 +31941,62 @@ public final class ByzCoinProto {
 
     /**
      * <code>required sint32 stateaction = 1;</code>
+     * @return Whether the stateaction field is set.
      */
     boolean hasStateaction();
     /**
      * <code>required sint32 stateaction = 1;</code>
+     * @return The stateaction.
      */
     int getStateaction();
 
     /**
      * <code>required string contractid = 2;</code>
+     * @return Whether the contractid field is set.
      */
     boolean hasContractid();
     /**
      * <code>required string contractid = 2;</code>
+     * @return The contractid.
      */
     java.lang.String getContractid();
     /**
      * <code>required string contractid = 2;</code>
+     * @return The bytes for contractid.
      */
     com.google.protobuf.ByteString
         getContractidBytes();
 
     /**
      * <code>required bytes value = 3;</code>
+     * @return Whether the value field is set.
      */
     boolean hasValue();
     /**
      * <code>required bytes value = 3;</code>
+     * @return The value.
      */
     com.google.protobuf.ByteString getValue();
 
     /**
      * <code>required uint64 version = 4;</code>
+     * @return Whether the version field is set.
      */
     boolean hasVersion();
     /**
      * <code>required uint64 version = 4;</code>
+     * @return The version.
      */
     long getVersion();
 
     /**
      * <code>required bytes darcid = 5;</code>
+     * @return Whether the darcid field is set.
      */
     boolean hasDarcid();
     /**
      * <code>required bytes darcid = 5;</code>
+     * @return The darcid.
      */
     com.google.protobuf.ByteString getDarcid();
   }
@@ -30723,7 +32008,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.StateChangeBody}
    */
-  public  static final class StateChangeBody extends
+  public static final class StateChangeBody extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.StateChangeBody)
       StateChangeBodyOrBuilder {
@@ -30733,11 +32018,16 @@ public final class ByzCoinProto {
       super(builder);
     }
     private StateChangeBody() {
-      stateaction_ = 0;
       contractid_ = "";
       value_ = com.google.protobuf.ByteString.EMPTY;
-      version_ = 0L;
       darcid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new StateChangeBody();
     }
 
     @java.lang.Override
@@ -30827,13 +32117,17 @@ public final class ByzCoinProto {
     private int stateaction_;
     /**
      * <code>required sint32 stateaction = 1;</code>
+     * @return Whether the stateaction field is set.
      */
+    @java.lang.Override
     public boolean hasStateaction() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required sint32 stateaction = 1;</code>
+     * @return The stateaction.
      */
+    @java.lang.Override
     public int getStateaction() {
       return stateaction_;
     }
@@ -30842,13 +32136,17 @@ public final class ByzCoinProto {
     private volatile java.lang.Object contractid_;
     /**
      * <code>required string contractid = 2;</code>
+     * @return Whether the contractid field is set.
      */
+    @java.lang.Override
     public boolean hasContractid() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required string contractid = 2;</code>
+     * @return The contractid.
      */
+    @java.lang.Override
     public java.lang.String getContractid() {
       java.lang.Object ref = contractid_;
       if (ref instanceof java.lang.String) {
@@ -30865,7 +32163,9 @@ public final class ByzCoinProto {
     }
     /**
      * <code>required string contractid = 2;</code>
+     * @return The bytes for contractid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getContractidBytes() {
       java.lang.Object ref = contractid_;
@@ -30884,13 +32184,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString value_;
     /**
      * <code>required bytes value = 3;</code>
+     * @return Whether the value field is set.
      */
+    @java.lang.Override
     public boolean hasValue() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>required bytes value = 3;</code>
+     * @return The value.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getValue() {
       return value_;
     }
@@ -30899,13 +32203,17 @@ public final class ByzCoinProto {
     private long version_;
     /**
      * <code>required uint64 version = 4;</code>
+     * @return Whether the version field is set.
      */
+    @java.lang.Override
     public boolean hasVersion() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <code>required uint64 version = 4;</code>
+     * @return The version.
      */
+    @java.lang.Override
     public long getVersion() {
       return version_;
     }
@@ -30914,13 +32222,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString darcid_;
     /**
      * <code>required bytes darcid = 5;</code>
+     * @return Whether the darcid field is set.
      */
+    @java.lang.Override
     public boolean hasDarcid() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <code>required bytes darcid = 5;</code>
+     * @return The darcid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getDarcid() {
       return darcid_;
     }
@@ -30959,19 +32271,19 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeSInt32(1, stateaction_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, contractid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBytes(3, value_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeUInt64(4, version_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeBytes(5, darcid_);
       }
       unknownFields.writeTo(output);
@@ -30983,22 +32295,22 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(1, stateaction_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, contractid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, value_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(4, version_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(5, darcid_);
       }
@@ -31017,34 +32329,33 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody other = (ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody) obj;
 
-      boolean result = true;
-      result = result && (hasStateaction() == other.hasStateaction());
+      if (hasStateaction() != other.hasStateaction()) return false;
       if (hasStateaction()) {
-        result = result && (getStateaction()
-            == other.getStateaction());
+        if (getStateaction()
+            != other.getStateaction()) return false;
       }
-      result = result && (hasContractid() == other.hasContractid());
+      if (hasContractid() != other.hasContractid()) return false;
       if (hasContractid()) {
-        result = result && getContractid()
-            .equals(other.getContractid());
+        if (!getContractid()
+            .equals(other.getContractid())) return false;
       }
-      result = result && (hasValue() == other.hasValue());
+      if (hasValue() != other.hasValue()) return false;
       if (hasValue()) {
-        result = result && getValue()
-            .equals(other.getValue());
+        if (!getValue()
+            .equals(other.getValue())) return false;
       }
-      result = result && (hasVersion() == other.hasVersion());
+      if (hasVersion() != other.hasVersion()) return false;
       if (hasVersion()) {
-        result = result && (getVersion()
-            == other.getVersion());
+        if (getVersion()
+            != other.getVersion()) return false;
       }
-      result = result && (hasDarcid() == other.hasDarcid());
+      if (hasDarcid() != other.hasDarcid()) return false;
       if (hasDarcid()) {
-        result = result && getDarcid()
-            .equals(other.getDarcid());
+        if (!getDarcid()
+            .equals(other.getDarcid())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -31251,23 +32562,23 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody result = new ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.stateaction_ = stateaction_;
           to_bitField0_ |= 0x00000001;
         }
-        result.stateaction_ = stateaction_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.contractid_ = contractid_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.value_ = value_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.version_ = version_;
           to_bitField0_ |= 0x00000008;
         }
-        result.version_ = version_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
           to_bitField0_ |= 0x00000010;
         }
         result.darcid_ = darcid_;
@@ -31278,35 +32589,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -31385,18 +32696,24 @@ public final class ByzCoinProto {
       private int stateaction_ ;
       /**
        * <code>required sint32 stateaction = 1;</code>
+       * @return Whether the stateaction field is set.
        */
+      @java.lang.Override
       public boolean hasStateaction() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required sint32 stateaction = 1;</code>
+       * @return The stateaction.
        */
+      @java.lang.Override
       public int getStateaction() {
         return stateaction_;
       }
       /**
        * <code>required sint32 stateaction = 1;</code>
+       * @param value The stateaction to set.
+       * @return This builder for chaining.
        */
       public Builder setStateaction(int value) {
         bitField0_ |= 0x00000001;
@@ -31406,6 +32723,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required sint32 stateaction = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearStateaction() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -31417,12 +32735,14 @@ public final class ByzCoinProto {
       private java.lang.Object contractid_ = "";
       /**
        * <code>required string contractid = 2;</code>
+       * @return Whether the contractid field is set.
        */
       public boolean hasContractid() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required string contractid = 2;</code>
+       * @return The contractid.
        */
       public java.lang.String getContractid() {
         java.lang.Object ref = contractid_;
@@ -31440,6 +32760,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required string contractid = 2;</code>
+       * @return The bytes for contractid.
        */
       public com.google.protobuf.ByteString
           getContractidBytes() {
@@ -31456,6 +32777,8 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required string contractid = 2;</code>
+       * @param value The contractid to set.
+       * @return This builder for chaining.
        */
       public Builder setContractid(
           java.lang.String value) {
@@ -31469,6 +32792,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required string contractid = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearContractid() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -31478,6 +32802,8 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required string contractid = 2;</code>
+       * @param value The bytes for contractid to set.
+       * @return This builder for chaining.
        */
       public Builder setContractidBytes(
           com.google.protobuf.ByteString value) {
@@ -31493,18 +32819,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString value_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes value = 3;</code>
+       * @return Whether the value field is set.
        */
+      @java.lang.Override
       public boolean hasValue() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>required bytes value = 3;</code>
+       * @return The value.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getValue() {
         return value_;
       }
       /**
        * <code>required bytes value = 3;</code>
+       * @param value The value to set.
+       * @return This builder for chaining.
        */
       public Builder setValue(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -31517,6 +32849,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes value = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearValue() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -31528,18 +32861,24 @@ public final class ByzCoinProto {
       private long version_ ;
       /**
        * <code>required uint64 version = 4;</code>
+       * @return Whether the version field is set.
        */
+      @java.lang.Override
       public boolean hasVersion() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>required uint64 version = 4;</code>
+       * @return The version.
        */
+      @java.lang.Override
       public long getVersion() {
         return version_;
       }
       /**
        * <code>required uint64 version = 4;</code>
+       * @param value The version to set.
+       * @return This builder for chaining.
        */
       public Builder setVersion(long value) {
         bitField0_ |= 0x00000008;
@@ -31549,6 +32888,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required uint64 version = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearVersion() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -31560,18 +32900,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString darcid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes darcid = 5;</code>
+       * @return Whether the darcid field is set.
        */
+      @java.lang.Override
       public boolean hasDarcid() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <code>required bytes darcid = 5;</code>
+       * @return The darcid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getDarcid() {
         return darcid_;
       }
       /**
        * <code>required bytes darcid = 5;</code>
+       * @param value The darcid to set.
+       * @return This builder for chaining.
        */
       public Builder setDarcid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -31584,6 +32930,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes darcid = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearDarcid() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -31650,29 +32997,37 @@ public final class ByzCoinProto {
 
     /**
      * <code>repeated string signerids = 1;</code>
+     * @return A list containing the signerids.
      */
     java.util.List<java.lang.String>
         getSigneridsList();
     /**
      * <code>repeated string signerids = 1;</code>
+     * @return The count of signerids.
      */
     int getSigneridsCount();
     /**
      * <code>repeated string signerids = 1;</code>
+     * @param index The index of the element to return.
+     * @return The signerids at the given index.
      */
     java.lang.String getSignerids(int index);
     /**
      * <code>repeated string signerids = 1;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the signerids at the given index.
      */
     com.google.protobuf.ByteString
         getSigneridsBytes(int index);
 
     /**
      * <code>required bytes skipchainid = 2;</code>
+     * @return Whether the skipchainid field is set.
      */
     boolean hasSkipchainid();
     /**
      * <code>required bytes skipchainid = 2;</code>
+     * @return The skipchainid.
      */
     com.google.protobuf.ByteString getSkipchainid();
   }
@@ -31684,7 +33039,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.GetSignerCounters}
    */
-  public  static final class GetSignerCounters extends
+  public static final class GetSignerCounters extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.GetSignerCounters)
       GetSignerCountersOrBuilder {
@@ -31696,6 +33051,13 @@ public final class ByzCoinProto {
     private GetSignerCounters() {
       signerids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       skipchainid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetSignerCounters();
     }
 
     @java.lang.Override
@@ -31724,7 +33086,7 @@ public final class ByzCoinProto {
               break;
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 signerids_ = new com.google.protobuf.LazyStringArrayList();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -31751,7 +33113,7 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
           signerids_ = signerids_.getUnmodifiableView();
         }
         this.unknownFields = unknownFields.build();
@@ -31776,6 +33138,7 @@ public final class ByzCoinProto {
     private com.google.protobuf.LazyStringList signerids_;
     /**
      * <code>repeated string signerids = 1;</code>
+     * @return A list containing the signerids.
      */
     public com.google.protobuf.ProtocolStringList
         getSigneridsList() {
@@ -31783,18 +33146,23 @@ public final class ByzCoinProto {
     }
     /**
      * <code>repeated string signerids = 1;</code>
+     * @return The count of signerids.
      */
     public int getSigneridsCount() {
       return signerids_.size();
     }
     /**
      * <code>repeated string signerids = 1;</code>
+     * @param index The index of the element to return.
+     * @return The signerids at the given index.
      */
     public java.lang.String getSignerids(int index) {
       return signerids_.get(index);
     }
     /**
      * <code>repeated string signerids = 1;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the signerids at the given index.
      */
     public com.google.protobuf.ByteString
         getSigneridsBytes(int index) {
@@ -31805,13 +33173,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString skipchainid_;
     /**
      * <code>required bytes skipchainid = 2;</code>
+     * @return Whether the skipchainid field is set.
      */
+    @java.lang.Override
     public boolean hasSkipchainid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes skipchainid = 2;</code>
+     * @return The skipchainid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getSkipchainid() {
       return skipchainid_;
     }
@@ -31837,7 +33209,7 @@ public final class ByzCoinProto {
       for (int i = 0; i < signerids_.size(); i++) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, signerids_.getRaw(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(2, skipchainid_);
       }
       unknownFields.writeTo(output);
@@ -31857,7 +33229,7 @@ public final class ByzCoinProto {
         size += dataSize;
         size += 1 * getSigneridsList().size();
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, skipchainid_);
       }
@@ -31876,16 +33248,15 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.GetSignerCounters other = (ch.epfl.dedis.lib.proto.ByzCoinProto.GetSignerCounters) obj;
 
-      boolean result = true;
-      result = result && getSigneridsList()
-          .equals(other.getSigneridsList());
-      result = result && (hasSkipchainid() == other.hasSkipchainid());
+      if (!getSigneridsList()
+          .equals(other.getSigneridsList())) return false;
+      if (hasSkipchainid() != other.hasSkipchainid()) return false;
       if (hasSkipchainid()) {
-        result = result && getSkipchainid()
-            .equals(other.getSkipchainid());
+        if (!getSkipchainid()
+            .equals(other.getSkipchainid())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -32073,12 +33444,12 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.GetSignerCounters result = new ch.epfl.dedis.lib.proto.ByzCoinProto.GetSignerCounters(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((bitField0_ & 0x00000001) != 0)) {
           signerids_ = signerids_.getUnmodifiableView();
           bitField0_ = (bitField0_ & ~0x00000001);
         }
         result.signerids_ = signerids_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.skipchainid_ = skipchainid_;
@@ -32089,35 +33460,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -32179,13 +33550,14 @@ public final class ByzCoinProto {
 
       private com.google.protobuf.LazyStringList signerids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureSigneridsIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           signerids_ = new com.google.protobuf.LazyStringArrayList(signerids_);
           bitField0_ |= 0x00000001;
          }
       }
       /**
        * <code>repeated string signerids = 1;</code>
+       * @return A list containing the signerids.
        */
       public com.google.protobuf.ProtocolStringList
           getSigneridsList() {
@@ -32193,18 +33565,23 @@ public final class ByzCoinProto {
       }
       /**
        * <code>repeated string signerids = 1;</code>
+       * @return The count of signerids.
        */
       public int getSigneridsCount() {
         return signerids_.size();
       }
       /**
        * <code>repeated string signerids = 1;</code>
+       * @param index The index of the element to return.
+       * @return The signerids at the given index.
        */
       public java.lang.String getSignerids(int index) {
         return signerids_.get(index);
       }
       /**
        * <code>repeated string signerids = 1;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the signerids at the given index.
        */
       public com.google.protobuf.ByteString
           getSigneridsBytes(int index) {
@@ -32212,6 +33589,9 @@ public final class ByzCoinProto {
       }
       /**
        * <code>repeated string signerids = 1;</code>
+       * @param index The index to set the value at.
+       * @param value The signerids to set.
+       * @return This builder for chaining.
        */
       public Builder setSignerids(
           int index, java.lang.String value) {
@@ -32225,6 +33605,8 @@ public final class ByzCoinProto {
       }
       /**
        * <code>repeated string signerids = 1;</code>
+       * @param value The signerids to add.
+       * @return This builder for chaining.
        */
       public Builder addSignerids(
           java.lang.String value) {
@@ -32238,6 +33620,8 @@ public final class ByzCoinProto {
       }
       /**
        * <code>repeated string signerids = 1;</code>
+       * @param values The signerids to add.
+       * @return This builder for chaining.
        */
       public Builder addAllSignerids(
           java.lang.Iterable<java.lang.String> values) {
@@ -32249,6 +33633,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>repeated string signerids = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSignerids() {
         signerids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -32258,6 +33643,8 @@ public final class ByzCoinProto {
       }
       /**
        * <code>repeated string signerids = 1;</code>
+       * @param value The bytes of the signerids to add.
+       * @return This builder for chaining.
        */
       public Builder addSigneridsBytes(
           com.google.protobuf.ByteString value) {
@@ -32273,18 +33660,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString skipchainid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes skipchainid = 2;</code>
+       * @return Whether the skipchainid field is set.
        */
+      @java.lang.Override
       public boolean hasSkipchainid() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes skipchainid = 2;</code>
+       * @return The skipchainid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getSkipchainid() {
         return skipchainid_;
       }
       /**
        * <code>required bytes skipchainid = 2;</code>
+       * @param value The skipchainid to set.
+       * @return This builder for chaining.
        */
       public Builder setSkipchainid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -32297,6 +33690,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes skipchainid = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSkipchainid() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -32363,14 +33757,18 @@ public final class ByzCoinProto {
 
     /**
      * <code>repeated uint64 counters = 1 [packed = true];</code>
+     * @return A list containing the counters.
      */
     java.util.List<java.lang.Long> getCountersList();
     /**
      * <code>repeated uint64 counters = 1 [packed = true];</code>
+     * @return The count of counters.
      */
     int getCountersCount();
     /**
      * <code>repeated uint64 counters = 1 [packed = true];</code>
+     * @param index The index of the element to return.
+     * @return The counters at the given index.
      */
     long getCounters(int index);
 
@@ -32382,6 +33780,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional uint64 index = 2;</code>
+     * @return Whether the index field is set.
      */
     boolean hasIndex();
     /**
@@ -32392,6 +33791,7 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional uint64 index = 2;</code>
+     * @return The index.
      */
     long getIndex();
   }
@@ -32403,7 +33803,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.GetSignerCountersResponse}
    */
-  public  static final class GetSignerCountersResponse extends
+  public static final class GetSignerCountersResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.GetSignerCountersResponse)
       GetSignerCountersResponseOrBuilder {
@@ -32413,8 +33813,14 @@ public final class ByzCoinProto {
       super(builder);
     }
     private GetSignerCountersResponse() {
-      counters_ = java.util.Collections.emptyList();
-      index_ = 0L;
+      counters_ = emptyLongList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetSignerCountersResponse();
     }
 
     @java.lang.Override
@@ -32442,22 +33848,22 @@ public final class ByzCoinProto {
               done = true;
               break;
             case 8: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                counters_ = new java.util.ArrayList<java.lang.Long>();
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                counters_ = newLongList();
                 mutable_bitField0_ |= 0x00000001;
               }
-              counters_.add(input.readUInt64());
+              counters_.addLong(input.readUInt64());
               break;
             }
             case 10: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001) && input.getBytesUntilLimit() > 0) {
-                counters_ = new java.util.ArrayList<java.lang.Long>();
+              if (!((mutable_bitField0_ & 0x00000001) != 0) && input.getBytesUntilLimit() > 0) {
+                counters_ = newLongList();
                 mutable_bitField0_ |= 0x00000001;
               }
               while (input.getBytesUntilLimit() > 0) {
-                counters_.add(input.readUInt64());
+                counters_.addLong(input.readUInt64());
               }
               input.popLimit(limit);
               break;
@@ -32482,8 +33888,8 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-          counters_ = java.util.Collections.unmodifiableList(counters_);
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
+          counters_.makeImmutable(); // C
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -32504,25 +33910,30 @@ public final class ByzCoinProto {
 
     private int bitField0_;
     public static final int COUNTERS_FIELD_NUMBER = 1;
-    private java.util.List<java.lang.Long> counters_;
+    private com.google.protobuf.Internal.LongList counters_;
     /**
      * <code>repeated uint64 counters = 1 [packed = true];</code>
+     * @return A list containing the counters.
      */
+    @java.lang.Override
     public java.util.List<java.lang.Long>
         getCountersList() {
       return counters_;
     }
     /**
      * <code>repeated uint64 counters = 1 [packed = true];</code>
+     * @return The count of counters.
      */
     public int getCountersCount() {
       return counters_.size();
     }
     /**
      * <code>repeated uint64 counters = 1 [packed = true];</code>
+     * @param index The index of the element to return.
+     * @return The counters at the given index.
      */
     public long getCounters(int index) {
-      return counters_.get(index);
+      return counters_.getLong(index);
     }
     private int countersMemoizedSerializedSize = -1;
 
@@ -32536,9 +33947,11 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional uint64 index = 2;</code>
+     * @return Whether the index field is set.
      */
+    @java.lang.Override
     public boolean hasIndex() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -32548,7 +33961,9 @@ public final class ByzCoinProto {
      * </pre>
      *
      * <code>optional uint64 index = 2;</code>
+     * @return The index.
      */
+    @java.lang.Override
     public long getIndex() {
       return index_;
     }
@@ -32573,9 +33988,9 @@ public final class ByzCoinProto {
         output.writeUInt32NoTag(countersMemoizedSerializedSize);
       }
       for (int i = 0; i < counters_.size(); i++) {
-        output.writeUInt64NoTag(counters_.get(i));
+        output.writeUInt64NoTag(counters_.getLong(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeUInt64(2, index_);
       }
       unknownFields.writeTo(output);
@@ -32591,7 +34006,7 @@ public final class ByzCoinProto {
         int dataSize = 0;
         for (int i = 0; i < counters_.size(); i++) {
           dataSize += com.google.protobuf.CodedOutputStream
-            .computeUInt64SizeNoTag(counters_.get(i));
+            .computeUInt64SizeNoTag(counters_.getLong(i));
         }
         size += dataSize;
         if (!getCountersList().isEmpty()) {
@@ -32601,7 +34016,7 @@ public final class ByzCoinProto {
         }
         countersMemoizedSerializedSize = dataSize;
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(2, index_);
       }
@@ -32620,16 +34035,15 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.GetSignerCountersResponse other = (ch.epfl.dedis.lib.proto.ByzCoinProto.GetSignerCountersResponse) obj;
 
-      boolean result = true;
-      result = result && getCountersList()
-          .equals(other.getCountersList());
-      result = result && (hasIndex() == other.hasIndex());
+      if (!getCountersList()
+          .equals(other.getCountersList())) return false;
+      if (hasIndex() != other.hasIndex()) return false;
       if (hasIndex()) {
-        result = result && (getIndex()
-            == other.getIndex());
+        if (getIndex()
+            != other.getIndex()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -32786,7 +34200,7 @@ public final class ByzCoinProto {
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        counters_ = java.util.Collections.emptyList();
+        counters_ = emptyLongList();
         bitField0_ = (bitField0_ & ~0x00000001);
         index_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -32818,15 +34232,15 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.GetSignerCountersResponse result = new ch.epfl.dedis.lib.proto.ByzCoinProto.GetSignerCountersResponse(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
-          counters_ = java.util.Collections.unmodifiableList(counters_);
+        if (((bitField0_ & 0x00000001) != 0)) {
+          counters_.makeImmutable();
           bitField0_ = (bitField0_ & ~0x00000001);
         }
         result.counters_ = counters_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.index_ = index_;
           to_bitField0_ |= 0x00000001;
         }
-        result.index_ = index_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -32834,35 +34248,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -32919,53 +34333,65 @@ public final class ByzCoinProto {
       }
       private int bitField0_;
 
-      private java.util.List<java.lang.Long> counters_ = java.util.Collections.emptyList();
+      private com.google.protobuf.Internal.LongList counters_ = emptyLongList();
       private void ensureCountersIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
-          counters_ = new java.util.ArrayList<java.lang.Long>(counters_);
+        if (!((bitField0_ & 0x00000001) != 0)) {
+          counters_ = mutableCopy(counters_);
           bitField0_ |= 0x00000001;
          }
       }
       /**
        * <code>repeated uint64 counters = 1 [packed = true];</code>
+       * @return A list containing the counters.
        */
       public java.util.List<java.lang.Long>
           getCountersList() {
-        return java.util.Collections.unmodifiableList(counters_);
+        return ((bitField0_ & 0x00000001) != 0) ?
+                 java.util.Collections.unmodifiableList(counters_) : counters_;
       }
       /**
        * <code>repeated uint64 counters = 1 [packed = true];</code>
+       * @return The count of counters.
        */
       public int getCountersCount() {
         return counters_.size();
       }
       /**
        * <code>repeated uint64 counters = 1 [packed = true];</code>
+       * @param index The index of the element to return.
+       * @return The counters at the given index.
        */
       public long getCounters(int index) {
-        return counters_.get(index);
+        return counters_.getLong(index);
       }
       /**
        * <code>repeated uint64 counters = 1 [packed = true];</code>
+       * @param index The index to set the value at.
+       * @param value The counters to set.
+       * @return This builder for chaining.
        */
       public Builder setCounters(
           int index, long value) {
         ensureCountersIsMutable();
-        counters_.set(index, value);
+        counters_.setLong(index, value);
         onChanged();
         return this;
       }
       /**
        * <code>repeated uint64 counters = 1 [packed = true];</code>
+       * @param value The counters to add.
+       * @return This builder for chaining.
        */
       public Builder addCounters(long value) {
         ensureCountersIsMutable();
-        counters_.add(value);
+        counters_.addLong(value);
         onChanged();
         return this;
       }
       /**
        * <code>repeated uint64 counters = 1 [packed = true];</code>
+       * @param values The counters to add.
+       * @return This builder for chaining.
        */
       public Builder addAllCounters(
           java.lang.Iterable<? extends java.lang.Long> values) {
@@ -32977,9 +34403,10 @@ public final class ByzCoinProto {
       }
       /**
        * <code>repeated uint64 counters = 1 [packed = true];</code>
+       * @return This builder for chaining.
        */
       public Builder clearCounters() {
-        counters_ = java.util.Collections.emptyList();
+        counters_ = emptyLongList();
         bitField0_ = (bitField0_ & ~0x00000001);
         onChanged();
         return this;
@@ -32994,9 +34421,11 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional uint64 index = 2;</code>
+       * @return Whether the index field is set.
        */
+      @java.lang.Override
       public boolean hasIndex() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -33006,7 +34435,9 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional uint64 index = 2;</code>
+       * @return The index.
        */
+      @java.lang.Override
       public long getIndex() {
         return index_;
       }
@@ -33018,6 +34449,8 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional uint64 index = 2;</code>
+       * @param value The index to set.
+       * @return This builder for chaining.
        */
       public Builder setIndex(long value) {
         bitField0_ |= 0x00000002;
@@ -33033,6 +34466,7 @@ public final class ByzCoinProto {
        * </pre>
        *
        * <code>optional uint64 index = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearIndex() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -33099,28 +34533,34 @@ public final class ByzCoinProto {
 
     /**
      * <code>required bytes skipchainid = 1;</code>
+     * @return Whether the skipchainid field is set.
      */
     boolean hasSkipchainid();
     /**
      * <code>required bytes skipchainid = 1;</code>
+     * @return The skipchainid.
      */
     com.google.protobuf.ByteString getSkipchainid();
 
     /**
      * <code>required bytes instanceid = 2;</code>
+     * @return Whether the instanceid field is set.
      */
     boolean hasInstanceid();
     /**
      * <code>required bytes instanceid = 2;</code>
+     * @return The instanceid.
      */
     com.google.protobuf.ByteString getInstanceid();
 
     /**
      * <code>required uint64 version = 3;</code>
+     * @return Whether the version field is set.
      */
     boolean hasVersion();
     /**
      * <code>required uint64 version = 3;</code>
+     * @return The version.
      */
     long getVersion();
   }
@@ -33132,7 +34572,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.GetInstanceVersion}
    */
-  public  static final class GetInstanceVersion extends
+  public static final class GetInstanceVersion extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.GetInstanceVersion)
       GetInstanceVersionOrBuilder {
@@ -33144,7 +34584,13 @@ public final class ByzCoinProto {
     private GetInstanceVersion() {
       skipchainid_ = com.google.protobuf.ByteString.EMPTY;
       instanceid_ = com.google.protobuf.ByteString.EMPTY;
-      version_ = 0L;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetInstanceVersion();
     }
 
     @java.lang.Override
@@ -33223,13 +34669,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString skipchainid_;
     /**
      * <code>required bytes skipchainid = 1;</code>
+     * @return Whether the skipchainid field is set.
      */
+    @java.lang.Override
     public boolean hasSkipchainid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes skipchainid = 1;</code>
+     * @return The skipchainid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getSkipchainid() {
       return skipchainid_;
     }
@@ -33238,13 +34688,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString instanceid_;
     /**
      * <code>required bytes instanceid = 2;</code>
+     * @return Whether the instanceid field is set.
      */
+    @java.lang.Override
     public boolean hasInstanceid() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes instanceid = 2;</code>
+     * @return The instanceid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getInstanceid() {
       return instanceid_;
     }
@@ -33253,13 +34707,17 @@ public final class ByzCoinProto {
     private long version_;
     /**
      * <code>required uint64 version = 3;</code>
+     * @return Whether the version field is set.
      */
+    @java.lang.Override
     public boolean hasVersion() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>required uint64 version = 3;</code>
+     * @return The version.
      */
+    @java.lang.Override
     public long getVersion() {
       return version_;
     }
@@ -33290,13 +34748,13 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, skipchainid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, instanceid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeUInt64(3, version_);
       }
       unknownFields.writeTo(output);
@@ -33308,15 +34766,15 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, skipchainid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, instanceid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(3, version_);
       }
@@ -33335,24 +34793,23 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersion other = (ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersion) obj;
 
-      boolean result = true;
-      result = result && (hasSkipchainid() == other.hasSkipchainid());
+      if (hasSkipchainid() != other.hasSkipchainid()) return false;
       if (hasSkipchainid()) {
-        result = result && getSkipchainid()
-            .equals(other.getSkipchainid());
+        if (!getSkipchainid()
+            .equals(other.getSkipchainid())) return false;
       }
-      result = result && (hasInstanceid() == other.hasInstanceid());
+      if (hasInstanceid() != other.hasInstanceid()) return false;
       if (hasInstanceid()) {
-        result = result && getInstanceid()
-            .equals(other.getInstanceid());
+        if (!getInstanceid()
+            .equals(other.getInstanceid())) return false;
       }
-      result = result && (hasVersion() == other.hasVersion());
+      if (hasVersion() != other.hasVersion()) return false;
       if (hasVersion()) {
-        result = result && (getVersion()
-            == other.getVersion());
+        if (getVersion()
+            != other.getVersion()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -33547,18 +35004,18 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersion result = new ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersion(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.skipchainid_ = skipchainid_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.instanceid_ = instanceid_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.version_ = version_;
           to_bitField0_ |= 0x00000004;
         }
-        result.version_ = version_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -33566,35 +35023,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -33659,18 +35116,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString skipchainid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes skipchainid = 1;</code>
+       * @return Whether the skipchainid field is set.
        */
+      @java.lang.Override
       public boolean hasSkipchainid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes skipchainid = 1;</code>
+       * @return The skipchainid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getSkipchainid() {
         return skipchainid_;
       }
       /**
        * <code>required bytes skipchainid = 1;</code>
+       * @param value The skipchainid to set.
+       * @return This builder for chaining.
        */
       public Builder setSkipchainid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -33683,6 +35146,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes skipchainid = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSkipchainid() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -33694,18 +35158,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString instanceid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes instanceid = 2;</code>
+       * @return Whether the instanceid field is set.
        */
+      @java.lang.Override
       public boolean hasInstanceid() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes instanceid = 2;</code>
+       * @return The instanceid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getInstanceid() {
         return instanceid_;
       }
       /**
        * <code>required bytes instanceid = 2;</code>
+       * @param value The instanceid to set.
+       * @return This builder for chaining.
        */
       public Builder setInstanceid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -33718,6 +35188,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes instanceid = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearInstanceid() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -33729,18 +35200,24 @@ public final class ByzCoinProto {
       private long version_ ;
       /**
        * <code>required uint64 version = 3;</code>
+       * @return Whether the version field is set.
        */
+      @java.lang.Override
       public boolean hasVersion() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>required uint64 version = 3;</code>
+       * @return The version.
        */
+      @java.lang.Override
       public long getVersion() {
         return version_;
       }
       /**
        * <code>required uint64 version = 3;</code>
+       * @param value The version to set.
+       * @return This builder for chaining.
        */
       public Builder setVersion(long value) {
         bitField0_ |= 0x00000004;
@@ -33750,6 +35227,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required uint64 version = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearVersion() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -33816,19 +35294,23 @@ public final class ByzCoinProto {
 
     /**
      * <code>required bytes skipchainid = 1;</code>
+     * @return Whether the skipchainid field is set.
      */
     boolean hasSkipchainid();
     /**
      * <code>required bytes skipchainid = 1;</code>
+     * @return The skipchainid.
      */
     com.google.protobuf.ByteString getSkipchainid();
 
     /**
      * <code>required bytes instanceid = 2;</code>
+     * @return Whether the instanceid field is set.
      */
     boolean hasInstanceid();
     /**
      * <code>required bytes instanceid = 2;</code>
+     * @return The instanceid.
      */
     com.google.protobuf.ByteString getInstanceid();
   }
@@ -33840,7 +35322,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.GetLastInstanceVersion}
    */
-  public  static final class GetLastInstanceVersion extends
+  public static final class GetLastInstanceVersion extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.GetLastInstanceVersion)
       GetLastInstanceVersionOrBuilder {
@@ -33852,6 +35334,13 @@ public final class ByzCoinProto {
     private GetLastInstanceVersion() {
       skipchainid_ = com.google.protobuf.ByteString.EMPTY;
       instanceid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetLastInstanceVersion();
     }
 
     @java.lang.Override
@@ -33925,13 +35414,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString skipchainid_;
     /**
      * <code>required bytes skipchainid = 1;</code>
+     * @return Whether the skipchainid field is set.
      */
+    @java.lang.Override
     public boolean hasSkipchainid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes skipchainid = 1;</code>
+     * @return The skipchainid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getSkipchainid() {
       return skipchainid_;
     }
@@ -33940,13 +35433,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString instanceid_;
     /**
      * <code>required bytes instanceid = 2;</code>
+     * @return Whether the instanceid field is set.
      */
+    @java.lang.Override
     public boolean hasInstanceid() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes instanceid = 2;</code>
+     * @return The instanceid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getInstanceid() {
       return instanceid_;
     }
@@ -33973,10 +35470,10 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, skipchainid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, instanceid_);
       }
       unknownFields.writeTo(output);
@@ -33988,11 +35485,11 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, skipchainid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, instanceid_);
       }
@@ -34011,19 +35508,18 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.GetLastInstanceVersion other = (ch.epfl.dedis.lib.proto.ByzCoinProto.GetLastInstanceVersion) obj;
 
-      boolean result = true;
-      result = result && (hasSkipchainid() == other.hasSkipchainid());
+      if (hasSkipchainid() != other.hasSkipchainid()) return false;
       if (hasSkipchainid()) {
-        result = result && getSkipchainid()
-            .equals(other.getSkipchainid());
+        if (!getSkipchainid()
+            .equals(other.getSkipchainid())) return false;
       }
-      result = result && (hasInstanceid() == other.hasInstanceid());
+      if (hasInstanceid() != other.hasInstanceid()) return false;
       if (hasInstanceid()) {
-        result = result && getInstanceid()
-            .equals(other.getInstanceid());
+        if (!getInstanceid()
+            .equals(other.getInstanceid())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -34211,11 +35707,11 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.GetLastInstanceVersion result = new ch.epfl.dedis.lib.proto.ByzCoinProto.GetLastInstanceVersion(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.skipchainid_ = skipchainid_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.instanceid_ = instanceid_;
@@ -34226,35 +35722,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -34313,18 +35809,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString skipchainid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes skipchainid = 1;</code>
+       * @return Whether the skipchainid field is set.
        */
+      @java.lang.Override
       public boolean hasSkipchainid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes skipchainid = 1;</code>
+       * @return The skipchainid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getSkipchainid() {
         return skipchainid_;
       }
       /**
        * <code>required bytes skipchainid = 1;</code>
+       * @param value The skipchainid to set.
+       * @return This builder for chaining.
        */
       public Builder setSkipchainid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -34337,6 +35839,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes skipchainid = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSkipchainid() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -34348,18 +35851,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString instanceid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes instanceid = 2;</code>
+       * @return Whether the instanceid field is set.
        */
+      @java.lang.Override
       public boolean hasInstanceid() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes instanceid = 2;</code>
+       * @return The instanceid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getInstanceid() {
         return instanceid_;
       }
       /**
        * <code>required bytes instanceid = 2;</code>
+       * @param value The instanceid to set.
+       * @return This builder for chaining.
        */
       public Builder setInstanceid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -34372,6 +35881,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes instanceid = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearInstanceid() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -34438,10 +35948,12 @@ public final class ByzCoinProto {
 
     /**
      * <code>required .byzcoin.StateChange statechange = 1;</code>
+     * @return Whether the statechange field is set.
      */
     boolean hasStatechange();
     /**
      * <code>required .byzcoin.StateChange statechange = 1;</code>
+     * @return The statechange.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange getStatechange();
     /**
@@ -34451,10 +35963,12 @@ public final class ByzCoinProto {
 
     /**
      * <code>required sint32 blockindex = 2;</code>
+     * @return Whether the blockindex field is set.
      */
     boolean hasBlockindex();
     /**
      * <code>required sint32 blockindex = 2;</code>
+     * @return The blockindex.
      */
     int getBlockindex();
   }
@@ -34468,7 +35982,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.GetInstanceVersionResponse}
    */
-  public  static final class GetInstanceVersionResponse extends
+  public static final class GetInstanceVersionResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.GetInstanceVersionResponse)
       GetInstanceVersionResponseOrBuilder {
@@ -34478,7 +35992,13 @@ public final class ByzCoinProto {
       super(builder);
     }
     private GetInstanceVersionResponse() {
-      blockindex_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetInstanceVersionResponse();
     }
 
     @java.lang.Override
@@ -34507,7 +36027,7 @@ public final class ByzCoinProto {
               break;
             case 10: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = statechange_.toBuilder();
               }
               statechange_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange.parser(), extensionRegistry);
@@ -34560,19 +36080,24 @@ public final class ByzCoinProto {
     private ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange statechange_;
     /**
      * <code>required .byzcoin.StateChange statechange = 1;</code>
+     * @return Whether the statechange field is set.
      */
+    @java.lang.Override
     public boolean hasStatechange() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required .byzcoin.StateChange statechange = 1;</code>
+     * @return The statechange.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange getStatechange() {
       return statechange_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange.getDefaultInstance() : statechange_;
     }
     /**
      * <code>required .byzcoin.StateChange statechange = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeOrBuilder getStatechangeOrBuilder() {
       return statechange_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange.getDefaultInstance() : statechange_;
     }
@@ -34581,13 +36106,17 @@ public final class ByzCoinProto {
     private int blockindex_;
     /**
      * <code>required sint32 blockindex = 2;</code>
+     * @return Whether the blockindex field is set.
      */
+    @java.lang.Override
     public boolean hasBlockindex() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required sint32 blockindex = 2;</code>
+     * @return The blockindex.
      */
+    @java.lang.Override
     public int getBlockindex() {
       return blockindex_;
     }
@@ -34618,10 +36147,10 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getStatechange());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeSInt32(2, blockindex_);
       }
       unknownFields.writeTo(output);
@@ -34633,11 +36162,11 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getStatechange());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(2, blockindex_);
       }
@@ -34656,19 +36185,18 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponse other = (ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponse) obj;
 
-      boolean result = true;
-      result = result && (hasStatechange() == other.hasStatechange());
+      if (hasStatechange() != other.hasStatechange()) return false;
       if (hasStatechange()) {
-        result = result && getStatechange()
-            .equals(other.getStatechange());
+        if (!getStatechange()
+            .equals(other.getStatechange())) return false;
       }
-      result = result && (hasBlockindex() == other.hasBlockindex());
+      if (hasBlockindex() != other.hasBlockindex()) return false;
       if (hasBlockindex()) {
-        result = result && (getBlockindex()
-            == other.getBlockindex());
+        if (getBlockindex()
+            != other.getBlockindex()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -34863,18 +36391,18 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponse result = new ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponse(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (statechangeBuilder_ == null) {
+            result.statechange_ = statechange_;
+          } else {
+            result.statechange_ = statechangeBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
         }
-        if (statechangeBuilder_ == null) {
-          result.statechange_ = statechange_;
-        } else {
-          result.statechange_ = statechangeBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.blockindex_ = blockindex_;
           to_bitField0_ |= 0x00000002;
         }
-        result.blockindex_ = blockindex_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -34882,35 +36410,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -34969,17 +36497,19 @@ public final class ByzCoinProto {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange statechange_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange statechange_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeOrBuilder> statechangeBuilder_;
       /**
        * <code>required .byzcoin.StateChange statechange = 1;</code>
+       * @return Whether the statechange field is set.
        */
       public boolean hasStatechange() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required .byzcoin.StateChange statechange = 1;</code>
+       * @return The statechange.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange getStatechange() {
         if (statechangeBuilder_ == null) {
@@ -35023,7 +36553,7 @@ public final class ByzCoinProto {
        */
       public Builder mergeStatechange(ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange value) {
         if (statechangeBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               statechange_ != null &&
               statechange_ != ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange.getDefaultInstance()) {
             statechange_ =
@@ -35090,18 +36620,24 @@ public final class ByzCoinProto {
       private int blockindex_ ;
       /**
        * <code>required sint32 blockindex = 2;</code>
+       * @return Whether the blockindex field is set.
        */
+      @java.lang.Override
       public boolean hasBlockindex() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required sint32 blockindex = 2;</code>
+       * @return The blockindex.
        */
+      @java.lang.Override
       public int getBlockindex() {
         return blockindex_;
       }
       /**
        * <code>required sint32 blockindex = 2;</code>
+       * @param value The blockindex to set.
+       * @return This builder for chaining.
        */
       public Builder setBlockindex(int value) {
         bitField0_ |= 0x00000002;
@@ -35111,6 +36647,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required sint32 blockindex = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearBlockindex() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -35177,19 +36714,23 @@ public final class ByzCoinProto {
 
     /**
      * <code>required bytes skipchainid = 1;</code>
+     * @return Whether the skipchainid field is set.
      */
     boolean hasSkipchainid();
     /**
      * <code>required bytes skipchainid = 1;</code>
+     * @return The skipchainid.
      */
     com.google.protobuf.ByteString getSkipchainid();
 
     /**
      * <code>required bytes instanceid = 2;</code>
+     * @return Whether the instanceid field is set.
      */
     boolean hasInstanceid();
     /**
      * <code>required bytes instanceid = 2;</code>
+     * @return The instanceid.
      */
     com.google.protobuf.ByteString getInstanceid();
   }
@@ -35201,7 +36742,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.GetAllInstanceVersion}
    */
-  public  static final class GetAllInstanceVersion extends
+  public static final class GetAllInstanceVersion extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.GetAllInstanceVersion)
       GetAllInstanceVersionOrBuilder {
@@ -35213,6 +36754,13 @@ public final class ByzCoinProto {
     private GetAllInstanceVersion() {
       skipchainid_ = com.google.protobuf.ByteString.EMPTY;
       instanceid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetAllInstanceVersion();
     }
 
     @java.lang.Override
@@ -35286,13 +36834,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString skipchainid_;
     /**
      * <code>required bytes skipchainid = 1;</code>
+     * @return Whether the skipchainid field is set.
      */
+    @java.lang.Override
     public boolean hasSkipchainid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes skipchainid = 1;</code>
+     * @return The skipchainid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getSkipchainid() {
       return skipchainid_;
     }
@@ -35301,13 +36853,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString instanceid_;
     /**
      * <code>required bytes instanceid = 2;</code>
+     * @return Whether the instanceid field is set.
      */
+    @java.lang.Override
     public boolean hasInstanceid() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes instanceid = 2;</code>
+     * @return The instanceid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getInstanceid() {
       return instanceid_;
     }
@@ -35334,10 +36890,10 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, skipchainid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, instanceid_);
       }
       unknownFields.writeTo(output);
@@ -35349,11 +36905,11 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, skipchainid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, instanceid_);
       }
@@ -35372,19 +36928,18 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllInstanceVersion other = (ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllInstanceVersion) obj;
 
-      boolean result = true;
-      result = result && (hasSkipchainid() == other.hasSkipchainid());
+      if (hasSkipchainid() != other.hasSkipchainid()) return false;
       if (hasSkipchainid()) {
-        result = result && getSkipchainid()
-            .equals(other.getSkipchainid());
+        if (!getSkipchainid()
+            .equals(other.getSkipchainid())) return false;
       }
-      result = result && (hasInstanceid() == other.hasInstanceid());
+      if (hasInstanceid() != other.hasInstanceid()) return false;
       if (hasInstanceid()) {
-        result = result && getInstanceid()
-            .equals(other.getInstanceid());
+        if (!getInstanceid()
+            .equals(other.getInstanceid())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -35572,11 +37127,11 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllInstanceVersion result = new ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllInstanceVersion(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.skipchainid_ = skipchainid_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.instanceid_ = instanceid_;
@@ -35587,35 +37142,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -35674,18 +37229,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString skipchainid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes skipchainid = 1;</code>
+       * @return Whether the skipchainid field is set.
        */
+      @java.lang.Override
       public boolean hasSkipchainid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes skipchainid = 1;</code>
+       * @return The skipchainid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getSkipchainid() {
         return skipchainid_;
       }
       /**
        * <code>required bytes skipchainid = 1;</code>
+       * @param value The skipchainid to set.
+       * @return This builder for chaining.
        */
       public Builder setSkipchainid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -35698,6 +37259,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes skipchainid = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSkipchainid() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -35709,18 +37271,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString instanceid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes instanceid = 2;</code>
+       * @return Whether the instanceid field is set.
        */
+      @java.lang.Override
       public boolean hasInstanceid() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes instanceid = 2;</code>
+       * @return The instanceid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getInstanceid() {
         return instanceid_;
       }
       /**
        * <code>required bytes instanceid = 2;</code>
+       * @param value The instanceid to set.
+       * @return This builder for chaining.
        */
       public Builder setInstanceid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -35733,6 +37301,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes instanceid = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearInstanceid() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -35829,7 +37398,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.GetAllInstanceVersionResponse}
    */
-  public  static final class GetAllInstanceVersionResponse extends
+  public static final class GetAllInstanceVersionResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.GetAllInstanceVersionResponse)
       GetAllInstanceVersionResponseOrBuilder {
@@ -35840,6 +37409,13 @@ public final class ByzCoinProto {
     }
     private GetAllInstanceVersionResponse() {
       statechanges_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetAllInstanceVersionResponse();
     }
 
     @java.lang.Override
@@ -35867,7 +37443,7 @@ public final class ByzCoinProto {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 statechanges_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponse>();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -35890,7 +37466,7 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
           statechanges_ = java.util.Collections.unmodifiableList(statechanges_);
         }
         this.unknownFields = unknownFields.build();
@@ -35915,12 +37491,14 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.GetInstanceVersionResponse statechanges = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponse> getStatechangesList() {
       return statechanges_;
     }
     /**
      * <code>repeated .byzcoin.GetInstanceVersionResponse statechanges = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponseOrBuilder>
         getStatechangesOrBuilderList() {
       return statechanges_;
@@ -35928,18 +37506,21 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.GetInstanceVersionResponse statechanges = 1;</code>
      */
+    @java.lang.Override
     public int getStatechangesCount() {
       return statechanges_.size();
     }
     /**
      * <code>repeated .byzcoin.GetInstanceVersionResponse statechanges = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponse getStatechanges(int index) {
       return statechanges_.get(index);
     }
     /**
      * <code>repeated .byzcoin.GetInstanceVersionResponse statechanges = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponseOrBuilder getStatechangesOrBuilder(
         int index) {
       return statechanges_.get(index);
@@ -35996,11 +37577,10 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllInstanceVersionResponse other = (ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllInstanceVersionResponse) obj;
 
-      boolean result = true;
-      result = result && getStatechangesList()
-          .equals(other.getStatechangesList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getStatechangesList()
+          .equals(other.getStatechangesList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -36187,7 +37767,7 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllInstanceVersionResponse result = new ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllInstanceVersionResponse(this);
         int from_bitField0_ = bitField0_;
         if (statechangesBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((bitField0_ & 0x00000001) != 0)) {
             statechanges_ = java.util.Collections.unmodifiableList(statechanges_);
             bitField0_ = (bitField0_ & ~0x00000001);
           }
@@ -36201,35 +37781,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -36307,7 +37887,7 @@ public final class ByzCoinProto {
       private java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponse> statechanges_ =
         java.util.Collections.emptyList();
       private void ensureStatechangesIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           statechanges_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponse>(statechanges_);
           bitField0_ |= 0x00000001;
          }
@@ -36536,7 +38116,7 @@ public final class ByzCoinProto {
           statechangesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponse, ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponse.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.GetInstanceVersionResponseOrBuilder>(
                   statechanges_,
-                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
                   isClean());
           statechanges_ = null;
@@ -36602,28 +38182,34 @@ public final class ByzCoinProto {
 
     /**
      * <code>required bytes skipchainid = 1;</code>
+     * @return Whether the skipchainid field is set.
      */
     boolean hasSkipchainid();
     /**
      * <code>required bytes skipchainid = 1;</code>
+     * @return The skipchainid.
      */
     com.google.protobuf.ByteString getSkipchainid();
 
     /**
      * <code>required bytes instanceid = 2;</code>
+     * @return Whether the instanceid field is set.
      */
     boolean hasInstanceid();
     /**
      * <code>required bytes instanceid = 2;</code>
+     * @return The instanceid.
      */
     com.google.protobuf.ByteString getInstanceid();
 
     /**
      * <code>required uint64 version = 3;</code>
+     * @return Whether the version field is set.
      */
     boolean hasVersion();
     /**
      * <code>required uint64 version = 3;</code>
+     * @return The version.
      */
     long getVersion();
   }
@@ -36636,7 +38222,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.CheckStateChangeValidity}
    */
-  public  static final class CheckStateChangeValidity extends
+  public static final class CheckStateChangeValidity extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.CheckStateChangeValidity)
       CheckStateChangeValidityOrBuilder {
@@ -36648,7 +38234,13 @@ public final class ByzCoinProto {
     private CheckStateChangeValidity() {
       skipchainid_ = com.google.protobuf.ByteString.EMPTY;
       instanceid_ = com.google.protobuf.ByteString.EMPTY;
-      version_ = 0L;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new CheckStateChangeValidity();
     }
 
     @java.lang.Override
@@ -36727,13 +38319,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString skipchainid_;
     /**
      * <code>required bytes skipchainid = 1;</code>
+     * @return Whether the skipchainid field is set.
      */
+    @java.lang.Override
     public boolean hasSkipchainid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes skipchainid = 1;</code>
+     * @return The skipchainid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getSkipchainid() {
       return skipchainid_;
     }
@@ -36742,13 +38338,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString instanceid_;
     /**
      * <code>required bytes instanceid = 2;</code>
+     * @return Whether the instanceid field is set.
      */
+    @java.lang.Override
     public boolean hasInstanceid() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes instanceid = 2;</code>
+     * @return The instanceid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getInstanceid() {
       return instanceid_;
     }
@@ -36757,13 +38357,17 @@ public final class ByzCoinProto {
     private long version_;
     /**
      * <code>required uint64 version = 3;</code>
+     * @return Whether the version field is set.
      */
+    @java.lang.Override
     public boolean hasVersion() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>required uint64 version = 3;</code>
+     * @return The version.
      */
+    @java.lang.Override
     public long getVersion() {
       return version_;
     }
@@ -36794,13 +38398,13 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, skipchainid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, instanceid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeUInt64(3, version_);
       }
       unknownFields.writeTo(output);
@@ -36812,15 +38416,15 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, skipchainid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, instanceid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(3, version_);
       }
@@ -36839,24 +38443,23 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.CheckStateChangeValidity other = (ch.epfl.dedis.lib.proto.ByzCoinProto.CheckStateChangeValidity) obj;
 
-      boolean result = true;
-      result = result && (hasSkipchainid() == other.hasSkipchainid());
+      if (hasSkipchainid() != other.hasSkipchainid()) return false;
       if (hasSkipchainid()) {
-        result = result && getSkipchainid()
-            .equals(other.getSkipchainid());
+        if (!getSkipchainid()
+            .equals(other.getSkipchainid())) return false;
       }
-      result = result && (hasInstanceid() == other.hasInstanceid());
+      if (hasInstanceid() != other.hasInstanceid()) return false;
       if (hasInstanceid()) {
-        result = result && getInstanceid()
-            .equals(other.getInstanceid());
+        if (!getInstanceid()
+            .equals(other.getInstanceid())) return false;
       }
-      result = result && (hasVersion() == other.hasVersion());
+      if (hasVersion() != other.hasVersion()) return false;
       if (hasVersion()) {
-        result = result && (getVersion()
-            == other.getVersion());
+        if (getVersion()
+            != other.getVersion()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -37052,18 +38655,18 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.CheckStateChangeValidity result = new ch.epfl.dedis.lib.proto.ByzCoinProto.CheckStateChangeValidity(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.skipchainid_ = skipchainid_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.instanceid_ = instanceid_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.version_ = version_;
           to_bitField0_ |= 0x00000004;
         }
-        result.version_ = version_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -37071,35 +38674,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -37164,18 +38767,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString skipchainid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes skipchainid = 1;</code>
+       * @return Whether the skipchainid field is set.
        */
+      @java.lang.Override
       public boolean hasSkipchainid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes skipchainid = 1;</code>
+       * @return The skipchainid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getSkipchainid() {
         return skipchainid_;
       }
       /**
        * <code>required bytes skipchainid = 1;</code>
+       * @param value The skipchainid to set.
+       * @return This builder for chaining.
        */
       public Builder setSkipchainid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -37188,6 +38797,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes skipchainid = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSkipchainid() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -37199,18 +38809,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString instanceid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes instanceid = 2;</code>
+       * @return Whether the instanceid field is set.
        */
+      @java.lang.Override
       public boolean hasInstanceid() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes instanceid = 2;</code>
+       * @return The instanceid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getInstanceid() {
         return instanceid_;
       }
       /**
        * <code>required bytes instanceid = 2;</code>
+       * @param value The instanceid to set.
+       * @return This builder for chaining.
        */
       public Builder setInstanceid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -37223,6 +38839,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes instanceid = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearInstanceid() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -37234,18 +38851,24 @@ public final class ByzCoinProto {
       private long version_ ;
       /**
        * <code>required uint64 version = 3;</code>
+       * @return Whether the version field is set.
        */
+      @java.lang.Override
       public boolean hasVersion() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>required uint64 version = 3;</code>
+       * @return The version.
        */
+      @java.lang.Override
       public long getVersion() {
         return version_;
       }
       /**
        * <code>required uint64 version = 3;</code>
+       * @param value The version to set.
+       * @return This builder for chaining.
        */
       public Builder setVersion(long value) {
         bitField0_ |= 0x00000004;
@@ -37255,6 +38878,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required uint64 version = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearVersion() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -37345,10 +38969,12 @@ public final class ByzCoinProto {
 
     /**
      * <code>required bytes blockid = 2;</code>
+     * @return Whether the blockid field is set.
      */
     boolean hasBlockid();
     /**
      * <code>required bytes blockid = 2;</code>
+     * @return The blockid.
      */
     com.google.protobuf.ByteString getBlockid();
   }
@@ -37361,7 +38987,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.CheckStateChangeValidityResponse}
    */
-  public  static final class CheckStateChangeValidityResponse extends
+  public static final class CheckStateChangeValidityResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.CheckStateChangeValidityResponse)
       CheckStateChangeValidityResponseOrBuilder {
@@ -37373,6 +38999,13 @@ public final class ByzCoinProto {
     private CheckStateChangeValidityResponse() {
       statechanges_ = java.util.Collections.emptyList();
       blockid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new CheckStateChangeValidityResponse();
     }
 
     @java.lang.Override
@@ -37400,7 +39033,7 @@ public final class ByzCoinProto {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 statechanges_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange>();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -37428,7 +39061,7 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
           statechanges_ = java.util.Collections.unmodifiableList(statechanges_);
         }
         this.unknownFields = unknownFields.build();
@@ -37454,12 +39087,14 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.StateChange statechanges = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange> getStatechangesList() {
       return statechanges_;
     }
     /**
      * <code>repeated .byzcoin.StateChange statechanges = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeOrBuilder>
         getStatechangesOrBuilderList() {
       return statechanges_;
@@ -37467,18 +39102,21 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.StateChange statechanges = 1;</code>
      */
+    @java.lang.Override
     public int getStatechangesCount() {
       return statechanges_.size();
     }
     /**
      * <code>repeated .byzcoin.StateChange statechanges = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange getStatechanges(int index) {
       return statechanges_.get(index);
     }
     /**
      * <code>repeated .byzcoin.StateChange statechanges = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeOrBuilder getStatechangesOrBuilder(
         int index) {
       return statechanges_.get(index);
@@ -37488,13 +39126,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString blockid_;
     /**
      * <code>required bytes blockid = 2;</code>
+     * @return Whether the blockid field is set.
      */
+    @java.lang.Override
     public boolean hasBlockid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes blockid = 2;</code>
+     * @return The blockid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getBlockid() {
       return blockid_;
     }
@@ -37526,7 +39168,7 @@ public final class ByzCoinProto {
       for (int i = 0; i < statechanges_.size(); i++) {
         output.writeMessage(1, statechanges_.get(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(2, blockid_);
       }
       unknownFields.writeTo(output);
@@ -37542,7 +39184,7 @@ public final class ByzCoinProto {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, statechanges_.get(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, blockid_);
       }
@@ -37561,16 +39203,15 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.CheckStateChangeValidityResponse other = (ch.epfl.dedis.lib.proto.ByzCoinProto.CheckStateChangeValidityResponse) obj;
 
-      boolean result = true;
-      result = result && getStatechangesList()
-          .equals(other.getStatechangesList());
-      result = result && (hasBlockid() == other.hasBlockid());
+      if (!getStatechangesList()
+          .equals(other.getStatechangesList())) return false;
+      if (hasBlockid() != other.hasBlockid()) return false;
       if (hasBlockid()) {
-        result = result && getBlockid()
-            .equals(other.getBlockid());
+        if (!getBlockid()
+            .equals(other.getBlockid())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -37765,7 +39406,7 @@ public final class ByzCoinProto {
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (statechangesBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((bitField0_ & 0x00000001) != 0)) {
             statechanges_ = java.util.Collections.unmodifiableList(statechanges_);
             bitField0_ = (bitField0_ & ~0x00000001);
           }
@@ -37773,7 +39414,7 @@ public final class ByzCoinProto {
         } else {
           result.statechanges_ = statechangesBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.blockid_ = blockid_;
@@ -37784,35 +39425,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -37896,7 +39537,7 @@ public final class ByzCoinProto {
       private java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange> statechanges_ =
         java.util.Collections.emptyList();
       private void ensureStatechangesIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           statechanges_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange>(statechanges_);
           bitField0_ |= 0x00000001;
          }
@@ -38125,7 +39766,7 @@ public final class ByzCoinProto {
           statechangesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChange.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeOrBuilder>(
                   statechanges_,
-                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
                   isClean());
           statechanges_ = null;
@@ -38136,18 +39777,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString blockid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes blockid = 2;</code>
+       * @return Whether the blockid field is set.
        */
+      @java.lang.Override
       public boolean hasBlockid() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes blockid = 2;</code>
+       * @return The blockid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getBlockid() {
         return blockid_;
       }
       /**
        * <code>required bytes blockid = 2;</code>
+       * @param value The blockid to set.
+       * @return This builder for chaining.
        */
       public Builder setBlockid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -38160,6 +39807,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes blockid = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearBlockid() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -38226,32 +39874,39 @@ public final class ByzCoinProto {
 
     /**
      * <code>required bytes skipchainid = 1;</code>
+     * @return Whether the skipchainid field is set.
      */
     boolean hasSkipchainid();
     /**
      * <code>required bytes skipchainid = 1;</code>
+     * @return The skipchainid.
      */
     com.google.protobuf.ByteString getSkipchainid();
 
     /**
      * <code>required bytes darcid = 2;</code>
+     * @return Whether the darcid field is set.
      */
     boolean hasDarcid();
     /**
      * <code>required bytes darcid = 2;</code>
+     * @return The darcid.
      */
     com.google.protobuf.ByteString getDarcid();
 
     /**
      * <code>required string name = 3;</code>
+     * @return Whether the name field is set.
      */
     boolean hasName();
     /**
      * <code>required string name = 3;</code>
+     * @return The name.
      */
     java.lang.String getName();
     /**
      * <code>required string name = 3;</code>
+     * @return The bytes for name.
      */
     com.google.protobuf.ByteString
         getNameBytes();
@@ -38264,7 +39919,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.ResolveInstanceID}
    */
-  public  static final class ResolveInstanceID extends
+  public static final class ResolveInstanceID extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.ResolveInstanceID)
       ResolveInstanceIDOrBuilder {
@@ -38277,6 +39932,13 @@ public final class ByzCoinProto {
       skipchainid_ = com.google.protobuf.ByteString.EMPTY;
       darcid_ = com.google.protobuf.ByteString.EMPTY;
       name_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new ResolveInstanceID();
     }
 
     @java.lang.Override
@@ -38356,13 +40018,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString skipchainid_;
     /**
      * <code>required bytes skipchainid = 1;</code>
+     * @return Whether the skipchainid field is set.
      */
+    @java.lang.Override
     public boolean hasSkipchainid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes skipchainid = 1;</code>
+     * @return The skipchainid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getSkipchainid() {
       return skipchainid_;
     }
@@ -38371,13 +40037,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString darcid_;
     /**
      * <code>required bytes darcid = 2;</code>
+     * @return Whether the darcid field is set.
      */
+    @java.lang.Override
     public boolean hasDarcid() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes darcid = 2;</code>
+     * @return The darcid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getDarcid() {
       return darcid_;
     }
@@ -38386,13 +40056,17 @@ public final class ByzCoinProto {
     private volatile java.lang.Object name_;
     /**
      * <code>required string name = 3;</code>
+     * @return Whether the name field is set.
      */
+    @java.lang.Override
     public boolean hasName() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>required string name = 3;</code>
+     * @return The name.
      */
+    @java.lang.Override
     public java.lang.String getName() {
       java.lang.Object ref = name_;
       if (ref instanceof java.lang.String) {
@@ -38409,7 +40083,9 @@ public final class ByzCoinProto {
     }
     /**
      * <code>required string name = 3;</code>
+     * @return The bytes for name.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getNameBytes() {
       java.lang.Object ref = name_;
@@ -38450,13 +40126,13 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, skipchainid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, darcid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 3, name_);
       }
       unknownFields.writeTo(output);
@@ -38468,15 +40144,15 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, skipchainid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, darcid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, name_);
       }
       size += unknownFields.getSerializedSize();
@@ -38494,24 +40170,23 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.ResolveInstanceID other = (ch.epfl.dedis.lib.proto.ByzCoinProto.ResolveInstanceID) obj;
 
-      boolean result = true;
-      result = result && (hasSkipchainid() == other.hasSkipchainid());
+      if (hasSkipchainid() != other.hasSkipchainid()) return false;
       if (hasSkipchainid()) {
-        result = result && getSkipchainid()
-            .equals(other.getSkipchainid());
+        if (!getSkipchainid()
+            .equals(other.getSkipchainid())) return false;
       }
-      result = result && (hasDarcid() == other.hasDarcid());
+      if (hasDarcid() != other.hasDarcid()) return false;
       if (hasDarcid()) {
-        result = result && getDarcid()
-            .equals(other.getDarcid());
+        if (!getDarcid()
+            .equals(other.getDarcid())) return false;
       }
-      result = result && (hasName() == other.hasName());
+      if (hasName() != other.hasName()) return false;
       if (hasName()) {
-        result = result && getName()
-            .equals(other.getName());
+        if (!getName()
+            .equals(other.getName())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -38705,15 +40380,15 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.ResolveInstanceID result = new ch.epfl.dedis.lib.proto.ByzCoinProto.ResolveInstanceID(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.skipchainid_ = skipchainid_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.darcid_ = darcid_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.name_ = name_;
@@ -38724,35 +40399,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -38819,18 +40494,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString skipchainid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes skipchainid = 1;</code>
+       * @return Whether the skipchainid field is set.
        */
+      @java.lang.Override
       public boolean hasSkipchainid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes skipchainid = 1;</code>
+       * @return The skipchainid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getSkipchainid() {
         return skipchainid_;
       }
       /**
        * <code>required bytes skipchainid = 1;</code>
+       * @param value The skipchainid to set.
+       * @return This builder for chaining.
        */
       public Builder setSkipchainid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -38843,6 +40524,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes skipchainid = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSkipchainid() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -38854,18 +40536,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString darcid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes darcid = 2;</code>
+       * @return Whether the darcid field is set.
        */
+      @java.lang.Override
       public boolean hasDarcid() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes darcid = 2;</code>
+       * @return The darcid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getDarcid() {
         return darcid_;
       }
       /**
        * <code>required bytes darcid = 2;</code>
+       * @param value The darcid to set.
+       * @return This builder for chaining.
        */
       public Builder setDarcid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -38878,6 +40566,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes darcid = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearDarcid() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -38889,12 +40578,14 @@ public final class ByzCoinProto {
       private java.lang.Object name_ = "";
       /**
        * <code>required string name = 3;</code>
+       * @return Whether the name field is set.
        */
       public boolean hasName() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>required string name = 3;</code>
+       * @return The name.
        */
       public java.lang.String getName() {
         java.lang.Object ref = name_;
@@ -38912,6 +40603,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required string name = 3;</code>
+       * @return The bytes for name.
        */
       public com.google.protobuf.ByteString
           getNameBytes() {
@@ -38928,6 +40620,8 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required string name = 3;</code>
+       * @param value The name to set.
+       * @return This builder for chaining.
        */
       public Builder setName(
           java.lang.String value) {
@@ -38941,6 +40635,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required string name = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearName() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -38950,6 +40645,8 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required string name = 3;</code>
+       * @param value The bytes for name to set.
+       * @return This builder for chaining.
        */
       public Builder setNameBytes(
           com.google.protobuf.ByteString value) {
@@ -39020,10 +40717,12 @@ public final class ByzCoinProto {
 
     /**
      * <code>required bytes instanceid = 1;</code>
+     * @return Whether the instanceid field is set.
      */
     boolean hasInstanceid();
     /**
      * <code>required bytes instanceid = 1;</code>
+     * @return The instanceid.
      */
     com.google.protobuf.ByteString getInstanceid();
   }
@@ -39034,7 +40733,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.ResolvedInstanceID}
    */
-  public  static final class ResolvedInstanceID extends
+  public static final class ResolvedInstanceID extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.ResolvedInstanceID)
       ResolvedInstanceIDOrBuilder {
@@ -39045,6 +40744,13 @@ public final class ByzCoinProto {
     }
     private ResolvedInstanceID() {
       instanceid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new ResolvedInstanceID();
     }
 
     @java.lang.Override
@@ -39113,13 +40819,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString instanceid_;
     /**
      * <code>required bytes instanceid = 1;</code>
+     * @return Whether the instanceid field is set.
      */
+    @java.lang.Override
     public boolean hasInstanceid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes instanceid = 1;</code>
+     * @return The instanceid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getInstanceid() {
       return instanceid_;
     }
@@ -39142,7 +40852,7 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, instanceid_);
       }
       unknownFields.writeTo(output);
@@ -39154,7 +40864,7 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, instanceid_);
       }
@@ -39173,14 +40883,13 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.ResolvedInstanceID other = (ch.epfl.dedis.lib.proto.ByzCoinProto.ResolvedInstanceID) obj;
 
-      boolean result = true;
-      result = result && (hasInstanceid() == other.hasInstanceid());
+      if (hasInstanceid() != other.hasInstanceid()) return false;
       if (hasInstanceid()) {
-        result = result && getInstanceid()
-            .equals(other.getInstanceid());
+        if (!getInstanceid()
+            .equals(other.getInstanceid())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -39361,7 +41070,7 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.ResolvedInstanceID result = new ch.epfl.dedis.lib.proto.ByzCoinProto.ResolvedInstanceID(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.instanceid_ = instanceid_;
@@ -39372,35 +41081,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -39453,18 +41162,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString instanceid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes instanceid = 1;</code>
+       * @return Whether the instanceid field is set.
        */
+      @java.lang.Override
       public boolean hasInstanceid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes instanceid = 1;</code>
+       * @return The instanceid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getInstanceid() {
         return instanceid_;
       }
       /**
        * <code>required bytes instanceid = 1;</code>
+       * @param value The instanceid to set.
+       * @return This builder for chaining.
        */
       public Builder setInstanceid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -39477,6 +41192,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes instanceid = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearInstanceid() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -39543,10 +41259,12 @@ public final class ByzCoinProto {
 
     /**
      * <code>optional bytes byzcoinid = 1;</code>
+     * @return Whether the byzcoinid field is set.
      */
     boolean hasByzcoinid();
     /**
      * <code>optional bytes byzcoinid = 1;</code>
+     * @return The byzcoinid.
      */
     com.google.protobuf.ByteString getByzcoinid();
   }
@@ -39558,7 +41276,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.DebugRequest}
    */
-  public  static final class DebugRequest extends
+  public static final class DebugRequest extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.DebugRequest)
       DebugRequestOrBuilder {
@@ -39569,6 +41287,13 @@ public final class ByzCoinProto {
     }
     private DebugRequest() {
       byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new DebugRequest();
     }
 
     @java.lang.Override
@@ -39637,13 +41362,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString byzcoinid_;
     /**
      * <code>optional bytes byzcoinid = 1;</code>
+     * @return Whether the byzcoinid field is set.
      */
+    @java.lang.Override
     public boolean hasByzcoinid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional bytes byzcoinid = 1;</code>
+     * @return The byzcoinid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getByzcoinid() {
       return byzcoinid_;
     }
@@ -39662,7 +41391,7 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, byzcoinid_);
       }
       unknownFields.writeTo(output);
@@ -39674,7 +41403,7 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, byzcoinid_);
       }
@@ -39693,14 +41422,13 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest other = (ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest) obj;
 
-      boolean result = true;
-      result = result && (hasByzcoinid() == other.hasByzcoinid());
+      if (hasByzcoinid() != other.hasByzcoinid()) return false;
       if (hasByzcoinid()) {
-        result = result && getByzcoinid()
-            .equals(other.getByzcoinid());
+        if (!getByzcoinid()
+            .equals(other.getByzcoinid())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -39882,7 +41610,7 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest result = new ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.byzcoinid_ = byzcoinid_;
@@ -39893,35 +41621,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -39971,18 +41699,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>optional bytes byzcoinid = 1;</code>
+       * @return Whether the byzcoinid field is set.
        */
+      @java.lang.Override
       public boolean hasByzcoinid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional bytes byzcoinid = 1;</code>
+       * @return The byzcoinid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getByzcoinid() {
         return byzcoinid_;
       }
       /**
        * <code>optional bytes byzcoinid = 1;</code>
+       * @param value The byzcoinid to set.
+       * @return This builder for chaining.
        */
       public Builder setByzcoinid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -39995,6 +41729,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>optional bytes byzcoinid = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearByzcoinid() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -40116,7 +41851,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.DebugResponse}
    */
-  public  static final class DebugResponse extends
+  public static final class DebugResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.DebugResponse)
       DebugResponseOrBuilder {
@@ -40128,6 +41863,13 @@ public final class ByzCoinProto {
     private DebugResponse() {
       byzcoins_ = java.util.Collections.emptyList();
       dump_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new DebugResponse();
     }
 
     @java.lang.Override
@@ -40155,7 +41897,7 @@ public final class ByzCoinProto {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 byzcoins_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin>();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -40164,7 +41906,7 @@ public final class ByzCoinProto {
               break;
             }
             case 18: {
-              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                 dump_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState>();
                 mutable_bitField0_ |= 0x00000002;
               }
@@ -40187,10 +41929,10 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
           byzcoins_ = java.util.Collections.unmodifiableList(byzcoins_);
         }
-        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((mutable_bitField0_ & 0x00000002) != 0)) {
           dump_ = java.util.Collections.unmodifiableList(dump_);
         }
         this.unknownFields = unknownFields.build();
@@ -40215,12 +41957,14 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin> getByzcoinsList() {
       return byzcoins_;
     }
     /**
      * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoinOrBuilder>
         getByzcoinsOrBuilderList() {
       return byzcoins_;
@@ -40228,18 +41972,21 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
      */
+    @java.lang.Override
     public int getByzcoinsCount() {
       return byzcoins_.size();
     }
     /**
      * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin getByzcoins(int index) {
       return byzcoins_.get(index);
     }
     /**
      * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoinOrBuilder getByzcoinsOrBuilder(
         int index) {
       return byzcoins_.get(index);
@@ -40250,12 +41997,14 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState> getDumpList() {
       return dump_;
     }
     /**
      * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseStateOrBuilder>
         getDumpOrBuilderList() {
       return dump_;
@@ -40263,18 +42012,21 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
      */
+    @java.lang.Override
     public int getDumpCount() {
       return dump_.size();
     }
     /**
      * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState getDump(int index) {
       return dump_.get(index);
     }
     /**
      * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseStateOrBuilder getDumpOrBuilder(
         int index) {
       return dump_.get(index);
@@ -40344,13 +42096,12 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse other = (ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse) obj;
 
-      boolean result = true;
-      result = result && getByzcoinsList()
-          .equals(other.getByzcoinsList());
-      result = result && getDumpList()
-          .equals(other.getDumpList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getByzcoinsList()
+          .equals(other.getByzcoinsList())) return false;
+      if (!getDumpList()
+          .equals(other.getDumpList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -40549,7 +42300,7 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse result = new ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse(this);
         int from_bitField0_ = bitField0_;
         if (byzcoinsBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((bitField0_ & 0x00000001) != 0)) {
             byzcoins_ = java.util.Collections.unmodifiableList(byzcoins_);
             bitField0_ = (bitField0_ & ~0x00000001);
           }
@@ -40558,7 +42309,7 @@ public final class ByzCoinProto {
           result.byzcoins_ = byzcoinsBuilder_.build();
         }
         if (dumpBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          if (((bitField0_ & 0x00000002) != 0)) {
             dump_ = java.util.Collections.unmodifiableList(dump_);
             bitField0_ = (bitField0_ & ~0x00000002);
           }
@@ -40572,35 +42323,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -40709,7 +42460,7 @@ public final class ByzCoinProto {
       private java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin> byzcoins_ =
         java.util.Collections.emptyList();
       private void ensureByzcoinsIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           byzcoins_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin>(byzcoins_);
           bitField0_ |= 0x00000001;
          }
@@ -40938,7 +42689,7 @@ public final class ByzCoinProto {
           byzcoinsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoinOrBuilder>(
                   byzcoins_,
-                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
                   isClean());
           byzcoins_ = null;
@@ -40949,7 +42700,7 @@ public final class ByzCoinProto {
       private java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState> dump_ =
         java.util.Collections.emptyList();
       private void ensureDumpIsMutable() {
-        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+        if (!((bitField0_ & 0x00000002) != 0)) {
           dump_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState>(dump_);
           bitField0_ |= 0x00000002;
          }
@@ -41178,7 +42929,7 @@ public final class ByzCoinProto {
           dumpBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseStateOrBuilder>(
                   dump_,
-                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  ((bitField0_ & 0x00000002) != 0),
                   getParentForChildren(),
                   isClean());
           dump_ = null;
@@ -41244,19 +42995,23 @@ public final class ByzCoinProto {
 
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return Whether the byzcoinid field is set.
      */
     boolean hasByzcoinid();
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return The byzcoinid.
      */
     com.google.protobuf.ByteString getByzcoinid();
 
     /**
      * <code>optional .skipchain.SkipBlock genesis = 2;</code>
+     * @return Whether the genesis field is set.
      */
     boolean hasGenesis();
     /**
      * <code>optional .skipchain.SkipBlock genesis = 2;</code>
+     * @return The genesis.
      */
     ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getGenesis();
     /**
@@ -41266,10 +43021,12 @@ public final class ByzCoinProto {
 
     /**
      * <code>optional .skipchain.SkipBlock latest = 3;</code>
+     * @return Whether the latest field is set.
      */
     boolean hasLatest();
     /**
      * <code>optional .skipchain.SkipBlock latest = 3;</code>
+     * @return The latest.
      */
     ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getLatest();
     /**
@@ -41285,7 +43042,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.DebugResponseByzcoin}
    */
-  public  static final class DebugResponseByzcoin extends
+  public static final class DebugResponseByzcoin extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.DebugResponseByzcoin)
       DebugResponseByzcoinOrBuilder {
@@ -41296,6 +43053,13 @@ public final class ByzCoinProto {
     }
     private DebugResponseByzcoin() {
       byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new DebugResponseByzcoin();
     }
 
     @java.lang.Override
@@ -41329,7 +43093,7 @@ public final class ByzCoinProto {
             }
             case 18: {
               ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = genesis_.toBuilder();
               }
               genesis_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.parser(), extensionRegistry);
@@ -41342,7 +43106,7 @@ public final class ByzCoinProto {
             }
             case 26: {
               ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+              if (((bitField0_ & 0x00000004) != 0)) {
                 subBuilder = latest_.toBuilder();
               }
               latest_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.parser(), extensionRegistry);
@@ -41390,13 +43154,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString byzcoinid_;
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return Whether the byzcoinid field is set.
      */
+    @java.lang.Override
     public boolean hasByzcoinid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return The byzcoinid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getByzcoinid() {
       return byzcoinid_;
     }
@@ -41405,19 +43173,24 @@ public final class ByzCoinProto {
     private ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock genesis_;
     /**
      * <code>optional .skipchain.SkipBlock genesis = 2;</code>
+     * @return Whether the genesis field is set.
      */
+    @java.lang.Override
     public boolean hasGenesis() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .skipchain.SkipBlock genesis = 2;</code>
+     * @return The genesis.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getGenesis() {
       return genesis_ == null ? ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance() : genesis_;
     }
     /**
      * <code>optional .skipchain.SkipBlock genesis = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder getGenesisOrBuilder() {
       return genesis_ == null ? ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance() : genesis_;
     }
@@ -41426,19 +43199,24 @@ public final class ByzCoinProto {
     private ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock latest_;
     /**
      * <code>optional .skipchain.SkipBlock latest = 3;</code>
+     * @return Whether the latest field is set.
      */
+    @java.lang.Override
     public boolean hasLatest() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional .skipchain.SkipBlock latest = 3;</code>
+     * @return The latest.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getLatest() {
       return latest_ == null ? ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance() : latest_;
     }
     /**
      * <code>optional .skipchain.SkipBlock latest = 3;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder getLatestOrBuilder() {
       return latest_ == null ? ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance() : latest_;
     }
@@ -41473,13 +43251,13 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, byzcoinid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getGenesis());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeMessage(3, getLatest());
       }
       unknownFields.writeTo(output);
@@ -41491,15 +43269,15 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, byzcoinid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getGenesis());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getLatest());
       }
@@ -41518,24 +43296,23 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin other = (ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin) obj;
 
-      boolean result = true;
-      result = result && (hasByzcoinid() == other.hasByzcoinid());
+      if (hasByzcoinid() != other.hasByzcoinid()) return false;
       if (hasByzcoinid()) {
-        result = result && getByzcoinid()
-            .equals(other.getByzcoinid());
+        if (!getByzcoinid()
+            .equals(other.getByzcoinid())) return false;
       }
-      result = result && (hasGenesis() == other.hasGenesis());
+      if (hasGenesis() != other.hasGenesis()) return false;
       if (hasGenesis()) {
-        result = result && getGenesis()
-            .equals(other.getGenesis());
+        if (!getGenesis()
+            .equals(other.getGenesis())) return false;
       }
-      result = result && (hasLatest() == other.hasLatest());
+      if (hasLatest() != other.hasLatest()) return false;
       if (hasLatest()) {
-        result = result && getLatest()
-            .equals(other.getLatest());
+        if (!getLatest()
+            .equals(other.getLatest())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -41739,25 +43516,25 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin result = new ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.byzcoinid_ = byzcoinid_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (genesisBuilder_ == null) {
+            result.genesis_ = genesis_;
+          } else {
+            result.genesis_ = genesisBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
         }
-        if (genesisBuilder_ == null) {
-          result.genesis_ = genesis_;
-        } else {
-          result.genesis_ = genesisBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          if (latestBuilder_ == null) {
+            result.latest_ = latest_;
+          } else {
+            result.latest_ = latestBuilder_.build();
+          }
           to_bitField0_ |= 0x00000004;
-        }
-        if (latestBuilder_ == null) {
-          result.latest_ = latest_;
-        } else {
-          result.latest_ = latestBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -41766,35 +43543,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -41863,18 +43640,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @return Whether the byzcoinid field is set.
        */
+      @java.lang.Override
       public boolean hasByzcoinid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @return The byzcoinid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getByzcoinid() {
         return byzcoinid_;
       }
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @param value The byzcoinid to set.
+       * @return This builder for chaining.
        */
       public Builder setByzcoinid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -41887,6 +43670,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearByzcoinid() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -41895,17 +43679,19 @@ public final class ByzCoinProto {
         return this;
       }
 
-      private ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock genesis_ = null;
+      private ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock genesis_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> genesisBuilder_;
       /**
        * <code>optional .skipchain.SkipBlock genesis = 2;</code>
+       * @return Whether the genesis field is set.
        */
       public boolean hasGenesis() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional .skipchain.SkipBlock genesis = 2;</code>
+       * @return The genesis.
        */
       public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getGenesis() {
         if (genesisBuilder_ == null) {
@@ -41949,7 +43735,7 @@ public final class ByzCoinProto {
        */
       public Builder mergeGenesis(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock value) {
         if (genesisBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               genesis_ != null &&
               genesis_ != ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance()) {
             genesis_ =
@@ -42013,17 +43799,19 @@ public final class ByzCoinProto {
         return genesisBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock latest_ = null;
+      private ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock latest_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> latestBuilder_;
       /**
        * <code>optional .skipchain.SkipBlock latest = 3;</code>
+       * @return Whether the latest field is set.
        */
       public boolean hasLatest() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional .skipchain.SkipBlock latest = 3;</code>
+       * @return The latest.
        */
       public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getLatest() {
         if (latestBuilder_ == null) {
@@ -42067,7 +43855,7 @@ public final class ByzCoinProto {
        */
       public Builder mergeLatest(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock value) {
         if (latestBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+          if (((bitField0_ & 0x00000004) != 0) &&
               latest_ != null &&
               latest_ != ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance()) {
             latest_ =
@@ -42189,19 +43977,23 @@ public final class ByzCoinProto {
 
     /**
      * <code>required bytes key = 1;</code>
+     * @return Whether the key field is set.
      */
     boolean hasKey();
     /**
      * <code>required bytes key = 1;</code>
+     * @return The key.
      */
     com.google.protobuf.ByteString getKey();
 
     /**
      * <code>required .byzcoin.StateChangeBody state = 2;</code>
+     * @return Whether the state field is set.
      */
     boolean hasState();
     /**
      * <code>required .byzcoin.StateChangeBody state = 2;</code>
+     * @return The state.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody getState();
     /**
@@ -42216,7 +44008,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.DebugResponseState}
    */
-  public  static final class DebugResponseState extends
+  public static final class DebugResponseState extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.DebugResponseState)
       DebugResponseStateOrBuilder {
@@ -42227,6 +44019,13 @@ public final class ByzCoinProto {
     }
     private DebugResponseState() {
       key_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new DebugResponseState();
     }
 
     @java.lang.Override
@@ -42260,7 +44059,7 @@ public final class ByzCoinProto {
             }
             case 18: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = state_.toBuilder();
               }
               state_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody.parser(), extensionRegistry);
@@ -42308,13 +44107,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString key_;
     /**
      * <code>required bytes key = 1;</code>
+     * @return Whether the key field is set.
      */
+    @java.lang.Override
     public boolean hasKey() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes key = 1;</code>
+     * @return The key.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getKey() {
       return key_;
     }
@@ -42323,19 +44126,24 @@ public final class ByzCoinProto {
     private ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody state_;
     /**
      * <code>required .byzcoin.StateChangeBody state = 2;</code>
+     * @return Whether the state field is set.
      */
+    @java.lang.Override
     public boolean hasState() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required .byzcoin.StateChangeBody state = 2;</code>
+     * @return The state.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody getState() {
       return state_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody.getDefaultInstance() : state_;
     }
     /**
      * <code>required .byzcoin.StateChangeBody state = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBodyOrBuilder getStateOrBuilder() {
       return state_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody.getDefaultInstance() : state_;
     }
@@ -42366,10 +44174,10 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, key_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getState());
       }
       unknownFields.writeTo(output);
@@ -42381,11 +44189,11 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, key_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getState());
       }
@@ -42404,19 +44212,18 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState other = (ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState) obj;
 
-      boolean result = true;
-      result = result && (hasKey() == other.hasKey());
+      if (hasKey() != other.hasKey()) return false;
       if (hasKey()) {
-        result = result && getKey()
-            .equals(other.getKey());
+        if (!getKey()
+            .equals(other.getKey())) return false;
       }
-      result = result && (hasState() == other.hasState());
+      if (hasState() != other.hasState()) return false;
       if (hasState()) {
-        result = result && getState()
-            .equals(other.getState());
+        if (!getState()
+            .equals(other.getState())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -42608,17 +44415,17 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState result = new ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.key_ = key_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (stateBuilder_ == null) {
+            result.state_ = state_;
+          } else {
+            result.state_ = stateBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
-        }
-        if (stateBuilder_ == null) {
-          result.state_ = state_;
-        } else {
-          result.state_ = stateBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -42627,35 +44434,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -42717,18 +44524,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString key_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes key = 1;</code>
+       * @return Whether the key field is set.
        */
+      @java.lang.Override
       public boolean hasKey() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes key = 1;</code>
+       * @return The key.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getKey() {
         return key_;
       }
       /**
        * <code>required bytes key = 1;</code>
+       * @param value The key to set.
+       * @return This builder for chaining.
        */
       public Builder setKey(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -42741,6 +44554,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes key = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearKey() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -42749,17 +44563,19 @@ public final class ByzCoinProto {
         return this;
       }
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody state_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody state_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBodyOrBuilder> stateBuilder_;
       /**
        * <code>required .byzcoin.StateChangeBody state = 2;</code>
+       * @return Whether the state field is set.
        */
       public boolean hasState() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required .byzcoin.StateChangeBody state = 2;</code>
+       * @return The state.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody getState() {
         if (stateBuilder_ == null) {
@@ -42803,7 +44619,7 @@ public final class ByzCoinProto {
        */
       public Builder mergeState(ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody value) {
         if (stateBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               state_ != null &&
               state_ != ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody.getDefaultInstance()) {
             state_ =
@@ -42925,19 +44741,23 @@ public final class ByzCoinProto {
 
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return Whether the byzcoinid field is set.
      */
     boolean hasByzcoinid();
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return The byzcoinid.
      */
     com.google.protobuf.ByteString getByzcoinid();
 
     /**
      * <code>required bytes signature = 2;</code>
+     * @return Whether the signature field is set.
      */
     boolean hasSignature();
     /**
      * <code>required bytes signature = 2;</code>
+     * @return The signature.
      */
     com.google.protobuf.ByteString getSignature();
   }
@@ -42949,7 +44769,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.DebugRemoveRequest}
    */
-  public  static final class DebugRemoveRequest extends
+  public static final class DebugRemoveRequest extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.DebugRemoveRequest)
       DebugRemoveRequestOrBuilder {
@@ -42961,6 +44781,13 @@ public final class ByzCoinProto {
     private DebugRemoveRequest() {
       byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
       signature_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new DebugRemoveRequest();
     }
 
     @java.lang.Override
@@ -43034,13 +44861,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString byzcoinid_;
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return Whether the byzcoinid field is set.
      */
+    @java.lang.Override
     public boolean hasByzcoinid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return The byzcoinid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getByzcoinid() {
       return byzcoinid_;
     }
@@ -43049,13 +44880,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString signature_;
     /**
      * <code>required bytes signature = 2;</code>
+     * @return Whether the signature field is set.
      */
+    @java.lang.Override
     public boolean hasSignature() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes signature = 2;</code>
+     * @return The signature.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getSignature() {
       return signature_;
     }
@@ -43082,10 +44917,10 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, byzcoinid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, signature_);
       }
       unknownFields.writeTo(output);
@@ -43097,11 +44932,11 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, byzcoinid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, signature_);
       }
@@ -43120,19 +44955,18 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest other = (ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest) obj;
 
-      boolean result = true;
-      result = result && (hasByzcoinid() == other.hasByzcoinid());
+      if (hasByzcoinid() != other.hasByzcoinid()) return false;
       if (hasByzcoinid()) {
-        result = result && getByzcoinid()
-            .equals(other.getByzcoinid());
+        if (!getByzcoinid()
+            .equals(other.getByzcoinid())) return false;
       }
-      result = result && (hasSignature() == other.hasSignature());
+      if (hasSignature() != other.hasSignature()) return false;
       if (hasSignature()) {
-        result = result && getSignature()
-            .equals(other.getSignature());
+        if (!getSignature()
+            .equals(other.getSignature())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -43320,11 +45154,11 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest result = new ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.byzcoinid_ = byzcoinid_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.signature_ = signature_;
@@ -43335,35 +45169,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -43422,18 +45256,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @return Whether the byzcoinid field is set.
        */
+      @java.lang.Override
       public boolean hasByzcoinid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @return The byzcoinid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getByzcoinid() {
         return byzcoinid_;
       }
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @param value The byzcoinid to set.
+       * @return This builder for chaining.
        */
       public Builder setByzcoinid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -43446,6 +45286,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearByzcoinid() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -43457,18 +45298,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString signature_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes signature = 2;</code>
+       * @return Whether the signature field is set.
        */
+      @java.lang.Override
       public boolean hasSignature() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes signature = 2;</code>
+       * @return The signature.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getSignature() {
         return signature_;
       }
       /**
        * <code>required bytes signature = 2;</code>
+       * @param value The signature to set.
+       * @return This builder for chaining.
        */
       public Builder setSignature(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -43481,6 +45328,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes signature = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSignature() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -43547,19 +45395,23 @@ public final class ByzCoinProto {
 
     /**
      * <code>required bytes id = 1;</code>
+     * @return Whether the id field is set.
      */
     boolean hasId();
     /**
      * <code>required bytes id = 1;</code>
+     * @return The id.
      */
     com.google.protobuf.ByteString getId();
 
     /**
      * <code>required uint64 version = 2;</code>
+     * @return Whether the version field is set.
      */
     boolean hasVersion();
     /**
      * <code>required uint64 version = 2;</code>
+     * @return The version.
      */
     long getVersion();
   }
@@ -43570,7 +45422,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.IDVersion}
    */
-  public  static final class IDVersion extends
+  public static final class IDVersion extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.IDVersion)
       IDVersionOrBuilder {
@@ -43581,7 +45433,13 @@ public final class ByzCoinProto {
     }
     private IDVersion() {
       id_ = com.google.protobuf.ByteString.EMPTY;
-      version_ = 0L;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new IDVersion();
     }
 
     @java.lang.Override
@@ -43655,13 +45513,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString id_;
     /**
      * <code>required bytes id = 1;</code>
+     * @return Whether the id field is set.
      */
+    @java.lang.Override
     public boolean hasId() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes id = 1;</code>
+     * @return The id.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getId() {
       return id_;
     }
@@ -43670,13 +45532,17 @@ public final class ByzCoinProto {
     private long version_;
     /**
      * <code>required uint64 version = 2;</code>
+     * @return Whether the version field is set.
      */
+    @java.lang.Override
     public boolean hasVersion() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required uint64 version = 2;</code>
+     * @return The version.
      */
+    @java.lang.Override
     public long getVersion() {
       return version_;
     }
@@ -43703,10 +45569,10 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, id_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeUInt64(2, version_);
       }
       unknownFields.writeTo(output);
@@ -43718,11 +45584,11 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, id_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(2, version_);
       }
@@ -43741,19 +45607,18 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersion other = (ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersion) obj;
 
-      boolean result = true;
-      result = result && (hasId() == other.hasId());
+      if (hasId() != other.hasId()) return false;
       if (hasId()) {
-        result = result && getId()
-            .equals(other.getId());
+        if (!getId()
+            .equals(other.getId())) return false;
       }
-      result = result && (hasVersion() == other.hasVersion());
+      if (hasVersion() != other.hasVersion()) return false;
       if (hasVersion()) {
-        result = result && (getVersion()
-            == other.getVersion());
+        if (getVersion()
+            != other.getVersion()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -43941,14 +45806,14 @@ public final class ByzCoinProto {
         ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersion result = new ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersion(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.id_ = id_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.version_ = version_;
           to_bitField0_ |= 0x00000002;
         }
-        result.version_ = version_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -43956,35 +45821,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -44043,18 +45908,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString id_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes id = 1;</code>
+       * @return Whether the id field is set.
        */
+      @java.lang.Override
       public boolean hasId() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes id = 1;</code>
+       * @return The id.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getId() {
         return id_;
       }
       /**
        * <code>required bytes id = 1;</code>
+       * @param value The id to set.
+       * @return This builder for chaining.
        */
       public Builder setId(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -44067,6 +45938,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes id = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearId() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -44078,18 +45950,24 @@ public final class ByzCoinProto {
       private long version_ ;
       /**
        * <code>required uint64 version = 2;</code>
+       * @return Whether the version field is set.
        */
+      @java.lang.Override
       public boolean hasVersion() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required uint64 version = 2;</code>
+       * @return The version.
        */
+      @java.lang.Override
       public long getVersion() {
         return version_;
       }
       /**
        * <code>required uint64 version = 2;</code>
+       * @param value The version to set.
+       * @return This builder for chaining.
        */
       public Builder setVersion(long value) {
         bitField0_ |= 0x00000002;
@@ -44099,6 +45977,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required uint64 version = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearVersion() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -44189,19 +46068,23 @@ public final class ByzCoinProto {
 
     /**
      * <code>required uint64 flags = 2;</code>
+     * @return Whether the flags field is set.
      */
     boolean hasFlags();
     /**
      * <code>required uint64 flags = 2;</code>
+     * @return The flags.
      */
     long getFlags();
 
     /**
      * <code>required bytes latestblockid = 3;</code>
+     * @return Whether the latestblockid field is set.
      */
     boolean hasLatestblockid();
     /**
      * <code>required bytes latestblockid = 3;</code>
+     * @return The latestblockid.
      */
     com.google.protobuf.ByteString getLatestblockid();
   }
@@ -44213,7 +46096,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.GetUpdatesRequest}
    */
-  public  static final class GetUpdatesRequest extends
+  public static final class GetUpdatesRequest extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.GetUpdatesRequest)
       GetUpdatesRequestOrBuilder {
@@ -44224,8 +46107,14 @@ public final class ByzCoinProto {
     }
     private GetUpdatesRequest() {
       instances_ = java.util.Collections.emptyList();
-      flags_ = 0L;
       latestblockid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetUpdatesRequest();
     }
 
     @java.lang.Override
@@ -44253,7 +46142,7 @@ public final class ByzCoinProto {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 instances_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersion>();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -44286,7 +46175,7 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
           instances_ = java.util.Collections.unmodifiableList(instances_);
         }
         this.unknownFields = unknownFields.build();
@@ -44312,12 +46201,14 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.IDVersion instances = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersion> getInstancesList() {
       return instances_;
     }
     /**
      * <code>repeated .byzcoin.IDVersion instances = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersionOrBuilder>
         getInstancesOrBuilderList() {
       return instances_;
@@ -44325,18 +46216,21 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .byzcoin.IDVersion instances = 1;</code>
      */
+    @java.lang.Override
     public int getInstancesCount() {
       return instances_.size();
     }
     /**
      * <code>repeated .byzcoin.IDVersion instances = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersion getInstances(int index) {
       return instances_.get(index);
     }
     /**
      * <code>repeated .byzcoin.IDVersion instances = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersionOrBuilder getInstancesOrBuilder(
         int index) {
       return instances_.get(index);
@@ -44346,13 +46240,17 @@ public final class ByzCoinProto {
     private long flags_;
     /**
      * <code>required uint64 flags = 2;</code>
+     * @return Whether the flags field is set.
      */
+    @java.lang.Override
     public boolean hasFlags() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required uint64 flags = 2;</code>
+     * @return The flags.
      */
+    @java.lang.Override
     public long getFlags() {
       return flags_;
     }
@@ -44361,13 +46259,17 @@ public final class ByzCoinProto {
     private com.google.protobuf.ByteString latestblockid_;
     /**
      * <code>required bytes latestblockid = 3;</code>
+     * @return Whether the latestblockid field is set.
      */
+    @java.lang.Override
     public boolean hasLatestblockid() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes latestblockid = 3;</code>
+     * @return The latestblockid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getLatestblockid() {
       return latestblockid_;
     }
@@ -44403,10 +46305,10 @@ public final class ByzCoinProto {
       for (int i = 0; i < instances_.size(); i++) {
         output.writeMessage(1, instances_.get(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeUInt64(2, flags_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(3, latestblockid_);
       }
       unknownFields.writeTo(output);
@@ -44422,11 +46324,11 @@ public final class ByzCoinProto {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, instances_.get(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(2, flags_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, latestblockid_);
       }
@@ -44445,21 +46347,20 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.GetUpdatesRequest other = (ch.epfl.dedis.lib.proto.ByzCoinProto.GetUpdatesRequest) obj;
 
-      boolean result = true;
-      result = result && getInstancesList()
-          .equals(other.getInstancesList());
-      result = result && (hasFlags() == other.hasFlags());
+      if (!getInstancesList()
+          .equals(other.getInstancesList())) return false;
+      if (hasFlags() != other.hasFlags()) return false;
       if (hasFlags()) {
-        result = result && (getFlags()
-            == other.getFlags());
+        if (getFlags()
+            != other.getFlags()) return false;
       }
-      result = result && (hasLatestblockid() == other.hasLatestblockid());
+      if (hasLatestblockid() != other.hasLatestblockid()) return false;
       if (hasLatestblockid()) {
-        result = result && getLatestblockid()
-            .equals(other.getLatestblockid());
+        if (!getLatestblockid()
+            .equals(other.getLatestblockid())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -44660,7 +46561,7 @@ public final class ByzCoinProto {
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (instancesBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((bitField0_ & 0x00000001) != 0)) {
             instances_ = java.util.Collections.unmodifiableList(instances_);
             bitField0_ = (bitField0_ & ~0x00000001);
           }
@@ -44668,11 +46569,11 @@ public final class ByzCoinProto {
         } else {
           result.instances_ = instancesBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.flags_ = flags_;
           to_bitField0_ |= 0x00000001;
         }
-        result.flags_ = flags_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.latestblockid_ = latestblockid_;
@@ -44683,35 +46584,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -44801,7 +46702,7 @@ public final class ByzCoinProto {
       private java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersion> instances_ =
         java.util.Collections.emptyList();
       private void ensureInstancesIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           instances_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersion>(instances_);
           bitField0_ |= 0x00000001;
          }
@@ -45030,7 +46931,7 @@ public final class ByzCoinProto {
           instancesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersion, ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersion.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.IDVersionOrBuilder>(
                   instances_,
-                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
                   isClean());
           instances_ = null;
@@ -45041,18 +46942,24 @@ public final class ByzCoinProto {
       private long flags_ ;
       /**
        * <code>required uint64 flags = 2;</code>
+       * @return Whether the flags field is set.
        */
+      @java.lang.Override
       public boolean hasFlags() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required uint64 flags = 2;</code>
+       * @return The flags.
        */
+      @java.lang.Override
       public long getFlags() {
         return flags_;
       }
       /**
        * <code>required uint64 flags = 2;</code>
+       * @param value The flags to set.
+       * @return This builder for chaining.
        */
       public Builder setFlags(long value) {
         bitField0_ |= 0x00000002;
@@ -45062,6 +46969,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required uint64 flags = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearFlags() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -45073,18 +46981,24 @@ public final class ByzCoinProto {
       private com.google.protobuf.ByteString latestblockid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes latestblockid = 3;</code>
+       * @return Whether the latestblockid field is set.
        */
+      @java.lang.Override
       public boolean hasLatestblockid() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>required bytes latestblockid = 3;</code>
+       * @return The latestblockid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getLatestblockid() {
         return latestblockid_;
       }
       /**
        * <code>required bytes latestblockid = 3;</code>
+       * @param value The latestblockid to set.
+       * @return This builder for chaining.
        */
       public Builder setLatestblockid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -45097,6 +47011,7 @@ public final class ByzCoinProto {
       }
       /**
        * <code>required bytes latestblockid = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearLatestblockid() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -45211,10 +47126,12 @@ public final class ByzCoinProto {
 
     /**
      * <code>optional .skipchain.SkipBlock latest = 3;</code>
+     * @return Whether the latest field is set.
      */
     boolean hasLatest();
     /**
      * <code>optional .skipchain.SkipBlock latest = 3;</code>
+     * @return The latest.
      */
     ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getLatest();
     /**
@@ -45230,7 +47147,7 @@ public final class ByzCoinProto {
    *
    * Protobuf type {@code byzcoin.GetUpdatesReply}
    */
-  public  static final class GetUpdatesReply extends
+  public static final class GetUpdatesReply extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:byzcoin.GetUpdatesReply)
       GetUpdatesReplyOrBuilder {
@@ -45242,6 +47159,13 @@ public final class ByzCoinProto {
     private GetUpdatesReply() {
       proofs_ = java.util.Collections.emptyList();
       links_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetUpdatesReply();
     }
 
     @java.lang.Override
@@ -45269,7 +47193,7 @@ public final class ByzCoinProto {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 proofs_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.TrieProto.Proof>();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -45278,7 +47202,7 @@ public final class ByzCoinProto {
               break;
             }
             case 18: {
-              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                 links_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink>();
                 mutable_bitField0_ |= 0x00000002;
               }
@@ -45288,7 +47212,7 @@ public final class ByzCoinProto {
             }
             case 26: {
               ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = latest_.toBuilder();
               }
               latest_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.parser(), extensionRegistry);
@@ -45314,10 +47238,10 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
           proofs_ = java.util.Collections.unmodifiableList(proofs_);
         }
-        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((mutable_bitField0_ & 0x00000002) != 0)) {
           links_ = java.util.Collections.unmodifiableList(links_);
         }
         this.unknownFields = unknownFields.build();
@@ -45343,12 +47267,14 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .trie.Proof proofs = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.TrieProto.Proof> getProofsList() {
       return proofs_;
     }
     /**
      * <code>repeated .trie.Proof proofs = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.TrieProto.ProofOrBuilder>
         getProofsOrBuilderList() {
       return proofs_;
@@ -45356,18 +47282,21 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .trie.Proof proofs = 1;</code>
      */
+    @java.lang.Override
     public int getProofsCount() {
       return proofs_.size();
     }
     /**
      * <code>repeated .trie.Proof proofs = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.TrieProto.Proof getProofs(int index) {
       return proofs_.get(index);
     }
     /**
      * <code>repeated .trie.Proof proofs = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.TrieProto.ProofOrBuilder getProofsOrBuilder(
         int index) {
       return proofs_.get(index);
@@ -45378,12 +47307,14 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .skipchain.ForwardLink links = 2;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink> getLinksList() {
       return links_;
     }
     /**
      * <code>repeated .skipchain.ForwardLink links = 2;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder>
         getLinksOrBuilderList() {
       return links_;
@@ -45391,18 +47322,21 @@ public final class ByzCoinProto {
     /**
      * <code>repeated .skipchain.ForwardLink links = 2;</code>
      */
+    @java.lang.Override
     public int getLinksCount() {
       return links_.size();
     }
     /**
      * <code>repeated .skipchain.ForwardLink links = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink getLinks(int index) {
       return links_.get(index);
     }
     /**
      * <code>repeated .skipchain.ForwardLink links = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder getLinksOrBuilder(
         int index) {
       return links_.get(index);
@@ -45412,19 +47346,24 @@ public final class ByzCoinProto {
     private ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock latest_;
     /**
      * <code>optional .skipchain.SkipBlock latest = 3;</code>
+     * @return Whether the latest field is set.
      */
+    @java.lang.Override
     public boolean hasLatest() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .skipchain.SkipBlock latest = 3;</code>
+     * @return The latest.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getLatest() {
       return latest_ == null ? ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance() : latest_;
     }
     /**
      * <code>optional .skipchain.SkipBlock latest = 3;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder getLatestOrBuilder() {
       return latest_ == null ? ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance() : latest_;
     }
@@ -45467,7 +47406,7 @@ public final class ByzCoinProto {
       for (int i = 0; i < links_.size(); i++) {
         output.writeMessage(2, links_.get(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(3, getLatest());
       }
       unknownFields.writeTo(output);
@@ -45487,7 +47426,7 @@ public final class ByzCoinProto {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, links_.get(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getLatest());
       }
@@ -45506,18 +47445,17 @@ public final class ByzCoinProto {
       }
       ch.epfl.dedis.lib.proto.ByzCoinProto.GetUpdatesReply other = (ch.epfl.dedis.lib.proto.ByzCoinProto.GetUpdatesReply) obj;
 
-      boolean result = true;
-      result = result && getProofsList()
-          .equals(other.getProofsList());
-      result = result && getLinksList()
-          .equals(other.getLinksList());
-      result = result && (hasLatest() == other.hasLatest());
+      if (!getProofsList()
+          .equals(other.getProofsList())) return false;
+      if (!getLinksList()
+          .equals(other.getLinksList())) return false;
+      if (hasLatest() != other.hasLatest()) return false;
       if (hasLatest()) {
-        result = result && getLatest()
-            .equals(other.getLatest());
+        if (!getLatest()
+            .equals(other.getLatest())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -45727,7 +47665,7 @@ public final class ByzCoinProto {
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (proofsBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((bitField0_ & 0x00000001) != 0)) {
             proofs_ = java.util.Collections.unmodifiableList(proofs_);
             bitField0_ = (bitField0_ & ~0x00000001);
           }
@@ -45736,7 +47674,7 @@ public final class ByzCoinProto {
           result.proofs_ = proofsBuilder_.build();
         }
         if (linksBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          if (((bitField0_ & 0x00000002) != 0)) {
             links_ = java.util.Collections.unmodifiableList(links_);
             bitField0_ = (bitField0_ & ~0x00000002);
           }
@@ -45744,13 +47682,13 @@ public final class ByzCoinProto {
         } else {
           result.links_ = linksBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          if (latestBuilder_ == null) {
+            result.latest_ = latest_;
+          } else {
+            result.latest_ = latestBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
-        }
-        if (latestBuilder_ == null) {
-          result.latest_ = latest_;
-        } else {
-          result.latest_ = latestBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -45759,35 +47697,35 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -45904,7 +47842,7 @@ public final class ByzCoinProto {
       private java.util.List<ch.epfl.dedis.lib.proto.TrieProto.Proof> proofs_ =
         java.util.Collections.emptyList();
       private void ensureProofsIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           proofs_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.TrieProto.Proof>(proofs_);
           bitField0_ |= 0x00000001;
          }
@@ -46133,7 +48071,7 @@ public final class ByzCoinProto {
           proofsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.TrieProto.Proof, ch.epfl.dedis.lib.proto.TrieProto.Proof.Builder, ch.epfl.dedis.lib.proto.TrieProto.ProofOrBuilder>(
                   proofs_,
-                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
                   isClean());
           proofs_ = null;
@@ -46144,7 +48082,7 @@ public final class ByzCoinProto {
       private java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink> links_ =
         java.util.Collections.emptyList();
       private void ensureLinksIsMutable() {
-        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+        if (!((bitField0_ & 0x00000002) != 0)) {
           links_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink>(links_);
           bitField0_ |= 0x00000002;
          }
@@ -46373,7 +48311,7 @@ public final class ByzCoinProto {
           linksBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink, ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLinkOrBuilder>(
                   links_,
-                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  ((bitField0_ & 0x00000002) != 0),
                   getParentForChildren(),
                   isClean());
           links_ = null;
@@ -46381,17 +48319,19 @@ public final class ByzCoinProto {
         return linksBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock latest_ = null;
+      private ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock latest_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> latestBuilder_;
       /**
        * <code>optional .skipchain.SkipBlock latest = 3;</code>
+       * @return Whether the latest field is set.
        */
       public boolean hasLatest() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional .skipchain.SkipBlock latest = 3;</code>
+       * @return The latest.
        */
       public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getLatest() {
         if (latestBuilder_ == null) {
@@ -46435,7 +48375,7 @@ public final class ByzCoinProto {
        */
       public Builder mergeLatest(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock value) {
         if (latestBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+          if (((bitField0_ & 0x00000004) != 0) &&
               latest_ != null &&
               latest_ != ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance()) {
             latest_ =
@@ -46919,22 +48859,14 @@ public final class ByzCoinProto {
       "kipchain.SkipBlockB\'\n\027ch.epfl.dedis.lib." +
       "protoB\014ByzCoinProto"
     };
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           ch.epfl.dedis.lib.proto.SkipchainProto.getDescriptor(),
           ch.epfl.dedis.lib.proto.OnetProto.getDescriptor(),
           ch.epfl.dedis.lib.proto.DarcProto.getDescriptor(),
           ch.epfl.dedis.lib.proto.TrieProto.getDescriptor(),
-        }, assigner);
+        });
     internal_static_byzcoin_GetAllByzCoinIDsRequest_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_byzcoin_GetAllByzCoinIDsRequest_fieldAccessorTable = new
