@@ -20,10 +20,12 @@ public final class OnetProto {
 
     /**
      * <code>optional bytes id = 1;</code>
+     * @return Whether the id field is set.
      */
     boolean hasId();
     /**
      * <code>optional bytes id = 1;</code>
+     * @return The id.
      */
     com.google.protobuf.ByteString getId();
 
@@ -53,17 +55,19 @@ public final class OnetProto {
 
     /**
      * <code>required bytes aggregate = 3;</code>
+     * @return Whether the aggregate field is set.
      */
     boolean hasAggregate();
     /**
      * <code>required bytes aggregate = 3;</code>
+     * @return The aggregate.
      */
     com.google.protobuf.ByteString getAggregate();
   }
   /**
    * Protobuf type {@code onet.Roster}
    */
-  public  static final class Roster extends
+  public static final class Roster extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:onet.Roster)
       RosterOrBuilder {
@@ -76,6 +80,13 @@ public final class OnetProto {
       id_ = com.google.protobuf.ByteString.EMPTY;
       list_ = java.util.Collections.emptyList();
       aggregate_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Roster();
     }
 
     @java.lang.Override
@@ -108,7 +119,7 @@ public final class OnetProto {
               break;
             }
             case 18: {
-              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                 list_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity>();
                 mutable_bitField0_ |= 0x00000002;
               }
@@ -136,7 +147,7 @@ public final class OnetProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((mutable_bitField0_ & 0x00000002) != 0)) {
           list_ = java.util.Collections.unmodifiableList(list_);
         }
         this.unknownFields = unknownFields.build();
@@ -161,13 +172,17 @@ public final class OnetProto {
     private com.google.protobuf.ByteString id_;
     /**
      * <code>optional bytes id = 1;</code>
+     * @return Whether the id field is set.
      */
+    @java.lang.Override
     public boolean hasId() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional bytes id = 1;</code>
+     * @return The id.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getId() {
       return id_;
     }
@@ -177,12 +192,14 @@ public final class OnetProto {
     /**
      * <code>repeated .network.ServerIdentity list = 2;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> getListList() {
       return list_;
     }
     /**
      * <code>repeated .network.ServerIdentity list = 2;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder>
         getListOrBuilderList() {
       return list_;
@@ -190,18 +207,21 @@ public final class OnetProto {
     /**
      * <code>repeated .network.ServerIdentity list = 2;</code>
      */
+    @java.lang.Override
     public int getListCount() {
       return list_.size();
     }
     /**
      * <code>repeated .network.ServerIdentity list = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity getList(int index) {
       return list_.get(index);
     }
     /**
      * <code>repeated .network.ServerIdentity list = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder getListOrBuilder(
         int index) {
       return list_.get(index);
@@ -211,13 +231,17 @@ public final class OnetProto {
     private com.google.protobuf.ByteString aggregate_;
     /**
      * <code>required bytes aggregate = 3;</code>
+     * @return Whether the aggregate field is set.
      */
+    @java.lang.Override
     public boolean hasAggregate() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes aggregate = 3;</code>
+     * @return The aggregate.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getAggregate() {
       return aggregate_;
     }
@@ -246,13 +270,13 @@ public final class OnetProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, id_);
       }
       for (int i = 0; i < list_.size(); i++) {
         output.writeMessage(2, list_.get(i));
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(3, aggregate_);
       }
       unknownFields.writeTo(output);
@@ -264,7 +288,7 @@ public final class OnetProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, id_);
       }
@@ -272,7 +296,7 @@ public final class OnetProto {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, list_.get(i));
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, aggregate_);
       }
@@ -291,21 +315,20 @@ public final class OnetProto {
       }
       ch.epfl.dedis.lib.proto.OnetProto.Roster other = (ch.epfl.dedis.lib.proto.OnetProto.Roster) obj;
 
-      boolean result = true;
-      result = result && (hasId() == other.hasId());
+      if (hasId() != other.hasId()) return false;
       if (hasId()) {
-        result = result && getId()
-            .equals(other.getId());
+        if (!getId()
+            .equals(other.getId())) return false;
       }
-      result = result && getListList()
-          .equals(other.getListList());
-      result = result && (hasAggregate() == other.hasAggregate());
+      if (!getListList()
+          .equals(other.getListList())) return false;
+      if (hasAggregate() != other.hasAggregate()) return false;
       if (hasAggregate()) {
-        result = result && getAggregate()
-            .equals(other.getAggregate());
+        if (!getAggregate()
+            .equals(other.getAggregate())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -499,12 +522,12 @@ public final class OnetProto {
         ch.epfl.dedis.lib.proto.OnetProto.Roster result = new ch.epfl.dedis.lib.proto.OnetProto.Roster(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.id_ = id_;
         if (listBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          if (((bitField0_ & 0x00000002) != 0)) {
             list_ = java.util.Collections.unmodifiableList(list_);
             bitField0_ = (bitField0_ & ~0x00000002);
           }
@@ -512,7 +535,7 @@ public final class OnetProto {
         } else {
           result.list_ = listBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.aggregate_ = aggregate_;
@@ -523,35 +546,35 @@ public final class OnetProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -638,18 +661,24 @@ public final class OnetProto {
       private com.google.protobuf.ByteString id_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>optional bytes id = 1;</code>
+       * @return Whether the id field is set.
        */
+      @java.lang.Override
       public boolean hasId() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional bytes id = 1;</code>
+       * @return The id.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getId() {
         return id_;
       }
       /**
        * <code>optional bytes id = 1;</code>
+       * @param value The id to set.
+       * @return This builder for chaining.
        */
       public Builder setId(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -662,6 +691,7 @@ public final class OnetProto {
       }
       /**
        * <code>optional bytes id = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearId() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -673,7 +703,7 @@ public final class OnetProto {
       private java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> list_ =
         java.util.Collections.emptyList();
       private void ensureListIsMutable() {
-        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+        if (!((bitField0_ & 0x00000002) != 0)) {
           list_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity>(list_);
           bitField0_ |= 0x00000002;
          }
@@ -902,7 +932,7 @@ public final class OnetProto {
           listBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder>(
                   list_,
-                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  ((bitField0_ & 0x00000002) != 0),
                   getParentForChildren(),
                   isClean());
           list_ = null;
@@ -913,18 +943,24 @@ public final class OnetProto {
       private com.google.protobuf.ByteString aggregate_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes aggregate = 3;</code>
+       * @return Whether the aggregate field is set.
        */
+      @java.lang.Override
       public boolean hasAggregate() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>required bytes aggregate = 3;</code>
+       * @return The aggregate.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getAggregate() {
         return aggregate_;
       }
       /**
        * <code>required bytes aggregate = 3;</code>
+       * @param value The aggregate to set.
+       * @return This builder for chaining.
        */
       public Builder setAggregate(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -937,6 +973,7 @@ public final class OnetProto {
       }
       /**
        * <code>required bytes aggregate = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearAggregate() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -1038,7 +1075,7 @@ public final class OnetProto {
   /**
    * Protobuf type {@code onet.Status}
    */
-  public  static final class Status extends
+  public static final class Status extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:onet.Status)
       StatusOrBuilder {
@@ -1048,6 +1085,13 @@ public final class OnetProto {
       super(builder);
     }
     private Status() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Status();
     }
 
     @java.lang.Override
@@ -1075,7 +1119,7 @@ public final class OnetProto {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 field_ = com.google.protobuf.MapField.newMapField(
                     FieldDefaultEntryHolder.defaultEntry);
                 mutable_bitField0_ |= 0x00000001;
@@ -1161,6 +1205,7 @@ public final class OnetProto {
      * <code>map&lt;string, string&gt; field = 1;</code>
      */
 
+    @java.lang.Override
     public boolean containsField(
         java.lang.String key) {
       if (key == null) { throw new java.lang.NullPointerException(); }
@@ -1169,6 +1214,7 @@ public final class OnetProto {
     /**
      * Use {@link #getFieldMap()} instead.
      */
+    @java.lang.Override
     @java.lang.Deprecated
     public java.util.Map<java.lang.String, java.lang.String> getField() {
       return getFieldMap();
@@ -1176,6 +1222,7 @@ public final class OnetProto {
     /**
      * <code>map&lt;string, string&gt; field = 1;</code>
      */
+    @java.lang.Override
 
     public java.util.Map<java.lang.String, java.lang.String> getFieldMap() {
       return internalGetField().getMap();
@@ -1183,6 +1230,7 @@ public final class OnetProto {
     /**
      * <code>map&lt;string, string&gt; field = 1;</code>
      */
+    @java.lang.Override
 
     public java.lang.String getFieldOrDefault(
         java.lang.String key,
@@ -1195,6 +1243,7 @@ public final class OnetProto {
     /**
      * <code>map&lt;string, string&gt; field = 1;</code>
      */
+    @java.lang.Override
 
     public java.lang.String getFieldOrThrow(
         java.lang.String key) {
@@ -1261,11 +1310,10 @@ public final class OnetProto {
       }
       ch.epfl.dedis.lib.proto.OnetProto.Status other = (ch.epfl.dedis.lib.proto.OnetProto.Status) obj;
 
-      boolean result = true;
-      result = result && internalGetField().equals(
-          other.internalGetField());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!internalGetField().equals(
+          other.internalGetField())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -1470,35 +1518,35 @@ public final class OnetProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -1574,6 +1622,7 @@ public final class OnetProto {
        * <code>map&lt;string, string&gt; field = 1;</code>
        */
 
+      @java.lang.Override
       public boolean containsField(
           java.lang.String key) {
         if (key == null) { throw new java.lang.NullPointerException(); }
@@ -1582,6 +1631,7 @@ public final class OnetProto {
       /**
        * Use {@link #getFieldMap()} instead.
        */
+      @java.lang.Override
       @java.lang.Deprecated
       public java.util.Map<java.lang.String, java.lang.String> getField() {
         return getFieldMap();
@@ -1589,6 +1639,7 @@ public final class OnetProto {
       /**
        * <code>map&lt;string, string&gt; field = 1;</code>
        */
+      @java.lang.Override
 
       public java.util.Map<java.lang.String, java.lang.String> getFieldMap() {
         return internalGetField().getMap();
@@ -1596,6 +1647,7 @@ public final class OnetProto {
       /**
        * <code>map&lt;string, string&gt; field = 1;</code>
        */
+      @java.lang.Override
 
       public java.lang.String getFieldOrDefault(
           java.lang.String key,
@@ -1608,6 +1660,7 @@ public final class OnetProto {
       /**
        * <code>map&lt;string, string&gt; field = 1;</code>
        */
+      @java.lang.Override
 
       public java.lang.String getFieldOrThrow(
           java.lang.String key) {
@@ -1751,19 +1804,11 @@ public final class OnetProto {
       "\002 \001(\t:\0028\001B$\n\027ch.epfl.dedis.lib.protoB\tOn" +
       "etProto"
     };
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           ch.epfl.dedis.lib.proto.NetworkProto.getDescriptor(),
-        }, assigner);
+        });
     internal_static_onet_Roster_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_onet_Roster_fieldAccessorTable = new

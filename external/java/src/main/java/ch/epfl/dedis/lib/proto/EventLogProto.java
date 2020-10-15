@@ -20,19 +20,23 @@ public final class EventLogProto {
 
     /**
      * <code>required bytes instance = 1;</code>
+     * @return Whether the instance field is set.
      */
     boolean hasInstance();
     /**
      * <code>required bytes instance = 1;</code>
+     * @return The instance.
      */
     com.google.protobuf.ByteString getInstance();
 
     /**
      * <code>required bytes id = 2;</code>
+     * @return Whether the id field is set.
      */
     boolean hasId();
     /**
      * <code>required bytes id = 2;</code>
+     * @return The id.
      */
     com.google.protobuf.ByteString getId();
 
@@ -42,6 +46,7 @@ public final class EventLogProto {
      * </pre>
      *
      * <code>required string topic = 3;</code>
+     * @return Whether the topic field is set.
      */
     boolean hasTopic();
     /**
@@ -50,6 +55,7 @@ public final class EventLogProto {
      * </pre>
      *
      * <code>required string topic = 3;</code>
+     * @return The topic.
      */
     java.lang.String getTopic();
     /**
@@ -58,6 +64,7 @@ public final class EventLogProto {
      * </pre>
      *
      * <code>required string topic = 3;</code>
+     * @return The bytes for topic.
      */
     com.google.protobuf.ByteString
         getTopicBytes();
@@ -68,6 +75,7 @@ public final class EventLogProto {
      * </pre>
      *
      * <code>required sint64 from = 4;</code>
+     * @return Whether the from field is set.
      */
     boolean hasFrom();
     /**
@@ -76,6 +84,7 @@ public final class EventLogProto {
      * </pre>
      *
      * <code>required sint64 from = 4;</code>
+     * @return The from.
      */
     long getFrom();
 
@@ -85,6 +94,7 @@ public final class EventLogProto {
      * </pre>
      *
      * <code>required sint64 to = 5;</code>
+     * @return Whether the to field is set.
      */
     boolean hasTo();
     /**
@@ -93,6 +103,7 @@ public final class EventLogProto {
      * </pre>
      *
      * <code>required sint64 to = 5;</code>
+     * @return The to.
      */
     long getTo();
   }
@@ -106,7 +117,7 @@ public final class EventLogProto {
    *
    * Protobuf type {@code eventlog.SearchRequest}
    */
-  public  static final class SearchRequest extends
+  public static final class SearchRequest extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:eventlog.SearchRequest)
       SearchRequestOrBuilder {
@@ -119,8 +130,13 @@ public final class EventLogProto {
       instance_ = com.google.protobuf.ByteString.EMPTY;
       id_ = com.google.protobuf.ByteString.EMPTY;
       topic_ = "";
-      from_ = 0L;
-      to_ = 0L;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new SearchRequest();
     }
 
     @java.lang.Override
@@ -210,13 +226,17 @@ public final class EventLogProto {
     private com.google.protobuf.ByteString instance_;
     /**
      * <code>required bytes instance = 1;</code>
+     * @return Whether the instance field is set.
      */
+    @java.lang.Override
     public boolean hasInstance() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes instance = 1;</code>
+     * @return The instance.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getInstance() {
       return instance_;
     }
@@ -225,13 +245,17 @@ public final class EventLogProto {
     private com.google.protobuf.ByteString id_;
     /**
      * <code>required bytes id = 2;</code>
+     * @return Whether the id field is set.
      */
+    @java.lang.Override
     public boolean hasId() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes id = 2;</code>
+     * @return The id.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getId() {
       return id_;
     }
@@ -244,9 +268,11 @@ public final class EventLogProto {
      * </pre>
      *
      * <code>required string topic = 3;</code>
+     * @return Whether the topic field is set.
      */
+    @java.lang.Override
     public boolean hasTopic() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -254,7 +280,9 @@ public final class EventLogProto {
      * </pre>
      *
      * <code>required string topic = 3;</code>
+     * @return The topic.
      */
+    @java.lang.Override
     public java.lang.String getTopic() {
       java.lang.Object ref = topic_;
       if (ref instanceof java.lang.String) {
@@ -275,7 +303,9 @@ public final class EventLogProto {
      * </pre>
      *
      * <code>required string topic = 3;</code>
+     * @return The bytes for topic.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getTopicBytes() {
       java.lang.Object ref = topic_;
@@ -298,9 +328,11 @@ public final class EventLogProto {
      * </pre>
      *
      * <code>required sint64 from = 4;</code>
+     * @return Whether the from field is set.
      */
+    @java.lang.Override
     public boolean hasFrom() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <pre>
@@ -308,7 +340,9 @@ public final class EventLogProto {
      * </pre>
      *
      * <code>required sint64 from = 4;</code>
+     * @return The from.
      */
+    @java.lang.Override
     public long getFrom() {
       return from_;
     }
@@ -321,9 +355,11 @@ public final class EventLogProto {
      * </pre>
      *
      * <code>required sint64 to = 5;</code>
+     * @return Whether the to field is set.
      */
+    @java.lang.Override
     public boolean hasTo() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <pre>
@@ -331,7 +367,9 @@ public final class EventLogProto {
      * </pre>
      *
      * <code>required sint64 to = 5;</code>
+     * @return The to.
      */
+    @java.lang.Override
     public long getTo() {
       return to_;
     }
@@ -370,19 +408,19 @@ public final class EventLogProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, instance_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, id_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 3, topic_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeSInt64(4, from_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeSInt64(5, to_);
       }
       unknownFields.writeTo(output);
@@ -394,22 +432,22 @@ public final class EventLogProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, instance_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, id_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, topic_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt64Size(4, from_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt64Size(5, to_);
       }
@@ -428,34 +466,33 @@ public final class EventLogProto {
       }
       ch.epfl.dedis.lib.proto.EventLogProto.SearchRequest other = (ch.epfl.dedis.lib.proto.EventLogProto.SearchRequest) obj;
 
-      boolean result = true;
-      result = result && (hasInstance() == other.hasInstance());
+      if (hasInstance() != other.hasInstance()) return false;
       if (hasInstance()) {
-        result = result && getInstance()
-            .equals(other.getInstance());
+        if (!getInstance()
+            .equals(other.getInstance())) return false;
       }
-      result = result && (hasId() == other.hasId());
+      if (hasId() != other.hasId()) return false;
       if (hasId()) {
-        result = result && getId()
-            .equals(other.getId());
+        if (!getId()
+            .equals(other.getId())) return false;
       }
-      result = result && (hasTopic() == other.hasTopic());
+      if (hasTopic() != other.hasTopic()) return false;
       if (hasTopic()) {
-        result = result && getTopic()
-            .equals(other.getTopic());
+        if (!getTopic()
+            .equals(other.getTopic())) return false;
       }
-      result = result && (hasFrom() == other.hasFrom());
+      if (hasFrom() != other.hasFrom()) return false;
       if (hasFrom()) {
-        result = result && (getFrom()
-            == other.getFrom());
+        if (getFrom()
+            != other.getFrom()) return false;
       }
-      result = result && (hasTo() == other.hasTo());
+      if (hasTo() != other.hasTo()) return false;
       if (hasTo()) {
-        result = result && (getTo()
-            == other.getTo());
+        if (getTo()
+            != other.getTo()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -665,26 +702,26 @@ public final class EventLogProto {
         ch.epfl.dedis.lib.proto.EventLogProto.SearchRequest result = new ch.epfl.dedis.lib.proto.EventLogProto.SearchRequest(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.instance_ = instance_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.id_ = id_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.topic_ = topic_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.from_ = from_;
           to_bitField0_ |= 0x00000008;
         }
-        result.from_ = from_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          result.to_ = to_;
           to_bitField0_ |= 0x00000010;
         }
-        result.to_ = to_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -692,35 +729,35 @@ public final class EventLogProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -799,18 +836,24 @@ public final class EventLogProto {
       private com.google.protobuf.ByteString instance_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes instance = 1;</code>
+       * @return Whether the instance field is set.
        */
+      @java.lang.Override
       public boolean hasInstance() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes instance = 1;</code>
+       * @return The instance.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getInstance() {
         return instance_;
       }
       /**
        * <code>required bytes instance = 1;</code>
+       * @param value The instance to set.
+       * @return This builder for chaining.
        */
       public Builder setInstance(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -823,6 +866,7 @@ public final class EventLogProto {
       }
       /**
        * <code>required bytes instance = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearInstance() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -834,18 +878,24 @@ public final class EventLogProto {
       private com.google.protobuf.ByteString id_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes id = 2;</code>
+       * @return Whether the id field is set.
        */
+      @java.lang.Override
       public boolean hasId() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes id = 2;</code>
+       * @return The id.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getId() {
         return id_;
       }
       /**
        * <code>required bytes id = 2;</code>
+       * @param value The id to set.
+       * @return This builder for chaining.
        */
       public Builder setId(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -858,6 +908,7 @@ public final class EventLogProto {
       }
       /**
        * <code>required bytes id = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearId() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -873,9 +924,10 @@ public final class EventLogProto {
        * </pre>
        *
        * <code>required string topic = 3;</code>
+       * @return Whether the topic field is set.
        */
       public boolean hasTopic() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -883,6 +935,7 @@ public final class EventLogProto {
        * </pre>
        *
        * <code>required string topic = 3;</code>
+       * @return The topic.
        */
       public java.lang.String getTopic() {
         java.lang.Object ref = topic_;
@@ -904,6 +957,7 @@ public final class EventLogProto {
        * </pre>
        *
        * <code>required string topic = 3;</code>
+       * @return The bytes for topic.
        */
       public com.google.protobuf.ByteString
           getTopicBytes() {
@@ -924,6 +978,8 @@ public final class EventLogProto {
        * </pre>
        *
        * <code>required string topic = 3;</code>
+       * @param value The topic to set.
+       * @return This builder for chaining.
        */
       public Builder setTopic(
           java.lang.String value) {
@@ -941,6 +997,7 @@ public final class EventLogProto {
        * </pre>
        *
        * <code>required string topic = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTopic() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -954,6 +1011,8 @@ public final class EventLogProto {
        * </pre>
        *
        * <code>required string topic = 3;</code>
+       * @param value The bytes for topic to set.
+       * @return This builder for chaining.
        */
       public Builder setTopicBytes(
           com.google.protobuf.ByteString value) {
@@ -973,9 +1032,11 @@ public final class EventLogProto {
        * </pre>
        *
        * <code>required sint64 from = 4;</code>
+       * @return Whether the from field is set.
        */
+      @java.lang.Override
       public boolean hasFrom() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <pre>
@@ -983,7 +1044,9 @@ public final class EventLogProto {
        * </pre>
        *
        * <code>required sint64 from = 4;</code>
+       * @return The from.
        */
+      @java.lang.Override
       public long getFrom() {
         return from_;
       }
@@ -993,6 +1056,8 @@ public final class EventLogProto {
        * </pre>
        *
        * <code>required sint64 from = 4;</code>
+       * @param value The from to set.
+       * @return This builder for chaining.
        */
       public Builder setFrom(long value) {
         bitField0_ |= 0x00000008;
@@ -1006,6 +1071,7 @@ public final class EventLogProto {
        * </pre>
        *
        * <code>required sint64 from = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearFrom() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -1021,9 +1087,11 @@ public final class EventLogProto {
        * </pre>
        *
        * <code>required sint64 to = 5;</code>
+       * @return Whether the to field is set.
        */
+      @java.lang.Override
       public boolean hasTo() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <pre>
@@ -1031,7 +1099,9 @@ public final class EventLogProto {
        * </pre>
        *
        * <code>required sint64 to = 5;</code>
+       * @return The to.
        */
+      @java.lang.Override
       public long getTo() {
         return to_;
       }
@@ -1041,6 +1111,8 @@ public final class EventLogProto {
        * </pre>
        *
        * <code>required sint64 to = 5;</code>
+       * @param value The to to set.
+       * @return This builder for chaining.
        */
       public Builder setTo(long value) {
         bitField0_ |= 0x00000010;
@@ -1054,6 +1126,7 @@ public final class EventLogProto {
        * </pre>
        *
        * <code>required sint64 to = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTo() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -1150,6 +1223,7 @@ public final class EventLogProto {
      * </pre>
      *
      * <code>required bool truncated = 2;</code>
+     * @return Whether the truncated field is set.
      */
     boolean hasTruncated();
     /**
@@ -1160,6 +1234,7 @@ public final class EventLogProto {
      * </pre>
      *
      * <code>required bool truncated = 2;</code>
+     * @return The truncated.
      */
     boolean getTruncated();
   }
@@ -1170,7 +1245,7 @@ public final class EventLogProto {
    *
    * Protobuf type {@code eventlog.SearchResponse}
    */
-  public  static final class SearchResponse extends
+  public static final class SearchResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:eventlog.SearchResponse)
       SearchResponseOrBuilder {
@@ -1181,7 +1256,13 @@ public final class EventLogProto {
     }
     private SearchResponse() {
       events_ = java.util.Collections.emptyList();
-      truncated_ = false;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new SearchResponse();
     }
 
     @java.lang.Override
@@ -1209,7 +1290,7 @@ public final class EventLogProto {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 events_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.EventLogProto.Event>();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -1237,7 +1318,7 @@ public final class EventLogProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
           events_ = java.util.Collections.unmodifiableList(events_);
         }
         this.unknownFields = unknownFields.build();
@@ -1263,12 +1344,14 @@ public final class EventLogProto {
     /**
      * <code>repeated .eventlog.Event events = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.EventLogProto.Event> getEventsList() {
       return events_;
     }
     /**
      * <code>repeated .eventlog.Event events = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.EventLogProto.EventOrBuilder>
         getEventsOrBuilderList() {
       return events_;
@@ -1276,18 +1359,21 @@ public final class EventLogProto {
     /**
      * <code>repeated .eventlog.Event events = 1;</code>
      */
+    @java.lang.Override
     public int getEventsCount() {
       return events_.size();
     }
     /**
      * <code>repeated .eventlog.Event events = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.EventLogProto.Event getEvents(int index) {
       return events_.get(index);
     }
     /**
      * <code>repeated .eventlog.Event events = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.EventLogProto.EventOrBuilder getEventsOrBuilder(
         int index) {
       return events_.get(index);
@@ -1303,9 +1389,11 @@ public final class EventLogProto {
      * </pre>
      *
      * <code>required bool truncated = 2;</code>
+     * @return Whether the truncated field is set.
      */
+    @java.lang.Override
     public boolean hasTruncated() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -1315,7 +1403,9 @@ public final class EventLogProto {
      * </pre>
      *
      * <code>required bool truncated = 2;</code>
+     * @return The truncated.
      */
+    @java.lang.Override
     public boolean getTruncated() {
       return truncated_;
     }
@@ -1347,7 +1437,7 @@ public final class EventLogProto {
       for (int i = 0; i < events_.size(); i++) {
         output.writeMessage(1, events_.get(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBool(2, truncated_);
       }
       unknownFields.writeTo(output);
@@ -1363,7 +1453,7 @@ public final class EventLogProto {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, events_.get(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(2, truncated_);
       }
@@ -1382,16 +1472,15 @@ public final class EventLogProto {
       }
       ch.epfl.dedis.lib.proto.EventLogProto.SearchResponse other = (ch.epfl.dedis.lib.proto.EventLogProto.SearchResponse) obj;
 
-      boolean result = true;
-      result = result && getEventsList()
-          .equals(other.getEventsList());
-      result = result && (hasTruncated() == other.hasTruncated());
+      if (!getEventsList()
+          .equals(other.getEventsList())) return false;
+      if (hasTruncated() != other.hasTruncated()) return false;
       if (hasTruncated()) {
-        result = result && (getTruncated()
-            == other.getTruncated());
+        if (getTruncated()
+            != other.getTruncated()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -1585,7 +1674,7 @@ public final class EventLogProto {
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (eventsBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((bitField0_ & 0x00000001) != 0)) {
             events_ = java.util.Collections.unmodifiableList(events_);
             bitField0_ = (bitField0_ & ~0x00000001);
           }
@@ -1593,10 +1682,10 @@ public final class EventLogProto {
         } else {
           result.events_ = eventsBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.truncated_ = truncated_;
           to_bitField0_ |= 0x00000001;
         }
-        result.truncated_ = truncated_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1604,35 +1693,35 @@ public final class EventLogProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -1716,7 +1805,7 @@ public final class EventLogProto {
       private java.util.List<ch.epfl.dedis.lib.proto.EventLogProto.Event> events_ =
         java.util.Collections.emptyList();
       private void ensureEventsIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           events_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.EventLogProto.Event>(events_);
           bitField0_ |= 0x00000001;
          }
@@ -1945,7 +2034,7 @@ public final class EventLogProto {
           eventsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.EventLogProto.Event, ch.epfl.dedis.lib.proto.EventLogProto.Event.Builder, ch.epfl.dedis.lib.proto.EventLogProto.EventOrBuilder>(
                   events_,
-                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
                   isClean());
           events_ = null;
@@ -1962,9 +2051,11 @@ public final class EventLogProto {
        * </pre>
        *
        * <code>required bool truncated = 2;</code>
+       * @return Whether the truncated field is set.
        */
+      @java.lang.Override
       public boolean hasTruncated() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -1974,7 +2065,9 @@ public final class EventLogProto {
        * </pre>
        *
        * <code>required bool truncated = 2;</code>
+       * @return The truncated.
        */
+      @java.lang.Override
       public boolean getTruncated() {
         return truncated_;
       }
@@ -1986,6 +2079,8 @@ public final class EventLogProto {
        * </pre>
        *
        * <code>required bool truncated = 2;</code>
+       * @param value The truncated to set.
+       * @return This builder for chaining.
        */
       public Builder setTruncated(boolean value) {
         bitField0_ |= 0x00000002;
@@ -2001,6 +2096,7 @@ public final class EventLogProto {
        * </pre>
        *
        * <code>required bool truncated = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTruncated() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -2067,37 +2163,45 @@ public final class EventLogProto {
 
     /**
      * <code>required sint64 when = 1;</code>
+     * @return Whether the when field is set.
      */
     boolean hasWhen();
     /**
      * <code>required sint64 when = 1;</code>
+     * @return The when.
      */
     long getWhen();
 
     /**
      * <code>required string topic = 2;</code>
+     * @return Whether the topic field is set.
      */
     boolean hasTopic();
     /**
      * <code>required string topic = 2;</code>
+     * @return The topic.
      */
     java.lang.String getTopic();
     /**
      * <code>required string topic = 2;</code>
+     * @return The bytes for topic.
      */
     com.google.protobuf.ByteString
         getTopicBytes();
 
     /**
      * <code>required string content = 3;</code>
+     * @return Whether the content field is set.
      */
     boolean hasContent();
     /**
      * <code>required string content = 3;</code>
+     * @return The content.
      */
     java.lang.String getContent();
     /**
      * <code>required string content = 3;</code>
+     * @return The bytes for content.
      */
     com.google.protobuf.ByteString
         getContentBytes();
@@ -2110,7 +2214,7 @@ public final class EventLogProto {
    *
    * Protobuf type {@code eventlog.Event}
    */
-  public  static final class Event extends
+  public static final class Event extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:eventlog.Event)
       EventOrBuilder {
@@ -2120,9 +2224,15 @@ public final class EventLogProto {
       super(builder);
     }
     private Event() {
-      when_ = 0L;
       topic_ = "";
       content_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Event();
     }
 
     @java.lang.Override
@@ -2203,13 +2313,17 @@ public final class EventLogProto {
     private long when_;
     /**
      * <code>required sint64 when = 1;</code>
+     * @return Whether the when field is set.
      */
+    @java.lang.Override
     public boolean hasWhen() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required sint64 when = 1;</code>
+     * @return The when.
      */
+    @java.lang.Override
     public long getWhen() {
       return when_;
     }
@@ -2218,13 +2332,17 @@ public final class EventLogProto {
     private volatile java.lang.Object topic_;
     /**
      * <code>required string topic = 2;</code>
+     * @return Whether the topic field is set.
      */
+    @java.lang.Override
     public boolean hasTopic() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required string topic = 2;</code>
+     * @return The topic.
      */
+    @java.lang.Override
     public java.lang.String getTopic() {
       java.lang.Object ref = topic_;
       if (ref instanceof java.lang.String) {
@@ -2241,7 +2359,9 @@ public final class EventLogProto {
     }
     /**
      * <code>required string topic = 2;</code>
+     * @return The bytes for topic.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getTopicBytes() {
       java.lang.Object ref = topic_;
@@ -2260,13 +2380,17 @@ public final class EventLogProto {
     private volatile java.lang.Object content_;
     /**
      * <code>required string content = 3;</code>
+     * @return Whether the content field is set.
      */
+    @java.lang.Override
     public boolean hasContent() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>required string content = 3;</code>
+     * @return The content.
      */
+    @java.lang.Override
     public java.lang.String getContent() {
       java.lang.Object ref = content_;
       if (ref instanceof java.lang.String) {
@@ -2283,7 +2407,9 @@ public final class EventLogProto {
     }
     /**
      * <code>required string content = 3;</code>
+     * @return The bytes for content.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getContentBytes() {
       java.lang.Object ref = content_;
@@ -2324,13 +2450,13 @@ public final class EventLogProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeSInt64(1, when_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, topic_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 3, content_);
       }
       unknownFields.writeTo(output);
@@ -2342,14 +2468,14 @@ public final class EventLogProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt64Size(1, when_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, topic_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, content_);
       }
       size += unknownFields.getSerializedSize();
@@ -2367,24 +2493,23 @@ public final class EventLogProto {
       }
       ch.epfl.dedis.lib.proto.EventLogProto.Event other = (ch.epfl.dedis.lib.proto.EventLogProto.Event) obj;
 
-      boolean result = true;
-      result = result && (hasWhen() == other.hasWhen());
+      if (hasWhen() != other.hasWhen()) return false;
       if (hasWhen()) {
-        result = result && (getWhen()
-            == other.getWhen());
+        if (getWhen()
+            != other.getWhen()) return false;
       }
-      result = result && (hasTopic() == other.hasTopic());
+      if (hasTopic() != other.hasTopic()) return false;
       if (hasTopic()) {
-        result = result && getTopic()
-            .equals(other.getTopic());
+        if (!getTopic()
+            .equals(other.getTopic())) return false;
       }
-      result = result && (hasContent() == other.hasContent());
+      if (hasContent() != other.hasContent()) return false;
       if (hasContent()) {
-        result = result && getContent()
-            .equals(other.getContent());
+        if (!getContent()
+            .equals(other.getContent())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -2579,15 +2704,15 @@ public final class EventLogProto {
         ch.epfl.dedis.lib.proto.EventLogProto.Event result = new ch.epfl.dedis.lib.proto.EventLogProto.Event(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.when_ = when_;
           to_bitField0_ |= 0x00000001;
         }
-        result.when_ = when_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.topic_ = topic_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.content_ = content_;
@@ -2598,35 +2723,35 @@ public final class EventLogProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -2695,18 +2820,24 @@ public final class EventLogProto {
       private long when_ ;
       /**
        * <code>required sint64 when = 1;</code>
+       * @return Whether the when field is set.
        */
+      @java.lang.Override
       public boolean hasWhen() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required sint64 when = 1;</code>
+       * @return The when.
        */
+      @java.lang.Override
       public long getWhen() {
         return when_;
       }
       /**
        * <code>required sint64 when = 1;</code>
+       * @param value The when to set.
+       * @return This builder for chaining.
        */
       public Builder setWhen(long value) {
         bitField0_ |= 0x00000001;
@@ -2716,6 +2847,7 @@ public final class EventLogProto {
       }
       /**
        * <code>required sint64 when = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearWhen() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -2727,12 +2859,14 @@ public final class EventLogProto {
       private java.lang.Object topic_ = "";
       /**
        * <code>required string topic = 2;</code>
+       * @return Whether the topic field is set.
        */
       public boolean hasTopic() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required string topic = 2;</code>
+       * @return The topic.
        */
       public java.lang.String getTopic() {
         java.lang.Object ref = topic_;
@@ -2750,6 +2884,7 @@ public final class EventLogProto {
       }
       /**
        * <code>required string topic = 2;</code>
+       * @return The bytes for topic.
        */
       public com.google.protobuf.ByteString
           getTopicBytes() {
@@ -2766,6 +2901,8 @@ public final class EventLogProto {
       }
       /**
        * <code>required string topic = 2;</code>
+       * @param value The topic to set.
+       * @return This builder for chaining.
        */
       public Builder setTopic(
           java.lang.String value) {
@@ -2779,6 +2916,7 @@ public final class EventLogProto {
       }
       /**
        * <code>required string topic = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTopic() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -2788,6 +2926,8 @@ public final class EventLogProto {
       }
       /**
        * <code>required string topic = 2;</code>
+       * @param value The bytes for topic to set.
+       * @return This builder for chaining.
        */
       public Builder setTopicBytes(
           com.google.protobuf.ByteString value) {
@@ -2803,12 +2943,14 @@ public final class EventLogProto {
       private java.lang.Object content_ = "";
       /**
        * <code>required string content = 3;</code>
+       * @return Whether the content field is set.
        */
       public boolean hasContent() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>required string content = 3;</code>
+       * @return The content.
        */
       public java.lang.String getContent() {
         java.lang.Object ref = content_;
@@ -2826,6 +2968,7 @@ public final class EventLogProto {
       }
       /**
        * <code>required string content = 3;</code>
+       * @return The bytes for content.
        */
       public com.google.protobuf.ByteString
           getContentBytes() {
@@ -2842,6 +2985,8 @@ public final class EventLogProto {
       }
       /**
        * <code>required string content = 3;</code>
+       * @param value The content to set.
+       * @return This builder for chaining.
        */
       public Builder setContent(
           java.lang.String value) {
@@ -2855,6 +3000,7 @@ public final class EventLogProto {
       }
       /**
        * <code>required string content = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearContent() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -2864,6 +3010,8 @@ public final class EventLogProto {
       }
       /**
        * <code>required string content = 3;</code>
+       * @param value The bytes for content to set.
+       * @return This builder for chaining.
        */
       public Builder setContentBytes(
           com.google.protobuf.ByteString value) {
@@ -2961,18 +3109,10 @@ public final class EventLogProto {
       "(\n\027ch.epfl.dedis.lib.protoB\rEventLogProt" +
       "o"
     };
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-        }, assigner);
+        });
     internal_static_eventlog_SearchRequest_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_eventlog_SearchRequest_fieldAccessorTable = new

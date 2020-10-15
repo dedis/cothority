@@ -1,5 +1,6 @@
 import Darc from "./darc";
 import IdentityDarc from "./identity-darc";
+import IdentityDid from "./identity-did";
 import IdentityEd25519 from "./identity-ed25519";
 import IdentityWrapper, { IIdentity } from "./identity-wrapper";
 import Rules, { Rule } from "./rules";
@@ -10,6 +11,7 @@ export {
     Darc,
     IIdentity,
     IdentityDarc,
+    IdentityDid,
     IdentityEd25519,
     IdentityWrapper,
     Rule,

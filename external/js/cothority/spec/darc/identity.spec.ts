@@ -1,4 +1,5 @@
 import IdentityDarc from "../../src/darc/identity-darc";
+import IdentityDid from "../../src/darc/identity-did";
 import IdentityEd25519 from "../../src/darc/identity-ed25519";
 import IdentityWrapper from "../../src/darc/identity-wrapper";
 import { SIGNER } from "../support/conondes";
@@ -24,10 +25,19 @@ describe("Identity Tests", () => {
         expect(id.toString()).toBe(`ed25519:${SIGNER.public.toString()}`);
     });
 
+    it("should create a did identity", () => {
+        const id = new IdentityDid({ method: Buffer.from("sov"), did: Buffer.from("xxx") });
+        expect(IdentityWrapper.fromIdentity(id).did).toBeDefined();
+        expect(id.toString()).toBe("did:sov:xxx");
+    });
+
     it("should return the string representation", () => {
         const id = new IdentityEd25519({ point: SIGNER.point });
         const wrapper = new IdentityWrapper({ ed25519: id });
-
         expect(id.toString()).toBe(wrapper.toString());
+
+        const did = new IdentityDid({ method: Buffer.from("sov"), did: Buffer.from("xxx") });
+        const wrapper2 = new IdentityWrapper({ did });
+        expect(did.toString()).toBe(wrapper2.toString());
     });
 });

@@ -20,28 +20,34 @@ public final class Personhood {
 
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return Whether the byzcoinid field is set.
      */
     boolean hasByzcoinid();
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return The byzcoinid.
      */
     com.google.protobuf.ByteString getByzcoinid();
 
     /**
      * <code>required bytes ropasciid = 2;</code>
+     * @return Whether the ropasciid field is set.
      */
     boolean hasRopasciid();
     /**
      * <code>required bytes ropasciid = 2;</code>
+     * @return The ropasciid.
      */
     com.google.protobuf.ByteString getRopasciid();
 
     /**
      * <code>optional sint64 locked = 3;</code>
+     * @return Whether the locked field is set.
      */
     boolean hasLocked();
     /**
      * <code>optional sint64 locked = 3;</code>
+     * @return The locked.
      */
     long getLocked();
   }
@@ -52,7 +58,7 @@ public final class Personhood {
    *
    * Protobuf type {@code personhood.RoPaSci}
    */
-  public  static final class RoPaSci extends
+  public static final class RoPaSci extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:personhood.RoPaSci)
       RoPaSciOrBuilder {
@@ -64,7 +70,13 @@ public final class Personhood {
     private RoPaSci() {
       byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
       ropasciid_ = com.google.protobuf.ByteString.EMPTY;
-      locked_ = 0L;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new RoPaSci();
     }
 
     @java.lang.Override
@@ -143,13 +155,17 @@ public final class Personhood {
     private com.google.protobuf.ByteString byzcoinid_;
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return Whether the byzcoinid field is set.
      */
+    @java.lang.Override
     public boolean hasByzcoinid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes byzcoinid = 1;</code>
+     * @return The byzcoinid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getByzcoinid() {
       return byzcoinid_;
     }
@@ -158,13 +174,17 @@ public final class Personhood {
     private com.google.protobuf.ByteString ropasciid_;
     /**
      * <code>required bytes ropasciid = 2;</code>
+     * @return Whether the ropasciid field is set.
      */
+    @java.lang.Override
     public boolean hasRopasciid() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes ropasciid = 2;</code>
+     * @return The ropasciid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getRopasciid() {
       return ropasciid_;
     }
@@ -173,13 +193,17 @@ public final class Personhood {
     private long locked_;
     /**
      * <code>optional sint64 locked = 3;</code>
+     * @return Whether the locked field is set.
      */
+    @java.lang.Override
     public boolean hasLocked() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional sint64 locked = 3;</code>
+     * @return The locked.
      */
+    @java.lang.Override
     public long getLocked() {
       return locked_;
     }
@@ -206,13 +230,13 @@ public final class Personhood {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, byzcoinid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, ropasciid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeSInt64(3, locked_);
       }
       unknownFields.writeTo(output);
@@ -224,15 +248,15 @@ public final class Personhood {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, byzcoinid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, ropasciid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt64Size(3, locked_);
       }
@@ -251,24 +275,23 @@ public final class Personhood {
       }
       ch.epfl.dedis.lib.proto.Personhood.RoPaSci other = (ch.epfl.dedis.lib.proto.Personhood.RoPaSci) obj;
 
-      boolean result = true;
-      result = result && (hasByzcoinid() == other.hasByzcoinid());
+      if (hasByzcoinid() != other.hasByzcoinid()) return false;
       if (hasByzcoinid()) {
-        result = result && getByzcoinid()
-            .equals(other.getByzcoinid());
+        if (!getByzcoinid()
+            .equals(other.getByzcoinid())) return false;
       }
-      result = result && (hasRopasciid() == other.hasRopasciid());
+      if (hasRopasciid() != other.hasRopasciid()) return false;
       if (hasRopasciid()) {
-        result = result && getRopasciid()
-            .equals(other.getRopasciid());
+        if (!getRopasciid()
+            .equals(other.getRopasciid())) return false;
       }
-      result = result && (hasLocked() == other.hasLocked());
+      if (hasLocked() != other.hasLocked()) return false;
       if (hasLocked()) {
-        result = result && (getLocked()
-            == other.getLocked());
+        if (getLocked()
+            != other.getLocked()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -462,18 +485,18 @@ public final class Personhood {
         ch.epfl.dedis.lib.proto.Personhood.RoPaSci result = new ch.epfl.dedis.lib.proto.Personhood.RoPaSci(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.byzcoinid_ = byzcoinid_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.ropasciid_ = ropasciid_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.locked_ = locked_;
           to_bitField0_ |= 0x00000004;
         }
-        result.locked_ = locked_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -481,35 +504,35 @@ public final class Personhood {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -571,18 +594,24 @@ public final class Personhood {
       private com.google.protobuf.ByteString byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @return Whether the byzcoinid field is set.
        */
+      @java.lang.Override
       public boolean hasByzcoinid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @return The byzcoinid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getByzcoinid() {
         return byzcoinid_;
       }
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @param value The byzcoinid to set.
+       * @return This builder for chaining.
        */
       public Builder setByzcoinid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -595,6 +624,7 @@ public final class Personhood {
       }
       /**
        * <code>required bytes byzcoinid = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearByzcoinid() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -606,18 +636,24 @@ public final class Personhood {
       private com.google.protobuf.ByteString ropasciid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes ropasciid = 2;</code>
+       * @return Whether the ropasciid field is set.
        */
+      @java.lang.Override
       public boolean hasRopasciid() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes ropasciid = 2;</code>
+       * @return The ropasciid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getRopasciid() {
         return ropasciid_;
       }
       /**
        * <code>required bytes ropasciid = 2;</code>
+       * @param value The ropasciid to set.
+       * @return This builder for chaining.
        */
       public Builder setRopasciid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -630,6 +666,7 @@ public final class Personhood {
       }
       /**
        * <code>required bytes ropasciid = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearRopasciid() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -641,18 +678,24 @@ public final class Personhood {
       private long locked_ ;
       /**
        * <code>optional sint64 locked = 3;</code>
+       * @return Whether the locked field is set.
        */
+      @java.lang.Override
       public boolean hasLocked() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional sint64 locked = 3;</code>
+       * @return The locked.
        */
+      @java.lang.Override
       public long getLocked() {
         return locked_;
       }
       /**
        * <code>optional sint64 locked = 3;</code>
+       * @param value The locked to set.
+       * @return This builder for chaining.
        */
       public Builder setLocked(long value) {
         bitField0_ |= 0x00000004;
@@ -662,6 +705,7 @@ public final class Personhood {
       }
       /**
        * <code>optional sint64 locked = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearLocked() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -728,24 +772,29 @@ public final class Personhood {
 
     /**
      * <code>required string description = 1;</code>
+     * @return Whether the description field is set.
      */
     boolean hasDescription();
     /**
      * <code>required string description = 1;</code>
+     * @return The description.
      */
     java.lang.String getDescription();
     /**
      * <code>required string description = 1;</code>
+     * @return The bytes for description.
      */
     com.google.protobuf.ByteString
         getDescriptionBytes();
 
     /**
      * <code>required .byzcoin.Coin stake = 2;</code>
+     * @return Whether the stake field is set.
      */
     boolean hasStake();
     /**
      * <code>required .byzcoin.Coin stake = 2;</code>
+     * @return The stake.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getStake();
     /**
@@ -755,64 +804,78 @@ public final class Personhood {
 
     /**
      * <code>required bytes firstplayerhash = 3;</code>
+     * @return Whether the firstplayerhash field is set.
      */
     boolean hasFirstplayerhash();
     /**
      * <code>required bytes firstplayerhash = 3;</code>
+     * @return The firstplayerhash.
      */
     com.google.protobuf.ByteString getFirstplayerhash();
 
     /**
      * <code>optional sint32 firstplayer = 4;</code>
+     * @return Whether the firstplayer field is set.
      */
     boolean hasFirstplayer();
     /**
      * <code>optional sint32 firstplayer = 4;</code>
+     * @return The firstplayer.
      */
     int getFirstplayer();
 
     /**
      * <code>optional sint32 secondplayer = 5;</code>
+     * @return Whether the secondplayer field is set.
      */
     boolean hasSecondplayer();
     /**
      * <code>optional sint32 secondplayer = 5;</code>
+     * @return The secondplayer.
      */
     int getSecondplayer();
 
     /**
      * <code>optional bytes secondplayeraccount = 6;</code>
+     * @return Whether the secondplayeraccount field is set.
      */
     boolean hasSecondplayeraccount();
     /**
      * <code>optional bytes secondplayeraccount = 6;</code>
+     * @return The secondplayeraccount.
      */
     com.google.protobuf.ByteString getSecondplayeraccount();
 
     /**
      * <code>optional bytes firstplayeraccount = 7;</code>
+     * @return Whether the firstplayeraccount field is set.
      */
     boolean hasFirstplayeraccount();
     /**
      * <code>optional bytes firstplayeraccount = 7;</code>
+     * @return The firstplayeraccount.
      */
     com.google.protobuf.ByteString getFirstplayeraccount();
 
     /**
      * <code>optional bytes calypsowrite = 8;</code>
+     * @return Whether the calypsowrite field is set.
      */
     boolean hasCalypsowrite();
     /**
      * <code>optional bytes calypsowrite = 8;</code>
+     * @return The calypsowrite.
      */
     com.google.protobuf.ByteString getCalypsowrite();
 
     /**
      * <code>optional bytes calypsoread = 9;</code>
+     * @return Whether the calypsoread field is set.
      */
     boolean hasCalypsoread();
     /**
      * <code>optional bytes calypsoread = 9;</code>
+     * @return The calypsoread.
      */
     com.google.protobuf.ByteString getCalypsoread();
   }
@@ -823,7 +886,7 @@ public final class Personhood {
    *
    * Protobuf type {@code personhood.RoPaSciStruct}
    */
-  public  static final class RoPaSciStruct extends
+  public static final class RoPaSciStruct extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:personhood.RoPaSciStruct)
       RoPaSciStructOrBuilder {
@@ -835,12 +898,17 @@ public final class Personhood {
     private RoPaSciStruct() {
       description_ = "";
       firstplayerhash_ = com.google.protobuf.ByteString.EMPTY;
-      firstplayer_ = 0;
-      secondplayer_ = 0;
       secondplayeraccount_ = com.google.protobuf.ByteString.EMPTY;
       firstplayeraccount_ = com.google.protobuf.ByteString.EMPTY;
       calypsowrite_ = com.google.protobuf.ByteString.EMPTY;
       calypsoread_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new RoPaSciStruct();
     }
 
     @java.lang.Override
@@ -875,7 +943,7 @@ public final class Personhood {
             }
             case 18: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = stake_.toBuilder();
               }
               stake_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.parser(), extensionRegistry);
@@ -958,13 +1026,17 @@ public final class Personhood {
     private volatile java.lang.Object description_;
     /**
      * <code>required string description = 1;</code>
+     * @return Whether the description field is set.
      */
+    @java.lang.Override
     public boolean hasDescription() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required string description = 1;</code>
+     * @return The description.
      */
+    @java.lang.Override
     public java.lang.String getDescription() {
       java.lang.Object ref = description_;
       if (ref instanceof java.lang.String) {
@@ -981,7 +1053,9 @@ public final class Personhood {
     }
     /**
      * <code>required string description = 1;</code>
+     * @return The bytes for description.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getDescriptionBytes() {
       java.lang.Object ref = description_;
@@ -1000,19 +1074,24 @@ public final class Personhood {
     private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin stake_;
     /**
      * <code>required .byzcoin.Coin stake = 2;</code>
+     * @return Whether the stake field is set.
      */
+    @java.lang.Override
     public boolean hasStake() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required .byzcoin.Coin stake = 2;</code>
+     * @return The stake.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getStake() {
       return stake_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : stake_;
     }
     /**
      * <code>required .byzcoin.Coin stake = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder getStakeOrBuilder() {
       return stake_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : stake_;
     }
@@ -1021,13 +1100,17 @@ public final class Personhood {
     private com.google.protobuf.ByteString firstplayerhash_;
     /**
      * <code>required bytes firstplayerhash = 3;</code>
+     * @return Whether the firstplayerhash field is set.
      */
+    @java.lang.Override
     public boolean hasFirstplayerhash() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>required bytes firstplayerhash = 3;</code>
+     * @return The firstplayerhash.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getFirstplayerhash() {
       return firstplayerhash_;
     }
@@ -1036,13 +1119,17 @@ public final class Personhood {
     private int firstplayer_;
     /**
      * <code>optional sint32 firstplayer = 4;</code>
+     * @return Whether the firstplayer field is set.
      */
+    @java.lang.Override
     public boolean hasFirstplayer() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <code>optional sint32 firstplayer = 4;</code>
+     * @return The firstplayer.
      */
+    @java.lang.Override
     public int getFirstplayer() {
       return firstplayer_;
     }
@@ -1051,13 +1138,17 @@ public final class Personhood {
     private int secondplayer_;
     /**
      * <code>optional sint32 secondplayer = 5;</code>
+     * @return Whether the secondplayer field is set.
      */
+    @java.lang.Override
     public boolean hasSecondplayer() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <code>optional sint32 secondplayer = 5;</code>
+     * @return The secondplayer.
      */
+    @java.lang.Override
     public int getSecondplayer() {
       return secondplayer_;
     }
@@ -1066,13 +1157,17 @@ public final class Personhood {
     private com.google.protobuf.ByteString secondplayeraccount_;
     /**
      * <code>optional bytes secondplayeraccount = 6;</code>
+     * @return Whether the secondplayeraccount field is set.
      */
+    @java.lang.Override
     public boolean hasSecondplayeraccount() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000020) != 0);
     }
     /**
      * <code>optional bytes secondplayeraccount = 6;</code>
+     * @return The secondplayeraccount.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getSecondplayeraccount() {
       return secondplayeraccount_;
     }
@@ -1081,13 +1176,17 @@ public final class Personhood {
     private com.google.protobuf.ByteString firstplayeraccount_;
     /**
      * <code>optional bytes firstplayeraccount = 7;</code>
+     * @return Whether the firstplayeraccount field is set.
      */
+    @java.lang.Override
     public boolean hasFirstplayeraccount() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000040) != 0);
     }
     /**
      * <code>optional bytes firstplayeraccount = 7;</code>
+     * @return The firstplayeraccount.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getFirstplayeraccount() {
       return firstplayeraccount_;
     }
@@ -1096,13 +1195,17 @@ public final class Personhood {
     private com.google.protobuf.ByteString calypsowrite_;
     /**
      * <code>optional bytes calypsowrite = 8;</code>
+     * @return Whether the calypsowrite field is set.
      */
+    @java.lang.Override
     public boolean hasCalypsowrite() {
-      return ((bitField0_ & 0x00000080) == 0x00000080);
+      return ((bitField0_ & 0x00000080) != 0);
     }
     /**
      * <code>optional bytes calypsowrite = 8;</code>
+     * @return The calypsowrite.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getCalypsowrite() {
       return calypsowrite_;
     }
@@ -1111,13 +1214,17 @@ public final class Personhood {
     private com.google.protobuf.ByteString calypsoread_;
     /**
      * <code>optional bytes calypsoread = 9;</code>
+     * @return Whether the calypsoread field is set.
      */
+    @java.lang.Override
     public boolean hasCalypsoread() {
-      return ((bitField0_ & 0x00000100) == 0x00000100);
+      return ((bitField0_ & 0x00000100) != 0);
     }
     /**
      * <code>optional bytes calypsoread = 9;</code>
+     * @return The calypsoread.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getCalypsoread() {
       return calypsoread_;
     }
@@ -1152,31 +1259,31 @@ public final class Personhood {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, description_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getStake());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBytes(3, firstplayerhash_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeSInt32(4, firstplayer_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeSInt32(5, secondplayer_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         output.writeBytes(6, secondplayeraccount_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         output.writeBytes(7, firstplayeraccount_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         output.writeBytes(8, calypsowrite_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000100) != 0)) {
         output.writeBytes(9, calypsoread_);
       }
       unknownFields.writeTo(output);
@@ -1188,38 +1295,38 @@ public final class Personhood {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, description_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getStake());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, firstplayerhash_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(4, firstplayer_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(5, secondplayer_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(6, secondplayeraccount_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(7, firstplayeraccount_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(8, calypsowrite_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000100) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(9, calypsoread_);
       }
@@ -1238,54 +1345,53 @@ public final class Personhood {
       }
       ch.epfl.dedis.lib.proto.Personhood.RoPaSciStruct other = (ch.epfl.dedis.lib.proto.Personhood.RoPaSciStruct) obj;
 
-      boolean result = true;
-      result = result && (hasDescription() == other.hasDescription());
+      if (hasDescription() != other.hasDescription()) return false;
       if (hasDescription()) {
-        result = result && getDescription()
-            .equals(other.getDescription());
+        if (!getDescription()
+            .equals(other.getDescription())) return false;
       }
-      result = result && (hasStake() == other.hasStake());
+      if (hasStake() != other.hasStake()) return false;
       if (hasStake()) {
-        result = result && getStake()
-            .equals(other.getStake());
+        if (!getStake()
+            .equals(other.getStake())) return false;
       }
-      result = result && (hasFirstplayerhash() == other.hasFirstplayerhash());
+      if (hasFirstplayerhash() != other.hasFirstplayerhash()) return false;
       if (hasFirstplayerhash()) {
-        result = result && getFirstplayerhash()
-            .equals(other.getFirstplayerhash());
+        if (!getFirstplayerhash()
+            .equals(other.getFirstplayerhash())) return false;
       }
-      result = result && (hasFirstplayer() == other.hasFirstplayer());
+      if (hasFirstplayer() != other.hasFirstplayer()) return false;
       if (hasFirstplayer()) {
-        result = result && (getFirstplayer()
-            == other.getFirstplayer());
+        if (getFirstplayer()
+            != other.getFirstplayer()) return false;
       }
-      result = result && (hasSecondplayer() == other.hasSecondplayer());
+      if (hasSecondplayer() != other.hasSecondplayer()) return false;
       if (hasSecondplayer()) {
-        result = result && (getSecondplayer()
-            == other.getSecondplayer());
+        if (getSecondplayer()
+            != other.getSecondplayer()) return false;
       }
-      result = result && (hasSecondplayeraccount() == other.hasSecondplayeraccount());
+      if (hasSecondplayeraccount() != other.hasSecondplayeraccount()) return false;
       if (hasSecondplayeraccount()) {
-        result = result && getSecondplayeraccount()
-            .equals(other.getSecondplayeraccount());
+        if (!getSecondplayeraccount()
+            .equals(other.getSecondplayeraccount())) return false;
       }
-      result = result && (hasFirstplayeraccount() == other.hasFirstplayeraccount());
+      if (hasFirstplayeraccount() != other.hasFirstplayeraccount()) return false;
       if (hasFirstplayeraccount()) {
-        result = result && getFirstplayeraccount()
-            .equals(other.getFirstplayeraccount());
+        if (!getFirstplayeraccount()
+            .equals(other.getFirstplayeraccount())) return false;
       }
-      result = result && (hasCalypsowrite() == other.hasCalypsowrite());
+      if (hasCalypsowrite() != other.hasCalypsowrite()) return false;
       if (hasCalypsowrite()) {
-        result = result && getCalypsowrite()
-            .equals(other.getCalypsowrite());
+        if (!getCalypsowrite()
+            .equals(other.getCalypsowrite())) return false;
       }
-      result = result && (hasCalypsoread() == other.hasCalypsoread());
+      if (hasCalypsoread() != other.hasCalypsoread()) return false;
       if (hasCalypsoread()) {
-        result = result && getCalypsoread()
-            .equals(other.getCalypsoread());
+        if (!getCalypsoread()
+            .equals(other.getCalypsoread())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -1519,43 +1625,43 @@ public final class Personhood {
         ch.epfl.dedis.lib.proto.Personhood.RoPaSciStruct result = new ch.epfl.dedis.lib.proto.Personhood.RoPaSciStruct(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.description_ = description_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (stakeBuilder_ == null) {
+            result.stake_ = stake_;
+          } else {
+            result.stake_ = stakeBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
         }
-        if (stakeBuilder_ == null) {
-          result.stake_ = stake_;
-        } else {
-          result.stake_ = stakeBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.firstplayerhash_ = firstplayerhash_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.firstplayer_ = firstplayer_;
           to_bitField0_ |= 0x00000008;
         }
-        result.firstplayer_ = firstplayer_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          result.secondplayer_ = secondplayer_;
           to_bitField0_ |= 0x00000010;
         }
-        result.secondplayer_ = secondplayer_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((from_bitField0_ & 0x00000020) != 0)) {
           to_bitField0_ |= 0x00000020;
         }
         result.secondplayeraccount_ = secondplayeraccount_;
-        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((from_bitField0_ & 0x00000040) != 0)) {
           to_bitField0_ |= 0x00000040;
         }
         result.firstplayeraccount_ = firstplayeraccount_;
-        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+        if (((from_bitField0_ & 0x00000080) != 0)) {
           to_bitField0_ |= 0x00000080;
         }
         result.calypsowrite_ = calypsowrite_;
-        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+        if (((from_bitField0_ & 0x00000100) != 0)) {
           to_bitField0_ |= 0x00000100;
         }
         result.calypsoread_ = calypsoread_;
@@ -1566,35 +1672,35 @@ public final class Personhood {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -1682,12 +1788,14 @@ public final class Personhood {
       private java.lang.Object description_ = "";
       /**
        * <code>required string description = 1;</code>
+       * @return Whether the description field is set.
        */
       public boolean hasDescription() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required string description = 1;</code>
+       * @return The description.
        */
       public java.lang.String getDescription() {
         java.lang.Object ref = description_;
@@ -1705,6 +1813,7 @@ public final class Personhood {
       }
       /**
        * <code>required string description = 1;</code>
+       * @return The bytes for description.
        */
       public com.google.protobuf.ByteString
           getDescriptionBytes() {
@@ -1721,6 +1830,8 @@ public final class Personhood {
       }
       /**
        * <code>required string description = 1;</code>
+       * @param value The description to set.
+       * @return This builder for chaining.
        */
       public Builder setDescription(
           java.lang.String value) {
@@ -1734,6 +1845,7 @@ public final class Personhood {
       }
       /**
        * <code>required string description = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearDescription() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -1743,6 +1855,8 @@ public final class Personhood {
       }
       /**
        * <code>required string description = 1;</code>
+       * @param value The bytes for description to set.
+       * @return This builder for chaining.
        */
       public Builder setDescriptionBytes(
           com.google.protobuf.ByteString value) {
@@ -1755,17 +1869,19 @@ public final class Personhood {
         return this;
       }
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin stake_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin stake_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder> stakeBuilder_;
       /**
        * <code>required .byzcoin.Coin stake = 2;</code>
+       * @return Whether the stake field is set.
        */
       public boolean hasStake() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required .byzcoin.Coin stake = 2;</code>
+       * @return The stake.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getStake() {
         if (stakeBuilder_ == null) {
@@ -1809,7 +1925,7 @@ public final class Personhood {
        */
       public Builder mergeStake(ch.epfl.dedis.lib.proto.ByzCoinProto.Coin value) {
         if (stakeBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               stake_ != null &&
               stake_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance()) {
             stake_ =
@@ -1876,18 +1992,24 @@ public final class Personhood {
       private com.google.protobuf.ByteString firstplayerhash_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes firstplayerhash = 3;</code>
+       * @return Whether the firstplayerhash field is set.
        */
+      @java.lang.Override
       public boolean hasFirstplayerhash() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>required bytes firstplayerhash = 3;</code>
+       * @return The firstplayerhash.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getFirstplayerhash() {
         return firstplayerhash_;
       }
       /**
        * <code>required bytes firstplayerhash = 3;</code>
+       * @param value The firstplayerhash to set.
+       * @return This builder for chaining.
        */
       public Builder setFirstplayerhash(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -1900,6 +2022,7 @@ public final class Personhood {
       }
       /**
        * <code>required bytes firstplayerhash = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearFirstplayerhash() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -1911,18 +2034,24 @@ public final class Personhood {
       private int firstplayer_ ;
       /**
        * <code>optional sint32 firstplayer = 4;</code>
+       * @return Whether the firstplayer field is set.
        */
+      @java.lang.Override
       public boolean hasFirstplayer() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>optional sint32 firstplayer = 4;</code>
+       * @return The firstplayer.
        */
+      @java.lang.Override
       public int getFirstplayer() {
         return firstplayer_;
       }
       /**
        * <code>optional sint32 firstplayer = 4;</code>
+       * @param value The firstplayer to set.
+       * @return This builder for chaining.
        */
       public Builder setFirstplayer(int value) {
         bitField0_ |= 0x00000008;
@@ -1932,6 +2061,7 @@ public final class Personhood {
       }
       /**
        * <code>optional sint32 firstplayer = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearFirstplayer() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -1943,18 +2073,24 @@ public final class Personhood {
       private int secondplayer_ ;
       /**
        * <code>optional sint32 secondplayer = 5;</code>
+       * @return Whether the secondplayer field is set.
        */
+      @java.lang.Override
       public boolean hasSecondplayer() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <code>optional sint32 secondplayer = 5;</code>
+       * @return The secondplayer.
        */
+      @java.lang.Override
       public int getSecondplayer() {
         return secondplayer_;
       }
       /**
        * <code>optional sint32 secondplayer = 5;</code>
+       * @param value The secondplayer to set.
+       * @return This builder for chaining.
        */
       public Builder setSecondplayer(int value) {
         bitField0_ |= 0x00000010;
@@ -1964,6 +2100,7 @@ public final class Personhood {
       }
       /**
        * <code>optional sint32 secondplayer = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSecondplayer() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -1975,18 +2112,24 @@ public final class Personhood {
       private com.google.protobuf.ByteString secondplayeraccount_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>optional bytes secondplayeraccount = 6;</code>
+       * @return Whether the secondplayeraccount field is set.
        */
+      @java.lang.Override
       public boolean hasSecondplayeraccount() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000020) != 0);
       }
       /**
        * <code>optional bytes secondplayeraccount = 6;</code>
+       * @return The secondplayeraccount.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getSecondplayeraccount() {
         return secondplayeraccount_;
       }
       /**
        * <code>optional bytes secondplayeraccount = 6;</code>
+       * @param value The secondplayeraccount to set.
+       * @return This builder for chaining.
        */
       public Builder setSecondplayeraccount(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -1999,6 +2142,7 @@ public final class Personhood {
       }
       /**
        * <code>optional bytes secondplayeraccount = 6;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSecondplayeraccount() {
         bitField0_ = (bitField0_ & ~0x00000020);
@@ -2010,18 +2154,24 @@ public final class Personhood {
       private com.google.protobuf.ByteString firstplayeraccount_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>optional bytes firstplayeraccount = 7;</code>
+       * @return Whether the firstplayeraccount field is set.
        */
+      @java.lang.Override
       public boolean hasFirstplayeraccount() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
+        return ((bitField0_ & 0x00000040) != 0);
       }
       /**
        * <code>optional bytes firstplayeraccount = 7;</code>
+       * @return The firstplayeraccount.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getFirstplayeraccount() {
         return firstplayeraccount_;
       }
       /**
        * <code>optional bytes firstplayeraccount = 7;</code>
+       * @param value The firstplayeraccount to set.
+       * @return This builder for chaining.
        */
       public Builder setFirstplayeraccount(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -2034,6 +2184,7 @@ public final class Personhood {
       }
       /**
        * <code>optional bytes firstplayeraccount = 7;</code>
+       * @return This builder for chaining.
        */
       public Builder clearFirstplayeraccount() {
         bitField0_ = (bitField0_ & ~0x00000040);
@@ -2045,18 +2196,24 @@ public final class Personhood {
       private com.google.protobuf.ByteString calypsowrite_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>optional bytes calypsowrite = 8;</code>
+       * @return Whether the calypsowrite field is set.
        */
+      @java.lang.Override
       public boolean hasCalypsowrite() {
-        return ((bitField0_ & 0x00000080) == 0x00000080);
+        return ((bitField0_ & 0x00000080) != 0);
       }
       /**
        * <code>optional bytes calypsowrite = 8;</code>
+       * @return The calypsowrite.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getCalypsowrite() {
         return calypsowrite_;
       }
       /**
        * <code>optional bytes calypsowrite = 8;</code>
+       * @param value The calypsowrite to set.
+       * @return This builder for chaining.
        */
       public Builder setCalypsowrite(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -2069,6 +2226,7 @@ public final class Personhood {
       }
       /**
        * <code>optional bytes calypsowrite = 8;</code>
+       * @return This builder for chaining.
        */
       public Builder clearCalypsowrite() {
         bitField0_ = (bitField0_ & ~0x00000080);
@@ -2080,18 +2238,24 @@ public final class Personhood {
       private com.google.protobuf.ByteString calypsoread_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>optional bytes calypsoread = 9;</code>
+       * @return Whether the calypsoread field is set.
        */
+      @java.lang.Override
       public boolean hasCalypsoread() {
-        return ((bitField0_ & 0x00000100) == 0x00000100);
+        return ((bitField0_ & 0x00000100) != 0);
       }
       /**
        * <code>optional bytes calypsoread = 9;</code>
+       * @return The calypsoread.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getCalypsoread() {
         return calypsoread_;
       }
       /**
        * <code>optional bytes calypsoread = 9;</code>
+       * @param value The calypsoread to set.
+       * @return This builder for chaining.
        */
       public Builder setCalypsoread(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -2104,6 +2268,7 @@ public final class Personhood {
       }
       /**
        * <code>optional bytes calypsoread = 9;</code>
+       * @return This builder for chaining.
        */
       public Builder clearCalypsoread() {
         bitField0_ = (bitField0_ & ~0x00000100);
@@ -2199,7 +2364,7 @@ public final class Personhood {
    *
    * Protobuf type {@code personhood.CredentialStruct}
    */
-  public  static final class CredentialStruct extends
+  public static final class CredentialStruct extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:personhood.CredentialStruct)
       CredentialStructOrBuilder {
@@ -2210,6 +2375,13 @@ public final class Personhood {
     }
     private CredentialStruct() {
       credentials_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new CredentialStruct();
     }
 
     @java.lang.Override
@@ -2237,7 +2409,7 @@ public final class Personhood {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 credentials_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.Personhood.Credential>();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -2260,7 +2432,7 @@ public final class Personhood {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
           credentials_ = java.util.Collections.unmodifiableList(credentials_);
         }
         this.unknownFields = unknownFields.build();
@@ -2285,12 +2457,14 @@ public final class Personhood {
     /**
      * <code>repeated .personhood.Credential credentials = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.Personhood.Credential> getCredentialsList() {
       return credentials_;
     }
     /**
      * <code>repeated .personhood.Credential credentials = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.CredentialOrBuilder>
         getCredentialsOrBuilderList() {
       return credentials_;
@@ -2298,18 +2472,21 @@ public final class Personhood {
     /**
      * <code>repeated .personhood.Credential credentials = 1;</code>
      */
+    @java.lang.Override
     public int getCredentialsCount() {
       return credentials_.size();
     }
     /**
      * <code>repeated .personhood.Credential credentials = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.Credential getCredentials(int index) {
       return credentials_.get(index);
     }
     /**
      * <code>repeated .personhood.Credential credentials = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.CredentialOrBuilder getCredentialsOrBuilder(
         int index) {
       return credentials_.get(index);
@@ -2366,11 +2543,10 @@ public final class Personhood {
       }
       ch.epfl.dedis.lib.proto.Personhood.CredentialStruct other = (ch.epfl.dedis.lib.proto.Personhood.CredentialStruct) obj;
 
-      boolean result = true;
-      result = result && getCredentialsList()
-          .equals(other.getCredentialsList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getCredentialsList()
+          .equals(other.getCredentialsList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -2556,7 +2732,7 @@ public final class Personhood {
         ch.epfl.dedis.lib.proto.Personhood.CredentialStruct result = new ch.epfl.dedis.lib.proto.Personhood.CredentialStruct(this);
         int from_bitField0_ = bitField0_;
         if (credentialsBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((bitField0_ & 0x00000001) != 0)) {
             credentials_ = java.util.Collections.unmodifiableList(credentials_);
             bitField0_ = (bitField0_ & ~0x00000001);
           }
@@ -2570,35 +2746,35 @@ public final class Personhood {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -2676,7 +2852,7 @@ public final class Personhood {
       private java.util.List<ch.epfl.dedis.lib.proto.Personhood.Credential> credentials_ =
         java.util.Collections.emptyList();
       private void ensureCredentialsIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           credentials_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.Personhood.Credential>(credentials_);
           bitField0_ |= 0x00000001;
          }
@@ -2905,7 +3081,7 @@ public final class Personhood {
           credentialsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.Personhood.Credential, ch.epfl.dedis.lib.proto.Personhood.Credential.Builder, ch.epfl.dedis.lib.proto.Personhood.CredentialOrBuilder>(
                   credentials_,
-                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
                   isClean());
           credentials_ = null;
@@ -2971,14 +3147,17 @@ public final class Personhood {
 
     /**
      * <code>required string name = 1;</code>
+     * @return Whether the name field is set.
      */
     boolean hasName();
     /**
      * <code>required string name = 1;</code>
+     * @return The name.
      */
     java.lang.String getName();
     /**
      * <code>required string name = 1;</code>
+     * @return The bytes for name.
      */
     com.google.protobuf.ByteString
         getNameBytes();
@@ -3014,7 +3193,7 @@ public final class Personhood {
    *
    * Protobuf type {@code personhood.Credential}
    */
-  public  static final class Credential extends
+  public static final class Credential extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:personhood.Credential)
       CredentialOrBuilder {
@@ -3026,6 +3205,13 @@ public final class Personhood {
     private Credential() {
       name_ = "";
       attributes_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Credential();
     }
 
     @java.lang.Override
@@ -3059,7 +3245,7 @@ public final class Personhood {
               break;
             }
             case 18: {
-              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                 attributes_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.Personhood.Attribute>();
                 mutable_bitField0_ |= 0x00000002;
               }
@@ -3082,7 +3268,7 @@ public final class Personhood {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((mutable_bitField0_ & 0x00000002) != 0)) {
           attributes_ = java.util.Collections.unmodifiableList(attributes_);
         }
         this.unknownFields = unknownFields.build();
@@ -3107,13 +3293,17 @@ public final class Personhood {
     private volatile java.lang.Object name_;
     /**
      * <code>required string name = 1;</code>
+     * @return Whether the name field is set.
      */
+    @java.lang.Override
     public boolean hasName() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required string name = 1;</code>
+     * @return The name.
      */
+    @java.lang.Override
     public java.lang.String getName() {
       java.lang.Object ref = name_;
       if (ref instanceof java.lang.String) {
@@ -3130,7 +3320,9 @@ public final class Personhood {
     }
     /**
      * <code>required string name = 1;</code>
+     * @return The bytes for name.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getNameBytes() {
       java.lang.Object ref = name_;
@@ -3150,12 +3342,14 @@ public final class Personhood {
     /**
      * <code>repeated .personhood.Attribute attributes = 2;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.Personhood.Attribute> getAttributesList() {
       return attributes_;
     }
     /**
      * <code>repeated .personhood.Attribute attributes = 2;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.AttributeOrBuilder>
         getAttributesOrBuilderList() {
       return attributes_;
@@ -3163,18 +3357,21 @@ public final class Personhood {
     /**
      * <code>repeated .personhood.Attribute attributes = 2;</code>
      */
+    @java.lang.Override
     public int getAttributesCount() {
       return attributes_.size();
     }
     /**
      * <code>repeated .personhood.Attribute attributes = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.Attribute getAttributes(int index) {
       return attributes_.get(index);
     }
     /**
      * <code>repeated .personhood.Attribute attributes = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.AttributeOrBuilder getAttributesOrBuilder(
         int index) {
       return attributes_.get(index);
@@ -3204,7 +3401,7 @@ public final class Personhood {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, name_);
       }
       for (int i = 0; i < attributes_.size(); i++) {
@@ -3219,7 +3416,7 @@ public final class Personhood {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, name_);
       }
       for (int i = 0; i < attributes_.size(); i++) {
@@ -3241,16 +3438,15 @@ public final class Personhood {
       }
       ch.epfl.dedis.lib.proto.Personhood.Credential other = (ch.epfl.dedis.lib.proto.Personhood.Credential) obj;
 
-      boolean result = true;
-      result = result && (hasName() == other.hasName());
+      if (hasName() != other.hasName()) return false;
       if (hasName()) {
-        result = result && getName()
-            .equals(other.getName());
+        if (!getName()
+            .equals(other.getName())) return false;
       }
-      result = result && getAttributesList()
-          .equals(other.getAttributesList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getAttributesList()
+          .equals(other.getAttributesList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -3442,12 +3638,12 @@ public final class Personhood {
         ch.epfl.dedis.lib.proto.Personhood.Credential result = new ch.epfl.dedis.lib.proto.Personhood.Credential(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.name_ = name_;
         if (attributesBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          if (((bitField0_ & 0x00000002) != 0)) {
             attributes_ = java.util.Collections.unmodifiableList(attributes_);
             bitField0_ = (bitField0_ & ~0x00000002);
           }
@@ -3462,35 +3658,35 @@ public final class Personhood {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -3576,12 +3772,14 @@ public final class Personhood {
       private java.lang.Object name_ = "";
       /**
        * <code>required string name = 1;</code>
+       * @return Whether the name field is set.
        */
       public boolean hasName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required string name = 1;</code>
+       * @return The name.
        */
       public java.lang.String getName() {
         java.lang.Object ref = name_;
@@ -3599,6 +3797,7 @@ public final class Personhood {
       }
       /**
        * <code>required string name = 1;</code>
+       * @return The bytes for name.
        */
       public com.google.protobuf.ByteString
           getNameBytes() {
@@ -3615,6 +3814,8 @@ public final class Personhood {
       }
       /**
        * <code>required string name = 1;</code>
+       * @param value The name to set.
+       * @return This builder for chaining.
        */
       public Builder setName(
           java.lang.String value) {
@@ -3628,6 +3829,7 @@ public final class Personhood {
       }
       /**
        * <code>required string name = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearName() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -3637,6 +3839,8 @@ public final class Personhood {
       }
       /**
        * <code>required string name = 1;</code>
+       * @param value The bytes for name to set.
+       * @return This builder for chaining.
        */
       public Builder setNameBytes(
           com.google.protobuf.ByteString value) {
@@ -3652,7 +3856,7 @@ public final class Personhood {
       private java.util.List<ch.epfl.dedis.lib.proto.Personhood.Attribute> attributes_ =
         java.util.Collections.emptyList();
       private void ensureAttributesIsMutable() {
-        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+        if (!((bitField0_ & 0x00000002) != 0)) {
           attributes_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.Personhood.Attribute>(attributes_);
           bitField0_ |= 0x00000002;
          }
@@ -3881,7 +4085,7 @@ public final class Personhood {
           attributesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.Personhood.Attribute, ch.epfl.dedis.lib.proto.Personhood.Attribute.Builder, ch.epfl.dedis.lib.proto.Personhood.AttributeOrBuilder>(
                   attributes_,
-                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  ((bitField0_ & 0x00000002) != 0),
                   getParentForChildren(),
                   isClean());
           attributes_ = null;
@@ -3947,24 +4151,29 @@ public final class Personhood {
 
     /**
      * <code>required string name = 1;</code>
+     * @return Whether the name field is set.
      */
     boolean hasName();
     /**
      * <code>required string name = 1;</code>
+     * @return The name.
      */
     java.lang.String getName();
     /**
      * <code>required string name = 1;</code>
+     * @return The bytes for name.
      */
     com.google.protobuf.ByteString
         getNameBytes();
 
     /**
      * <code>required bytes value = 2;</code>
+     * @return Whether the value field is set.
      */
     boolean hasValue();
     /**
      * <code>required bytes value = 2;</code>
+     * @return The value.
      */
     com.google.protobuf.ByteString getValue();
   }
@@ -3975,7 +4184,7 @@ public final class Personhood {
    *
    * Protobuf type {@code personhood.Attribute}
    */
-  public  static final class Attribute extends
+  public static final class Attribute extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:personhood.Attribute)
       AttributeOrBuilder {
@@ -3987,6 +4196,13 @@ public final class Personhood {
     private Attribute() {
       name_ = "";
       value_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Attribute();
     }
 
     @java.lang.Override
@@ -4061,13 +4277,17 @@ public final class Personhood {
     private volatile java.lang.Object name_;
     /**
      * <code>required string name = 1;</code>
+     * @return Whether the name field is set.
      */
+    @java.lang.Override
     public boolean hasName() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required string name = 1;</code>
+     * @return The name.
      */
+    @java.lang.Override
     public java.lang.String getName() {
       java.lang.Object ref = name_;
       if (ref instanceof java.lang.String) {
@@ -4084,7 +4304,9 @@ public final class Personhood {
     }
     /**
      * <code>required string name = 1;</code>
+     * @return The bytes for name.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getNameBytes() {
       java.lang.Object ref = name_;
@@ -4103,13 +4325,17 @@ public final class Personhood {
     private com.google.protobuf.ByteString value_;
     /**
      * <code>required bytes value = 2;</code>
+     * @return Whether the value field is set.
      */
+    @java.lang.Override
     public boolean hasValue() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes value = 2;</code>
+     * @return The value.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getValue() {
       return value_;
     }
@@ -4136,10 +4362,10 @@ public final class Personhood {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, name_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, value_);
       }
       unknownFields.writeTo(output);
@@ -4151,10 +4377,10 @@ public final class Personhood {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, name_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, value_);
       }
@@ -4173,19 +4399,18 @@ public final class Personhood {
       }
       ch.epfl.dedis.lib.proto.Personhood.Attribute other = (ch.epfl.dedis.lib.proto.Personhood.Attribute) obj;
 
-      boolean result = true;
-      result = result && (hasName() == other.hasName());
+      if (hasName() != other.hasName()) return false;
       if (hasName()) {
-        result = result && getName()
-            .equals(other.getName());
+        if (!getName()
+            .equals(other.getName())) return false;
       }
-      result = result && (hasValue() == other.hasValue());
+      if (hasValue() != other.hasValue()) return false;
       if (hasValue()) {
-        result = result && getValue()
-            .equals(other.getValue());
+        if (!getValue()
+            .equals(other.getValue())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -4372,11 +4597,11 @@ public final class Personhood {
         ch.epfl.dedis.lib.proto.Personhood.Attribute result = new ch.epfl.dedis.lib.proto.Personhood.Attribute(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.name_ = name_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.value_ = value_;
@@ -4387,35 +4612,35 @@ public final class Personhood {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -4476,12 +4701,14 @@ public final class Personhood {
       private java.lang.Object name_ = "";
       /**
        * <code>required string name = 1;</code>
+       * @return Whether the name field is set.
        */
       public boolean hasName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required string name = 1;</code>
+       * @return The name.
        */
       public java.lang.String getName() {
         java.lang.Object ref = name_;
@@ -4499,6 +4726,7 @@ public final class Personhood {
       }
       /**
        * <code>required string name = 1;</code>
+       * @return The bytes for name.
        */
       public com.google.protobuf.ByteString
           getNameBytes() {
@@ -4515,6 +4743,8 @@ public final class Personhood {
       }
       /**
        * <code>required string name = 1;</code>
+       * @param value The name to set.
+       * @return This builder for chaining.
        */
       public Builder setName(
           java.lang.String value) {
@@ -4528,6 +4758,7 @@ public final class Personhood {
       }
       /**
        * <code>required string name = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearName() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -4537,6 +4768,8 @@ public final class Personhood {
       }
       /**
        * <code>required string name = 1;</code>
+       * @param value The bytes for name to set.
+       * @return This builder for chaining.
        */
       public Builder setNameBytes(
           com.google.protobuf.ByteString value) {
@@ -4552,18 +4785,24 @@ public final class Personhood {
       private com.google.protobuf.ByteString value_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes value = 2;</code>
+       * @return Whether the value field is set.
        */
+      @java.lang.Override
       public boolean hasValue() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes value = 2;</code>
+       * @return The value.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getValue() {
         return value_;
       }
       /**
        * <code>required bytes value = 2;</code>
+       * @param value The value to set.
+       * @return This builder for chaining.
        */
       public Builder setValue(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -4576,6 +4815,7 @@ public final class Personhood {
       }
       /**
        * <code>required bytes value = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearValue() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -4642,10 +4882,12 @@ public final class Personhood {
 
     /**
      * <code>required .byzcoin.Coin costdarc = 1;</code>
+     * @return Whether the costdarc field is set.
      */
     boolean hasCostdarc();
     /**
      * <code>required .byzcoin.Coin costdarc = 1;</code>
+     * @return The costdarc.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostdarc();
     /**
@@ -4655,10 +4897,12 @@ public final class Personhood {
 
     /**
      * <code>required .byzcoin.Coin costcoin = 2;</code>
+     * @return Whether the costcoin field is set.
      */
     boolean hasCostcoin();
     /**
      * <code>required .byzcoin.Coin costcoin = 2;</code>
+     * @return The costcoin.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostcoin();
     /**
@@ -4668,10 +4912,12 @@ public final class Personhood {
 
     /**
      * <code>required .byzcoin.Coin costcredential = 3;</code>
+     * @return Whether the costcredential field is set.
      */
     boolean hasCostcredential();
     /**
      * <code>required .byzcoin.Coin costcredential = 3;</code>
+     * @return The costcredential.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostcredential();
     /**
@@ -4681,10 +4927,12 @@ public final class Personhood {
 
     /**
      * <code>required .byzcoin.Coin costparty = 4;</code>
+     * @return Whether the costparty field is set.
      */
     boolean hasCostparty();
     /**
      * <code>required .byzcoin.Coin costparty = 4;</code>
+     * @return The costparty.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostparty();
     /**
@@ -4694,19 +4942,23 @@ public final class Personhood {
 
     /**
      * <code>required bytes beneficiary = 5;</code>
+     * @return Whether the beneficiary field is set.
      */
     boolean hasBeneficiary();
     /**
      * <code>required bytes beneficiary = 5;</code>
+     * @return The beneficiary.
      */
     com.google.protobuf.ByteString getBeneficiary();
 
     /**
      * <code>optional .byzcoin.Coin costropasci = 6;</code>
+     * @return Whether the costropasci field is set.
      */
     boolean hasCostropasci();
     /**
      * <code>optional .byzcoin.Coin costropasci = 6;</code>
+     * @return The costropasci.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostropasci();
     /**
@@ -4716,10 +4968,12 @@ public final class Personhood {
 
     /**
      * <code>optional .byzcoin.Coin costcwrite = 7;</code>
+     * @return Whether the costcwrite field is set.
      */
     boolean hasCostcwrite();
     /**
      * <code>optional .byzcoin.Coin costcwrite = 7;</code>
+     * @return The costcwrite.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostcwrite();
     /**
@@ -4729,10 +4983,12 @@ public final class Personhood {
 
     /**
      * <code>optional .byzcoin.Coin costcread = 8;</code>
+     * @return Whether the costcread field is set.
      */
     boolean hasCostcread();
     /**
      * <code>optional .byzcoin.Coin costcread = 8;</code>
+     * @return The costcread.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostcread();
     /**
@@ -4742,10 +4998,12 @@ public final class Personhood {
 
     /**
      * <code>optional .byzcoin.Coin costvalue = 9;</code>
+     * @return Whether the costvalue field is set.
      */
     boolean hasCostvalue();
     /**
      * <code>optional .byzcoin.Coin costvalue = 9;</code>
+     * @return The costvalue.
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostvalue();
     /**
@@ -4761,7 +5019,7 @@ public final class Personhood {
    *
    * Protobuf type {@code personhood.SpawnerStruct}
    */
-  public  static final class SpawnerStruct extends
+  public static final class SpawnerStruct extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:personhood.SpawnerStruct)
       SpawnerStructOrBuilder {
@@ -4772,6 +5030,13 @@ public final class Personhood {
     }
     private SpawnerStruct() {
       beneficiary_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new SpawnerStruct();
     }
 
     @java.lang.Override
@@ -4800,7 +5065,7 @@ public final class Personhood {
               break;
             case 10: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = costdarc_.toBuilder();
               }
               costdarc_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.parser(), extensionRegistry);
@@ -4813,7 +5078,7 @@ public final class Personhood {
             }
             case 18: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = costcoin_.toBuilder();
               }
               costcoin_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.parser(), extensionRegistry);
@@ -4826,7 +5091,7 @@ public final class Personhood {
             }
             case 26: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+              if (((bitField0_ & 0x00000004) != 0)) {
                 subBuilder = costcredential_.toBuilder();
               }
               costcredential_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.parser(), extensionRegistry);
@@ -4839,7 +5104,7 @@ public final class Personhood {
             }
             case 34: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000008) == 0x00000008)) {
+              if (((bitField0_ & 0x00000008) != 0)) {
                 subBuilder = costparty_.toBuilder();
               }
               costparty_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.parser(), extensionRegistry);
@@ -4857,7 +5122,7 @@ public final class Personhood {
             }
             case 50: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000020) == 0x00000020)) {
+              if (((bitField0_ & 0x00000020) != 0)) {
                 subBuilder = costropasci_.toBuilder();
               }
               costropasci_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.parser(), extensionRegistry);
@@ -4870,7 +5135,7 @@ public final class Personhood {
             }
             case 58: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000040) == 0x00000040)) {
+              if (((bitField0_ & 0x00000040) != 0)) {
                 subBuilder = costcwrite_.toBuilder();
               }
               costcwrite_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.parser(), extensionRegistry);
@@ -4883,7 +5148,7 @@ public final class Personhood {
             }
             case 66: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000080) == 0x00000080)) {
+              if (((bitField0_ & 0x00000080) != 0)) {
                 subBuilder = costcread_.toBuilder();
               }
               costcread_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.parser(), extensionRegistry);
@@ -4896,7 +5161,7 @@ public final class Personhood {
             }
             case 74: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000100) == 0x00000100)) {
+              if (((bitField0_ & 0x00000100) != 0)) {
                 subBuilder = costvalue_.toBuilder();
               }
               costvalue_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.parser(), extensionRegistry);
@@ -4944,19 +5209,24 @@ public final class Personhood {
     private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costdarc_;
     /**
      * <code>required .byzcoin.Coin costdarc = 1;</code>
+     * @return Whether the costdarc field is set.
      */
+    @java.lang.Override
     public boolean hasCostdarc() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required .byzcoin.Coin costdarc = 1;</code>
+     * @return The costdarc.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostdarc() {
       return costdarc_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : costdarc_;
     }
     /**
      * <code>required .byzcoin.Coin costdarc = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder getCostdarcOrBuilder() {
       return costdarc_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : costdarc_;
     }
@@ -4965,19 +5235,24 @@ public final class Personhood {
     private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costcoin_;
     /**
      * <code>required .byzcoin.Coin costcoin = 2;</code>
+     * @return Whether the costcoin field is set.
      */
+    @java.lang.Override
     public boolean hasCostcoin() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required .byzcoin.Coin costcoin = 2;</code>
+     * @return The costcoin.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostcoin() {
       return costcoin_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : costcoin_;
     }
     /**
      * <code>required .byzcoin.Coin costcoin = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder getCostcoinOrBuilder() {
       return costcoin_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : costcoin_;
     }
@@ -4986,19 +5261,24 @@ public final class Personhood {
     private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costcredential_;
     /**
      * <code>required .byzcoin.Coin costcredential = 3;</code>
+     * @return Whether the costcredential field is set.
      */
+    @java.lang.Override
     public boolean hasCostcredential() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>required .byzcoin.Coin costcredential = 3;</code>
+     * @return The costcredential.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostcredential() {
       return costcredential_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : costcredential_;
     }
     /**
      * <code>required .byzcoin.Coin costcredential = 3;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder getCostcredentialOrBuilder() {
       return costcredential_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : costcredential_;
     }
@@ -5007,19 +5287,24 @@ public final class Personhood {
     private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costparty_;
     /**
      * <code>required .byzcoin.Coin costparty = 4;</code>
+     * @return Whether the costparty field is set.
      */
+    @java.lang.Override
     public boolean hasCostparty() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <code>required .byzcoin.Coin costparty = 4;</code>
+     * @return The costparty.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostparty() {
       return costparty_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : costparty_;
     }
     /**
      * <code>required .byzcoin.Coin costparty = 4;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder getCostpartyOrBuilder() {
       return costparty_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : costparty_;
     }
@@ -5028,13 +5313,17 @@ public final class Personhood {
     private com.google.protobuf.ByteString beneficiary_;
     /**
      * <code>required bytes beneficiary = 5;</code>
+     * @return Whether the beneficiary field is set.
      */
+    @java.lang.Override
     public boolean hasBeneficiary() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <code>required bytes beneficiary = 5;</code>
+     * @return The beneficiary.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getBeneficiary() {
       return beneficiary_;
     }
@@ -5043,19 +5332,24 @@ public final class Personhood {
     private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costropasci_;
     /**
      * <code>optional .byzcoin.Coin costropasci = 6;</code>
+     * @return Whether the costropasci field is set.
      */
+    @java.lang.Override
     public boolean hasCostropasci() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000020) != 0);
     }
     /**
      * <code>optional .byzcoin.Coin costropasci = 6;</code>
+     * @return The costropasci.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostropasci() {
       return costropasci_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : costropasci_;
     }
     /**
      * <code>optional .byzcoin.Coin costropasci = 6;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder getCostropasciOrBuilder() {
       return costropasci_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : costropasci_;
     }
@@ -5064,19 +5358,24 @@ public final class Personhood {
     private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costcwrite_;
     /**
      * <code>optional .byzcoin.Coin costcwrite = 7;</code>
+     * @return Whether the costcwrite field is set.
      */
+    @java.lang.Override
     public boolean hasCostcwrite() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000040) != 0);
     }
     /**
      * <code>optional .byzcoin.Coin costcwrite = 7;</code>
+     * @return The costcwrite.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostcwrite() {
       return costcwrite_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : costcwrite_;
     }
     /**
      * <code>optional .byzcoin.Coin costcwrite = 7;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder getCostcwriteOrBuilder() {
       return costcwrite_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : costcwrite_;
     }
@@ -5085,19 +5384,24 @@ public final class Personhood {
     private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costcread_;
     /**
      * <code>optional .byzcoin.Coin costcread = 8;</code>
+     * @return Whether the costcread field is set.
      */
+    @java.lang.Override
     public boolean hasCostcread() {
-      return ((bitField0_ & 0x00000080) == 0x00000080);
+      return ((bitField0_ & 0x00000080) != 0);
     }
     /**
      * <code>optional .byzcoin.Coin costcread = 8;</code>
+     * @return The costcread.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostcread() {
       return costcread_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : costcread_;
     }
     /**
      * <code>optional .byzcoin.Coin costcread = 8;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder getCostcreadOrBuilder() {
       return costcread_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : costcread_;
     }
@@ -5106,19 +5410,24 @@ public final class Personhood {
     private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costvalue_;
     /**
      * <code>optional .byzcoin.Coin costvalue = 9;</code>
+     * @return Whether the costvalue field is set.
      */
+    @java.lang.Override
     public boolean hasCostvalue() {
-      return ((bitField0_ & 0x00000100) == 0x00000100);
+      return ((bitField0_ & 0x00000100) != 0);
     }
     /**
      * <code>optional .byzcoin.Coin costvalue = 9;</code>
+     * @return The costvalue.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostvalue() {
       return costvalue_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : costvalue_;
     }
     /**
      * <code>optional .byzcoin.Coin costvalue = 9;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder getCostvalueOrBuilder() {
       return costvalue_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : costvalue_;
     }
@@ -5197,31 +5506,31 @@ public final class Personhood {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getCostdarc());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getCostcoin());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeMessage(3, getCostcredential());
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeMessage(4, getCostparty());
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeBytes(5, beneficiary_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         output.writeMessage(6, getCostropasci());
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         output.writeMessage(7, getCostcwrite());
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         output.writeMessage(8, getCostcread());
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000100) != 0)) {
         output.writeMessage(9, getCostvalue());
       }
       unknownFields.writeTo(output);
@@ -5233,39 +5542,39 @@ public final class Personhood {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getCostdarc());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getCostcoin());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getCostcredential());
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, getCostparty());
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(5, beneficiary_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(6, getCostropasci());
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(7, getCostcwrite());
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(8, getCostcread());
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000100) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(9, getCostvalue());
       }
@@ -5284,54 +5593,53 @@ public final class Personhood {
       }
       ch.epfl.dedis.lib.proto.Personhood.SpawnerStruct other = (ch.epfl.dedis.lib.proto.Personhood.SpawnerStruct) obj;
 
-      boolean result = true;
-      result = result && (hasCostdarc() == other.hasCostdarc());
+      if (hasCostdarc() != other.hasCostdarc()) return false;
       if (hasCostdarc()) {
-        result = result && getCostdarc()
-            .equals(other.getCostdarc());
+        if (!getCostdarc()
+            .equals(other.getCostdarc())) return false;
       }
-      result = result && (hasCostcoin() == other.hasCostcoin());
+      if (hasCostcoin() != other.hasCostcoin()) return false;
       if (hasCostcoin()) {
-        result = result && getCostcoin()
-            .equals(other.getCostcoin());
+        if (!getCostcoin()
+            .equals(other.getCostcoin())) return false;
       }
-      result = result && (hasCostcredential() == other.hasCostcredential());
+      if (hasCostcredential() != other.hasCostcredential()) return false;
       if (hasCostcredential()) {
-        result = result && getCostcredential()
-            .equals(other.getCostcredential());
+        if (!getCostcredential()
+            .equals(other.getCostcredential())) return false;
       }
-      result = result && (hasCostparty() == other.hasCostparty());
+      if (hasCostparty() != other.hasCostparty()) return false;
       if (hasCostparty()) {
-        result = result && getCostparty()
-            .equals(other.getCostparty());
+        if (!getCostparty()
+            .equals(other.getCostparty())) return false;
       }
-      result = result && (hasBeneficiary() == other.hasBeneficiary());
+      if (hasBeneficiary() != other.hasBeneficiary()) return false;
       if (hasBeneficiary()) {
-        result = result && getBeneficiary()
-            .equals(other.getBeneficiary());
+        if (!getBeneficiary()
+            .equals(other.getBeneficiary())) return false;
       }
-      result = result && (hasCostropasci() == other.hasCostropasci());
+      if (hasCostropasci() != other.hasCostropasci()) return false;
       if (hasCostropasci()) {
-        result = result && getCostropasci()
-            .equals(other.getCostropasci());
+        if (!getCostropasci()
+            .equals(other.getCostropasci())) return false;
       }
-      result = result && (hasCostcwrite() == other.hasCostcwrite());
+      if (hasCostcwrite() != other.hasCostcwrite()) return false;
       if (hasCostcwrite()) {
-        result = result && getCostcwrite()
-            .equals(other.getCostcwrite());
+        if (!getCostcwrite()
+            .equals(other.getCostcwrite())) return false;
       }
-      result = result && (hasCostcread() == other.hasCostcread());
+      if (hasCostcread() != other.hasCostcread()) return false;
       if (hasCostcread()) {
-        result = result && getCostcread()
-            .equals(other.getCostcread());
+        if (!getCostcread()
+            .equals(other.getCostcread())) return false;
       }
-      result = result && (hasCostvalue() == other.hasCostvalue());
+      if (hasCostvalue() != other.hasCostvalue()) return false;
       if (hasCostvalue()) {
-        result = result && getCostvalue()
-            .equals(other.getCostvalue());
+        if (!getCostvalue()
+            .equals(other.getCostvalue())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -5601,73 +5909,73 @@ public final class Personhood {
         ch.epfl.dedis.lib.proto.Personhood.SpawnerStruct result = new ch.epfl.dedis.lib.proto.Personhood.SpawnerStruct(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (costdarcBuilder_ == null) {
+            result.costdarc_ = costdarc_;
+          } else {
+            result.costdarc_ = costdarcBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
         }
-        if (costdarcBuilder_ == null) {
-          result.costdarc_ = costdarc_;
-        } else {
-          result.costdarc_ = costdarcBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (costcoinBuilder_ == null) {
+            result.costcoin_ = costcoin_;
+          } else {
+            result.costcoin_ = costcoinBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
         }
-        if (costcoinBuilder_ == null) {
-          result.costcoin_ = costcoin_;
-        } else {
-          result.costcoin_ = costcoinBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          if (costcredentialBuilder_ == null) {
+            result.costcredential_ = costcredential_;
+          } else {
+            result.costcredential_ = costcredentialBuilder_.build();
+          }
           to_bitField0_ |= 0x00000004;
         }
-        if (costcredentialBuilder_ == null) {
-          result.costcredential_ = costcredential_;
-        } else {
-          result.costcredential_ = costcredentialBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          if (costpartyBuilder_ == null) {
+            result.costparty_ = costparty_;
+          } else {
+            result.costparty_ = costpartyBuilder_.build();
+          }
           to_bitField0_ |= 0x00000008;
         }
-        if (costpartyBuilder_ == null) {
-          result.costparty_ = costparty_;
-        } else {
-          result.costparty_ = costpartyBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
           to_bitField0_ |= 0x00000010;
         }
         result.beneficiary_ = beneficiary_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((from_bitField0_ & 0x00000020) != 0)) {
+          if (costropasciBuilder_ == null) {
+            result.costropasci_ = costropasci_;
+          } else {
+            result.costropasci_ = costropasciBuilder_.build();
+          }
           to_bitField0_ |= 0x00000020;
         }
-        if (costropasciBuilder_ == null) {
-          result.costropasci_ = costropasci_;
-        } else {
-          result.costropasci_ = costropasciBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((from_bitField0_ & 0x00000040) != 0)) {
+          if (costcwriteBuilder_ == null) {
+            result.costcwrite_ = costcwrite_;
+          } else {
+            result.costcwrite_ = costcwriteBuilder_.build();
+          }
           to_bitField0_ |= 0x00000040;
         }
-        if (costcwriteBuilder_ == null) {
-          result.costcwrite_ = costcwrite_;
-        } else {
-          result.costcwrite_ = costcwriteBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+        if (((from_bitField0_ & 0x00000080) != 0)) {
+          if (costcreadBuilder_ == null) {
+            result.costcread_ = costcread_;
+          } else {
+            result.costcread_ = costcreadBuilder_.build();
+          }
           to_bitField0_ |= 0x00000080;
         }
-        if (costcreadBuilder_ == null) {
-          result.costcread_ = costcread_;
-        } else {
-          result.costcread_ = costcreadBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+        if (((from_bitField0_ & 0x00000100) != 0)) {
+          if (costvalueBuilder_ == null) {
+            result.costvalue_ = costvalue_;
+          } else {
+            result.costvalue_ = costvalueBuilder_.build();
+          }
           to_bitField0_ |= 0x00000100;
-        }
-        if (costvalueBuilder_ == null) {
-          result.costvalue_ = costvalue_;
-        } else {
-          result.costvalue_ = costvalueBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -5676,35 +5984,35 @@ public final class Personhood {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -5822,17 +6130,19 @@ public final class Personhood {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costdarc_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costdarc_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder> costdarcBuilder_;
       /**
        * <code>required .byzcoin.Coin costdarc = 1;</code>
+       * @return Whether the costdarc field is set.
        */
       public boolean hasCostdarc() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required .byzcoin.Coin costdarc = 1;</code>
+       * @return The costdarc.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostdarc() {
         if (costdarcBuilder_ == null) {
@@ -5876,7 +6186,7 @@ public final class Personhood {
        */
       public Builder mergeCostdarc(ch.epfl.dedis.lib.proto.ByzCoinProto.Coin value) {
         if (costdarcBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               costdarc_ != null &&
               costdarc_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance()) {
             costdarc_ =
@@ -5940,17 +6250,19 @@ public final class Personhood {
         return costdarcBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costcoin_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costcoin_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder> costcoinBuilder_;
       /**
        * <code>required .byzcoin.Coin costcoin = 2;</code>
+       * @return Whether the costcoin field is set.
        */
       public boolean hasCostcoin() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required .byzcoin.Coin costcoin = 2;</code>
+       * @return The costcoin.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostcoin() {
         if (costcoinBuilder_ == null) {
@@ -5994,7 +6306,7 @@ public final class Personhood {
        */
       public Builder mergeCostcoin(ch.epfl.dedis.lib.proto.ByzCoinProto.Coin value) {
         if (costcoinBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               costcoin_ != null &&
               costcoin_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance()) {
             costcoin_ =
@@ -6058,17 +6370,19 @@ public final class Personhood {
         return costcoinBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costcredential_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costcredential_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder> costcredentialBuilder_;
       /**
        * <code>required .byzcoin.Coin costcredential = 3;</code>
+       * @return Whether the costcredential field is set.
        */
       public boolean hasCostcredential() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>required .byzcoin.Coin costcredential = 3;</code>
+       * @return The costcredential.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostcredential() {
         if (costcredentialBuilder_ == null) {
@@ -6112,7 +6426,7 @@ public final class Personhood {
        */
       public Builder mergeCostcredential(ch.epfl.dedis.lib.proto.ByzCoinProto.Coin value) {
         if (costcredentialBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+          if (((bitField0_ & 0x00000004) != 0) &&
               costcredential_ != null &&
               costcredential_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance()) {
             costcredential_ =
@@ -6176,17 +6490,19 @@ public final class Personhood {
         return costcredentialBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costparty_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costparty_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder> costpartyBuilder_;
       /**
        * <code>required .byzcoin.Coin costparty = 4;</code>
+       * @return Whether the costparty field is set.
        */
       public boolean hasCostparty() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>required .byzcoin.Coin costparty = 4;</code>
+       * @return The costparty.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostparty() {
         if (costpartyBuilder_ == null) {
@@ -6230,7 +6546,7 @@ public final class Personhood {
        */
       public Builder mergeCostparty(ch.epfl.dedis.lib.proto.ByzCoinProto.Coin value) {
         if (costpartyBuilder_ == null) {
-          if (((bitField0_ & 0x00000008) == 0x00000008) &&
+          if (((bitField0_ & 0x00000008) != 0) &&
               costparty_ != null &&
               costparty_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance()) {
             costparty_ =
@@ -6297,18 +6613,24 @@ public final class Personhood {
       private com.google.protobuf.ByteString beneficiary_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes beneficiary = 5;</code>
+       * @return Whether the beneficiary field is set.
        */
+      @java.lang.Override
       public boolean hasBeneficiary() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <code>required bytes beneficiary = 5;</code>
+       * @return The beneficiary.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getBeneficiary() {
         return beneficiary_;
       }
       /**
        * <code>required bytes beneficiary = 5;</code>
+       * @param value The beneficiary to set.
+       * @return This builder for chaining.
        */
       public Builder setBeneficiary(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -6321,6 +6643,7 @@ public final class Personhood {
       }
       /**
        * <code>required bytes beneficiary = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearBeneficiary() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -6329,17 +6652,19 @@ public final class Personhood {
         return this;
       }
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costropasci_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costropasci_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder> costropasciBuilder_;
       /**
        * <code>optional .byzcoin.Coin costropasci = 6;</code>
+       * @return Whether the costropasci field is set.
        */
       public boolean hasCostropasci() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000020) != 0);
       }
       /**
        * <code>optional .byzcoin.Coin costropasci = 6;</code>
+       * @return The costropasci.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostropasci() {
         if (costropasciBuilder_ == null) {
@@ -6383,7 +6708,7 @@ public final class Personhood {
        */
       public Builder mergeCostropasci(ch.epfl.dedis.lib.proto.ByzCoinProto.Coin value) {
         if (costropasciBuilder_ == null) {
-          if (((bitField0_ & 0x00000020) == 0x00000020) &&
+          if (((bitField0_ & 0x00000020) != 0) &&
               costropasci_ != null &&
               costropasci_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance()) {
             costropasci_ =
@@ -6447,17 +6772,19 @@ public final class Personhood {
         return costropasciBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costcwrite_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costcwrite_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder> costcwriteBuilder_;
       /**
        * <code>optional .byzcoin.Coin costcwrite = 7;</code>
+       * @return Whether the costcwrite field is set.
        */
       public boolean hasCostcwrite() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
+        return ((bitField0_ & 0x00000040) != 0);
       }
       /**
        * <code>optional .byzcoin.Coin costcwrite = 7;</code>
+       * @return The costcwrite.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostcwrite() {
         if (costcwriteBuilder_ == null) {
@@ -6501,7 +6828,7 @@ public final class Personhood {
        */
       public Builder mergeCostcwrite(ch.epfl.dedis.lib.proto.ByzCoinProto.Coin value) {
         if (costcwriteBuilder_ == null) {
-          if (((bitField0_ & 0x00000040) == 0x00000040) &&
+          if (((bitField0_ & 0x00000040) != 0) &&
               costcwrite_ != null &&
               costcwrite_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance()) {
             costcwrite_ =
@@ -6565,17 +6892,19 @@ public final class Personhood {
         return costcwriteBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costcread_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costcread_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder> costcreadBuilder_;
       /**
        * <code>optional .byzcoin.Coin costcread = 8;</code>
+       * @return Whether the costcread field is set.
        */
       public boolean hasCostcread() {
-        return ((bitField0_ & 0x00000080) == 0x00000080);
+        return ((bitField0_ & 0x00000080) != 0);
       }
       /**
        * <code>optional .byzcoin.Coin costcread = 8;</code>
+       * @return The costcread.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostcread() {
         if (costcreadBuilder_ == null) {
@@ -6619,7 +6948,7 @@ public final class Personhood {
        */
       public Builder mergeCostcread(ch.epfl.dedis.lib.proto.ByzCoinProto.Coin value) {
         if (costcreadBuilder_ == null) {
-          if (((bitField0_ & 0x00000080) == 0x00000080) &&
+          if (((bitField0_ & 0x00000080) != 0) &&
               costcread_ != null &&
               costcread_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance()) {
             costcread_ =
@@ -6683,17 +7012,19 @@ public final class Personhood {
         return costcreadBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costvalue_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin costvalue_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder> costvalueBuilder_;
       /**
        * <code>optional .byzcoin.Coin costvalue = 9;</code>
+       * @return Whether the costvalue field is set.
        */
       public boolean hasCostvalue() {
-        return ((bitField0_ & 0x00000100) == 0x00000100);
+        return ((bitField0_ & 0x00000100) != 0);
       }
       /**
        * <code>optional .byzcoin.Coin costvalue = 9;</code>
+       * @return The costvalue.
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCostvalue() {
         if (costvalueBuilder_ == null) {
@@ -6737,7 +7068,7 @@ public final class Personhood {
        */
       public Builder mergeCostvalue(ch.epfl.dedis.lib.proto.ByzCoinProto.Coin value) {
         if (costvalueBuilder_ == null) {
-          if (((bitField0_ & 0x00000100) == 0x00000100) &&
+          if (((bitField0_ & 0x00000100) != 0) &&
               costvalue_ != null &&
               costvalue_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance()) {
             costvalue_ =
@@ -6866,6 +7197,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>required sint32 state = 1;</code>
+     * @return Whether the state field is set.
      */
     boolean hasState();
     /**
@@ -6877,6 +7209,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>required sint32 state = 1;</code>
+     * @return The state.
      */
     int getState();
 
@@ -6886,6 +7219,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>required sint32 organizers = 2;</code>
+     * @return Whether the organizers field is set.
      */
     boolean hasOrganizers();
     /**
@@ -6894,6 +7228,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>required sint32 organizers = 2;</code>
+     * @return The organizers.
      */
     int getOrganizers();
 
@@ -6904,6 +7239,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>repeated string finalizations = 3;</code>
+     * @return A list containing the finalizations.
      */
     java.util.List<java.lang.String>
         getFinalizationsList();
@@ -6914,6 +7250,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>repeated string finalizations = 3;</code>
+     * @return The count of finalizations.
      */
     int getFinalizationsCount();
     /**
@@ -6923,6 +7260,8 @@ public final class Personhood {
      * </pre>
      *
      * <code>repeated string finalizations = 3;</code>
+     * @param index The index of the element to return.
+     * @return The finalizations at the given index.
      */
     java.lang.String getFinalizations(int index);
     /**
@@ -6932,6 +7271,8 @@ public final class Personhood {
      * </pre>
      *
      * <code>repeated string finalizations = 3;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the finalizations at the given index.
      */
     com.google.protobuf.ByteString
         getFinalizationsBytes(int index);
@@ -6943,6 +7284,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>required .personhood.PopDesc description = 4;</code>
+     * @return Whether the description field is set.
      */
     boolean hasDescription();
     /**
@@ -6952,6 +7294,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>required .personhood.PopDesc description = 4;</code>
+     * @return The description.
      */
     ch.epfl.dedis.lib.proto.Personhood.PopDesc getDescription();
     /**
@@ -6970,6 +7313,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>required .personhood.Attendees attendees = 5;</code>
+     * @return Whether the attendees field is set.
      */
     boolean hasAttendees();
     /**
@@ -6978,6 +7322,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>required .personhood.Attendees attendees = 5;</code>
+     * @return The attendees.
      */
     ch.epfl.dedis.lib.proto.Personhood.Attendees getAttendees();
     /**
@@ -7044,6 +7389,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>required uint64 miningreward = 7;</code>
+     * @return Whether the miningreward field is set.
      */
     boolean hasMiningreward();
     /**
@@ -7052,6 +7398,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>required uint64 miningreward = 7;</code>
+     * @return The miningreward.
      */
     long getMiningreward();
 
@@ -7062,6 +7409,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>optional bytes previous = 8;</code>
+     * @return Whether the previous field is set.
      */
     boolean hasPrevious();
     /**
@@ -7071,6 +7419,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>optional bytes previous = 8;</code>
+     * @return The previous.
      */
     com.google.protobuf.ByteString getPrevious();
 
@@ -7081,6 +7430,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>optional bytes next = 9;</code>
+     * @return Whether the next field is set.
      */
     boolean hasNext();
     /**
@@ -7090,6 +7440,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>optional bytes next = 9;</code>
+     * @return The next.
      */
     com.google.protobuf.ByteString getNext();
   }
@@ -7100,7 +7451,7 @@ public final class Personhood {
    *
    * Protobuf type {@code personhood.PopPartyStruct}
    */
-  public  static final class PopPartyStruct extends
+  public static final class PopPartyStruct extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:personhood.PopPartyStruct)
       PopPartyStructOrBuilder {
@@ -7110,13 +7461,17 @@ public final class Personhood {
       super(builder);
     }
     private PopPartyStruct() {
-      state_ = 0;
-      organizers_ = 0;
       finalizations_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       miners_ = java.util.Collections.emptyList();
-      miningreward_ = 0L;
       previous_ = com.google.protobuf.ByteString.EMPTY;
       next_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new PopPartyStruct();
     }
 
     @java.lang.Override
@@ -7155,7 +7510,7 @@ public final class Personhood {
             }
             case 26: {
               com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+              if (!((mutable_bitField0_ & 0x00000004) != 0)) {
                 finalizations_ = new com.google.protobuf.LazyStringArrayList();
                 mutable_bitField0_ |= 0x00000004;
               }
@@ -7164,7 +7519,7 @@ public final class Personhood {
             }
             case 34: {
               ch.epfl.dedis.lib.proto.Personhood.PopDesc.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+              if (((bitField0_ & 0x00000004) != 0)) {
                 subBuilder = description_.toBuilder();
               }
               description_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.PopDesc.parser(), extensionRegistry);
@@ -7177,7 +7532,7 @@ public final class Personhood {
             }
             case 42: {
               ch.epfl.dedis.lib.proto.Personhood.Attendees.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000008) == 0x00000008)) {
+              if (((bitField0_ & 0x00000008) != 0)) {
                 subBuilder = attendees_.toBuilder();
               }
               attendees_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.Attendees.parser(), extensionRegistry);
@@ -7189,7 +7544,7 @@ public final class Personhood {
               break;
             }
             case 50: {
-              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+              if (!((mutable_bitField0_ & 0x00000020) != 0)) {
                 miners_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.Personhood.LRSTag>();
                 mutable_bitField0_ |= 0x00000020;
               }
@@ -7227,10 +7582,10 @@ public final class Personhood {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((mutable_bitField0_ & 0x00000004) != 0)) {
           finalizations_ = finalizations_.getUnmodifiableView();
         }
-        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((mutable_bitField0_ & 0x00000020) != 0)) {
           miners_ = java.util.Collections.unmodifiableList(miners_);
         }
         this.unknownFields = unknownFields.build();
@@ -7262,9 +7617,11 @@ public final class Personhood {
      * </pre>
      *
      * <code>required sint32 state = 1;</code>
+     * @return Whether the state field is set.
      */
+    @java.lang.Override
     public boolean hasState() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -7275,7 +7632,9 @@ public final class Personhood {
      * </pre>
      *
      * <code>required sint32 state = 1;</code>
+     * @return The state.
      */
+    @java.lang.Override
     public int getState() {
       return state_;
     }
@@ -7288,9 +7647,11 @@ public final class Personhood {
      * </pre>
      *
      * <code>required sint32 organizers = 2;</code>
+     * @return Whether the organizers field is set.
      */
+    @java.lang.Override
     public boolean hasOrganizers() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -7298,7 +7659,9 @@ public final class Personhood {
      * </pre>
      *
      * <code>required sint32 organizers = 2;</code>
+     * @return The organizers.
      */
+    @java.lang.Override
     public int getOrganizers() {
       return organizers_;
     }
@@ -7312,6 +7675,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>repeated string finalizations = 3;</code>
+     * @return A list containing the finalizations.
      */
     public com.google.protobuf.ProtocolStringList
         getFinalizationsList() {
@@ -7324,6 +7688,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>repeated string finalizations = 3;</code>
+     * @return The count of finalizations.
      */
     public int getFinalizationsCount() {
       return finalizations_.size();
@@ -7335,6 +7700,8 @@ public final class Personhood {
      * </pre>
      *
      * <code>repeated string finalizations = 3;</code>
+     * @param index The index of the element to return.
+     * @return The finalizations at the given index.
      */
     public java.lang.String getFinalizations(int index) {
       return finalizations_.get(index);
@@ -7346,6 +7713,8 @@ public final class Personhood {
      * </pre>
      *
      * <code>repeated string finalizations = 3;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the finalizations at the given index.
      */
     public com.google.protobuf.ByteString
         getFinalizationsBytes(int index) {
@@ -7361,9 +7730,11 @@ public final class Personhood {
      * </pre>
      *
      * <code>required .personhood.PopDesc description = 4;</code>
+     * @return Whether the description field is set.
      */
+    @java.lang.Override
     public boolean hasDescription() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -7372,7 +7743,9 @@ public final class Personhood {
      * </pre>
      *
      * <code>required .personhood.PopDesc description = 4;</code>
+     * @return The description.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.PopDesc getDescription() {
       return description_ == null ? ch.epfl.dedis.lib.proto.Personhood.PopDesc.getDefaultInstance() : description_;
     }
@@ -7384,6 +7757,7 @@ public final class Personhood {
      *
      * <code>required .personhood.PopDesc description = 4;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.PopDescOrBuilder getDescriptionOrBuilder() {
       return description_ == null ? ch.epfl.dedis.lib.proto.Personhood.PopDesc.getDefaultInstance() : description_;
     }
@@ -7396,9 +7770,11 @@ public final class Personhood {
      * </pre>
      *
      * <code>required .personhood.Attendees attendees = 5;</code>
+     * @return Whether the attendees field is set.
      */
+    @java.lang.Override
     public boolean hasAttendees() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <pre>
@@ -7406,7 +7782,9 @@ public final class Personhood {
      * </pre>
      *
      * <code>required .personhood.Attendees attendees = 5;</code>
+     * @return The attendees.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.Attendees getAttendees() {
       return attendees_ == null ? ch.epfl.dedis.lib.proto.Personhood.Attendees.getDefaultInstance() : attendees_;
     }
@@ -7417,6 +7795,7 @@ public final class Personhood {
      *
      * <code>required .personhood.Attendees attendees = 5;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.AttendeesOrBuilder getAttendeesOrBuilder() {
       return attendees_ == null ? ch.epfl.dedis.lib.proto.Personhood.Attendees.getDefaultInstance() : attendees_;
     }
@@ -7431,6 +7810,7 @@ public final class Personhood {
      *
      * <code>repeated .personhood.LRSTag miners = 6;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.Personhood.LRSTag> getMinersList() {
       return miners_;
     }
@@ -7442,6 +7822,7 @@ public final class Personhood {
      *
      * <code>repeated .personhood.LRSTag miners = 6;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.LRSTagOrBuilder>
         getMinersOrBuilderList() {
       return miners_;
@@ -7454,6 +7835,7 @@ public final class Personhood {
      *
      * <code>repeated .personhood.LRSTag miners = 6;</code>
      */
+    @java.lang.Override
     public int getMinersCount() {
       return miners_.size();
     }
@@ -7465,6 +7847,7 @@ public final class Personhood {
      *
      * <code>repeated .personhood.LRSTag miners = 6;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.LRSTag getMiners(int index) {
       return miners_.get(index);
     }
@@ -7476,6 +7859,7 @@ public final class Personhood {
      *
      * <code>repeated .personhood.LRSTag miners = 6;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.LRSTagOrBuilder getMinersOrBuilder(
         int index) {
       return miners_.get(index);
@@ -7489,9 +7873,11 @@ public final class Personhood {
      * </pre>
      *
      * <code>required uint64 miningreward = 7;</code>
+     * @return Whether the miningreward field is set.
      */
+    @java.lang.Override
     public boolean hasMiningreward() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <pre>
@@ -7499,7 +7885,9 @@ public final class Personhood {
      * </pre>
      *
      * <code>required uint64 miningreward = 7;</code>
+     * @return The miningreward.
      */
+    @java.lang.Override
     public long getMiningreward() {
       return miningreward_;
     }
@@ -7513,9 +7901,11 @@ public final class Personhood {
      * </pre>
      *
      * <code>optional bytes previous = 8;</code>
+     * @return Whether the previous field is set.
      */
+    @java.lang.Override
     public boolean hasPrevious() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000020) != 0);
     }
     /**
      * <pre>
@@ -7524,7 +7914,9 @@ public final class Personhood {
      * </pre>
      *
      * <code>optional bytes previous = 8;</code>
+     * @return The previous.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getPrevious() {
       return previous_;
     }
@@ -7538,9 +7930,11 @@ public final class Personhood {
      * </pre>
      *
      * <code>optional bytes next = 9;</code>
+     * @return Whether the next field is set.
      */
+    @java.lang.Override
     public boolean hasNext() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000040) != 0);
     }
     /**
      * <pre>
@@ -7549,7 +7943,9 @@ public final class Personhood {
      * </pre>
      *
      * <code>optional bytes next = 9;</code>
+     * @return The next.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getNext() {
       return next_;
     }
@@ -7598,31 +7994,31 @@ public final class Personhood {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeSInt32(1, state_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeSInt32(2, organizers_);
       }
       for (int i = 0; i < finalizations_.size(); i++) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 3, finalizations_.getRaw(i));
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeMessage(4, getDescription());
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeMessage(5, getAttendees());
       }
       for (int i = 0; i < miners_.size(); i++) {
         output.writeMessage(6, miners_.get(i));
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeUInt64(7, miningreward_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         output.writeBytes(8, previous_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         output.writeBytes(9, next_);
       }
       unknownFields.writeTo(output);
@@ -7634,11 +8030,11 @@ public final class Personhood {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(1, state_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(2, organizers_);
       }
@@ -7650,11 +8046,11 @@ public final class Personhood {
         size += dataSize;
         size += 1 * getFinalizationsList().size();
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, getDescription());
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(5, getAttendees());
       }
@@ -7662,15 +8058,15 @@ public final class Personhood {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(6, miners_.get(i));
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(7, miningreward_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(8, previous_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(9, next_);
       }
@@ -7689,48 +8085,47 @@ public final class Personhood {
       }
       ch.epfl.dedis.lib.proto.Personhood.PopPartyStruct other = (ch.epfl.dedis.lib.proto.Personhood.PopPartyStruct) obj;
 
-      boolean result = true;
-      result = result && (hasState() == other.hasState());
+      if (hasState() != other.hasState()) return false;
       if (hasState()) {
-        result = result && (getState()
-            == other.getState());
+        if (getState()
+            != other.getState()) return false;
       }
-      result = result && (hasOrganizers() == other.hasOrganizers());
+      if (hasOrganizers() != other.hasOrganizers()) return false;
       if (hasOrganizers()) {
-        result = result && (getOrganizers()
-            == other.getOrganizers());
+        if (getOrganizers()
+            != other.getOrganizers()) return false;
       }
-      result = result && getFinalizationsList()
-          .equals(other.getFinalizationsList());
-      result = result && (hasDescription() == other.hasDescription());
+      if (!getFinalizationsList()
+          .equals(other.getFinalizationsList())) return false;
+      if (hasDescription() != other.hasDescription()) return false;
       if (hasDescription()) {
-        result = result && getDescription()
-            .equals(other.getDescription());
+        if (!getDescription()
+            .equals(other.getDescription())) return false;
       }
-      result = result && (hasAttendees() == other.hasAttendees());
+      if (hasAttendees() != other.hasAttendees()) return false;
       if (hasAttendees()) {
-        result = result && getAttendees()
-            .equals(other.getAttendees());
+        if (!getAttendees()
+            .equals(other.getAttendees())) return false;
       }
-      result = result && getMinersList()
-          .equals(other.getMinersList());
-      result = result && (hasMiningreward() == other.hasMiningreward());
+      if (!getMinersList()
+          .equals(other.getMinersList())) return false;
+      if (hasMiningreward() != other.hasMiningreward()) return false;
       if (hasMiningreward()) {
-        result = result && (getMiningreward()
-            == other.getMiningreward());
+        if (getMiningreward()
+            != other.getMiningreward()) return false;
       }
-      result = result && (hasPrevious() == other.hasPrevious());
+      if (hasPrevious() != other.hasPrevious()) return false;
       if (hasPrevious()) {
-        result = result && getPrevious()
-            .equals(other.getPrevious());
+        if (!getPrevious()
+            .equals(other.getPrevious())) return false;
       }
-      result = result && (hasNext() == other.hasNext());
+      if (hasNext() != other.hasNext()) return false;
       if (hasNext()) {
-        result = result && getNext()
-            .equals(other.getNext());
+        if (!getNext()
+            .equals(other.getNext())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -7975,37 +8370,37 @@ public final class Personhood {
         ch.epfl.dedis.lib.proto.Personhood.PopPartyStruct result = new ch.epfl.dedis.lib.proto.Personhood.PopPartyStruct(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.state_ = state_;
           to_bitField0_ |= 0x00000001;
         }
-        result.state_ = state_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.organizers_ = organizers_;
           to_bitField0_ |= 0x00000002;
         }
-        result.organizers_ = organizers_;
-        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((bitField0_ & 0x00000004) != 0)) {
           finalizations_ = finalizations_.getUnmodifiableView();
           bitField0_ = (bitField0_ & ~0x00000004);
         }
         result.finalizations_ = finalizations_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          if (descriptionBuilder_ == null) {
+            result.description_ = description_;
+          } else {
+            result.description_ = descriptionBuilder_.build();
+          }
           to_bitField0_ |= 0x00000004;
         }
-        if (descriptionBuilder_ == null) {
-          result.description_ = description_;
-        } else {
-          result.description_ = descriptionBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          if (attendeesBuilder_ == null) {
+            result.attendees_ = attendees_;
+          } else {
+            result.attendees_ = attendeesBuilder_.build();
+          }
           to_bitField0_ |= 0x00000008;
         }
-        if (attendeesBuilder_ == null) {
-          result.attendees_ = attendees_;
-        } else {
-          result.attendees_ = attendeesBuilder_.build();
-        }
         if (minersBuilder_ == null) {
-          if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          if (((bitField0_ & 0x00000020) != 0)) {
             miners_ = java.util.Collections.unmodifiableList(miners_);
             bitField0_ = (bitField0_ & ~0x00000020);
           }
@@ -8013,15 +8408,15 @@ public final class Personhood {
         } else {
           result.miners_ = minersBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((from_bitField0_ & 0x00000040) != 0)) {
+          result.miningreward_ = miningreward_;
           to_bitField0_ |= 0x00000010;
         }
-        result.miningreward_ = miningreward_;
-        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+        if (((from_bitField0_ & 0x00000080) != 0)) {
           to_bitField0_ |= 0x00000020;
         }
         result.previous_ = previous_;
-        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+        if (((from_bitField0_ & 0x00000100) != 0)) {
           to_bitField0_ |= 0x00000040;
         }
         result.next_ = next_;
@@ -8032,35 +8427,35 @@ public final class Personhood {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -8194,9 +8589,11 @@ public final class Personhood {
        * </pre>
        *
        * <code>required sint32 state = 1;</code>
+       * @return Whether the state field is set.
        */
+      @java.lang.Override
       public boolean hasState() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -8207,7 +8604,9 @@ public final class Personhood {
        * </pre>
        *
        * <code>required sint32 state = 1;</code>
+       * @return The state.
        */
+      @java.lang.Override
       public int getState() {
         return state_;
       }
@@ -8220,6 +8619,8 @@ public final class Personhood {
        * </pre>
        *
        * <code>required sint32 state = 1;</code>
+       * @param value The state to set.
+       * @return This builder for chaining.
        */
       public Builder setState(int value) {
         bitField0_ |= 0x00000001;
@@ -8236,6 +8637,7 @@ public final class Personhood {
        * </pre>
        *
        * <code>required sint32 state = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearState() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -8251,9 +8653,11 @@ public final class Personhood {
        * </pre>
        *
        * <code>required sint32 organizers = 2;</code>
+       * @return Whether the organizers field is set.
        */
+      @java.lang.Override
       public boolean hasOrganizers() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -8261,7 +8665,9 @@ public final class Personhood {
        * </pre>
        *
        * <code>required sint32 organizers = 2;</code>
+       * @return The organizers.
        */
+      @java.lang.Override
       public int getOrganizers() {
         return organizers_;
       }
@@ -8271,6 +8677,8 @@ public final class Personhood {
        * </pre>
        *
        * <code>required sint32 organizers = 2;</code>
+       * @param value The organizers to set.
+       * @return This builder for chaining.
        */
       public Builder setOrganizers(int value) {
         bitField0_ |= 0x00000002;
@@ -8284,6 +8692,7 @@ public final class Personhood {
        * </pre>
        *
        * <code>required sint32 organizers = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearOrganizers() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -8294,7 +8703,7 @@ public final class Personhood {
 
       private com.google.protobuf.LazyStringList finalizations_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureFinalizationsIsMutable() {
-        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+        if (!((bitField0_ & 0x00000004) != 0)) {
           finalizations_ = new com.google.protobuf.LazyStringArrayList(finalizations_);
           bitField0_ |= 0x00000004;
          }
@@ -8306,6 +8715,7 @@ public final class Personhood {
        * </pre>
        *
        * <code>repeated string finalizations = 3;</code>
+       * @return A list containing the finalizations.
        */
       public com.google.protobuf.ProtocolStringList
           getFinalizationsList() {
@@ -8318,6 +8728,7 @@ public final class Personhood {
        * </pre>
        *
        * <code>repeated string finalizations = 3;</code>
+       * @return The count of finalizations.
        */
       public int getFinalizationsCount() {
         return finalizations_.size();
@@ -8329,6 +8740,8 @@ public final class Personhood {
        * </pre>
        *
        * <code>repeated string finalizations = 3;</code>
+       * @param index The index of the element to return.
+       * @return The finalizations at the given index.
        */
       public java.lang.String getFinalizations(int index) {
         return finalizations_.get(index);
@@ -8340,6 +8753,8 @@ public final class Personhood {
        * </pre>
        *
        * <code>repeated string finalizations = 3;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the finalizations at the given index.
        */
       public com.google.protobuf.ByteString
           getFinalizationsBytes(int index) {
@@ -8352,6 +8767,9 @@ public final class Personhood {
        * </pre>
        *
        * <code>repeated string finalizations = 3;</code>
+       * @param index The index to set the value at.
+       * @param value The finalizations to set.
+       * @return This builder for chaining.
        */
       public Builder setFinalizations(
           int index, java.lang.String value) {
@@ -8370,6 +8788,8 @@ public final class Personhood {
        * </pre>
        *
        * <code>repeated string finalizations = 3;</code>
+       * @param value The finalizations to add.
+       * @return This builder for chaining.
        */
       public Builder addFinalizations(
           java.lang.String value) {
@@ -8388,6 +8808,8 @@ public final class Personhood {
        * </pre>
        *
        * <code>repeated string finalizations = 3;</code>
+       * @param values The finalizations to add.
+       * @return This builder for chaining.
        */
       public Builder addAllFinalizations(
           java.lang.Iterable<java.lang.String> values) {
@@ -8404,6 +8826,7 @@ public final class Personhood {
        * </pre>
        *
        * <code>repeated string finalizations = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearFinalizations() {
         finalizations_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -8418,6 +8841,8 @@ public final class Personhood {
        * </pre>
        *
        * <code>repeated string finalizations = 3;</code>
+       * @param value The bytes of the finalizations to add.
+       * @return This builder for chaining.
        */
       public Builder addFinalizationsBytes(
           com.google.protobuf.ByteString value) {
@@ -8430,7 +8855,7 @@ public final class Personhood {
         return this;
       }
 
-      private ch.epfl.dedis.lib.proto.Personhood.PopDesc description_ = null;
+      private ch.epfl.dedis.lib.proto.Personhood.PopDesc description_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.Personhood.PopDesc, ch.epfl.dedis.lib.proto.Personhood.PopDesc.Builder, ch.epfl.dedis.lib.proto.Personhood.PopDescOrBuilder> descriptionBuilder_;
       /**
@@ -8440,9 +8865,10 @@ public final class Personhood {
        * </pre>
        *
        * <code>required .personhood.PopDesc description = 4;</code>
+       * @return Whether the description field is set.
        */
       public boolean hasDescription() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <pre>
@@ -8451,6 +8877,7 @@ public final class Personhood {
        * </pre>
        *
        * <code>required .personhood.PopDesc description = 4;</code>
+       * @return The description.
        */
       public ch.epfl.dedis.lib.proto.Personhood.PopDesc getDescription() {
         if (descriptionBuilder_ == null) {
@@ -8509,7 +8936,7 @@ public final class Personhood {
        */
       public Builder mergeDescription(ch.epfl.dedis.lib.proto.Personhood.PopDesc value) {
         if (descriptionBuilder_ == null) {
-          if (((bitField0_ & 0x00000008) == 0x00000008) &&
+          if (((bitField0_ & 0x00000008) != 0) &&
               description_ != null &&
               description_ != ch.epfl.dedis.lib.proto.Personhood.PopDesc.getDefaultInstance()) {
             description_ =
@@ -8593,7 +9020,7 @@ public final class Personhood {
         return descriptionBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.Personhood.Attendees attendees_ = null;
+      private ch.epfl.dedis.lib.proto.Personhood.Attendees attendees_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.Personhood.Attendees, ch.epfl.dedis.lib.proto.Personhood.Attendees.Builder, ch.epfl.dedis.lib.proto.Personhood.AttendeesOrBuilder> attendeesBuilder_;
       /**
@@ -8602,9 +9029,10 @@ public final class Personhood {
        * </pre>
        *
        * <code>required .personhood.Attendees attendees = 5;</code>
+       * @return Whether the attendees field is set.
        */
       public boolean hasAttendees() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <pre>
@@ -8612,6 +9040,7 @@ public final class Personhood {
        * </pre>
        *
        * <code>required .personhood.Attendees attendees = 5;</code>
+       * @return The attendees.
        */
       public ch.epfl.dedis.lib.proto.Personhood.Attendees getAttendees() {
         if (attendeesBuilder_ == null) {
@@ -8667,7 +9096,7 @@ public final class Personhood {
        */
       public Builder mergeAttendees(ch.epfl.dedis.lib.proto.Personhood.Attendees value) {
         if (attendeesBuilder_ == null) {
-          if (((bitField0_ & 0x00000010) == 0x00000010) &&
+          if (((bitField0_ & 0x00000010) != 0) &&
               attendees_ != null &&
               attendees_ != ch.epfl.dedis.lib.proto.Personhood.Attendees.getDefaultInstance()) {
             attendees_ =
@@ -8750,7 +9179,7 @@ public final class Personhood {
       private java.util.List<ch.epfl.dedis.lib.proto.Personhood.LRSTag> miners_ =
         java.util.Collections.emptyList();
       private void ensureMinersIsMutable() {
-        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
+        if (!((bitField0_ & 0x00000020) != 0)) {
           miners_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.Personhood.LRSTag>(miners_);
           bitField0_ |= 0x00000020;
          }
@@ -9069,7 +9498,7 @@ public final class Personhood {
           minersBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.Personhood.LRSTag, ch.epfl.dedis.lib.proto.Personhood.LRSTag.Builder, ch.epfl.dedis.lib.proto.Personhood.LRSTagOrBuilder>(
                   miners_,
-                  ((bitField0_ & 0x00000020) == 0x00000020),
+                  ((bitField0_ & 0x00000020) != 0),
                   getParentForChildren(),
                   isClean());
           miners_ = null;
@@ -9084,9 +9513,11 @@ public final class Personhood {
        * </pre>
        *
        * <code>required uint64 miningreward = 7;</code>
+       * @return Whether the miningreward field is set.
        */
+      @java.lang.Override
       public boolean hasMiningreward() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
+        return ((bitField0_ & 0x00000040) != 0);
       }
       /**
        * <pre>
@@ -9094,7 +9525,9 @@ public final class Personhood {
        * </pre>
        *
        * <code>required uint64 miningreward = 7;</code>
+       * @return The miningreward.
        */
+      @java.lang.Override
       public long getMiningreward() {
         return miningreward_;
       }
@@ -9104,6 +9537,8 @@ public final class Personhood {
        * </pre>
        *
        * <code>required uint64 miningreward = 7;</code>
+       * @param value The miningreward to set.
+       * @return This builder for chaining.
        */
       public Builder setMiningreward(long value) {
         bitField0_ |= 0x00000040;
@@ -9117,6 +9552,7 @@ public final class Personhood {
        * </pre>
        *
        * <code>required uint64 miningreward = 7;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMiningreward() {
         bitField0_ = (bitField0_ & ~0x00000040);
@@ -9133,9 +9569,11 @@ public final class Personhood {
        * </pre>
        *
        * <code>optional bytes previous = 8;</code>
+       * @return Whether the previous field is set.
        */
+      @java.lang.Override
       public boolean hasPrevious() {
-        return ((bitField0_ & 0x00000080) == 0x00000080);
+        return ((bitField0_ & 0x00000080) != 0);
       }
       /**
        * <pre>
@@ -9144,7 +9582,9 @@ public final class Personhood {
        * </pre>
        *
        * <code>optional bytes previous = 8;</code>
+       * @return The previous.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getPrevious() {
         return previous_;
       }
@@ -9155,6 +9595,8 @@ public final class Personhood {
        * </pre>
        *
        * <code>optional bytes previous = 8;</code>
+       * @param value The previous to set.
+       * @return This builder for chaining.
        */
       public Builder setPrevious(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -9172,6 +9614,7 @@ public final class Personhood {
        * </pre>
        *
        * <code>optional bytes previous = 8;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPrevious() {
         bitField0_ = (bitField0_ & ~0x00000080);
@@ -9188,9 +9631,11 @@ public final class Personhood {
        * </pre>
        *
        * <code>optional bytes next = 9;</code>
+       * @return Whether the next field is set.
        */
+      @java.lang.Override
       public boolean hasNext() {
-        return ((bitField0_ & 0x00000100) == 0x00000100);
+        return ((bitField0_ & 0x00000100) != 0);
       }
       /**
        * <pre>
@@ -9199,7 +9644,9 @@ public final class Personhood {
        * </pre>
        *
        * <code>optional bytes next = 9;</code>
+       * @return The next.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getNext() {
         return next_;
       }
@@ -9210,6 +9657,8 @@ public final class Personhood {
        * </pre>
        *
        * <code>optional bytes next = 9;</code>
+       * @param value The next to set.
+       * @return This builder for chaining.
        */
       public Builder setNext(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -9227,6 +9676,7 @@ public final class Personhood {
        * </pre>
        *
        * <code>optional bytes next = 9;</code>
+       * @return This builder for chaining.
        */
       public Builder clearNext() {
         bitField0_ = (bitField0_ & ~0x00000100);
@@ -9297,6 +9747,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>required string name = 1;</code>
+     * @return Whether the name field is set.
      */
     boolean hasName();
     /**
@@ -9305,6 +9756,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>required string name = 1;</code>
+     * @return The name.
      */
     java.lang.String getName();
     /**
@@ -9313,6 +9765,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>required string name = 1;</code>
+     * @return The bytes for name.
      */
     com.google.protobuf.ByteString
         getNameBytes();
@@ -9323,6 +9776,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>required string purpose = 2;</code>
+     * @return Whether the purpose field is set.
      */
     boolean hasPurpose();
     /**
@@ -9331,6 +9785,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>required string purpose = 2;</code>
+     * @return The purpose.
      */
     java.lang.String getPurpose();
     /**
@@ -9339,6 +9794,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>required string purpose = 2;</code>
+     * @return The bytes for purpose.
      */
     com.google.protobuf.ByteString
         getPurposeBytes();
@@ -9349,6 +9805,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>required uint64 datetime = 3;</code>
+     * @return Whether the datetime field is set.
      */
     boolean hasDatetime();
     /**
@@ -9357,6 +9814,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>required uint64 datetime = 3;</code>
+     * @return The datetime.
      */
     long getDatetime();
 
@@ -9366,6 +9824,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>required string location = 4;</code>
+     * @return Whether the location field is set.
      */
     boolean hasLocation();
     /**
@@ -9374,6 +9833,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>required string location = 4;</code>
+     * @return The location.
      */
     java.lang.String getLocation();
     /**
@@ -9382,6 +9842,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>required string location = 4;</code>
+     * @return The bytes for location.
      */
     com.google.protobuf.ByteString
         getLocationBytes();
@@ -9393,7 +9854,7 @@ public final class Personhood {
    *
    * Protobuf type {@code personhood.PopDesc}
    */
-  public  static final class PopDesc extends
+  public static final class PopDesc extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:personhood.PopDesc)
       PopDescOrBuilder {
@@ -9405,8 +9866,14 @@ public final class Personhood {
     private PopDesc() {
       name_ = "";
       purpose_ = "";
-      datetime_ = 0L;
       location_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new PopDesc();
     }
 
     @java.lang.Override
@@ -9497,9 +9964,11 @@ public final class Personhood {
      * </pre>
      *
      * <code>required string name = 1;</code>
+     * @return Whether the name field is set.
      */
+    @java.lang.Override
     public boolean hasName() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -9507,7 +9976,9 @@ public final class Personhood {
      * </pre>
      *
      * <code>required string name = 1;</code>
+     * @return The name.
      */
+    @java.lang.Override
     public java.lang.String getName() {
       java.lang.Object ref = name_;
       if (ref instanceof java.lang.String) {
@@ -9528,7 +9999,9 @@ public final class Personhood {
      * </pre>
      *
      * <code>required string name = 1;</code>
+     * @return The bytes for name.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getNameBytes() {
       java.lang.Object ref = name_;
@@ -9551,9 +10024,11 @@ public final class Personhood {
      * </pre>
      *
      * <code>required string purpose = 2;</code>
+     * @return Whether the purpose field is set.
      */
+    @java.lang.Override
     public boolean hasPurpose() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -9561,7 +10036,9 @@ public final class Personhood {
      * </pre>
      *
      * <code>required string purpose = 2;</code>
+     * @return The purpose.
      */
+    @java.lang.Override
     public java.lang.String getPurpose() {
       java.lang.Object ref = purpose_;
       if (ref instanceof java.lang.String) {
@@ -9582,7 +10059,9 @@ public final class Personhood {
      * </pre>
      *
      * <code>required string purpose = 2;</code>
+     * @return The bytes for purpose.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getPurposeBytes() {
       java.lang.Object ref = purpose_;
@@ -9605,9 +10084,11 @@ public final class Personhood {
      * </pre>
      *
      * <code>required uint64 datetime = 3;</code>
+     * @return Whether the datetime field is set.
      */
+    @java.lang.Override
     public boolean hasDatetime() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -9615,7 +10096,9 @@ public final class Personhood {
      * </pre>
      *
      * <code>required uint64 datetime = 3;</code>
+     * @return The datetime.
      */
+    @java.lang.Override
     public long getDatetime() {
       return datetime_;
     }
@@ -9628,9 +10111,11 @@ public final class Personhood {
      * </pre>
      *
      * <code>required string location = 4;</code>
+     * @return Whether the location field is set.
      */
+    @java.lang.Override
     public boolean hasLocation() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <pre>
@@ -9638,7 +10123,9 @@ public final class Personhood {
      * </pre>
      *
      * <code>required string location = 4;</code>
+     * @return The location.
      */
+    @java.lang.Override
     public java.lang.String getLocation() {
       java.lang.Object ref = location_;
       if (ref instanceof java.lang.String) {
@@ -9659,7 +10146,9 @@ public final class Personhood {
      * </pre>
      *
      * <code>required string location = 4;</code>
+     * @return The bytes for location.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getLocationBytes() {
       java.lang.Object ref = location_;
@@ -9704,16 +10193,16 @@ public final class Personhood {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, name_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, purpose_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeUInt64(3, datetime_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 4, location_);
       }
       unknownFields.writeTo(output);
@@ -9725,17 +10214,17 @@ public final class Personhood {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, name_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, purpose_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(3, datetime_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, location_);
       }
       size += unknownFields.getSerializedSize();
@@ -9753,29 +10242,28 @@ public final class Personhood {
       }
       ch.epfl.dedis.lib.proto.Personhood.PopDesc other = (ch.epfl.dedis.lib.proto.Personhood.PopDesc) obj;
 
-      boolean result = true;
-      result = result && (hasName() == other.hasName());
+      if (hasName() != other.hasName()) return false;
       if (hasName()) {
-        result = result && getName()
-            .equals(other.getName());
+        if (!getName()
+            .equals(other.getName())) return false;
       }
-      result = result && (hasPurpose() == other.hasPurpose());
+      if (hasPurpose() != other.hasPurpose()) return false;
       if (hasPurpose()) {
-        result = result && getPurpose()
-            .equals(other.getPurpose());
+        if (!getPurpose()
+            .equals(other.getPurpose())) return false;
       }
-      result = result && (hasDatetime() == other.hasDatetime());
+      if (hasDatetime() != other.hasDatetime()) return false;
       if (hasDatetime()) {
-        result = result && (getDatetime()
-            == other.getDatetime());
+        if (getDatetime()
+            != other.getDatetime()) return false;
       }
-      result = result && (hasLocation() == other.hasLocation());
+      if (hasLocation() != other.hasLocation()) return false;
       if (hasLocation()) {
-        result = result && getLocation()
-            .equals(other.getLocation());
+        if (!getLocation()
+            .equals(other.getLocation())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -9975,19 +10463,19 @@ public final class Personhood {
         ch.epfl.dedis.lib.proto.Personhood.PopDesc result = new ch.epfl.dedis.lib.proto.Personhood.PopDesc(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.name_ = name_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.purpose_ = purpose_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.datetime_ = datetime_;
           to_bitField0_ |= 0x00000004;
         }
-        result.datetime_ = datetime_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
           to_bitField0_ |= 0x00000008;
         }
         result.location_ = location_;
@@ -9998,35 +10486,35 @@ public final class Personhood {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -10107,9 +10595,10 @@ public final class Personhood {
        * </pre>
        *
        * <code>required string name = 1;</code>
+       * @return Whether the name field is set.
        */
       public boolean hasName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -10117,6 +10606,7 @@ public final class Personhood {
        * </pre>
        *
        * <code>required string name = 1;</code>
+       * @return The name.
        */
       public java.lang.String getName() {
         java.lang.Object ref = name_;
@@ -10138,6 +10628,7 @@ public final class Personhood {
        * </pre>
        *
        * <code>required string name = 1;</code>
+       * @return The bytes for name.
        */
       public com.google.protobuf.ByteString
           getNameBytes() {
@@ -10158,6 +10649,8 @@ public final class Personhood {
        * </pre>
        *
        * <code>required string name = 1;</code>
+       * @param value The name to set.
+       * @return This builder for chaining.
        */
       public Builder setName(
           java.lang.String value) {
@@ -10175,6 +10668,7 @@ public final class Personhood {
        * </pre>
        *
        * <code>required string name = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearName() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -10188,6 +10682,8 @@ public final class Personhood {
        * </pre>
        *
        * <code>required string name = 1;</code>
+       * @param value The bytes for name to set.
+       * @return This builder for chaining.
        */
       public Builder setNameBytes(
           com.google.protobuf.ByteString value) {
@@ -10207,9 +10703,10 @@ public final class Personhood {
        * </pre>
        *
        * <code>required string purpose = 2;</code>
+       * @return Whether the purpose field is set.
        */
       public boolean hasPurpose() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -10217,6 +10714,7 @@ public final class Personhood {
        * </pre>
        *
        * <code>required string purpose = 2;</code>
+       * @return The purpose.
        */
       public java.lang.String getPurpose() {
         java.lang.Object ref = purpose_;
@@ -10238,6 +10736,7 @@ public final class Personhood {
        * </pre>
        *
        * <code>required string purpose = 2;</code>
+       * @return The bytes for purpose.
        */
       public com.google.protobuf.ByteString
           getPurposeBytes() {
@@ -10258,6 +10757,8 @@ public final class Personhood {
        * </pre>
        *
        * <code>required string purpose = 2;</code>
+       * @param value The purpose to set.
+       * @return This builder for chaining.
        */
       public Builder setPurpose(
           java.lang.String value) {
@@ -10275,6 +10776,7 @@ public final class Personhood {
        * </pre>
        *
        * <code>required string purpose = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPurpose() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -10288,6 +10790,8 @@ public final class Personhood {
        * </pre>
        *
        * <code>required string purpose = 2;</code>
+       * @param value The bytes for purpose to set.
+       * @return This builder for chaining.
        */
       public Builder setPurposeBytes(
           com.google.protobuf.ByteString value) {
@@ -10307,9 +10811,11 @@ public final class Personhood {
        * </pre>
        *
        * <code>required uint64 datetime = 3;</code>
+       * @return Whether the datetime field is set.
        */
+      @java.lang.Override
       public boolean hasDatetime() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -10317,7 +10823,9 @@ public final class Personhood {
        * </pre>
        *
        * <code>required uint64 datetime = 3;</code>
+       * @return The datetime.
        */
+      @java.lang.Override
       public long getDatetime() {
         return datetime_;
       }
@@ -10327,6 +10835,8 @@ public final class Personhood {
        * </pre>
        *
        * <code>required uint64 datetime = 3;</code>
+       * @param value The datetime to set.
+       * @return This builder for chaining.
        */
       public Builder setDatetime(long value) {
         bitField0_ |= 0x00000004;
@@ -10340,6 +10850,7 @@ public final class Personhood {
        * </pre>
        *
        * <code>required uint64 datetime = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearDatetime() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -10355,9 +10866,10 @@ public final class Personhood {
        * </pre>
        *
        * <code>required string location = 4;</code>
+       * @return Whether the location field is set.
        */
       public boolean hasLocation() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <pre>
@@ -10365,6 +10877,7 @@ public final class Personhood {
        * </pre>
        *
        * <code>required string location = 4;</code>
+       * @return The location.
        */
       public java.lang.String getLocation() {
         java.lang.Object ref = location_;
@@ -10386,6 +10899,7 @@ public final class Personhood {
        * </pre>
        *
        * <code>required string location = 4;</code>
+       * @return The bytes for location.
        */
       public com.google.protobuf.ByteString
           getLocationBytes() {
@@ -10406,6 +10920,8 @@ public final class Personhood {
        * </pre>
        *
        * <code>required string location = 4;</code>
+       * @param value The location to set.
+       * @return This builder for chaining.
        */
       public Builder setLocation(
           java.lang.String value) {
@@ -10423,6 +10939,7 @@ public final class Personhood {
        * </pre>
        *
        * <code>required string location = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearLocation() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -10436,6 +10953,8 @@ public final class Personhood {
        * </pre>
        *
        * <code>required string location = 4;</code>
+       * @param value The bytes for location to set.
+       * @return This builder for chaining.
        */
       public Builder setLocationBytes(
           com.google.protobuf.ByteString value) {
@@ -10510,6 +11029,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>optional .personhood.PopDesc desc = 1;</code>
+     * @return Whether the desc field is set.
      */
     boolean hasDesc();
     /**
@@ -10518,6 +11038,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>optional .personhood.PopDesc desc = 1;</code>
+     * @return The desc.
      */
     ch.epfl.dedis.lib.proto.Personhood.PopDesc getDesc();
     /**
@@ -10535,6 +11056,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>required .personhood.Attendees attendees = 2;</code>
+     * @return Whether the attendees field is set.
      */
     boolean hasAttendees();
     /**
@@ -10543,6 +11065,7 @@ public final class Personhood {
      * </pre>
      *
      * <code>required .personhood.Attendees attendees = 2;</code>
+     * @return The attendees.
      */
     ch.epfl.dedis.lib.proto.Personhood.Attendees getAttendees();
     /**
@@ -10562,7 +11085,7 @@ public final class Personhood {
    *
    * Protobuf type {@code personhood.FinalStatement}
    */
-  public  static final class FinalStatement extends
+  public static final class FinalStatement extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:personhood.FinalStatement)
       FinalStatementOrBuilder {
@@ -10572,6 +11095,13 @@ public final class Personhood {
       super(builder);
     }
     private FinalStatement() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new FinalStatement();
     }
 
     @java.lang.Override
@@ -10600,7 +11130,7 @@ public final class Personhood {
               break;
             case 10: {
               ch.epfl.dedis.lib.proto.Personhood.PopDesc.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = desc_.toBuilder();
               }
               desc_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.PopDesc.parser(), extensionRegistry);
@@ -10613,7 +11143,7 @@ public final class Personhood {
             }
             case 18: {
               ch.epfl.dedis.lib.proto.Personhood.Attendees.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = attendees_.toBuilder();
               }
               attendees_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.Attendees.parser(), extensionRegistry);
@@ -10665,9 +11195,11 @@ public final class Personhood {
      * </pre>
      *
      * <code>optional .personhood.PopDesc desc = 1;</code>
+     * @return Whether the desc field is set.
      */
+    @java.lang.Override
     public boolean hasDesc() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -10675,7 +11207,9 @@ public final class Personhood {
      * </pre>
      *
      * <code>optional .personhood.PopDesc desc = 1;</code>
+     * @return The desc.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.PopDesc getDesc() {
       return desc_ == null ? ch.epfl.dedis.lib.proto.Personhood.PopDesc.getDefaultInstance() : desc_;
     }
@@ -10686,6 +11220,7 @@ public final class Personhood {
      *
      * <code>optional .personhood.PopDesc desc = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.PopDescOrBuilder getDescOrBuilder() {
       return desc_ == null ? ch.epfl.dedis.lib.proto.Personhood.PopDesc.getDefaultInstance() : desc_;
     }
@@ -10698,9 +11233,11 @@ public final class Personhood {
      * </pre>
      *
      * <code>required .personhood.Attendees attendees = 2;</code>
+     * @return Whether the attendees field is set.
      */
+    @java.lang.Override
     public boolean hasAttendees() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -10708,7 +11245,9 @@ public final class Personhood {
      * </pre>
      *
      * <code>required .personhood.Attendees attendees = 2;</code>
+     * @return The attendees.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.Attendees getAttendees() {
       return attendees_ == null ? ch.epfl.dedis.lib.proto.Personhood.Attendees.getDefaultInstance() : attendees_;
     }
@@ -10719,6 +11258,7 @@ public final class Personhood {
      *
      * <code>required .personhood.Attendees attendees = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.AttendeesOrBuilder getAttendeesOrBuilder() {
       return attendees_ == null ? ch.epfl.dedis.lib.proto.Personhood.Attendees.getDefaultInstance() : attendees_;
     }
@@ -10747,10 +11287,10 @@ public final class Personhood {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getDesc());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getAttendees());
       }
       unknownFields.writeTo(output);
@@ -10762,11 +11302,11 @@ public final class Personhood {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getDesc());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getAttendees());
       }
@@ -10785,19 +11325,18 @@ public final class Personhood {
       }
       ch.epfl.dedis.lib.proto.Personhood.FinalStatement other = (ch.epfl.dedis.lib.proto.Personhood.FinalStatement) obj;
 
-      boolean result = true;
-      result = result && (hasDesc() == other.hasDesc());
+      if (hasDesc() != other.hasDesc()) return false;
       if (hasDesc()) {
-        result = result && getDesc()
-            .equals(other.getDesc());
+        if (!getDesc()
+            .equals(other.getDesc())) return false;
       }
-      result = result && (hasAttendees() == other.hasAttendees());
+      if (hasAttendees() != other.hasAttendees()) return false;
       if (hasAttendees()) {
-        result = result && getAttendees()
-            .equals(other.getAttendees());
+        if (!getAttendees()
+            .equals(other.getAttendees())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -10995,21 +11534,21 @@ public final class Personhood {
         ch.epfl.dedis.lib.proto.Personhood.FinalStatement result = new ch.epfl.dedis.lib.proto.Personhood.FinalStatement(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (descBuilder_ == null) {
+            result.desc_ = desc_;
+          } else {
+            result.desc_ = descBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
         }
-        if (descBuilder_ == null) {
-          result.desc_ = desc_;
-        } else {
-          result.desc_ = descBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (attendeesBuilder_ == null) {
+            result.attendees_ = attendees_;
+          } else {
+            result.attendees_ = attendeesBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
-        }
-        if (attendeesBuilder_ == null) {
-          result.attendees_ = attendees_;
-        } else {
-          result.attendees_ = attendeesBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -11018,35 +11557,35 @@ public final class Personhood {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -11104,7 +11643,7 @@ public final class Personhood {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.lib.proto.Personhood.PopDesc desc_ = null;
+      private ch.epfl.dedis.lib.proto.Personhood.PopDesc desc_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.Personhood.PopDesc, ch.epfl.dedis.lib.proto.Personhood.PopDesc.Builder, ch.epfl.dedis.lib.proto.Personhood.PopDescOrBuilder> descBuilder_;
       /**
@@ -11113,9 +11652,10 @@ public final class Personhood {
        * </pre>
        *
        * <code>optional .personhood.PopDesc desc = 1;</code>
+       * @return Whether the desc field is set.
        */
       public boolean hasDesc() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -11123,6 +11663,7 @@ public final class Personhood {
        * </pre>
        *
        * <code>optional .personhood.PopDesc desc = 1;</code>
+       * @return The desc.
        */
       public ch.epfl.dedis.lib.proto.Personhood.PopDesc getDesc() {
         if (descBuilder_ == null) {
@@ -11178,7 +11719,7 @@ public final class Personhood {
        */
       public Builder mergeDesc(ch.epfl.dedis.lib.proto.Personhood.PopDesc value) {
         if (descBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               desc_ != null &&
               desc_ != ch.epfl.dedis.lib.proto.Personhood.PopDesc.getDefaultInstance()) {
             desc_ =
@@ -11258,7 +11799,7 @@ public final class Personhood {
         return descBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.Personhood.Attendees attendees_ = null;
+      private ch.epfl.dedis.lib.proto.Personhood.Attendees attendees_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.Personhood.Attendees, ch.epfl.dedis.lib.proto.Personhood.Attendees.Builder, ch.epfl.dedis.lib.proto.Personhood.AttendeesOrBuilder> attendeesBuilder_;
       /**
@@ -11267,9 +11808,10 @@ public final class Personhood {
        * </pre>
        *
        * <code>required .personhood.Attendees attendees = 2;</code>
+       * @return Whether the attendees field is set.
        */
       public boolean hasAttendees() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -11277,6 +11819,7 @@ public final class Personhood {
        * </pre>
        *
        * <code>required .personhood.Attendees attendees = 2;</code>
+       * @return The attendees.
        */
       public ch.epfl.dedis.lib.proto.Personhood.Attendees getAttendees() {
         if (attendeesBuilder_ == null) {
@@ -11332,7 +11875,7 @@ public final class Personhood {
        */
       public Builder mergeAttendees(ch.epfl.dedis.lib.proto.Personhood.Attendees value) {
         if (attendeesBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               attendees_ != null &&
               attendees_ != ch.epfl.dedis.lib.proto.Personhood.Attendees.getDefaultInstance()) {
             attendees_ =
@@ -11470,14 +12013,18 @@ public final class Personhood {
 
     /**
      * <code>repeated bytes keys = 1;</code>
+     * @return A list containing the keys.
      */
     java.util.List<com.google.protobuf.ByteString> getKeysList();
     /**
      * <code>repeated bytes keys = 1;</code>
+     * @return The count of keys.
      */
     int getKeysCount();
     /**
      * <code>repeated bytes keys = 1;</code>
+     * @param index The index of the element to return.
+     * @return The keys at the given index.
      */
     com.google.protobuf.ByteString getKeys(int index);
   }
@@ -11488,7 +12035,7 @@ public final class Personhood {
    *
    * Protobuf type {@code personhood.Attendees}
    */
-  public  static final class Attendees extends
+  public static final class Attendees extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:personhood.Attendees)
       AttendeesOrBuilder {
@@ -11499,6 +12046,13 @@ public final class Personhood {
     }
     private Attendees() {
       keys_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Attendees();
     }
 
     @java.lang.Override
@@ -11526,7 +12080,7 @@ public final class Personhood {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 keys_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -11548,8 +12102,8 @@ public final class Personhood {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-          keys_ = java.util.Collections.unmodifiableList(keys_);
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
+          keys_ = java.util.Collections.unmodifiableList(keys_); // C
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -11572,19 +12126,24 @@ public final class Personhood {
     private java.util.List<com.google.protobuf.ByteString> keys_;
     /**
      * <code>repeated bytes keys = 1;</code>
+     * @return A list containing the keys.
      */
+    @java.lang.Override
     public java.util.List<com.google.protobuf.ByteString>
         getKeysList() {
       return keys_;
     }
     /**
      * <code>repeated bytes keys = 1;</code>
+     * @return The count of keys.
      */
     public int getKeysCount() {
       return keys_.size();
     }
     /**
      * <code>repeated bytes keys = 1;</code>
+     * @param index The index of the element to return.
+     * @return The keys at the given index.
      */
     public com.google.protobuf.ByteString getKeys(int index) {
       return keys_.get(index);
@@ -11640,11 +12199,10 @@ public final class Personhood {
       }
       ch.epfl.dedis.lib.proto.Personhood.Attendees other = (ch.epfl.dedis.lib.proto.Personhood.Attendees) obj;
 
-      boolean result = true;
-      result = result && getKeysList()
-          .equals(other.getKeysList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getKeysList()
+          .equals(other.getKeysList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -11824,7 +12382,7 @@ public final class Personhood {
       public ch.epfl.dedis.lib.proto.Personhood.Attendees buildPartial() {
         ch.epfl.dedis.lib.proto.Personhood.Attendees result = new ch.epfl.dedis.lib.proto.Personhood.Attendees(this);
         int from_bitField0_ = bitField0_;
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((bitField0_ & 0x00000001) != 0)) {
           keys_ = java.util.Collections.unmodifiableList(keys_);
           bitField0_ = (bitField0_ & ~0x00000001);
         }
@@ -11835,35 +12393,35 @@ public final class Personhood {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -11919,32 +12477,40 @@ public final class Personhood {
 
       private java.util.List<com.google.protobuf.ByteString> keys_ = java.util.Collections.emptyList();
       private void ensureKeysIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           keys_ = new java.util.ArrayList<com.google.protobuf.ByteString>(keys_);
           bitField0_ |= 0x00000001;
          }
       }
       /**
        * <code>repeated bytes keys = 1;</code>
+       * @return A list containing the keys.
        */
       public java.util.List<com.google.protobuf.ByteString>
           getKeysList() {
-        return java.util.Collections.unmodifiableList(keys_);
+        return ((bitField0_ & 0x00000001) != 0) ?
+                 java.util.Collections.unmodifiableList(keys_) : keys_;
       }
       /**
        * <code>repeated bytes keys = 1;</code>
+       * @return The count of keys.
        */
       public int getKeysCount() {
         return keys_.size();
       }
       /**
        * <code>repeated bytes keys = 1;</code>
+       * @param index The index of the element to return.
+       * @return The keys at the given index.
        */
       public com.google.protobuf.ByteString getKeys(int index) {
         return keys_.get(index);
       }
       /**
        * <code>repeated bytes keys = 1;</code>
+       * @param index The index to set the value at.
+       * @param value The keys to set.
+       * @return This builder for chaining.
        */
       public Builder setKeys(
           int index, com.google.protobuf.ByteString value) {
@@ -11958,6 +12524,8 @@ public final class Personhood {
       }
       /**
        * <code>repeated bytes keys = 1;</code>
+       * @param value The keys to add.
+       * @return This builder for chaining.
        */
       public Builder addKeys(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -11970,6 +12538,8 @@ public final class Personhood {
       }
       /**
        * <code>repeated bytes keys = 1;</code>
+       * @param values The keys to add.
+       * @return This builder for chaining.
        */
       public Builder addAllKeys(
           java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
@@ -11981,6 +12551,7 @@ public final class Personhood {
       }
       /**
        * <code>repeated bytes keys = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearKeys() {
         keys_ = java.util.Collections.emptyList();
@@ -12047,10 +12618,12 @@ public final class Personhood {
 
     /**
      * <code>required bytes tag = 1;</code>
+     * @return Whether the tag field is set.
      */
     boolean hasTag();
     /**
      * <code>required bytes tag = 1;</code>
+     * @return The tag.
      */
     com.google.protobuf.ByteString getTag();
   }
@@ -12061,7 +12634,7 @@ public final class Personhood {
    *
    * Protobuf type {@code personhood.LRSTag}
    */
-  public  static final class LRSTag extends
+  public static final class LRSTag extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:personhood.LRSTag)
       LRSTagOrBuilder {
@@ -12072,6 +12645,13 @@ public final class Personhood {
     }
     private LRSTag() {
       tag_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new LRSTag();
     }
 
     @java.lang.Override
@@ -12140,13 +12720,17 @@ public final class Personhood {
     private com.google.protobuf.ByteString tag_;
     /**
      * <code>required bytes tag = 1;</code>
+     * @return Whether the tag field is set.
      */
+    @java.lang.Override
     public boolean hasTag() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes tag = 1;</code>
+     * @return The tag.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getTag() {
       return tag_;
     }
@@ -12169,7 +12753,7 @@ public final class Personhood {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, tag_);
       }
       unknownFields.writeTo(output);
@@ -12181,7 +12765,7 @@ public final class Personhood {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, tag_);
       }
@@ -12200,14 +12784,13 @@ public final class Personhood {
       }
       ch.epfl.dedis.lib.proto.Personhood.LRSTag other = (ch.epfl.dedis.lib.proto.Personhood.LRSTag) obj;
 
-      boolean result = true;
-      result = result && (hasTag() == other.hasTag());
+      if (hasTag() != other.hasTag()) return false;
       if (hasTag()) {
-        result = result && getTag()
-            .equals(other.getTag());
+        if (!getTag()
+            .equals(other.getTag())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -12388,7 +12971,7 @@ public final class Personhood {
         ch.epfl.dedis.lib.proto.Personhood.LRSTag result = new ch.epfl.dedis.lib.proto.Personhood.LRSTag(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.tag_ = tag_;
@@ -12399,35 +12982,35 @@ public final class Personhood {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -12480,18 +13063,24 @@ public final class Personhood {
       private com.google.protobuf.ByteString tag_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes tag = 1;</code>
+       * @return Whether the tag field is set.
        */
+      @java.lang.Override
       public boolean hasTag() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes tag = 1;</code>
+       * @return The tag.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getTag() {
         return tag_;
       }
       /**
        * <code>required bytes tag = 1;</code>
+       * @param value The tag to set.
+       * @return This builder for chaining.
        */
       public Builder setTag(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -12504,6 +13093,7 @@ public final class Personhood {
       }
       /**
        * <code>required bytes tag = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTag() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -12663,19 +13253,11 @@ public final class Personhood {
       "\014\n\004keys\030\001 \003(\014\"\025\n\006LRSTag\022\013\n\003tag\030\001 \002(\014B%\n\027" +
       "ch.epfl.dedis.lib.protoB\nPersonhood"
     };
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           ch.epfl.dedis.lib.proto.ByzCoinProto.getDescriptor(),
-        }, assigner);
+        });
     internal_static_personhood_RoPaSci_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_personhood_RoPaSci_fieldAccessorTable = new

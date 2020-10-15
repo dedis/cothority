@@ -69,6 +69,8 @@ type Identity struct {
 	Proxy *IdentityProxy
 	// Address of an EVM contract
 	EvmContract *IdentityEvmContract
+	// A claim signed by one of the keys in a DID Doc
+	DID *IdentityDID
 }
 
 // IdentityEd25519 holds a Ed25519 public key (Point)
@@ -101,6 +103,46 @@ type IdentityEvmContract struct {
 	Address common.Address
 }
 
+// IdentityDID holds the DID and DIDDoc required to verify a claim
+// from a decentralized identifier
+type IdentityDID struct {
+	DID    string
+	DIDDoc *DIDDoc
+	Method string
+}
+
+// DIDDoc stores the DID Document
+type DIDDoc struct {
+	Context        []string
+	ID             string
+	PublicKey      []PublicKey
+	Service        []DIDService
+	Authentication []VerificationMethod
+}
+
+// PublicKey DID doc public key
+type PublicKey struct {
+	ID         string
+	Type       string
+	Controller string
+	Value      []byte
+}
+
+// DIDService is a description of a service endpoint.
+type DIDService struct {
+	ID              string
+	Type            string
+	Priority        int
+	RecipientKeys   []string
+	RoutingKeys     []string
+	ServiceEndpoint string
+}
+
+// VerificationMethod authentication verification method
+type VerificationMethod struct {
+	PublicKey PublicKey
+}
+
 // Signature is a signature on a Darc to accept a given decision.
 // can be verified using the appropriate identity.
 type Signature struct {
@@ -116,6 +158,7 @@ type Signer struct {
 	X509EC      *SignerX509EC
 	Proxy       *SignerProxy
 	EvmContract *SignerEvmContract
+	DID         *SignerDID
 }
 
 // SignerEd25519 holds a public and private keys necessary to sign Darcs
@@ -143,6 +186,14 @@ type SignerProxy struct {
 type SignerEvmContract struct {
 	BEvmID  []byte // BEvm InstanceID
 	Address common.Address
+}
+
+// SignerDID holds public and private keys from a DID Document to sign
+// Darcs.
+type SignerDID struct {
+	Public []byte
+	Secret []byte
+	DID    string
 }
 
 // Request is the structure that the client must provide to be verified

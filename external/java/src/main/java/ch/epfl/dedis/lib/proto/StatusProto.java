@@ -25,7 +25,7 @@ public final class StatusProto {
    *
    * Protobuf type {@code status.Request}
    */
-  public  static final class Request extends
+  public static final class Request extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:status.Request)
       RequestOrBuilder {
@@ -35,6 +35,13 @@ public final class StatusProto {
       super(builder);
     }
     private Request() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Request();
     }
 
     @java.lang.Override
@@ -130,9 +137,8 @@ public final class StatusProto {
       }
       ch.epfl.dedis.lib.proto.StatusProto.Request other = (ch.epfl.dedis.lib.proto.StatusProto.Request) obj;
 
-      boolean result = true;
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -311,35 +317,35 @@ public final class StatusProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -474,10 +480,12 @@ public final class StatusProto {
 
     /**
      * <code>optional .network.ServerIdentity serveridentity = 2;</code>
+     * @return Whether the serveridentity field is set.
      */
     boolean hasServeridentity();
     /**
      * <code>optional .network.ServerIdentity serveridentity = 2;</code>
+     * @return The serveridentity.
      */
     ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity getServeridentity();
     /**
@@ -492,7 +500,7 @@ public final class StatusProto {
    *
    * Protobuf type {@code status.Response}
    */
-  public  static final class Response extends
+  public static final class Response extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:status.Response)
       ResponseOrBuilder {
@@ -502,6 +510,13 @@ public final class StatusProto {
       super(builder);
     }
     private Response() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Response();
     }
 
     @java.lang.Override
@@ -529,7 +544,7 @@ public final class StatusProto {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 status_ = com.google.protobuf.MapField.newMapField(
                     StatusDefaultEntryHolder.defaultEntry);
                 mutable_bitField0_ |= 0x00000001;
@@ -543,7 +558,7 @@ public final class StatusProto {
             }
             case 18: {
               ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = serveridentity_.toBuilder();
               }
               serveridentity_ = input.readMessage(ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.parser(), extensionRegistry);
@@ -629,6 +644,7 @@ public final class StatusProto {
      * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
      */
 
+    @java.lang.Override
     public boolean containsStatus(
         java.lang.String key) {
       if (key == null) { throw new java.lang.NullPointerException(); }
@@ -637,6 +653,7 @@ public final class StatusProto {
     /**
      * Use {@link #getStatusMap()} instead.
      */
+    @java.lang.Override
     @java.lang.Deprecated
     public java.util.Map<java.lang.String, ch.epfl.dedis.lib.proto.OnetProto.Status> getStatus() {
       return getStatusMap();
@@ -644,6 +661,7 @@ public final class StatusProto {
     /**
      * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
      */
+    @java.lang.Override
 
     public java.util.Map<java.lang.String, ch.epfl.dedis.lib.proto.OnetProto.Status> getStatusMap() {
       return internalGetStatus().getMap();
@@ -651,6 +669,7 @@ public final class StatusProto {
     /**
      * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
      */
+    @java.lang.Override
 
     public ch.epfl.dedis.lib.proto.OnetProto.Status getStatusOrDefault(
         java.lang.String key,
@@ -663,6 +682,7 @@ public final class StatusProto {
     /**
      * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
      */
+    @java.lang.Override
 
     public ch.epfl.dedis.lib.proto.OnetProto.Status getStatusOrThrow(
         java.lang.String key) {
@@ -679,19 +699,24 @@ public final class StatusProto {
     private ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity serveridentity_;
     /**
      * <code>optional .network.ServerIdentity serveridentity = 2;</code>
+     * @return Whether the serveridentity field is set.
      */
+    @java.lang.Override
     public boolean hasServeridentity() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .network.ServerIdentity serveridentity = 2;</code>
+     * @return The serveridentity.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity getServeridentity() {
       return serveridentity_ == null ? ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.getDefaultInstance() : serveridentity_;
     }
     /**
      * <code>optional .network.ServerIdentity serveridentity = 2;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder getServeridentityOrBuilder() {
       return serveridentity_ == null ? ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.getDefaultInstance() : serveridentity_;
     }
@@ -722,7 +747,7 @@ public final class StatusProto {
           internalGetStatus(),
           StatusDefaultEntryHolder.defaultEntry,
           1);
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(2, getServeridentity());
       }
       unknownFields.writeTo(output);
@@ -744,7 +769,7 @@ public final class StatusProto {
         size += com.google.protobuf.CodedOutputStream
             .computeMessageSize(1, status__);
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getServeridentity());
       }
@@ -763,16 +788,15 @@ public final class StatusProto {
       }
       ch.epfl.dedis.lib.proto.StatusProto.Response other = (ch.epfl.dedis.lib.proto.StatusProto.Response) obj;
 
-      boolean result = true;
-      result = result && internalGetStatus().equals(
-          other.internalGetStatus());
-      result = result && (hasServeridentity() == other.hasServeridentity());
+      if (!internalGetStatus().equals(
+          other.internalGetStatus())) return false;
+      if (hasServeridentity() != other.hasServeridentity()) return false;
       if (hasServeridentity()) {
-        result = result && getServeridentity()
-            .equals(other.getServeridentity());
+        if (!getServeridentity()
+            .equals(other.getServeridentity())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -987,13 +1011,13 @@ public final class StatusProto {
         int to_bitField0_ = 0;
         result.status_ = internalGetStatus();
         result.status_.makeImmutable();
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (serveridentityBuilder_ == null) {
+            result.serveridentity_ = serveridentity_;
+          } else {
+            result.serveridentity_ = serveridentityBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
-        }
-        if (serveridentityBuilder_ == null) {
-          result.serveridentity_ = serveridentity_;
-        } else {
-          result.serveridentity_ = serveridentityBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -1002,35 +1026,35 @@ public final class StatusProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -1114,6 +1138,7 @@ public final class StatusProto {
        * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
        */
 
+      @java.lang.Override
       public boolean containsStatus(
           java.lang.String key) {
         if (key == null) { throw new java.lang.NullPointerException(); }
@@ -1122,6 +1147,7 @@ public final class StatusProto {
       /**
        * Use {@link #getStatusMap()} instead.
        */
+      @java.lang.Override
       @java.lang.Deprecated
       public java.util.Map<java.lang.String, ch.epfl.dedis.lib.proto.OnetProto.Status> getStatus() {
         return getStatusMap();
@@ -1129,6 +1155,7 @@ public final class StatusProto {
       /**
        * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
        */
+      @java.lang.Override
 
       public java.util.Map<java.lang.String, ch.epfl.dedis.lib.proto.OnetProto.Status> getStatusMap() {
         return internalGetStatus().getMap();
@@ -1136,6 +1163,7 @@ public final class StatusProto {
       /**
        * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
        */
+      @java.lang.Override
 
       public ch.epfl.dedis.lib.proto.OnetProto.Status getStatusOrDefault(
           java.lang.String key,
@@ -1148,6 +1176,7 @@ public final class StatusProto {
       /**
        * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
        */
+      @java.lang.Override
 
       public ch.epfl.dedis.lib.proto.OnetProto.Status getStatusOrThrow(
           java.lang.String key) {
@@ -1207,17 +1236,19 @@ public final class StatusProto {
         return this;
       }
 
-      private ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity serveridentity_ = null;
+      private ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity serveridentity_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> serveridentityBuilder_;
       /**
        * <code>optional .network.ServerIdentity serveridentity = 2;</code>
+       * @return Whether the serveridentity field is set.
        */
       public boolean hasServeridentity() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional .network.ServerIdentity serveridentity = 2;</code>
+       * @return The serveridentity.
        */
       public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity getServeridentity() {
         if (serveridentityBuilder_ == null) {
@@ -1261,7 +1292,7 @@ public final class StatusProto {
        */
       public Builder mergeServeridentity(ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity value) {
         if (serveridentityBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               serveridentity_ != null &&
               serveridentity_ != ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.getDefaultInstance()) {
             serveridentity_ =
@@ -1383,28 +1414,34 @@ public final class StatusProto {
 
     /**
      * <code>required sint64 time = 1;</code>
+     * @return Whether the time field is set.
      */
     boolean hasTime();
     /**
      * <code>required sint64 time = 1;</code>
+     * @return The time.
      */
     long getTime();
 
     /**
      * <code>required sint64 timeout = 2;</code>
+     * @return Whether the timeout field is set.
      */
     boolean hasTimeout();
     /**
      * <code>required sint64 timeout = 2;</code>
+     * @return The timeout.
      */
     long getTimeout();
 
     /**
      * <code>required bool findfaulty = 3;</code>
+     * @return Whether the findfaulty field is set.
      */
     boolean hasFindfaulty();
     /**
      * <code>required bool findfaulty = 3;</code>
+     * @return The findfaulty.
      */
     boolean getFindfaulty();
 
@@ -1434,10 +1471,12 @@ public final class StatusProto {
 
     /**
      * <code>required bytes signature = 5;</code>
+     * @return Whether the signature field is set.
      */
     boolean hasSignature();
     /**
      * <code>required bytes signature = 5;</code>
+     * @return The signature.
      */
     com.google.protobuf.ByteString getSignature();
   }
@@ -1455,7 +1494,7 @@ public final class StatusProto {
    *
    * Protobuf type {@code status.CheckConnectivity}
    */
-  public  static final class CheckConnectivity extends
+  public static final class CheckConnectivity extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:status.CheckConnectivity)
       CheckConnectivityOrBuilder {
@@ -1465,11 +1504,15 @@ public final class StatusProto {
       super(builder);
     }
     private CheckConnectivity() {
-      time_ = 0L;
-      timeout_ = 0L;
-      findfaulty_ = false;
       list_ = java.util.Collections.emptyList();
       signature_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new CheckConnectivity();
     }
 
     @java.lang.Override
@@ -1512,7 +1555,7 @@ public final class StatusProto {
               break;
             }
             case 34: {
-              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+              if (!((mutable_bitField0_ & 0x00000008) != 0)) {
                 list_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity>();
                 mutable_bitField0_ |= 0x00000008;
               }
@@ -1540,7 +1583,7 @@ public final class StatusProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((mutable_bitField0_ & 0x00000008) != 0)) {
           list_ = java.util.Collections.unmodifiableList(list_);
         }
         this.unknownFields = unknownFields.build();
@@ -1565,13 +1608,17 @@ public final class StatusProto {
     private long time_;
     /**
      * <code>required sint64 time = 1;</code>
+     * @return Whether the time field is set.
      */
+    @java.lang.Override
     public boolean hasTime() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required sint64 time = 1;</code>
+     * @return The time.
      */
+    @java.lang.Override
     public long getTime() {
       return time_;
     }
@@ -1580,13 +1627,17 @@ public final class StatusProto {
     private long timeout_;
     /**
      * <code>required sint64 timeout = 2;</code>
+     * @return Whether the timeout field is set.
      */
+    @java.lang.Override
     public boolean hasTimeout() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required sint64 timeout = 2;</code>
+     * @return The timeout.
      */
+    @java.lang.Override
     public long getTimeout() {
       return timeout_;
     }
@@ -1595,13 +1646,17 @@ public final class StatusProto {
     private boolean findfaulty_;
     /**
      * <code>required bool findfaulty = 3;</code>
+     * @return Whether the findfaulty field is set.
      */
+    @java.lang.Override
     public boolean hasFindfaulty() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>required bool findfaulty = 3;</code>
+     * @return The findfaulty.
      */
+    @java.lang.Override
     public boolean getFindfaulty() {
       return findfaulty_;
     }
@@ -1611,12 +1666,14 @@ public final class StatusProto {
     /**
      * <code>repeated .network.ServerIdentity list = 4;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> getListList() {
       return list_;
     }
     /**
      * <code>repeated .network.ServerIdentity list = 4;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder>
         getListOrBuilderList() {
       return list_;
@@ -1624,18 +1681,21 @@ public final class StatusProto {
     /**
      * <code>repeated .network.ServerIdentity list = 4;</code>
      */
+    @java.lang.Override
     public int getListCount() {
       return list_.size();
     }
     /**
      * <code>repeated .network.ServerIdentity list = 4;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity getList(int index) {
       return list_.get(index);
     }
     /**
      * <code>repeated .network.ServerIdentity list = 4;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder getListOrBuilder(
         int index) {
       return list_.get(index);
@@ -1645,13 +1705,17 @@ public final class StatusProto {
     private com.google.protobuf.ByteString signature_;
     /**
      * <code>required bytes signature = 5;</code>
+     * @return Whether the signature field is set.
      */
+    @java.lang.Override
     public boolean hasSignature() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <code>required bytes signature = 5;</code>
+     * @return The signature.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getSignature() {
       return signature_;
     }
@@ -1692,19 +1756,19 @@ public final class StatusProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeSInt64(1, time_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeSInt64(2, timeout_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBool(3, findfaulty_);
       }
       for (int i = 0; i < list_.size(); i++) {
         output.writeMessage(4, list_.get(i));
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeBytes(5, signature_);
       }
       unknownFields.writeTo(output);
@@ -1716,15 +1780,15 @@ public final class StatusProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt64Size(1, time_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt64Size(2, timeout_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(3, findfaulty_);
       }
@@ -1732,7 +1796,7 @@ public final class StatusProto {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, list_.get(i));
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(5, signature_);
       }
@@ -1751,31 +1815,30 @@ public final class StatusProto {
       }
       ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity other = (ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity) obj;
 
-      boolean result = true;
-      result = result && (hasTime() == other.hasTime());
+      if (hasTime() != other.hasTime()) return false;
       if (hasTime()) {
-        result = result && (getTime()
-            == other.getTime());
+        if (getTime()
+            != other.getTime()) return false;
       }
-      result = result && (hasTimeout() == other.hasTimeout());
+      if (hasTimeout() != other.hasTimeout()) return false;
       if (hasTimeout()) {
-        result = result && (getTimeout()
-            == other.getTimeout());
+        if (getTimeout()
+            != other.getTimeout()) return false;
       }
-      result = result && (hasFindfaulty() == other.hasFindfaulty());
+      if (hasFindfaulty() != other.hasFindfaulty()) return false;
       if (hasFindfaulty()) {
-        result = result && (getFindfaulty()
-            == other.getFindfaulty());
+        if (getFindfaulty()
+            != other.getFindfaulty()) return false;
       }
-      result = result && getListList()
-          .equals(other.getListList());
-      result = result && (hasSignature() == other.hasSignature());
+      if (!getListList()
+          .equals(other.getListList())) return false;
+      if (hasSignature() != other.hasSignature()) return false;
       if (hasSignature()) {
-        result = result && getSignature()
-            .equals(other.getSignature());
+        if (!getSignature()
+            .equals(other.getSignature())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -1995,20 +2058,20 @@ public final class StatusProto {
         ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity result = new ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.time_ = time_;
           to_bitField0_ |= 0x00000001;
         }
-        result.time_ = time_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.timeout_ = timeout_;
           to_bitField0_ |= 0x00000002;
         }
-        result.timeout_ = timeout_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.findfaulty_ = findfaulty_;
           to_bitField0_ |= 0x00000004;
         }
-        result.findfaulty_ = findfaulty_;
         if (listBuilder_ == null) {
-          if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          if (((bitField0_ & 0x00000008) != 0)) {
             list_ = java.util.Collections.unmodifiableList(list_);
             bitField0_ = (bitField0_ & ~0x00000008);
           }
@@ -2016,7 +2079,7 @@ public final class StatusProto {
         } else {
           result.list_ = listBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
           to_bitField0_ |= 0x00000008;
         }
         result.signature_ = signature_;
@@ -2027,35 +2090,35 @@ public final class StatusProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -2157,18 +2220,24 @@ public final class StatusProto {
       private long time_ ;
       /**
        * <code>required sint64 time = 1;</code>
+       * @return Whether the time field is set.
        */
+      @java.lang.Override
       public boolean hasTime() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required sint64 time = 1;</code>
+       * @return The time.
        */
+      @java.lang.Override
       public long getTime() {
         return time_;
       }
       /**
        * <code>required sint64 time = 1;</code>
+       * @param value The time to set.
+       * @return This builder for chaining.
        */
       public Builder setTime(long value) {
         bitField0_ |= 0x00000001;
@@ -2178,6 +2247,7 @@ public final class StatusProto {
       }
       /**
        * <code>required sint64 time = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTime() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -2189,18 +2259,24 @@ public final class StatusProto {
       private long timeout_ ;
       /**
        * <code>required sint64 timeout = 2;</code>
+       * @return Whether the timeout field is set.
        */
+      @java.lang.Override
       public boolean hasTimeout() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required sint64 timeout = 2;</code>
+       * @return The timeout.
        */
+      @java.lang.Override
       public long getTimeout() {
         return timeout_;
       }
       /**
        * <code>required sint64 timeout = 2;</code>
+       * @param value The timeout to set.
+       * @return This builder for chaining.
        */
       public Builder setTimeout(long value) {
         bitField0_ |= 0x00000002;
@@ -2210,6 +2286,7 @@ public final class StatusProto {
       }
       /**
        * <code>required sint64 timeout = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTimeout() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -2221,18 +2298,24 @@ public final class StatusProto {
       private boolean findfaulty_ ;
       /**
        * <code>required bool findfaulty = 3;</code>
+       * @return Whether the findfaulty field is set.
        */
+      @java.lang.Override
       public boolean hasFindfaulty() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>required bool findfaulty = 3;</code>
+       * @return The findfaulty.
        */
+      @java.lang.Override
       public boolean getFindfaulty() {
         return findfaulty_;
       }
       /**
        * <code>required bool findfaulty = 3;</code>
+       * @param value The findfaulty to set.
+       * @return This builder for chaining.
        */
       public Builder setFindfaulty(boolean value) {
         bitField0_ |= 0x00000004;
@@ -2242,6 +2325,7 @@ public final class StatusProto {
       }
       /**
        * <code>required bool findfaulty = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearFindfaulty() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -2253,7 +2337,7 @@ public final class StatusProto {
       private java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> list_ =
         java.util.Collections.emptyList();
       private void ensureListIsMutable() {
-        if (!((bitField0_ & 0x00000008) == 0x00000008)) {
+        if (!((bitField0_ & 0x00000008) != 0)) {
           list_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity>(list_);
           bitField0_ |= 0x00000008;
          }
@@ -2482,7 +2566,7 @@ public final class StatusProto {
           listBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder>(
                   list_,
-                  ((bitField0_ & 0x00000008) == 0x00000008),
+                  ((bitField0_ & 0x00000008) != 0),
                   getParentForChildren(),
                   isClean());
           list_ = null;
@@ -2493,18 +2577,24 @@ public final class StatusProto {
       private com.google.protobuf.ByteString signature_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes signature = 5;</code>
+       * @return Whether the signature field is set.
        */
+      @java.lang.Override
       public boolean hasSignature() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <code>required bytes signature = 5;</code>
+       * @return The signature.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getSignature() {
         return signature_;
       }
       /**
        * <code>required bytes signature = 5;</code>
+       * @param value The signature to set.
+       * @return This builder for chaining.
        */
       public Builder setSignature(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -2517,6 +2607,7 @@ public final class StatusProto {
       }
       /**
        * <code>required bytes signature = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSignature() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -2613,7 +2704,7 @@ public final class StatusProto {
    *
    * Protobuf type {@code status.CheckConnectivityReply}
    */
-  public  static final class CheckConnectivityReply extends
+  public static final class CheckConnectivityReply extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:status.CheckConnectivityReply)
       CheckConnectivityReplyOrBuilder {
@@ -2624,6 +2715,13 @@ public final class StatusProto {
     }
     private CheckConnectivityReply() {
       nodes_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new CheckConnectivityReply();
     }
 
     @java.lang.Override
@@ -2651,7 +2749,7 @@ public final class StatusProto {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 nodes_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity>();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -2674,7 +2772,7 @@ public final class StatusProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
           nodes_ = java.util.Collections.unmodifiableList(nodes_);
         }
         this.unknownFields = unknownFields.build();
@@ -2699,12 +2797,14 @@ public final class StatusProto {
     /**
      * <code>repeated .network.ServerIdentity nodes = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> getNodesList() {
       return nodes_;
     }
     /**
      * <code>repeated .network.ServerIdentity nodes = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder>
         getNodesOrBuilderList() {
       return nodes_;
@@ -2712,18 +2812,21 @@ public final class StatusProto {
     /**
      * <code>repeated .network.ServerIdentity nodes = 1;</code>
      */
+    @java.lang.Override
     public int getNodesCount() {
       return nodes_.size();
     }
     /**
      * <code>repeated .network.ServerIdentity nodes = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity getNodes(int index) {
       return nodes_.get(index);
     }
     /**
      * <code>repeated .network.ServerIdentity nodes = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder getNodesOrBuilder(
         int index) {
       return nodes_.get(index);
@@ -2780,11 +2883,10 @@ public final class StatusProto {
       }
       ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply other = (ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply) obj;
 
-      boolean result = true;
-      result = result && getNodesList()
-          .equals(other.getNodesList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getNodesList()
+          .equals(other.getNodesList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -2971,7 +3073,7 @@ public final class StatusProto {
         ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply result = new ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply(this);
         int from_bitField0_ = bitField0_;
         if (nodesBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((bitField0_ & 0x00000001) != 0)) {
             nodes_ = java.util.Collections.unmodifiableList(nodes_);
             bitField0_ = (bitField0_ & ~0x00000001);
           }
@@ -2985,35 +3087,35 @@ public final class StatusProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -3091,7 +3193,7 @@ public final class StatusProto {
       private java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> nodes_ =
         java.util.Collections.emptyList();
       private void ensureNodesIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           nodes_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity>(nodes_);
           bitField0_ |= 0x00000001;
          }
@@ -3320,7 +3422,7 @@ public final class StatusProto {
           nodesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder>(
                   nodes_,
-                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
                   isClean());
           nodes_ = null;
@@ -3427,20 +3529,12 @@ public final class StatusProto {
       "\0132\027.network.ServerIdentityB&\n\027ch.epfl.de" +
       "dis.lib.protoB\013StatusProto"
     };
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           ch.epfl.dedis.lib.proto.OnetProto.getDescriptor(),
           ch.epfl.dedis.lib.proto.NetworkProto.getDescriptor(),
-        }, assigner);
+        });
     internal_static_status_Request_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_status_Request_fieldAccessorTable = new

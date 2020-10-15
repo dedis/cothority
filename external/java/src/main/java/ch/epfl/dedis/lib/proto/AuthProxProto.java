@@ -20,51 +20,63 @@ public final class AuthProxProto {
 
     /**
      * <code>required string type = 1;</code>
+     * @return Whether the type field is set.
      */
     boolean hasType();
     /**
      * <code>required string type = 1;</code>
+     * @return The type.
      */
     java.lang.String getType();
     /**
      * <code>required string type = 1;</code>
+     * @return The bytes for type.
      */
     com.google.protobuf.ByteString
         getTypeBytes();
 
     /**
      * <code>required string issuer = 2;</code>
+     * @return Whether the issuer field is set.
      */
     boolean hasIssuer();
     /**
      * <code>required string issuer = 2;</code>
+     * @return The issuer.
      */
     java.lang.String getIssuer();
     /**
      * <code>required string issuer = 2;</code>
+     * @return The bytes for issuer.
      */
     com.google.protobuf.ByteString
         getIssuerBytes();
 
     /**
      * <code>repeated bytes participants = 3;</code>
+     * @return A list containing the participants.
      */
     java.util.List<com.google.protobuf.ByteString> getParticipantsList();
     /**
      * <code>repeated bytes participants = 3;</code>
+     * @return The count of participants.
      */
     int getParticipantsCount();
     /**
      * <code>repeated bytes participants = 3;</code>
+     * @param index The index of the element to return.
+     * @return The participants at the given index.
      */
     com.google.protobuf.ByteString getParticipants(int index);
 
     /**
      * <code>required .authprox.PriShare longpri = 4;</code>
+     * @return Whether the longpri field is set.
      */
     boolean hasLongpri();
     /**
      * <code>required .authprox.PriShare longpri = 4;</code>
+     * @return The longpri.
      */
     ch.epfl.dedis.lib.proto.AuthProxProto.PriShare getLongpri();
     /**
@@ -74,14 +86,18 @@ public final class AuthProxProto {
 
     /**
      * <code>repeated bytes longpubs = 5;</code>
+     * @return A list containing the longpubs.
      */
     java.util.List<com.google.protobuf.ByteString> getLongpubsList();
     /**
      * <code>repeated bytes longpubs = 5;</code>
+     * @return The count of longpubs.
      */
     int getLongpubsCount();
     /**
      * <code>repeated bytes longpubs = 5;</code>
+     * @param index The index of the element to return.
+     * @return The longpubs at the given index.
      */
     com.google.protobuf.ByteString getLongpubs(int index);
   }
@@ -93,7 +109,7 @@ public final class AuthProxProto {
    *
    * Protobuf type {@code authprox.EnrollRequest}
    */
-  public  static final class EnrollRequest extends
+  public static final class EnrollRequest extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:authprox.EnrollRequest)
       EnrollRequestOrBuilder {
@@ -107,6 +123,13 @@ public final class AuthProxProto {
       issuer_ = "";
       participants_ = java.util.Collections.emptyList();
       longpubs_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new EnrollRequest();
     }
 
     @java.lang.Override
@@ -146,7 +169,7 @@ public final class AuthProxProto {
               break;
             }
             case 26: {
-              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+              if (!((mutable_bitField0_ & 0x00000004) != 0)) {
                 participants_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
                 mutable_bitField0_ |= 0x00000004;
               }
@@ -155,7 +178,7 @@ public final class AuthProxProto {
             }
             case 34: {
               ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+              if (((bitField0_ & 0x00000004) != 0)) {
                 subBuilder = longpri_.toBuilder();
               }
               longpri_ = input.readMessage(ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.parser(), extensionRegistry);
@@ -167,7 +190,7 @@ public final class AuthProxProto {
               break;
             }
             case 42: {
-              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+              if (!((mutable_bitField0_ & 0x00000010) != 0)) {
                 longpubs_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
                 mutable_bitField0_ |= 0x00000010;
               }
@@ -189,11 +212,11 @@ public final class AuthProxProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
-          participants_ = java.util.Collections.unmodifiableList(participants_);
+        if (((mutable_bitField0_ & 0x00000004) != 0)) {
+          participants_ = java.util.Collections.unmodifiableList(participants_); // C
         }
-        if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
-          longpubs_ = java.util.Collections.unmodifiableList(longpubs_);
+        if (((mutable_bitField0_ & 0x00000010) != 0)) {
+          longpubs_ = java.util.Collections.unmodifiableList(longpubs_); // C
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -217,13 +240,17 @@ public final class AuthProxProto {
     private volatile java.lang.Object type_;
     /**
      * <code>required string type = 1;</code>
+     * @return Whether the type field is set.
      */
+    @java.lang.Override
     public boolean hasType() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required string type = 1;</code>
+     * @return The type.
      */
+    @java.lang.Override
     public java.lang.String getType() {
       java.lang.Object ref = type_;
       if (ref instanceof java.lang.String) {
@@ -240,7 +267,9 @@ public final class AuthProxProto {
     }
     /**
      * <code>required string type = 1;</code>
+     * @return The bytes for type.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getTypeBytes() {
       java.lang.Object ref = type_;
@@ -259,13 +288,17 @@ public final class AuthProxProto {
     private volatile java.lang.Object issuer_;
     /**
      * <code>required string issuer = 2;</code>
+     * @return Whether the issuer field is set.
      */
+    @java.lang.Override
     public boolean hasIssuer() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required string issuer = 2;</code>
+     * @return The issuer.
      */
+    @java.lang.Override
     public java.lang.String getIssuer() {
       java.lang.Object ref = issuer_;
       if (ref instanceof java.lang.String) {
@@ -282,7 +315,9 @@ public final class AuthProxProto {
     }
     /**
      * <code>required string issuer = 2;</code>
+     * @return The bytes for issuer.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getIssuerBytes() {
       java.lang.Object ref = issuer_;
@@ -301,19 +336,24 @@ public final class AuthProxProto {
     private java.util.List<com.google.protobuf.ByteString> participants_;
     /**
      * <code>repeated bytes participants = 3;</code>
+     * @return A list containing the participants.
      */
+    @java.lang.Override
     public java.util.List<com.google.protobuf.ByteString>
         getParticipantsList() {
       return participants_;
     }
     /**
      * <code>repeated bytes participants = 3;</code>
+     * @return The count of participants.
      */
     public int getParticipantsCount() {
       return participants_.size();
     }
     /**
      * <code>repeated bytes participants = 3;</code>
+     * @param index The index of the element to return.
+     * @return The participants at the given index.
      */
     public com.google.protobuf.ByteString getParticipants(int index) {
       return participants_.get(index);
@@ -323,19 +363,24 @@ public final class AuthProxProto {
     private ch.epfl.dedis.lib.proto.AuthProxProto.PriShare longpri_;
     /**
      * <code>required .authprox.PriShare longpri = 4;</code>
+     * @return Whether the longpri field is set.
      */
+    @java.lang.Override
     public boolean hasLongpri() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>required .authprox.PriShare longpri = 4;</code>
+     * @return The longpri.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.AuthProxProto.PriShare getLongpri() {
       return longpri_ == null ? ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.getDefaultInstance() : longpri_;
     }
     /**
      * <code>required .authprox.PriShare longpri = 4;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.AuthProxProto.PriShareOrBuilder getLongpriOrBuilder() {
       return longpri_ == null ? ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.getDefaultInstance() : longpri_;
     }
@@ -344,19 +389,24 @@ public final class AuthProxProto {
     private java.util.List<com.google.protobuf.ByteString> longpubs_;
     /**
      * <code>repeated bytes longpubs = 5;</code>
+     * @return A list containing the longpubs.
      */
+    @java.lang.Override
     public java.util.List<com.google.protobuf.ByteString>
         getLongpubsList() {
       return longpubs_;
     }
     /**
      * <code>repeated bytes longpubs = 5;</code>
+     * @return The count of longpubs.
      */
     public int getLongpubsCount() {
       return longpubs_.size();
     }
     /**
      * <code>repeated bytes longpubs = 5;</code>
+     * @param index The index of the element to return.
+     * @return The longpubs at the given index.
      */
     public com.google.protobuf.ByteString getLongpubs(int index) {
       return longpubs_.get(index);
@@ -388,16 +438,16 @@ public final class AuthProxProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, type_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, issuer_);
       }
       for (int i = 0; i < participants_.size(); i++) {
         output.writeBytes(3, participants_.get(i));
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeMessage(4, getLongpri());
       }
       for (int i = 0; i < longpubs_.size(); i++) {
@@ -412,10 +462,10 @@ public final class AuthProxProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, type_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, issuer_);
       }
       {
@@ -427,7 +477,7 @@ public final class AuthProxProto {
         size += dataSize;
         size += 1 * getParticipantsList().size();
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, getLongpri());
       }
@@ -455,28 +505,27 @@ public final class AuthProxProto {
       }
       ch.epfl.dedis.lib.proto.AuthProxProto.EnrollRequest other = (ch.epfl.dedis.lib.proto.AuthProxProto.EnrollRequest) obj;
 
-      boolean result = true;
-      result = result && (hasType() == other.hasType());
+      if (hasType() != other.hasType()) return false;
       if (hasType()) {
-        result = result && getType()
-            .equals(other.getType());
+        if (!getType()
+            .equals(other.getType())) return false;
       }
-      result = result && (hasIssuer() == other.hasIssuer());
+      if (hasIssuer() != other.hasIssuer()) return false;
       if (hasIssuer()) {
-        result = result && getIssuer()
-            .equals(other.getIssuer());
+        if (!getIssuer()
+            .equals(other.getIssuer())) return false;
       }
-      result = result && getParticipantsList()
-          .equals(other.getParticipantsList());
-      result = result && (hasLongpri() == other.hasLongpri());
+      if (!getParticipantsList()
+          .equals(other.getParticipantsList())) return false;
+      if (hasLongpri() != other.hasLongpri()) return false;
       if (hasLongpri()) {
-        result = result && getLongpri()
-            .equals(other.getLongpri());
+        if (!getLongpri()
+            .equals(other.getLongpri())) return false;
       }
-      result = result && getLongpubsList()
-          .equals(other.getLongpubsList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getLongpubsList()
+          .equals(other.getLongpubsList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -687,28 +736,28 @@ public final class AuthProxProto {
         ch.epfl.dedis.lib.proto.AuthProxProto.EnrollRequest result = new ch.epfl.dedis.lib.proto.AuthProxProto.EnrollRequest(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.type_ = type_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.issuer_ = issuer_;
-        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((bitField0_ & 0x00000004) != 0)) {
           participants_ = java.util.Collections.unmodifiableList(participants_);
           bitField0_ = (bitField0_ & ~0x00000004);
         }
         result.participants_ = participants_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          if (longpriBuilder_ == null) {
+            result.longpri_ = longpri_;
+          } else {
+            result.longpri_ = longpriBuilder_.build();
+          }
           to_bitField0_ |= 0x00000004;
         }
-        if (longpriBuilder_ == null) {
-          result.longpri_ = longpri_;
-        } else {
-          result.longpri_ = longpriBuilder_.build();
-        }
-        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((bitField0_ & 0x00000010) != 0)) {
           longpubs_ = java.util.Collections.unmodifiableList(longpubs_);
           bitField0_ = (bitField0_ & ~0x00000010);
         }
@@ -720,35 +769,35 @@ public final class AuthProxProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -837,12 +886,14 @@ public final class AuthProxProto {
       private java.lang.Object type_ = "";
       /**
        * <code>required string type = 1;</code>
+       * @return Whether the type field is set.
        */
       public boolean hasType() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required string type = 1;</code>
+       * @return The type.
        */
       public java.lang.String getType() {
         java.lang.Object ref = type_;
@@ -860,6 +911,7 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string type = 1;</code>
+       * @return The bytes for type.
        */
       public com.google.protobuf.ByteString
           getTypeBytes() {
@@ -876,6 +928,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string type = 1;</code>
+       * @param value The type to set.
+       * @return This builder for chaining.
        */
       public Builder setType(
           java.lang.String value) {
@@ -889,6 +943,7 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string type = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearType() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -898,6 +953,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string type = 1;</code>
+       * @param value The bytes for type to set.
+       * @return This builder for chaining.
        */
       public Builder setTypeBytes(
           com.google.protobuf.ByteString value) {
@@ -913,12 +970,14 @@ public final class AuthProxProto {
       private java.lang.Object issuer_ = "";
       /**
        * <code>required string issuer = 2;</code>
+       * @return Whether the issuer field is set.
        */
       public boolean hasIssuer() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required string issuer = 2;</code>
+       * @return The issuer.
        */
       public java.lang.String getIssuer() {
         java.lang.Object ref = issuer_;
@@ -936,6 +995,7 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string issuer = 2;</code>
+       * @return The bytes for issuer.
        */
       public com.google.protobuf.ByteString
           getIssuerBytes() {
@@ -952,6 +1012,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string issuer = 2;</code>
+       * @param value The issuer to set.
+       * @return This builder for chaining.
        */
       public Builder setIssuer(
           java.lang.String value) {
@@ -965,6 +1027,7 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string issuer = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearIssuer() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -974,6 +1037,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string issuer = 2;</code>
+       * @param value The bytes for issuer to set.
+       * @return This builder for chaining.
        */
       public Builder setIssuerBytes(
           com.google.protobuf.ByteString value) {
@@ -988,32 +1053,40 @@ public final class AuthProxProto {
 
       private java.util.List<com.google.protobuf.ByteString> participants_ = java.util.Collections.emptyList();
       private void ensureParticipantsIsMutable() {
-        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+        if (!((bitField0_ & 0x00000004) != 0)) {
           participants_ = new java.util.ArrayList<com.google.protobuf.ByteString>(participants_);
           bitField0_ |= 0x00000004;
          }
       }
       /**
        * <code>repeated bytes participants = 3;</code>
+       * @return A list containing the participants.
        */
       public java.util.List<com.google.protobuf.ByteString>
           getParticipantsList() {
-        return java.util.Collections.unmodifiableList(participants_);
+        return ((bitField0_ & 0x00000004) != 0) ?
+                 java.util.Collections.unmodifiableList(participants_) : participants_;
       }
       /**
        * <code>repeated bytes participants = 3;</code>
+       * @return The count of participants.
        */
       public int getParticipantsCount() {
         return participants_.size();
       }
       /**
        * <code>repeated bytes participants = 3;</code>
+       * @param index The index of the element to return.
+       * @return The participants at the given index.
        */
       public com.google.protobuf.ByteString getParticipants(int index) {
         return participants_.get(index);
       }
       /**
        * <code>repeated bytes participants = 3;</code>
+       * @param index The index to set the value at.
+       * @param value The participants to set.
+       * @return This builder for chaining.
        */
       public Builder setParticipants(
           int index, com.google.protobuf.ByteString value) {
@@ -1027,6 +1100,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>repeated bytes participants = 3;</code>
+       * @param value The participants to add.
+       * @return This builder for chaining.
        */
       public Builder addParticipants(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -1039,6 +1114,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>repeated bytes participants = 3;</code>
+       * @param values The participants to add.
+       * @return This builder for chaining.
        */
       public Builder addAllParticipants(
           java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
@@ -1050,6 +1127,7 @@ public final class AuthProxProto {
       }
       /**
        * <code>repeated bytes participants = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearParticipants() {
         participants_ = java.util.Collections.emptyList();
@@ -1058,17 +1136,19 @@ public final class AuthProxProto {
         return this;
       }
 
-      private ch.epfl.dedis.lib.proto.AuthProxProto.PriShare longpri_ = null;
+      private ch.epfl.dedis.lib.proto.AuthProxProto.PriShare longpri_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.AuthProxProto.PriShare, ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.Builder, ch.epfl.dedis.lib.proto.AuthProxProto.PriShareOrBuilder> longpriBuilder_;
       /**
        * <code>required .authprox.PriShare longpri = 4;</code>
+       * @return Whether the longpri field is set.
        */
       public boolean hasLongpri() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>required .authprox.PriShare longpri = 4;</code>
+       * @return The longpri.
        */
       public ch.epfl.dedis.lib.proto.AuthProxProto.PriShare getLongpri() {
         if (longpriBuilder_ == null) {
@@ -1112,7 +1192,7 @@ public final class AuthProxProto {
        */
       public Builder mergeLongpri(ch.epfl.dedis.lib.proto.AuthProxProto.PriShare value) {
         if (longpriBuilder_ == null) {
-          if (((bitField0_ & 0x00000008) == 0x00000008) &&
+          if (((bitField0_ & 0x00000008) != 0) &&
               longpri_ != null &&
               longpri_ != ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.getDefaultInstance()) {
             longpri_ =
@@ -1178,32 +1258,40 @@ public final class AuthProxProto {
 
       private java.util.List<com.google.protobuf.ByteString> longpubs_ = java.util.Collections.emptyList();
       private void ensureLongpubsIsMutable() {
-        if (!((bitField0_ & 0x00000010) == 0x00000010)) {
+        if (!((bitField0_ & 0x00000010) != 0)) {
           longpubs_ = new java.util.ArrayList<com.google.protobuf.ByteString>(longpubs_);
           bitField0_ |= 0x00000010;
          }
       }
       /**
        * <code>repeated bytes longpubs = 5;</code>
+       * @return A list containing the longpubs.
        */
       public java.util.List<com.google.protobuf.ByteString>
           getLongpubsList() {
-        return java.util.Collections.unmodifiableList(longpubs_);
+        return ((bitField0_ & 0x00000010) != 0) ?
+                 java.util.Collections.unmodifiableList(longpubs_) : longpubs_;
       }
       /**
        * <code>repeated bytes longpubs = 5;</code>
+       * @return The count of longpubs.
        */
       public int getLongpubsCount() {
         return longpubs_.size();
       }
       /**
        * <code>repeated bytes longpubs = 5;</code>
+       * @param index The index of the element to return.
+       * @return The longpubs at the given index.
        */
       public com.google.protobuf.ByteString getLongpubs(int index) {
         return longpubs_.get(index);
       }
       /**
        * <code>repeated bytes longpubs = 5;</code>
+       * @param index The index to set the value at.
+       * @param value The longpubs to set.
+       * @return This builder for chaining.
        */
       public Builder setLongpubs(
           int index, com.google.protobuf.ByteString value) {
@@ -1217,6 +1305,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>repeated bytes longpubs = 5;</code>
+       * @param value The longpubs to add.
+       * @return This builder for chaining.
        */
       public Builder addLongpubs(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -1229,6 +1319,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>repeated bytes longpubs = 5;</code>
+       * @param values The longpubs to add.
+       * @return This builder for chaining.
        */
       public Builder addAllLongpubs(
           java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
@@ -1240,6 +1332,7 @@ public final class AuthProxProto {
       }
       /**
        * <code>repeated bytes longpubs = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearLongpubs() {
         longpubs_ = java.util.Collections.emptyList();
@@ -1311,7 +1404,7 @@ public final class AuthProxProto {
    *
    * Protobuf type {@code authprox.EnrollResponse}
    */
-  public  static final class EnrollResponse extends
+  public static final class EnrollResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:authprox.EnrollResponse)
       EnrollResponseOrBuilder {
@@ -1321,6 +1414,13 @@ public final class AuthProxProto {
       super(builder);
     }
     private EnrollResponse() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new EnrollResponse();
     }
 
     @java.lang.Override
@@ -1416,9 +1516,8 @@ public final class AuthProxProto {
       }
       ch.epfl.dedis.lib.proto.AuthProxProto.EnrollResponse other = (ch.epfl.dedis.lib.proto.AuthProxProto.EnrollResponse) obj;
 
-      boolean result = true;
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -1597,35 +1696,35 @@ public final class AuthProxProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -1726,47 +1825,57 @@ public final class AuthProxProto {
 
     /**
      * <code>required string type = 1;</code>
+     * @return Whether the type field is set.
      */
     boolean hasType();
     /**
      * <code>required string type = 1;</code>
+     * @return The type.
      */
     java.lang.String getType();
     /**
      * <code>required string type = 1;</code>
+     * @return The bytes for type.
      */
     com.google.protobuf.ByteString
         getTypeBytes();
 
     /**
      * <code>required string issuer = 2;</code>
+     * @return Whether the issuer field is set.
      */
     boolean hasIssuer();
     /**
      * <code>required string issuer = 2;</code>
+     * @return The issuer.
      */
     java.lang.String getIssuer();
     /**
      * <code>required string issuer = 2;</code>
+     * @return The bytes for issuer.
      */
     com.google.protobuf.ByteString
         getIssuerBytes();
 
     /**
      * <code>required bytes authinfo = 3;</code>
+     * @return Whether the authinfo field is set.
      */
     boolean hasAuthinfo();
     /**
      * <code>required bytes authinfo = 3;</code>
+     * @return The authinfo.
      */
     com.google.protobuf.ByteString getAuthinfo();
 
     /**
      * <code>required .authprox.PriShare randpri = 4;</code>
+     * @return Whether the randpri field is set.
      */
     boolean hasRandpri();
     /**
      * <code>required .authprox.PriShare randpri = 4;</code>
+     * @return The randpri.
      */
     ch.epfl.dedis.lib.proto.AuthProxProto.PriShare getRandpri();
     /**
@@ -1776,23 +1885,29 @@ public final class AuthProxProto {
 
     /**
      * <code>repeated bytes randpubs = 5;</code>
+     * @return A list containing the randpubs.
      */
     java.util.List<com.google.protobuf.ByteString> getRandpubsList();
     /**
      * <code>repeated bytes randpubs = 5;</code>
+     * @return The count of randpubs.
      */
     int getRandpubsCount();
     /**
      * <code>repeated bytes randpubs = 5;</code>
+     * @param index The index of the element to return.
+     * @return The randpubs at the given index.
      */
     com.google.protobuf.ByteString getRandpubs(int index);
 
     /**
      * <code>required bytes message = 6;</code>
+     * @return Whether the message field is set.
      */
     boolean hasMessage();
     /**
      * <code>required bytes message = 6;</code>
+     * @return The message.
      */
     com.google.protobuf.ByteString getMessage();
   }
@@ -1806,7 +1921,7 @@ public final class AuthProxProto {
    *
    * Protobuf type {@code authprox.SignatureRequest}
    */
-  public  static final class SignatureRequest extends
+  public static final class SignatureRequest extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:authprox.SignatureRequest)
       SignatureRequestOrBuilder {
@@ -1821,6 +1936,13 @@ public final class AuthProxProto {
       authinfo_ = com.google.protobuf.ByteString.EMPTY;
       randpubs_ = java.util.Collections.emptyList();
       message_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new SignatureRequest();
     }
 
     @java.lang.Override
@@ -1866,7 +1988,7 @@ public final class AuthProxProto {
             }
             case 34: {
               ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000008) == 0x00000008)) {
+              if (((bitField0_ & 0x00000008) != 0)) {
                 subBuilder = randpri_.toBuilder();
               }
               randpri_ = input.readMessage(ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.parser(), extensionRegistry);
@@ -1878,7 +2000,7 @@ public final class AuthProxProto {
               break;
             }
             case 42: {
-              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+              if (!((mutable_bitField0_ & 0x00000010) != 0)) {
                 randpubs_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
                 mutable_bitField0_ |= 0x00000010;
               }
@@ -1905,8 +2027,8 @@ public final class AuthProxProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
-          randpubs_ = java.util.Collections.unmodifiableList(randpubs_);
+        if (((mutable_bitField0_ & 0x00000010) != 0)) {
+          randpubs_ = java.util.Collections.unmodifiableList(randpubs_); // C
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -1930,13 +2052,17 @@ public final class AuthProxProto {
     private volatile java.lang.Object type_;
     /**
      * <code>required string type = 1;</code>
+     * @return Whether the type field is set.
      */
+    @java.lang.Override
     public boolean hasType() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required string type = 1;</code>
+     * @return The type.
      */
+    @java.lang.Override
     public java.lang.String getType() {
       java.lang.Object ref = type_;
       if (ref instanceof java.lang.String) {
@@ -1953,7 +2079,9 @@ public final class AuthProxProto {
     }
     /**
      * <code>required string type = 1;</code>
+     * @return The bytes for type.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getTypeBytes() {
       java.lang.Object ref = type_;
@@ -1972,13 +2100,17 @@ public final class AuthProxProto {
     private volatile java.lang.Object issuer_;
     /**
      * <code>required string issuer = 2;</code>
+     * @return Whether the issuer field is set.
      */
+    @java.lang.Override
     public boolean hasIssuer() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required string issuer = 2;</code>
+     * @return The issuer.
      */
+    @java.lang.Override
     public java.lang.String getIssuer() {
       java.lang.Object ref = issuer_;
       if (ref instanceof java.lang.String) {
@@ -1995,7 +2127,9 @@ public final class AuthProxProto {
     }
     /**
      * <code>required string issuer = 2;</code>
+     * @return The bytes for issuer.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getIssuerBytes() {
       java.lang.Object ref = issuer_;
@@ -2014,13 +2148,17 @@ public final class AuthProxProto {
     private com.google.protobuf.ByteString authinfo_;
     /**
      * <code>required bytes authinfo = 3;</code>
+     * @return Whether the authinfo field is set.
      */
+    @java.lang.Override
     public boolean hasAuthinfo() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>required bytes authinfo = 3;</code>
+     * @return The authinfo.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getAuthinfo() {
       return authinfo_;
     }
@@ -2029,19 +2167,24 @@ public final class AuthProxProto {
     private ch.epfl.dedis.lib.proto.AuthProxProto.PriShare randpri_;
     /**
      * <code>required .authprox.PriShare randpri = 4;</code>
+     * @return Whether the randpri field is set.
      */
+    @java.lang.Override
     public boolean hasRandpri() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <code>required .authprox.PriShare randpri = 4;</code>
+     * @return The randpri.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.AuthProxProto.PriShare getRandpri() {
       return randpri_ == null ? ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.getDefaultInstance() : randpri_;
     }
     /**
      * <code>required .authprox.PriShare randpri = 4;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.AuthProxProto.PriShareOrBuilder getRandpriOrBuilder() {
       return randpri_ == null ? ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.getDefaultInstance() : randpri_;
     }
@@ -2050,19 +2193,24 @@ public final class AuthProxProto {
     private java.util.List<com.google.protobuf.ByteString> randpubs_;
     /**
      * <code>repeated bytes randpubs = 5;</code>
+     * @return A list containing the randpubs.
      */
+    @java.lang.Override
     public java.util.List<com.google.protobuf.ByteString>
         getRandpubsList() {
       return randpubs_;
     }
     /**
      * <code>repeated bytes randpubs = 5;</code>
+     * @return The count of randpubs.
      */
     public int getRandpubsCount() {
       return randpubs_.size();
     }
     /**
      * <code>repeated bytes randpubs = 5;</code>
+     * @param index The index of the element to return.
+     * @return The randpubs at the given index.
      */
     public com.google.protobuf.ByteString getRandpubs(int index) {
       return randpubs_.get(index);
@@ -2072,13 +2220,17 @@ public final class AuthProxProto {
     private com.google.protobuf.ByteString message_;
     /**
      * <code>required bytes message = 6;</code>
+     * @return Whether the message field is set.
      */
+    @java.lang.Override
     public boolean hasMessage() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <code>required bytes message = 6;</code>
+     * @return The message.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getMessage() {
       return message_;
     }
@@ -2117,22 +2269,22 @@ public final class AuthProxProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, type_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, issuer_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBytes(3, authinfo_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeMessage(4, getRandpri());
       }
       for (int i = 0; i < randpubs_.size(); i++) {
         output.writeBytes(5, randpubs_.get(i));
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeBytes(6, message_);
       }
       unknownFields.writeTo(output);
@@ -2144,17 +2296,17 @@ public final class AuthProxProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, type_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, issuer_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, authinfo_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, getRandpri());
       }
@@ -2167,7 +2319,7 @@ public final class AuthProxProto {
         size += dataSize;
         size += 1 * getRandpubsList().size();
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(6, message_);
       }
@@ -2186,36 +2338,35 @@ public final class AuthProxProto {
       }
       ch.epfl.dedis.lib.proto.AuthProxProto.SignatureRequest other = (ch.epfl.dedis.lib.proto.AuthProxProto.SignatureRequest) obj;
 
-      boolean result = true;
-      result = result && (hasType() == other.hasType());
+      if (hasType() != other.hasType()) return false;
       if (hasType()) {
-        result = result && getType()
-            .equals(other.getType());
+        if (!getType()
+            .equals(other.getType())) return false;
       }
-      result = result && (hasIssuer() == other.hasIssuer());
+      if (hasIssuer() != other.hasIssuer()) return false;
       if (hasIssuer()) {
-        result = result && getIssuer()
-            .equals(other.getIssuer());
+        if (!getIssuer()
+            .equals(other.getIssuer())) return false;
       }
-      result = result && (hasAuthinfo() == other.hasAuthinfo());
+      if (hasAuthinfo() != other.hasAuthinfo()) return false;
       if (hasAuthinfo()) {
-        result = result && getAuthinfo()
-            .equals(other.getAuthinfo());
+        if (!getAuthinfo()
+            .equals(other.getAuthinfo())) return false;
       }
-      result = result && (hasRandpri() == other.hasRandpri());
+      if (hasRandpri() != other.hasRandpri()) return false;
       if (hasRandpri()) {
-        result = result && getRandpri()
-            .equals(other.getRandpri());
+        if (!getRandpri()
+            .equals(other.getRandpri())) return false;
       }
-      result = result && getRandpubsList()
-          .equals(other.getRandpubsList());
-      result = result && (hasMessage() == other.hasMessage());
+      if (!getRandpubsList()
+          .equals(other.getRandpubsList())) return false;
+      if (hasMessage() != other.hasMessage()) return false;
       if (hasMessage()) {
-        result = result && getMessage()
-            .equals(other.getMessage());
+        if (!getMessage()
+            .equals(other.getMessage())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -2434,32 +2585,32 @@ public final class AuthProxProto {
         ch.epfl.dedis.lib.proto.AuthProxProto.SignatureRequest result = new ch.epfl.dedis.lib.proto.AuthProxProto.SignatureRequest(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.type_ = type_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.issuer_ = issuer_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.authinfo_ = authinfo_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          if (randpriBuilder_ == null) {
+            result.randpri_ = randpri_;
+          } else {
+            result.randpri_ = randpriBuilder_.build();
+          }
           to_bitField0_ |= 0x00000008;
         }
-        if (randpriBuilder_ == null) {
-          result.randpri_ = randpri_;
-        } else {
-          result.randpri_ = randpriBuilder_.build();
-        }
-        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((bitField0_ & 0x00000010) != 0)) {
           randpubs_ = java.util.Collections.unmodifiableList(randpubs_);
           bitField0_ = (bitField0_ & ~0x00000010);
         }
         result.randpubs_ = randpubs_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((from_bitField0_ & 0x00000020) != 0)) {
           to_bitField0_ |= 0x00000010;
         }
         result.message_ = message_;
@@ -2470,35 +2621,35 @@ public final class AuthProxProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -2589,12 +2740,14 @@ public final class AuthProxProto {
       private java.lang.Object type_ = "";
       /**
        * <code>required string type = 1;</code>
+       * @return Whether the type field is set.
        */
       public boolean hasType() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required string type = 1;</code>
+       * @return The type.
        */
       public java.lang.String getType() {
         java.lang.Object ref = type_;
@@ -2612,6 +2765,7 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string type = 1;</code>
+       * @return The bytes for type.
        */
       public com.google.protobuf.ByteString
           getTypeBytes() {
@@ -2628,6 +2782,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string type = 1;</code>
+       * @param value The type to set.
+       * @return This builder for chaining.
        */
       public Builder setType(
           java.lang.String value) {
@@ -2641,6 +2797,7 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string type = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearType() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -2650,6 +2807,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string type = 1;</code>
+       * @param value The bytes for type to set.
+       * @return This builder for chaining.
        */
       public Builder setTypeBytes(
           com.google.protobuf.ByteString value) {
@@ -2665,12 +2824,14 @@ public final class AuthProxProto {
       private java.lang.Object issuer_ = "";
       /**
        * <code>required string issuer = 2;</code>
+       * @return Whether the issuer field is set.
        */
       public boolean hasIssuer() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required string issuer = 2;</code>
+       * @return The issuer.
        */
       public java.lang.String getIssuer() {
         java.lang.Object ref = issuer_;
@@ -2688,6 +2849,7 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string issuer = 2;</code>
+       * @return The bytes for issuer.
        */
       public com.google.protobuf.ByteString
           getIssuerBytes() {
@@ -2704,6 +2866,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string issuer = 2;</code>
+       * @param value The issuer to set.
+       * @return This builder for chaining.
        */
       public Builder setIssuer(
           java.lang.String value) {
@@ -2717,6 +2881,7 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string issuer = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearIssuer() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -2726,6 +2891,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string issuer = 2;</code>
+       * @param value The bytes for issuer to set.
+       * @return This builder for chaining.
        */
       public Builder setIssuerBytes(
           com.google.protobuf.ByteString value) {
@@ -2741,18 +2908,24 @@ public final class AuthProxProto {
       private com.google.protobuf.ByteString authinfo_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes authinfo = 3;</code>
+       * @return Whether the authinfo field is set.
        */
+      @java.lang.Override
       public boolean hasAuthinfo() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>required bytes authinfo = 3;</code>
+       * @return The authinfo.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getAuthinfo() {
         return authinfo_;
       }
       /**
        * <code>required bytes authinfo = 3;</code>
+       * @param value The authinfo to set.
+       * @return This builder for chaining.
        */
       public Builder setAuthinfo(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -2765,6 +2938,7 @@ public final class AuthProxProto {
       }
       /**
        * <code>required bytes authinfo = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearAuthinfo() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -2773,17 +2947,19 @@ public final class AuthProxProto {
         return this;
       }
 
-      private ch.epfl.dedis.lib.proto.AuthProxProto.PriShare randpri_ = null;
+      private ch.epfl.dedis.lib.proto.AuthProxProto.PriShare randpri_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.AuthProxProto.PriShare, ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.Builder, ch.epfl.dedis.lib.proto.AuthProxProto.PriShareOrBuilder> randpriBuilder_;
       /**
        * <code>required .authprox.PriShare randpri = 4;</code>
+       * @return Whether the randpri field is set.
        */
       public boolean hasRandpri() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>required .authprox.PriShare randpri = 4;</code>
+       * @return The randpri.
        */
       public ch.epfl.dedis.lib.proto.AuthProxProto.PriShare getRandpri() {
         if (randpriBuilder_ == null) {
@@ -2827,7 +3003,7 @@ public final class AuthProxProto {
        */
       public Builder mergeRandpri(ch.epfl.dedis.lib.proto.AuthProxProto.PriShare value) {
         if (randpriBuilder_ == null) {
-          if (((bitField0_ & 0x00000008) == 0x00000008) &&
+          if (((bitField0_ & 0x00000008) != 0) &&
               randpri_ != null &&
               randpri_ != ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.getDefaultInstance()) {
             randpri_ =
@@ -2893,32 +3069,40 @@ public final class AuthProxProto {
 
       private java.util.List<com.google.protobuf.ByteString> randpubs_ = java.util.Collections.emptyList();
       private void ensureRandpubsIsMutable() {
-        if (!((bitField0_ & 0x00000010) == 0x00000010)) {
+        if (!((bitField0_ & 0x00000010) != 0)) {
           randpubs_ = new java.util.ArrayList<com.google.protobuf.ByteString>(randpubs_);
           bitField0_ |= 0x00000010;
          }
       }
       /**
        * <code>repeated bytes randpubs = 5;</code>
+       * @return A list containing the randpubs.
        */
       public java.util.List<com.google.protobuf.ByteString>
           getRandpubsList() {
-        return java.util.Collections.unmodifiableList(randpubs_);
+        return ((bitField0_ & 0x00000010) != 0) ?
+                 java.util.Collections.unmodifiableList(randpubs_) : randpubs_;
       }
       /**
        * <code>repeated bytes randpubs = 5;</code>
+       * @return The count of randpubs.
        */
       public int getRandpubsCount() {
         return randpubs_.size();
       }
       /**
        * <code>repeated bytes randpubs = 5;</code>
+       * @param index The index of the element to return.
+       * @return The randpubs at the given index.
        */
       public com.google.protobuf.ByteString getRandpubs(int index) {
         return randpubs_.get(index);
       }
       /**
        * <code>repeated bytes randpubs = 5;</code>
+       * @param index The index to set the value at.
+       * @param value The randpubs to set.
+       * @return This builder for chaining.
        */
       public Builder setRandpubs(
           int index, com.google.protobuf.ByteString value) {
@@ -2932,6 +3116,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>repeated bytes randpubs = 5;</code>
+       * @param value The randpubs to add.
+       * @return This builder for chaining.
        */
       public Builder addRandpubs(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -2944,6 +3130,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>repeated bytes randpubs = 5;</code>
+       * @param values The randpubs to add.
+       * @return This builder for chaining.
        */
       public Builder addAllRandpubs(
           java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
@@ -2955,6 +3143,7 @@ public final class AuthProxProto {
       }
       /**
        * <code>repeated bytes randpubs = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearRandpubs() {
         randpubs_ = java.util.Collections.emptyList();
@@ -2966,18 +3155,24 @@ public final class AuthProxProto {
       private com.google.protobuf.ByteString message_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes message = 6;</code>
+       * @return Whether the message field is set.
        */
+      @java.lang.Override
       public boolean hasMessage() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000020) != 0);
       }
       /**
        * <code>required bytes message = 6;</code>
+       * @return The message.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getMessage() {
         return message_;
       }
       /**
        * <code>required bytes message = 6;</code>
+       * @param value The message to set.
+       * @return This builder for chaining.
        */
       public Builder setMessage(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -2990,6 +3185,7 @@ public final class AuthProxProto {
       }
       /**
        * <code>required bytes message = 6;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMessage() {
         bitField0_ = (bitField0_ & ~0x00000020);
@@ -3062,7 +3258,7 @@ public final class AuthProxProto {
    *
    * Protobuf type {@code authprox.PriShare}
    */
-  public  static final class PriShare extends
+  public static final class PriShare extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:authprox.PriShare)
       PriShareOrBuilder {
@@ -3072,6 +3268,13 @@ public final class AuthProxProto {
       super(builder);
     }
     private PriShare() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new PriShare();
     }
 
     @java.lang.Override
@@ -3167,9 +3370,8 @@ public final class AuthProxProto {
       }
       ch.epfl.dedis.lib.proto.AuthProxProto.PriShare other = (ch.epfl.dedis.lib.proto.AuthProxProto.PriShare) obj;
 
-      boolean result = true;
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -3349,35 +3551,35 @@ public final class AuthProxProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -3478,10 +3680,12 @@ public final class AuthProxProto {
 
     /**
      * <code>required .authprox.PriShare partial = 1;</code>
+     * @return Whether the partial field is set.
      */
     boolean hasPartial();
     /**
      * <code>required .authprox.PriShare partial = 1;</code>
+     * @return The partial.
      */
     ch.epfl.dedis.lib.proto.AuthProxProto.PriShare getPartial();
     /**
@@ -3491,19 +3695,23 @@ public final class AuthProxProto {
 
     /**
      * <code>required bytes sessionid = 2;</code>
+     * @return Whether the sessionid field is set.
      */
     boolean hasSessionid();
     /**
      * <code>required bytes sessionid = 2;</code>
+     * @return The sessionid.
      */
     com.google.protobuf.ByteString getSessionid();
 
     /**
      * <code>required bytes signature = 3;</code>
+     * @return Whether the signature field is set.
      */
     boolean hasSignature();
     /**
      * <code>required bytes signature = 3;</code>
+     * @return The signature.
      */
     com.google.protobuf.ByteString getSignature();
   }
@@ -3515,7 +3723,7 @@ public final class AuthProxProto {
    *
    * Protobuf type {@code authprox.PartialSig}
    */
-  public  static final class PartialSig extends
+  public static final class PartialSig extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:authprox.PartialSig)
       PartialSigOrBuilder {
@@ -3527,6 +3735,13 @@ public final class AuthProxProto {
     private PartialSig() {
       sessionid_ = com.google.protobuf.ByteString.EMPTY;
       signature_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new PartialSig();
     }
 
     @java.lang.Override
@@ -3555,7 +3770,7 @@ public final class AuthProxProto {
               break;
             case 10: {
               ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = partial_.toBuilder();
               }
               partial_ = input.readMessage(ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.parser(), extensionRegistry);
@@ -3613,19 +3828,24 @@ public final class AuthProxProto {
     private ch.epfl.dedis.lib.proto.AuthProxProto.PriShare partial_;
     /**
      * <code>required .authprox.PriShare partial = 1;</code>
+     * @return Whether the partial field is set.
      */
+    @java.lang.Override
     public boolean hasPartial() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required .authprox.PriShare partial = 1;</code>
+     * @return The partial.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.AuthProxProto.PriShare getPartial() {
       return partial_ == null ? ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.getDefaultInstance() : partial_;
     }
     /**
      * <code>required .authprox.PriShare partial = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.AuthProxProto.PriShareOrBuilder getPartialOrBuilder() {
       return partial_ == null ? ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.getDefaultInstance() : partial_;
     }
@@ -3634,13 +3854,17 @@ public final class AuthProxProto {
     private com.google.protobuf.ByteString sessionid_;
     /**
      * <code>required bytes sessionid = 2;</code>
+     * @return Whether the sessionid field is set.
      */
+    @java.lang.Override
     public boolean hasSessionid() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes sessionid = 2;</code>
+     * @return The sessionid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getSessionid() {
       return sessionid_;
     }
@@ -3649,13 +3873,17 @@ public final class AuthProxProto {
     private com.google.protobuf.ByteString signature_;
     /**
      * <code>required bytes signature = 3;</code>
+     * @return Whether the signature field is set.
      */
+    @java.lang.Override
     public boolean hasSignature() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>required bytes signature = 3;</code>
+     * @return The signature.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getSignature() {
       return signature_;
     }
@@ -3686,13 +3914,13 @@ public final class AuthProxProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getPartial());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, sessionid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBytes(3, signature_);
       }
       unknownFields.writeTo(output);
@@ -3704,15 +3932,15 @@ public final class AuthProxProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getPartial());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, sessionid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, signature_);
       }
@@ -3731,24 +3959,23 @@ public final class AuthProxProto {
       }
       ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig other = (ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig) obj;
 
-      boolean result = true;
-      result = result && (hasPartial() == other.hasPartial());
+      if (hasPartial() != other.hasPartial()) return false;
       if (hasPartial()) {
-        result = result && getPartial()
-            .equals(other.getPartial());
+        if (!getPartial()
+            .equals(other.getPartial())) return false;
       }
-      result = result && (hasSessionid() == other.hasSessionid());
+      if (hasSessionid() != other.hasSessionid()) return false;
       if (hasSessionid()) {
-        result = result && getSessionid()
-            .equals(other.getSessionid());
+        if (!getSessionid()
+            .equals(other.getSessionid())) return false;
       }
-      result = result && (hasSignature() == other.hasSignature());
+      if (hasSignature() != other.hasSignature()) return false;
       if (hasSignature()) {
-        result = result && getSignature()
-            .equals(other.getSignature());
+        if (!getSignature()
+            .equals(other.getSignature())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -3947,19 +4174,19 @@ public final class AuthProxProto {
         ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig result = new ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (partialBuilder_ == null) {
+            result.partial_ = partial_;
+          } else {
+            result.partial_ = partialBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
         }
-        if (partialBuilder_ == null) {
-          result.partial_ = partial_;
-        } else {
-          result.partial_ = partialBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.sessionid_ = sessionid_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.signature_ = signature_;
@@ -3970,35 +4197,35 @@ public final class AuthProxProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -4060,17 +4287,19 @@ public final class AuthProxProto {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.lib.proto.AuthProxProto.PriShare partial_ = null;
+      private ch.epfl.dedis.lib.proto.AuthProxProto.PriShare partial_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.AuthProxProto.PriShare, ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.Builder, ch.epfl.dedis.lib.proto.AuthProxProto.PriShareOrBuilder> partialBuilder_;
       /**
        * <code>required .authprox.PriShare partial = 1;</code>
+       * @return Whether the partial field is set.
        */
       public boolean hasPartial() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required .authprox.PriShare partial = 1;</code>
+       * @return The partial.
        */
       public ch.epfl.dedis.lib.proto.AuthProxProto.PriShare getPartial() {
         if (partialBuilder_ == null) {
@@ -4114,7 +4343,7 @@ public final class AuthProxProto {
        */
       public Builder mergePartial(ch.epfl.dedis.lib.proto.AuthProxProto.PriShare value) {
         if (partialBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               partial_ != null &&
               partial_ != ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.getDefaultInstance()) {
             partial_ =
@@ -4181,18 +4410,24 @@ public final class AuthProxProto {
       private com.google.protobuf.ByteString sessionid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes sessionid = 2;</code>
+       * @return Whether the sessionid field is set.
        */
+      @java.lang.Override
       public boolean hasSessionid() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes sessionid = 2;</code>
+       * @return The sessionid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getSessionid() {
         return sessionid_;
       }
       /**
        * <code>required bytes sessionid = 2;</code>
+       * @param value The sessionid to set.
+       * @return This builder for chaining.
        */
       public Builder setSessionid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -4205,6 +4440,7 @@ public final class AuthProxProto {
       }
       /**
        * <code>required bytes sessionid = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSessionid() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -4216,18 +4452,24 @@ public final class AuthProxProto {
       private com.google.protobuf.ByteString signature_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes signature = 3;</code>
+       * @return Whether the signature field is set.
        */
+      @java.lang.Override
       public boolean hasSignature() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>required bytes signature = 3;</code>
+       * @return The signature.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getSignature() {
         return signature_;
       }
       /**
        * <code>required bytes signature = 3;</code>
+       * @param value The signature to set.
+       * @return This builder for chaining.
        */
       public Builder setSignature(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -4240,6 +4482,7 @@ public final class AuthProxProto {
       }
       /**
        * <code>required bytes signature = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSignature() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -4306,10 +4549,12 @@ public final class AuthProxProto {
 
     /**
      * <code>required .authprox.PartialSig partialsignature = 1;</code>
+     * @return Whether the partialsignature field is set.
      */
     boolean hasPartialsignature();
     /**
      * <code>required .authprox.PartialSig partialsignature = 1;</code>
+     * @return The partialsignature.
      */
     ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig getPartialsignature();
     /**
@@ -4324,7 +4569,7 @@ public final class AuthProxProto {
    *
    * Protobuf type {@code authprox.SignatureResponse}
    */
-  public  static final class SignatureResponse extends
+  public static final class SignatureResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:authprox.SignatureResponse)
       SignatureResponseOrBuilder {
@@ -4334,6 +4579,13 @@ public final class AuthProxProto {
       super(builder);
     }
     private SignatureResponse() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new SignatureResponse();
     }
 
     @java.lang.Override
@@ -4362,7 +4614,7 @@ public final class AuthProxProto {
               break;
             case 10: {
               ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = partialsignature_.toBuilder();
               }
               partialsignature_ = input.readMessage(ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig.parser(), extensionRegistry);
@@ -4410,19 +4662,24 @@ public final class AuthProxProto {
     private ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig partialsignature_;
     /**
      * <code>required .authprox.PartialSig partialsignature = 1;</code>
+     * @return Whether the partialsignature field is set.
      */
+    @java.lang.Override
     public boolean hasPartialsignature() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required .authprox.PartialSig partialsignature = 1;</code>
+     * @return The partialsignature.
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig getPartialsignature() {
       return partialsignature_ == null ? ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig.getDefaultInstance() : partialsignature_;
     }
     /**
      * <code>required .authprox.PartialSig partialsignature = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.AuthProxProto.PartialSigOrBuilder getPartialsignatureOrBuilder() {
       return partialsignature_ == null ? ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig.getDefaultInstance() : partialsignature_;
     }
@@ -4449,7 +4706,7 @@ public final class AuthProxProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getPartialsignature());
       }
       unknownFields.writeTo(output);
@@ -4461,7 +4718,7 @@ public final class AuthProxProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getPartialsignature());
       }
@@ -4480,14 +4737,13 @@ public final class AuthProxProto {
       }
       ch.epfl.dedis.lib.proto.AuthProxProto.SignatureResponse other = (ch.epfl.dedis.lib.proto.AuthProxProto.SignatureResponse) obj;
 
-      boolean result = true;
-      result = result && (hasPartialsignature() == other.hasPartialsignature());
+      if (hasPartialsignature() != other.hasPartialsignature()) return false;
       if (hasPartialsignature()) {
-        result = result && getPartialsignature()
-            .equals(other.getPartialsignature());
+        if (!getPartialsignature()
+            .equals(other.getPartialsignature())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -4673,13 +4929,13 @@ public final class AuthProxProto {
         ch.epfl.dedis.lib.proto.AuthProxProto.SignatureResponse result = new ch.epfl.dedis.lib.proto.AuthProxProto.SignatureResponse(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (partialsignatureBuilder_ == null) {
+            result.partialsignature_ = partialsignature_;
+          } else {
+            result.partialsignature_ = partialsignatureBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
-        }
-        if (partialsignatureBuilder_ == null) {
-          result.partialsignature_ = partialsignature_;
-        } else {
-          result.partialsignature_ = partialsignatureBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -4688,35 +4944,35 @@ public final class AuthProxProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -4769,17 +5025,19 @@ public final class AuthProxProto {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig partialsignature_ = null;
+      private ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig partialsignature_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig, ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig.Builder, ch.epfl.dedis.lib.proto.AuthProxProto.PartialSigOrBuilder> partialsignatureBuilder_;
       /**
        * <code>required .authprox.PartialSig partialsignature = 1;</code>
+       * @return Whether the partialsignature field is set.
        */
       public boolean hasPartialsignature() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required .authprox.PartialSig partialsignature = 1;</code>
+       * @return The partialsignature.
        */
       public ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig getPartialsignature() {
         if (partialsignatureBuilder_ == null) {
@@ -4823,7 +5081,7 @@ public final class AuthProxProto {
        */
       public Builder mergePartialsignature(ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig value) {
         if (partialsignatureBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               partialsignature_ != null &&
               partialsignature_ != ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig.getDefaultInstance()) {
             partialsignature_ =
@@ -4945,38 +5203,50 @@ public final class AuthProxProto {
 
     /**
      * <code>repeated string types = 1;</code>
+     * @return A list containing the types.
      */
     java.util.List<java.lang.String>
         getTypesList();
     /**
      * <code>repeated string types = 1;</code>
+     * @return The count of types.
      */
     int getTypesCount();
     /**
      * <code>repeated string types = 1;</code>
+     * @param index The index of the element to return.
+     * @return The types at the given index.
      */
     java.lang.String getTypes(int index);
     /**
      * <code>repeated string types = 1;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the types at the given index.
      */
     com.google.protobuf.ByteString
         getTypesBytes(int index);
 
     /**
      * <code>repeated string issuers = 2;</code>
+     * @return A list containing the issuers.
      */
     java.util.List<java.lang.String>
         getIssuersList();
     /**
      * <code>repeated string issuers = 2;</code>
+     * @return The count of issuers.
      */
     int getIssuersCount();
     /**
      * <code>repeated string issuers = 2;</code>
+     * @param index The index of the element to return.
+     * @return The issuers at the given index.
      */
     java.lang.String getIssuers(int index);
     /**
      * <code>repeated string issuers = 2;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the issuers at the given index.
      */
     com.google.protobuf.ByteString
         getIssuersBytes(int index);
@@ -4991,7 +5261,7 @@ public final class AuthProxProto {
    *
    * Protobuf type {@code authprox.EnrollmentsRequest}
    */
-  public  static final class EnrollmentsRequest extends
+  public static final class EnrollmentsRequest extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:authprox.EnrollmentsRequest)
       EnrollmentsRequestOrBuilder {
@@ -5003,6 +5273,13 @@ public final class AuthProxProto {
     private EnrollmentsRequest() {
       types_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       issuers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new EnrollmentsRequest();
     }
 
     @java.lang.Override
@@ -5031,7 +5308,7 @@ public final class AuthProxProto {
               break;
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 types_ = new com.google.protobuf.LazyStringArrayList();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -5040,7 +5317,7 @@ public final class AuthProxProto {
             }
             case 18: {
               com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                 issuers_ = new com.google.protobuf.LazyStringArrayList();
                 mutable_bitField0_ |= 0x00000002;
               }
@@ -5062,10 +5339,10 @@ public final class AuthProxProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
           types_ = types_.getUnmodifiableView();
         }
-        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((mutable_bitField0_ & 0x00000002) != 0)) {
           issuers_ = issuers_.getUnmodifiableView();
         }
         this.unknownFields = unknownFields.build();
@@ -5089,6 +5366,7 @@ public final class AuthProxProto {
     private com.google.protobuf.LazyStringList types_;
     /**
      * <code>repeated string types = 1;</code>
+     * @return A list containing the types.
      */
     public com.google.protobuf.ProtocolStringList
         getTypesList() {
@@ -5096,18 +5374,23 @@ public final class AuthProxProto {
     }
     /**
      * <code>repeated string types = 1;</code>
+     * @return The count of types.
      */
     public int getTypesCount() {
       return types_.size();
     }
     /**
      * <code>repeated string types = 1;</code>
+     * @param index The index of the element to return.
+     * @return The types at the given index.
      */
     public java.lang.String getTypes(int index) {
       return types_.get(index);
     }
     /**
      * <code>repeated string types = 1;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the types at the given index.
      */
     public com.google.protobuf.ByteString
         getTypesBytes(int index) {
@@ -5118,6 +5401,7 @@ public final class AuthProxProto {
     private com.google.protobuf.LazyStringList issuers_;
     /**
      * <code>repeated string issuers = 2;</code>
+     * @return A list containing the issuers.
      */
     public com.google.protobuf.ProtocolStringList
         getIssuersList() {
@@ -5125,18 +5409,23 @@ public final class AuthProxProto {
     }
     /**
      * <code>repeated string issuers = 2;</code>
+     * @return The count of issuers.
      */
     public int getIssuersCount() {
       return issuers_.size();
     }
     /**
      * <code>repeated string issuers = 2;</code>
+     * @param index The index of the element to return.
+     * @return The issuers at the given index.
      */
     public java.lang.String getIssuers(int index) {
       return issuers_.get(index);
     }
     /**
      * <code>repeated string issuers = 2;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the issuers at the given index.
      */
     public com.google.protobuf.ByteString
         getIssuersBytes(int index) {
@@ -5203,13 +5492,12 @@ public final class AuthProxProto {
       }
       ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsRequest other = (ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsRequest) obj;
 
-      boolean result = true;
-      result = result && getTypesList()
-          .equals(other.getTypesList());
-      result = result && getIssuersList()
-          .equals(other.getIssuersList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getTypesList()
+          .equals(other.getTypesList())) return false;
+      if (!getIssuersList()
+          .equals(other.getIssuersList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -5398,12 +5686,12 @@ public final class AuthProxProto {
       public ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsRequest buildPartial() {
         ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsRequest result = new ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsRequest(this);
         int from_bitField0_ = bitField0_;
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((bitField0_ & 0x00000001) != 0)) {
           types_ = types_.getUnmodifiableView();
           bitField0_ = (bitField0_ & ~0x00000001);
         }
         result.types_ = types_;
-        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((bitField0_ & 0x00000002) != 0)) {
           issuers_ = issuers_.getUnmodifiableView();
           bitField0_ = (bitField0_ & ~0x00000002);
         }
@@ -5414,35 +5702,35 @@ public final class AuthProxProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -5508,13 +5796,14 @@ public final class AuthProxProto {
 
       private com.google.protobuf.LazyStringList types_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureTypesIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           types_ = new com.google.protobuf.LazyStringArrayList(types_);
           bitField0_ |= 0x00000001;
          }
       }
       /**
        * <code>repeated string types = 1;</code>
+       * @return A list containing the types.
        */
       public com.google.protobuf.ProtocolStringList
           getTypesList() {
@@ -5522,18 +5811,23 @@ public final class AuthProxProto {
       }
       /**
        * <code>repeated string types = 1;</code>
+       * @return The count of types.
        */
       public int getTypesCount() {
         return types_.size();
       }
       /**
        * <code>repeated string types = 1;</code>
+       * @param index The index of the element to return.
+       * @return The types at the given index.
        */
       public java.lang.String getTypes(int index) {
         return types_.get(index);
       }
       /**
        * <code>repeated string types = 1;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the types at the given index.
        */
       public com.google.protobuf.ByteString
           getTypesBytes(int index) {
@@ -5541,6 +5835,9 @@ public final class AuthProxProto {
       }
       /**
        * <code>repeated string types = 1;</code>
+       * @param index The index to set the value at.
+       * @param value The types to set.
+       * @return This builder for chaining.
        */
       public Builder setTypes(
           int index, java.lang.String value) {
@@ -5554,6 +5851,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>repeated string types = 1;</code>
+       * @param value The types to add.
+       * @return This builder for chaining.
        */
       public Builder addTypes(
           java.lang.String value) {
@@ -5567,6 +5866,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>repeated string types = 1;</code>
+       * @param values The types to add.
+       * @return This builder for chaining.
        */
       public Builder addAllTypes(
           java.lang.Iterable<java.lang.String> values) {
@@ -5578,6 +5879,7 @@ public final class AuthProxProto {
       }
       /**
        * <code>repeated string types = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTypes() {
         types_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -5587,6 +5889,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>repeated string types = 1;</code>
+       * @param value The bytes of the types to add.
+       * @return This builder for chaining.
        */
       public Builder addTypesBytes(
           com.google.protobuf.ByteString value) {
@@ -5601,13 +5905,14 @@ public final class AuthProxProto {
 
       private com.google.protobuf.LazyStringList issuers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureIssuersIsMutable() {
-        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+        if (!((bitField0_ & 0x00000002) != 0)) {
           issuers_ = new com.google.protobuf.LazyStringArrayList(issuers_);
           bitField0_ |= 0x00000002;
          }
       }
       /**
        * <code>repeated string issuers = 2;</code>
+       * @return A list containing the issuers.
        */
       public com.google.protobuf.ProtocolStringList
           getIssuersList() {
@@ -5615,18 +5920,23 @@ public final class AuthProxProto {
       }
       /**
        * <code>repeated string issuers = 2;</code>
+       * @return The count of issuers.
        */
       public int getIssuersCount() {
         return issuers_.size();
       }
       /**
        * <code>repeated string issuers = 2;</code>
+       * @param index The index of the element to return.
+       * @return The issuers at the given index.
        */
       public java.lang.String getIssuers(int index) {
         return issuers_.get(index);
       }
       /**
        * <code>repeated string issuers = 2;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the issuers at the given index.
        */
       public com.google.protobuf.ByteString
           getIssuersBytes(int index) {
@@ -5634,6 +5944,9 @@ public final class AuthProxProto {
       }
       /**
        * <code>repeated string issuers = 2;</code>
+       * @param index The index to set the value at.
+       * @param value The issuers to set.
+       * @return This builder for chaining.
        */
       public Builder setIssuers(
           int index, java.lang.String value) {
@@ -5647,6 +5960,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>repeated string issuers = 2;</code>
+       * @param value The issuers to add.
+       * @return This builder for chaining.
        */
       public Builder addIssuers(
           java.lang.String value) {
@@ -5660,6 +5975,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>repeated string issuers = 2;</code>
+       * @param values The issuers to add.
+       * @return This builder for chaining.
        */
       public Builder addAllIssuers(
           java.lang.Iterable<java.lang.String> values) {
@@ -5671,6 +5988,7 @@ public final class AuthProxProto {
       }
       /**
        * <code>repeated string issuers = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearIssuers() {
         issuers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -5680,6 +5998,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>repeated string issuers = 2;</code>
+       * @param value The bytes of the issuers to add.
+       * @return This builder for chaining.
        */
       public Builder addIssuersBytes(
           com.google.protobuf.ByteString value) {
@@ -5779,7 +6099,7 @@ public final class AuthProxProto {
    *
    * Protobuf type {@code authprox.EnrollmentsResponse}
    */
-  public  static final class EnrollmentsResponse extends
+  public static final class EnrollmentsResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:authprox.EnrollmentsResponse)
       EnrollmentsResponseOrBuilder {
@@ -5790,6 +6110,13 @@ public final class AuthProxProto {
     }
     private EnrollmentsResponse() {
       enrollments_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new EnrollmentsResponse();
     }
 
     @java.lang.Override
@@ -5817,7 +6144,7 @@ public final class AuthProxProto {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 enrollments_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo>();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -5840,7 +6167,7 @@ public final class AuthProxProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
           enrollments_ = java.util.Collections.unmodifiableList(enrollments_);
         }
         this.unknownFields = unknownFields.build();
@@ -5865,12 +6192,14 @@ public final class AuthProxProto {
     /**
      * <code>repeated .authprox.EnrollmentInfo enrollments = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo> getEnrollmentsList() {
       return enrollments_;
     }
     /**
      * <code>repeated .authprox.EnrollmentInfo enrollments = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfoOrBuilder>
         getEnrollmentsOrBuilderList() {
       return enrollments_;
@@ -5878,18 +6207,21 @@ public final class AuthProxProto {
     /**
      * <code>repeated .authprox.EnrollmentInfo enrollments = 1;</code>
      */
+    @java.lang.Override
     public int getEnrollmentsCount() {
       return enrollments_.size();
     }
     /**
      * <code>repeated .authprox.EnrollmentInfo enrollments = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo getEnrollments(int index) {
       return enrollments_.get(index);
     }
     /**
      * <code>repeated .authprox.EnrollmentInfo enrollments = 1;</code>
      */
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfoOrBuilder getEnrollmentsOrBuilder(
         int index) {
       return enrollments_.get(index);
@@ -5946,11 +6278,10 @@ public final class AuthProxProto {
       }
       ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsResponse other = (ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsResponse) obj;
 
-      boolean result = true;
-      result = result && getEnrollmentsList()
-          .equals(other.getEnrollmentsList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getEnrollmentsList()
+          .equals(other.getEnrollmentsList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -6136,7 +6467,7 @@ public final class AuthProxProto {
         ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsResponse result = new ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsResponse(this);
         int from_bitField0_ = bitField0_;
         if (enrollmentsBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((bitField0_ & 0x00000001) != 0)) {
             enrollments_ = java.util.Collections.unmodifiableList(enrollments_);
             bitField0_ = (bitField0_ & ~0x00000001);
           }
@@ -6150,35 +6481,35 @@ public final class AuthProxProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -6256,7 +6587,7 @@ public final class AuthProxProto {
       private java.util.List<ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo> enrollments_ =
         java.util.Collections.emptyList();
       private void ensureEnrollmentsIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           enrollments_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo>(enrollments_);
           bitField0_ |= 0x00000001;
          }
@@ -6485,7 +6816,7 @@ public final class AuthProxProto {
           enrollmentsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo, ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo.Builder, ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfoOrBuilder>(
                   enrollments_,
-                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
                   isClean());
           enrollments_ = null;
@@ -6551,38 +6882,46 @@ public final class AuthProxProto {
 
     /**
      * <code>required string type = 1;</code>
+     * @return Whether the type field is set.
      */
     boolean hasType();
     /**
      * <code>required string type = 1;</code>
+     * @return The type.
      */
     java.lang.String getType();
     /**
      * <code>required string type = 1;</code>
+     * @return The bytes for type.
      */
     com.google.protobuf.ByteString
         getTypeBytes();
 
     /**
      * <code>required string issuer = 2;</code>
+     * @return Whether the issuer field is set.
      */
     boolean hasIssuer();
     /**
      * <code>required string issuer = 2;</code>
+     * @return The issuer.
      */
     java.lang.String getIssuer();
     /**
      * <code>required string issuer = 2;</code>
+     * @return The bytes for issuer.
      */
     com.google.protobuf.ByteString
         getIssuerBytes();
 
     /**
      * <code>required bytes public = 3;</code>
+     * @return Whether the public field is set.
      */
     boolean hasPublic();
     /**
      * <code>required bytes public = 3;</code>
+     * @return The public.
      */
     com.google.protobuf.ByteString getPublic();
   }
@@ -6593,7 +6932,7 @@ public final class AuthProxProto {
    *
    * Protobuf type {@code authprox.EnrollmentInfo}
    */
-  public  static final class EnrollmentInfo extends
+  public static final class EnrollmentInfo extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:authprox.EnrollmentInfo)
       EnrollmentInfoOrBuilder {
@@ -6606,6 +6945,13 @@ public final class AuthProxProto {
       type_ = "";
       issuer_ = "";
       public_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new EnrollmentInfo();
     }
 
     @java.lang.Override
@@ -6686,13 +7032,17 @@ public final class AuthProxProto {
     private volatile java.lang.Object type_;
     /**
      * <code>required string type = 1;</code>
+     * @return Whether the type field is set.
      */
+    @java.lang.Override
     public boolean hasType() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required string type = 1;</code>
+     * @return The type.
      */
+    @java.lang.Override
     public java.lang.String getType() {
       java.lang.Object ref = type_;
       if (ref instanceof java.lang.String) {
@@ -6709,7 +7059,9 @@ public final class AuthProxProto {
     }
     /**
      * <code>required string type = 1;</code>
+     * @return The bytes for type.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getTypeBytes() {
       java.lang.Object ref = type_;
@@ -6728,13 +7080,17 @@ public final class AuthProxProto {
     private volatile java.lang.Object issuer_;
     /**
      * <code>required string issuer = 2;</code>
+     * @return Whether the issuer field is set.
      */
+    @java.lang.Override
     public boolean hasIssuer() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required string issuer = 2;</code>
+     * @return The issuer.
      */
+    @java.lang.Override
     public java.lang.String getIssuer() {
       java.lang.Object ref = issuer_;
       if (ref instanceof java.lang.String) {
@@ -6751,7 +7107,9 @@ public final class AuthProxProto {
     }
     /**
      * <code>required string issuer = 2;</code>
+     * @return The bytes for issuer.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getIssuerBytes() {
       java.lang.Object ref = issuer_;
@@ -6770,13 +7128,17 @@ public final class AuthProxProto {
     private com.google.protobuf.ByteString public_;
     /**
      * <code>required bytes public = 3;</code>
+     * @return Whether the public field is set.
      */
+    @java.lang.Override
     public boolean hasPublic() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>required bytes public = 3;</code>
+     * @return The public.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getPublic() {
       return public_;
     }
@@ -6807,13 +7169,13 @@ public final class AuthProxProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, type_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, issuer_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBytes(3, public_);
       }
       unknownFields.writeTo(output);
@@ -6825,13 +7187,13 @@ public final class AuthProxProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, type_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, issuer_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, public_);
       }
@@ -6850,24 +7212,23 @@ public final class AuthProxProto {
       }
       ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo other = (ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo) obj;
 
-      boolean result = true;
-      result = result && (hasType() == other.hasType());
+      if (hasType() != other.hasType()) return false;
       if (hasType()) {
-        result = result && getType()
-            .equals(other.getType());
+        if (!getType()
+            .equals(other.getType())) return false;
       }
-      result = result && (hasIssuer() == other.hasIssuer());
+      if (hasIssuer() != other.hasIssuer()) return false;
       if (hasIssuer()) {
-        result = result && getIssuer()
-            .equals(other.getIssuer());
+        if (!getIssuer()
+            .equals(other.getIssuer())) return false;
       }
-      result = result && (hasPublic() == other.hasPublic());
+      if (hasPublic() != other.hasPublic()) return false;
       if (hasPublic()) {
-        result = result && getPublic()
-            .equals(other.getPublic());
+        if (!getPublic()
+            .equals(other.getPublic())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -7060,15 +7421,15 @@ public final class AuthProxProto {
         ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo result = new ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.type_ = type_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.issuer_ = issuer_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.public_ = public_;
@@ -7079,35 +7440,35 @@ public final class AuthProxProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -7176,12 +7537,14 @@ public final class AuthProxProto {
       private java.lang.Object type_ = "";
       /**
        * <code>required string type = 1;</code>
+       * @return Whether the type field is set.
        */
       public boolean hasType() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required string type = 1;</code>
+       * @return The type.
        */
       public java.lang.String getType() {
         java.lang.Object ref = type_;
@@ -7199,6 +7562,7 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string type = 1;</code>
+       * @return The bytes for type.
        */
       public com.google.protobuf.ByteString
           getTypeBytes() {
@@ -7215,6 +7579,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string type = 1;</code>
+       * @param value The type to set.
+       * @return This builder for chaining.
        */
       public Builder setType(
           java.lang.String value) {
@@ -7228,6 +7594,7 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string type = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearType() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -7237,6 +7604,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string type = 1;</code>
+       * @param value The bytes for type to set.
+       * @return This builder for chaining.
        */
       public Builder setTypeBytes(
           com.google.protobuf.ByteString value) {
@@ -7252,12 +7621,14 @@ public final class AuthProxProto {
       private java.lang.Object issuer_ = "";
       /**
        * <code>required string issuer = 2;</code>
+       * @return Whether the issuer field is set.
        */
       public boolean hasIssuer() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required string issuer = 2;</code>
+       * @return The issuer.
        */
       public java.lang.String getIssuer() {
         java.lang.Object ref = issuer_;
@@ -7275,6 +7646,7 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string issuer = 2;</code>
+       * @return The bytes for issuer.
        */
       public com.google.protobuf.ByteString
           getIssuerBytes() {
@@ -7291,6 +7663,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string issuer = 2;</code>
+       * @param value The issuer to set.
+       * @return This builder for chaining.
        */
       public Builder setIssuer(
           java.lang.String value) {
@@ -7304,6 +7678,7 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string issuer = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearIssuer() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -7313,6 +7688,8 @@ public final class AuthProxProto {
       }
       /**
        * <code>required string issuer = 2;</code>
+       * @param value The bytes for issuer to set.
+       * @return This builder for chaining.
        */
       public Builder setIssuerBytes(
           com.google.protobuf.ByteString value) {
@@ -7328,18 +7705,24 @@ public final class AuthProxProto {
       private com.google.protobuf.ByteString public_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>required bytes public = 3;</code>
+       * @return Whether the public field is set.
        */
+      @java.lang.Override
       public boolean hasPublic() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>required bytes public = 3;</code>
+       * @return The public.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getPublic() {
         return public_;
       }
       /**
        * <code>required bytes public = 3;</code>
+       * @param value The public to set.
+       * @return This builder for chaining.
        */
       public Builder setPublic(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -7352,6 +7735,7 @@ public final class AuthProxProto {
       }
       /**
        * <code>required bytes public = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPublic() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -7485,18 +7869,10 @@ public final class AuthProxProto {
       "ssuer\030\002 \002(\t\022\016\n\006public\030\003 \002(\014B(\n\027ch.epfl.d" +
       "edis.lib.protoB\rAuthProxProto"
     };
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-        }, assigner);
+        });
     internal_static_authprox_EnrollRequest_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_authprox_EnrollRequest_fieldAccessorTable = new
