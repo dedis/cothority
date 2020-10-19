@@ -10,12 +10,8 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	"go.dedis.ch/cothority/v3"
-
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3/byzcoin"
-	"go.dedis.ch/cothority/v3/darc"
-	"go.dedis.ch/onet/v3"
 )
 
 var txParams = struct {
@@ -34,10 +30,10 @@ var testPrivateKeys = []string{
 func Test_Spawn(t *testing.T) {
 	// Create a new ledger and prepare for proper closing
 	bct := newBCTest(t)
-	defer bct.Close()
+	defer bct.CloseAll()
 
 	// Spawn a new BEvm instance
-	_, err := NewBEvm(bct.cl, bct.signer, bct.gDarc)
+	_, err := NewBEvm(bct.Client, bct.Signer, bct.GenesisDarc)
 	require.NoError(t, err)
 }
 
@@ -45,14 +41,14 @@ func Test_Spawn(t *testing.T) {
 func Test_SpawnAndDelete(t *testing.T) {
 	// Create a new ledger and prepare for proper closing
 	bct := newBCTest(t)
-	defer bct.Close()
+	defer bct.CloseAll()
 
 	// Spawn a new BEvm instance
-	instanceID, err := NewBEvm(bct.cl, bct.signer, bct.gDarc)
+	instanceID, err := NewBEvm(bct.Client, bct.Signer, bct.GenesisDarc)
 	require.NoError(t, err)
 
 	// Create a new BEvm client
-	bevmClient, err := NewClient(bct.cl, bct.signer, instanceID)
+	bevmClient, err := NewClient(bct.Client, bct.Signer, instanceID)
 	require.NoError(t, err)
 
 	// Initialize an account
@@ -84,14 +80,14 @@ func Test_SpawnAndDelete(t *testing.T) {
 func Test_InvokeCreditAccounts(t *testing.T) {
 	// Create a new ledger and prepare for proper closing
 	bct := newBCTest(t)
-	defer bct.Close()
+	defer bct.CloseAll()
 
 	// Spawn a new BEvm instance
-	instanceID, err := NewBEvm(bct.cl, bct.signer, bct.gDarc)
+	instanceID, err := NewBEvm(bct.Client, bct.Signer, bct.GenesisDarc)
 	require.NoError(t, err)
 
 	// Create a new BEvm client
-	bevmClient, err := NewClient(bct.cl, bct.signer, instanceID)
+	bevmClient, err := NewClient(bct.Client, bct.Signer, instanceID)
 	require.NoError(t, err)
 
 	// Initialize some accounts
@@ -119,14 +115,14 @@ func Test_InvokeCreditAccounts(t *testing.T) {
 func Test_InvokeCandyContract(t *testing.T) {
 	// Create a new ledger and prepare for proper closing
 	bct := newBCTest(t)
-	defer bct.Close()
+	defer bct.CloseAll()
 
 	// Spawn a new BEvm instance
-	instanceID, err := NewBEvm(bct.cl, bct.signer, bct.gDarc)
+	instanceID, err := NewBEvm(bct.Client, bct.Signer, bct.GenesisDarc)
 	require.NoError(t, err)
 
 	// Create a new BEvm client
-	bevmClient, err := NewClient(bct.cl, bct.signer, instanceID)
+	bevmClient, err := NewClient(bct.Client, bct.Signer, instanceID)
 	require.NoError(t, err)
 
 	// Initialize an account
@@ -175,14 +171,14 @@ func Test_InvokeCandyContract(t *testing.T) {
 func Test_Time(t *testing.T) {
 	// Create a new ledger and prepare for proper closing
 	bct := newBCTest(t)
-	defer bct.Close()
+	defer bct.CloseAll()
 
 	// Spawn a new BEvm instance
-	instanceID, err := NewBEvm(bct.cl, bct.signer, bct.gDarc)
+	instanceID, err := NewBEvm(bct.Client, bct.Signer, bct.GenesisDarc)
 	require.NoError(t, err)
 
 	// Create a new BEvm client
-	bevmClient, err := NewClient(bct.cl, bct.signer, instanceID)
+	bevmClient, err := NewClient(bct.Client, bct.Signer, instanceID)
 	require.NoError(t, err)
 
 	// Initialize an account
@@ -246,14 +242,14 @@ func Test_Time(t *testing.T) {
 func Test_ABIv2(t *testing.T) {
 	// Create a new ledger and prepare for proper closing
 	bct := newBCTest(t)
-	defer bct.Close()
+	defer bct.CloseAll()
 
 	// Spawn a new BEvm instance
-	instanceID, err := NewBEvm(bct.cl, bct.signer, bct.gDarc)
+	instanceID, err := NewBEvm(bct.Client, bct.Signer, bct.GenesisDarc)
 	require.NoError(t, err)
 
 	// Create a new BEvm client
-	bevmClient, err := NewClient(bct.cl, bct.signer, instanceID)
+	bevmClient, err := NewClient(bct.Client, bct.Signer, instanceID)
 	require.NoError(t, err)
 
 	// Initialize an account
@@ -301,14 +297,14 @@ func Test_ABIv2(t *testing.T) {
 func Test_InvokeTokenContract(t *testing.T) {
 	// Create a new ledger and prepare for proper closing
 	bct := newBCTest(t)
-	defer bct.Close()
+	defer bct.CloseAll()
 
 	// Spawn a new BEvm instance
-	instanceID, err := NewBEvm(bct.cl, bct.signer, bct.gDarc)
+	instanceID, err := NewBEvm(bct.Client, bct.Signer, bct.GenesisDarc)
 	require.NoError(t, err)
 
 	// Create a new BEvm client
-	bevmClient, err := NewClient(bct.cl, bct.signer, instanceID)
+	bevmClient, err := NewClient(bct.Client, bct.Signer, instanceID)
 	require.NoError(t, err)
 
 	// Initialize two accounts
@@ -399,14 +395,14 @@ func Test_InvokeTokenContract(t *testing.T) {
 func Test_InvokeLoanContract(t *testing.T) {
 	//Preparing ledger
 	bct := newBCTest(t)
-	defer bct.Close()
+	defer bct.CloseAll()
 
 	// Spawn a new BEvm instance
-	instanceID, err := NewBEvm(bct.cl, bct.signer, bct.gDarc)
+	instanceID, err := NewBEvm(bct.Client, bct.Signer, bct.GenesisDarc)
 	require.NoError(t, err)
 
 	// Create a new BEvm client
-	bevmClient, err := NewClient(bct.cl, bct.signer, instanceID)
+	bevmClient, err := NewClient(bct.Client, bct.Signer, instanceID)
 	require.NoError(t, err)
 
 	// Initialize two accounts
@@ -524,56 +520,16 @@ func Test_InvokeLoanContract(t *testing.T) {
 	require.Equal(t, expected, bal)
 }
 
-// bcTest is used here to provide some simple test structure for different
-// tests.
-type bcTest struct {
-	t       *testing.T
-	local   *onet.LocalTest
-	signer  darc.Signer
-	servers []*onet.Server
-	roster  *onet.Roster
-	cl      *byzcoin.Client
-	gMsg    *byzcoin.CreateGenesisBlock
-	gDarc   *darc.Darc
-}
-
-func newBCTest(t *testing.T) (out *bcTest) {
-	out = &bcTest{t: t}
-	// First create a local test environment with three nodes.
-	out.local = onet.NewTCPTest(cothority.Suite)
-
-	out.signer = darc.NewSignerEd25519(nil, nil)
-	out.servers, out.roster, _ = out.local.GenTree(3, true)
-
-	// Then create a new ledger with the genesis darc having the right
-	// to create and update keyValue contracts.
-	var err error
-	out.gMsg, err = byzcoin.DefaultGenesisMsg(
-		byzcoin.CurrentVersion,
-		out.roster,
-		[]string{
-			"spawn:bevm",
-			"invoke:bevm.credit",
-			"invoke:bevm.transaction",
-			"delete:bevm"},
-		out.signer.Identity())
-	require.NoError(t, err)
-	out.gDarc = &out.gMsg.GenesisDarc
-
-	// This BlockInterval is good for testing, but in real world applications
-	// this should be more like 5 seconds.
-	out.gMsg.BlockInterval = time.Second
-
-	out.cl, _, err = byzcoin.NewLedger(out.gMsg, false)
-	require.NoError(t, err)
-
-	out.cl.UseNode(0)
-
+// newBCTest creates a new byzcoin-instance with the correct rules to create
+// a new BEvm-instance.
+func newBCTest(t *testing.T) (out *byzcoin.BCTest) {
+	out = byzcoin.NewBCTestDefault(t)
+	out.AddGenesisRules("spawn:bevm",
+		"invoke:bevm.credit",
+		"invoke:bevm.transaction",
+		"delete:bevm")
+	out.CreateByzCoin()
 	return out
-}
-
-func (bct *bcTest) Close() {
-	bct.local.CloseAll()
 }
 
 // Helper functions
