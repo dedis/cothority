@@ -1,6 +1,6 @@
 import Long from "long";
 import { BehaviorSubject, fromEvent, Subscription } from "rxjs";
-import { distinct, distinctUntilChanged, elementAt, map, startWith, tap } from "rxjs/operators";
+import { distinctUntilChanged, flatMap, map, tap } from "rxjs/operators";
 import { Rule } from "../darc";
 import Darc from "../darc/darc";
 import IdentityEd25519 from "../darc/identity-ed25519";
@@ -20,7 +20,8 @@ import {
     AddTxRequest,
     AddTxResponse,
     CreateGenesisBlock,
-    CreateGenesisBlockResponse, GetAllInstanceVersion,
+    CreateGenesisBlockResponse,
+    GetAllInstanceVersion,
     GetAllInstanceVersionResponse,
     GetInstanceVersion,
     GetInstanceVersionResponse,
@@ -240,10 +241,10 @@ export default class ByzCoinRPC implements ICounterUpdater {
             try {
                 const gp = await this.getUpdates([new IDVersion({id, version: Long.fromNumber(0)})],
                     GetUpdatesRequest.sendVersion0);
-                if (gp.length !== 1) {
+                if (gp.proofs.length !== 1) {
                     throw new Error("couldn't find this instance");
                 }
-                dbIP = gp[0];
+                dbIP = gp.proofs[0];
                 await this.db.set(idStr, Buffer.from(InclusionProof.encode(dbIP).finish()));
             } catch (e) {
                 Log.error("couldn't getUpdates", e);
@@ -417,12 +418,9 @@ export default class ByzCoinRPC implements ICounterUpdater {
 
     /**
      * Gets one or more proofs for updated instances. The client can ask an array of instances and their latest
-     * known version, and the service will return all instances that have been updated in the meantim.
+     * known version, and the service will return all instances that have been updated in the meantime.
      *
      * Instead of returning full proofs, it only returns the InclusionProofs.
-     *
-     * If the call to the node fails with an error "can only give proofs for latest block", it retries
-     * up to 5 times.
      *
      * @param instances that will be queried for changes
      * @param flags are ORed to indicate the following behaviors:
@@ -430,52 +428,15 @@ export default class ByzCoinRPC implements ICounterUpdater {
      *     version 0, even those that are note updated.
      *    - GetUpdatesRequest.sendMissingProofs (=2) will make GetUpdates send proofs for missing
      *     instances. If not present, missing instances are ignored.
-     * @param rec used to avoid infinite recursions when the call fails.
      */
-    async getUpdates(instances: IDVersion[], flags = Long.fromNumber(0), rec = 0): Promise<InclusionProof[]> {
+    async getUpdates(instances: IDVersion[], flags = Long.fromNumber(0)): Promise<GetUpdatesReply> {
         const req = new GetUpdatesRequest({
             flags,
             instances,
-            latestblockid: this.latest.hash,
+            skipchainid: this.genesisID,
         });
-        const latestIndex = this.latest.index;
 
-        const header = DataHeader.decode(this.latest.data);
-        try {
-            const reply = await this.conn.send<GetUpdatesReply>(req, GetUpdatesReply);
-            if (reply.proofs.length === 0 && flags.and(GetUpdatesRequest.sendVersion0).notEquals(0)) {
-                Log.warn("Got empty reply");
-            } else {
-                return reply.proofs.filter((pr) => pr.hashInterior(0).equals(header.trieRoot))
-                    .filter((pr) => instances.find((inst) => inst.id.equals(pr.key)))
-                    .filter((pr) => pr.exists(pr.key));
-            }
-        } catch (e) {
-            if (e.toString().match(/(latest block|cannot find skipblock)/) === null) {
-                return Log.rcatch(e, "couldn't get a suitable block...");
-            }
-            Log.warn("Got retriable error from node:", e.toString());
-        }
-
-        if (rec > 0) {
-            throw new Error("maximum number of tries reached");
-        }
-
-        Log.lvl2("Trying again with index", latestIndex + 1);
-        return new Promise(async (resolve, reject) => {
-            // Start with the index used in the query, and add all new arriving blocks.
-            // Using `distinct` and `elementAt` to fetch only a new block-number different from
-            // the one used in the previous query.
-            const ui = await this.getUpdateInstances();
-            ui.pipe(startWith(latestIndex), distinct(), elementAt(1)).subscribe(async () => {
-                try {
-                    const ips = await this.getUpdates(instances, flags, rec + 1);
-                    resolve(ips);
-                } catch (e) {
-                    reject(e);
-                }
-            });
-        });
+        return this.conn.send<GetUpdatesReply>(req, GetUpdatesReply);
     }
 
     /**
@@ -582,8 +543,10 @@ export default class ByzCoinRPC implements ICounterUpdater {
      */
     closeNewBlocks() {
         if (this.newBlock) {
-            this.newBlockWS.close(1000);
             this.newBlock = undefined;
+            if (this.newBlockWS) {
+                this.newBlockWS.close(1000);
+            }
         }
     }
 
@@ -633,35 +596,41 @@ export default class ByzCoinRPC implements ICounterUpdater {
         return response.statechanges;
     }
 
+    /**
+     * For every new block received, this method calls getUpdates with all instance-IDs of the cache.
+     * If an instance has been updated onchain, it calls 'next' with the new value.
+     * This means that for every instance returned from instanceObservable, it will automatically be updated.
+     */
     private async getUpdateInstances(): Promise<BehaviorSubject<number>> {
         if (this.updateInstances === undefined) {
             // For every new block, send the latest known version of all instances, and then
             // call `next` for all received updates.
             this.updateInstances = new BehaviorSubject(this.latest.index);
             (await this.getNewBlocks()).subscribe((block) => this.updateInstances.next(block.index));
-            this.updateInstances.pipe(distinctUntilChanged((a, b) => a === b))
-                .subscribe({
-                    next: async () => {
-                        const idvs = [...this.cache.values()].map((pr) =>
-                            new IDVersion({
-                                    id: pr.getValue().key,
-                                    version: pr.getValue().stateChangeBody.version,
-                                },
-                            ));
-                        const updates = await this.getUpdates(idvs);
-                        await updates.forEach(async (update) => {
-                            const ids = update.key.toString("hex");
-                            await this.db.set(ids, Buffer.from(InclusionProof.encode(update).finish()));
-                            const pr = new Proof({
-                                inclusionproof: update,
-                                latest: this.latest,
-                                links: [],
-                            });
-                            this.cache.get(ids).next(pr);
+            this.updateInstances.pipe(distinctUntilChanged((a, b) => a === b),
+                flatMap(() => {
+                    const idvs = [...this.cache.values()].map((pr) =>
+                        new IDVersion({
+                                id: pr.getValue().key,
+                                version: pr.getValue().stateChangeBody.version,
+                            },
+                        ));
+                    return this.getUpdates(idvs);
+                })).subscribe({
+                next: (updates) => {
+                    updates.proofs.forEach(async (update) => {
+                        const ids = update.key.toString("hex");
+                        await this.db.set(ids, Buffer.from(InclusionProof.encode(update).finish()));
+                        const pr = new Proof({
+                            inclusionproof: update,
+                            latest: updates.latest,
+                            links: [],
                         });
-                        Log.lvl2("Processed", updates.length, "updates");
-                    },
-                });
+                        this.cache.get(ids).next(pr);
+                    });
+                    Log.lvl2("Processed", updates.proofs.length);
+                },
+            });
         }
         return this.updateInstances;
     }
@@ -705,8 +674,10 @@ export default class ByzCoinRPC implements ICounterUpdater {
                 setTimeout(() => this.listenNewBlocks(), 1000);
             },
             next: (sb) => {
-                Log.lvl2("Got new block", sb.index);
-                this.newBlock.next(sb);
+                if (this.newBlock) {
+                    Log.lvl2("Got new block", sb.index);
+                    this.newBlock.next(sb);
+                }
             },
         });
     }

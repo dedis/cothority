@@ -46078,20 +46078,35 @@ public final class ByzCoinProto {
     long getFlags();
 
     /**
-     * <code>required bytes latestblockid = 3;</code>
+     * <code>optional bytes latestblockid = 3;</code>
      * @return Whether the latestblockid field is set.
      */
     boolean hasLatestblockid();
     /**
-     * <code>required bytes latestblockid = 3;</code>
+     * <code>optional bytes latestblockid = 3;</code>
      * @return The latestblockid.
      */
     com.google.protobuf.ByteString getLatestblockid();
+
+    /**
+     * <code>optional bytes skipchainid = 4;</code>
+     * @return Whether the skipchainid field is set.
+     */
+    boolean hasSkipchainid();
+    /**
+     * <code>optional bytes skipchainid = 4;</code>
+     * @return The skipchainid.
+     */
+    com.google.protobuf.ByteString getSkipchainid();
   }
   /**
    * <pre>
    * GetUpdatesRequest allows to request changes to existing instances by
    * sending a slice of known versions.
+   * If the LatestBlockID is given, the method checks if it corresponds to the
+   * latest block. The usage of LatestBlockID is discouraged.
+   * SkipchainID should be given instead of LatestBLockID to fetch the latest
+   * versions of the instance from the given skipchain.
    * </pre>
    *
    * Protobuf type {@code byzcoin.GetUpdatesRequest}
@@ -46108,6 +46123,7 @@ public final class ByzCoinProto {
     private GetUpdatesRequest() {
       instances_ = java.util.Collections.emptyList();
       latestblockid_ = com.google.protobuf.ByteString.EMPTY;
+      skipchainid_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -46158,6 +46174,11 @@ public final class ByzCoinProto {
             case 26: {
               bitField0_ |= 0x00000002;
               latestblockid_ = input.readBytes();
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000004;
+              skipchainid_ = input.readBytes();
               break;
             }
             default: {
@@ -46258,7 +46279,7 @@ public final class ByzCoinProto {
     public static final int LATESTBLOCKID_FIELD_NUMBER = 3;
     private com.google.protobuf.ByteString latestblockid_;
     /**
-     * <code>required bytes latestblockid = 3;</code>
+     * <code>optional bytes latestblockid = 3;</code>
      * @return Whether the latestblockid field is set.
      */
     @java.lang.Override
@@ -46266,12 +46287,31 @@ public final class ByzCoinProto {
       return ((bitField0_ & 0x00000002) != 0);
     }
     /**
-     * <code>required bytes latestblockid = 3;</code>
+     * <code>optional bytes latestblockid = 3;</code>
      * @return The latestblockid.
      */
     @java.lang.Override
     public com.google.protobuf.ByteString getLatestblockid() {
       return latestblockid_;
+    }
+
+    public static final int SKIPCHAINID_FIELD_NUMBER = 4;
+    private com.google.protobuf.ByteString skipchainid_;
+    /**
+     * <code>optional bytes skipchainid = 4;</code>
+     * @return Whether the skipchainid field is set.
+     */
+    @java.lang.Override
+    public boolean hasSkipchainid() {
+      return ((bitField0_ & 0x00000004) != 0);
+    }
+    /**
+     * <code>optional bytes skipchainid = 4;</code>
+     * @return The skipchainid.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString getSkipchainid() {
+      return skipchainid_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -46282,10 +46322,6 @@ public final class ByzCoinProto {
       if (isInitialized == 0) return false;
 
       if (!hasFlags()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasLatestblockid()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -46311,6 +46347,9 @@ public final class ByzCoinProto {
       if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(3, latestblockid_);
       }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        output.writeBytes(4, skipchainid_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -46331,6 +46370,10 @@ public final class ByzCoinProto {
       if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, latestblockid_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, skipchainid_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -46359,6 +46402,11 @@ public final class ByzCoinProto {
         if (!getLatestblockid()
             .equals(other.getLatestblockid())) return false;
       }
+      if (hasSkipchainid() != other.hasSkipchainid()) return false;
+      if (hasSkipchainid()) {
+        if (!getSkipchainid()
+            .equals(other.getSkipchainid())) return false;
+      }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -46382,6 +46430,10 @@ public final class ByzCoinProto {
       if (hasLatestblockid()) {
         hash = (37 * hash) + LATESTBLOCKID_FIELD_NUMBER;
         hash = (53 * hash) + getLatestblockid().hashCode();
+      }
+      if (hasSkipchainid()) {
+        hash = (37 * hash) + SKIPCHAINID_FIELD_NUMBER;
+        hash = (53 * hash) + getSkipchainid().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -46482,6 +46534,10 @@ public final class ByzCoinProto {
      * <pre>
      * GetUpdatesRequest allows to request changes to existing instances by
      * sending a slice of known versions.
+     * If the LatestBlockID is given, the method checks if it corresponds to the
+     * latest block. The usage of LatestBlockID is discouraged.
+     * SkipchainID should be given instead of LatestBLockID to fetch the latest
+     * versions of the instance from the given skipchain.
      * </pre>
      *
      * Protobuf type {@code byzcoin.GetUpdatesRequest}
@@ -46532,6 +46588,8 @@ public final class ByzCoinProto {
         bitField0_ = (bitField0_ & ~0x00000002);
         latestblockid_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000004);
+        skipchainid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -46577,6 +46635,10 @@ public final class ByzCoinProto {
           to_bitField0_ |= 0x00000002;
         }
         result.latestblockid_ = latestblockid_;
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.skipchainid_ = skipchainid_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -46658,6 +46720,9 @@ public final class ByzCoinProto {
         if (other.hasLatestblockid()) {
           setLatestblockid(other.getLatestblockid());
         }
+        if (other.hasSkipchainid()) {
+          setSkipchainid(other.getSkipchainid());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -46666,9 +46731,6 @@ public final class ByzCoinProto {
       @java.lang.Override
       public final boolean isInitialized() {
         if (!hasFlags()) {
-          return false;
-        }
-        if (!hasLatestblockid()) {
           return false;
         }
         for (int i = 0; i < getInstancesCount(); i++) {
@@ -46980,7 +47042,7 @@ public final class ByzCoinProto {
 
       private com.google.protobuf.ByteString latestblockid_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required bytes latestblockid = 3;</code>
+       * <code>optional bytes latestblockid = 3;</code>
        * @return Whether the latestblockid field is set.
        */
       @java.lang.Override
@@ -46988,7 +47050,7 @@ public final class ByzCoinProto {
         return ((bitField0_ & 0x00000004) != 0);
       }
       /**
-       * <code>required bytes latestblockid = 3;</code>
+       * <code>optional bytes latestblockid = 3;</code>
        * @return The latestblockid.
        */
       @java.lang.Override
@@ -46996,7 +47058,7 @@ public final class ByzCoinProto {
         return latestblockid_;
       }
       /**
-       * <code>required bytes latestblockid = 3;</code>
+       * <code>optional bytes latestblockid = 3;</code>
        * @param value The latestblockid to set.
        * @return This builder for chaining.
        */
@@ -47010,12 +47072,54 @@ public final class ByzCoinProto {
         return this;
       }
       /**
-       * <code>required bytes latestblockid = 3;</code>
+       * <code>optional bytes latestblockid = 3;</code>
        * @return This builder for chaining.
        */
       public Builder clearLatestblockid() {
         bitField0_ = (bitField0_ & ~0x00000004);
         latestblockid_ = getDefaultInstance().getLatestblockid();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString skipchainid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes skipchainid = 4;</code>
+       * @return Whether the skipchainid field is set.
+       */
+      @java.lang.Override
+      public boolean hasSkipchainid() {
+        return ((bitField0_ & 0x00000008) != 0);
+      }
+      /**
+       * <code>optional bytes skipchainid = 4;</code>
+       * @return The skipchainid.
+       */
+      @java.lang.Override
+      public com.google.protobuf.ByteString getSkipchainid() {
+        return skipchainid_;
+      }
+      /**
+       * <code>optional bytes skipchainid = 4;</code>
+       * @param value The skipchainid to set.
+       * @return This builder for chaining.
+       */
+      public Builder setSkipchainid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        skipchainid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes skipchainid = 4;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearSkipchainid() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        skipchainid_ = getDefaultInstance().getSkipchainid();
         onChanged();
         return this;
       }
@@ -48850,14 +48954,14 @@ public final class ByzCoinProto {
       "\013\n\003key\030\001 \002(\014\022\'\n\005state\030\002 \002(\0132\030.byzcoin.St" +
       "ateChangeBody\":\n\022DebugRemoveRequest\022\021\n\tb" +
       "yzcoinid\030\001 \002(\014\022\021\n\tsignature\030\002 \002(\014\"(\n\tIDV" +
-      "ersion\022\n\n\002id\030\001 \002(\014\022\017\n\007version\030\002 \002(\004\"`\n\021G" +
+      "ersion\022\n\n\002id\030\001 \002(\014\022\017\n\007version\030\002 \002(\004\"u\n\021G" +
       "etUpdatesRequest\022%\n\tinstances\030\001 \003(\0132\022.by" +
       "zcoin.IDVersion\022\r\n\005flags\030\002 \002(\004\022\025\n\rlatest" +
-      "blockid\030\003 \002(\014\"{\n\017GetUpdatesReply\022\033\n\006proo" +
-      "fs\030\001 \003(\0132\013.trie.Proof\022%\n\005links\030\002 \003(\0132\026.s" +
-      "kipchain.ForwardLink\022$\n\006latest\030\003 \001(\0132\024.s" +
-      "kipchain.SkipBlockB\'\n\027ch.epfl.dedis.lib." +
-      "protoB\014ByzCoinProto"
+      "blockid\030\003 \001(\014\022\023\n\013skipchainid\030\004 \001(\014\"{\n\017Ge" +
+      "tUpdatesReply\022\033\n\006proofs\030\001 \003(\0132\013.trie.Pro" +
+      "of\022%\n\005links\030\002 \003(\0132\026.skipchain.ForwardLin" +
+      "k\022$\n\006latest\030\003 \001(\0132\024.skipchain.SkipBlockB" +
+      "\'\n\027ch.epfl.dedis.lib.protoB\014ByzCoinProto"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -49160,7 +49264,7 @@ public final class ByzCoinProto {
     internal_static_byzcoin_GetUpdatesRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_GetUpdatesRequest_descriptor,
-        new java.lang.String[] { "Instances", "Flags", "Latestblockid", });
+        new java.lang.String[] { "Instances", "Flags", "Latestblockid", "Skipchainid", });
     internal_static_byzcoin_GetUpdatesReply_descriptor =
       getDescriptor().getMessageTypes().get(49);
     internal_static_byzcoin_GetUpdatesReply_fieldAccessorTable = new

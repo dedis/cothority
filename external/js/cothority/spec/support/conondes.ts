@@ -3,6 +3,7 @@ import Docker from "dockerode";
 import fs from "fs";
 import Long from "long";
 
+import { Log } from "../../src";
 import SignerEd25519 from "../../src/darc/signer-ed25519";
 import { RosterWSConnection } from "../../src/network";
 import { Roster } from "../../src/network/proto";
@@ -19,6 +20,7 @@ export const BLOCK_INTERVAL = Long.fromNumber(1 * 1000 * 1000 * 1000); // 5s in 
 export const SIGNER = SignerEd25519.fromBytes(Buffer.from("0cb119094dbf72dfd169f8ba605069ce66a0c8ba402eb22952b544022d33b90c", "hex"));
 
 export async function startConodes(): Promise<void> {
+    Log.lvl = 1;
     const containers = await docker.listContainers({ all: true, filters: FILTERS });
     const container = containers[0];
     RosterWSConnection.defaultParallel = 1;

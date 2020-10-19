@@ -253,6 +253,7 @@ export class GetUpdatesRequest extends Message<GetUpdatesRequest> {
     readonly instances: IDVersion[];
     readonly flags: Long;
     readonly latestblockid: Buffer;
+    readonly skipchainid: Buffer;
 }
 
 /**
