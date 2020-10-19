@@ -1,5 +1,4 @@
 import Long from "long";
-import { Log } from "../../src";
 import { ByzCoinRPC } from "../../src/byzcoin";
 import { LocalCache } from "../../src/byzcoin/byzcoin-rpc";
 import DarcInstance from "../../src/byzcoin/contracts/darc-instance";

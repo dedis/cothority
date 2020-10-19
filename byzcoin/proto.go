@@ -525,10 +525,15 @@ type IDVersion struct {
 
 // GetUpdatesRequest allows to request changes to existing instances by
 // sending a slice of known versions.
+// If the LatestBlockID is given, the method checks if it corresponds to the
+// latest block. The usage of LatestBlockID is discouraged.
+// SkipchainID should be given instead of LatestBLockID to fetch the latest
+// versions of the instance from the given skipchain.
 type GetUpdatesRequest struct {
 	Instances     []IDVersion
 	Flags         GetUpdatesFlags
-	LatestBlockID skipchain.SkipBlockID
+	LatestBlockID skipchain.SkipBlockID `protobuf:"opt"`
+	SkipchainID   skipchain.SkipBlockID `protobuf:"opt"`
 }
 
 // GetUpdatesReply only sends back the instances that have a new version,

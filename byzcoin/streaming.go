@@ -124,7 +124,7 @@ func (s *Service) StreamTransactions(msg *StreamingRequest) (chan *StreamingResp
 	return outChan, stopChan, nil
 }
 
-// PaginateBlocks return blocks with pagination, ie. N asynchounous requests
+// PaginateBlocks returns blocks with pagination, ie. N asynchronous requests
 // that contain each K consecutive block. The caller is responsible for closing
 // the close chan when the caller wants to close the connection.
 func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, chan bool, error) {

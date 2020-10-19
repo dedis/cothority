@@ -692,21 +692,32 @@ func (s *Service) GetUpdates(pr *GetUpdatesRequest) (*GetUpdatesReply, error) {
 	s.updateTrieLock.Lock()
 	defer s.updateTrieLock.Unlock()
 
-	sb := s.db().GetByID(pr.LatestBlockID)
-	if sb == nil {
-		return nil, xerrors.New("cannot find skipblock while getting proof")
-	}
-	if len(sb.ForwardLink) > 0 {
-		return nil, xerrors.New("can only give proofs for latest block")
+	scID := pr.SkipchainID
+	if scID.IsNull() {
+		if pr.LatestBlockID.IsNull() {
+			return nil, xerrors.New("give SkipchainID")
+		}
+		sb := s.db().GetByID(pr.LatestBlockID)
+		if sb == nil {
+			return nil, xerrors.New("cannot find skipblock while getting proof")
+		}
+		if len(sb.ForwardLink) > 0 {
+			return nil, xerrors.New("can only give proofs for latest block")
+		}
+		scID = sb.SkipChainID()
 	}
 
-	st, err := s.GetReadOnlyStateTrie(sb.SkipChainID())
+	st, err := s.GetReadOnlyStateTrie(scID)
 	if err != nil {
 		return nil, xerrors.Errorf("getting state trie: %w", err)
 	}
 
 	sendVersion0 := pr.Flags&GUFSendVersion0 > 0
 	reply := &GetUpdatesReply{}
+	reply.Latest, err = s.db().GetLatestByID(scID)
+	if err != nil {
+		return nil, xerrors.Errorf("couldn't get latest block: %v", err)
+	}
 	for _, idv := range pr.Instances {
 		proof, err := st.GetProof(idv.ID[:])
 		if err != nil {
