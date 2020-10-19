@@ -97,14 +97,14 @@ func TestService_InputArgs(t *testing.T) {
 func TestService_Call(t *testing.T) {
 	// Create a new ledger and prepare for proper closing
 	bct := newBCTest(t)
-	defer bct.Close()
+	defer bct.CloseAll()
 
 	// Spawn a new BEvm instance
-	instanceID, err := NewBEvm(bct.cl, bct.signer, bct.gDarc)
+	instanceID, err := NewBEvm(bct.Client, bct.Signer, bct.GenesisDarc)
 	require.NoError(t, err)
 
 	// Create a new BEvm client
-	bevmClient, err := NewClient(bct.cl, bct.signer, instanceID)
+	bevmClient, err := NewClient(bct.Client, bct.Signer, instanceID)
 	require.NoError(t, err)
 
 	// Initialize an account
@@ -128,15 +128,15 @@ func TestService_Call(t *testing.T) {
 	require.NoError(t, err)
 
 	// Ensure transaction is propagated to all nodes
-	require.NoError(t, bct.cl.WaitPropagation(-1))
+	require.NoError(t, bct.Client.WaitPropagation(-1))
 
 	callData, err := candyInstance.packMethod("getRemainingCandies")
 	require.NoError(t, err)
 
 	// Get remaining candies
 	resp, err := bevmClient.viewCall(
-		bct.roster.List[0],
-		bct.cl.ID,
+		bct.Roster.List[0],
+		bct.Client.ID,
 		bevmClient.instanceID,
 		a.Address[:],
 		candyInstance.Address[:],
