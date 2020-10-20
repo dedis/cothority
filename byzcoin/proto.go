@@ -177,6 +177,13 @@ type ChainConfig struct {
 	Roster          onet.Roster
 	MaxBlockSize    int
 	DarcContractIDs []string
+	// LeaderRotation indicates how many seconds the next node in the roster
+	// must wait before it's allowed to request a leader-rotation.
+	// If it's 0 or not given, auto leader rotation is not allowed.
+	LeaderRotation int `proto:"opt"`
+	// LastViewchange holds the index of the last successful viewchange.
+	// Either because of a failing leader, or because of an auto viewchange.
+	LastViewchange int `proto:"opt"`
 }
 
 // Proof represents everything necessary to verify a given

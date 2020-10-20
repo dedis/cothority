@@ -24,7 +24,7 @@ func init() {
 type Version int
 
 // CurrentVersion is what we're running now
-const CurrentVersion Version = VersionRollup
+const CurrentVersion Version = VersionAutoViewchange
 
 const (
 	// VersionInstructionHash is the first version and indicates that a new,
@@ -44,4 +44,8 @@ const (
 	// VersionRollup indicates that the followers send their transactions to
 	// the leader, instead of polling by the leader.
 	VersionRollup = 7
+	// VersionAutoViewchange allows the nodes to propose themselves as a new
+	// leader after some interval that can be configured in the genesis
+	// configuration.
+	VersionAutoViewchange = 8
 )
