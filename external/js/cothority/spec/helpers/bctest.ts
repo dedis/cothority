@@ -25,8 +25,6 @@ export class BCTest {
     static async singleton(): Promise<BCTest> {
         if (BCTest.bct === undefined) {
             BCTest.bct = await BCTest.init();
-        } else {
-            await new Promise((resolve) => setTimeout(resolve, 1000));
         }
 
         return BCTest.bct;
