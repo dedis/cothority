@@ -1,5 +1,6 @@
 import { Message } from "protobufjs";
 import { Observable } from "rxjs";
+import URL from "url-parse";
 import Log from "../log";
 import { IConnection } from "./nodes";
 import { Roster } from "./proto";
@@ -39,18 +40,18 @@ export class WebSocketConnection implements IConnection {
         // by the fact that URL will not allow you to have an empty pathname,
         // which will always equal to "/" if there isn't any
         if (url.pathname.slice(-1) !== "/") {
-            url.pathname = url.pathname + "/";
+            url.set("pathname", url.pathname + "/");
         }
         if (url.username !== "" || url.password !== "") {
             throw new Error("addr contains authentication, which is not supported");
         }
-        if (url.search !== "" || url.hash !== "") {
+        if (url.hash !== "") {
             throw new Error("addr contains more data than the origin");
         }
 
         if (typeof globalThis !== "undefined" && typeof globalThis.location !== "undefined") {
             if (globalThis.location.protocol === "https:") {
-                url.protocol = "wss";
+                url.set("protocol", "wss");
             }
         }
 
@@ -112,7 +113,7 @@ export class WebSocketConnection implements IConnection {
 
         return new Observable((sub) => {
             const url = new URL(this.url.href);
-            url.pathname += `${this.service}/${message.$type.name.replace(/.*\./, "")}`;
+            url.set("pathname", url.pathname + `${this.service}/${message.$type.name.replace(/.*\./, "")}`);
             Log.lvl4(`Socket: new WebSocket(${url.href})`);
             const ws = factory(url.href);
             const bytes = Buffer.from(message.$type.encode(message).finish());
