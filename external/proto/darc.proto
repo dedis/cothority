@@ -168,7 +168,7 @@ message SignerEvmContract {
 // SignerDID holds public and private keys from a DID Document to sign
 // Darcs.
 message SignerDID {
-  required bytes point = 1;
+  required bytes public = 1;
   required bytes secret = 2;
   required string did = 3;
 }

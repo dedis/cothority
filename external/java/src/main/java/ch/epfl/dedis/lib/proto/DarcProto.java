@@ -17951,13 +17951,13 @@ public final class DarcProto {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>required bytes point = 1;</code>
+     * <code>required bytes public = 1;</code>
      */
-    boolean hasPoint();
+    boolean hasPublic();
     /**
-     * <code>required bytes point = 1;</code>
+     * <code>required bytes public = 1;</code>
      */
-    com.google.protobuf.ByteString getPoint();
+    com.google.protobuf.ByteString getPublic();
 
     /**
      * <code>required bytes secret = 2;</code>
@@ -18000,7 +18000,7 @@ public final class DarcProto {
       super(builder);
     }
     private SignerDID() {
-      point_ = com.google.protobuf.ByteString.EMPTY;
+      public_ = com.google.protobuf.ByteString.EMPTY;
       secret_ = com.google.protobuf.ByteString.EMPTY;
       did_ = "";
     }
@@ -18031,7 +18031,7 @@ public final class DarcProto {
               break;
             case 10: {
               bitField0_ |= 0x00000001;
-              point_ = input.readBytes();
+              public_ = input.readBytes();
               break;
             }
             case 18: {
@@ -18078,19 +18078,19 @@ public final class DarcProto {
     }
 
     private int bitField0_;
-    public static final int POINT_FIELD_NUMBER = 1;
-    private com.google.protobuf.ByteString point_;
+    public static final int PUBLIC_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString public_;
     /**
-     * <code>required bytes point = 1;</code>
+     * <code>required bytes public = 1;</code>
      */
-    public boolean hasPoint() {
+    public boolean hasPublic() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>required bytes point = 1;</code>
+     * <code>required bytes public = 1;</code>
      */
-    public com.google.protobuf.ByteString getPoint() {
-      return point_;
+    public com.google.protobuf.ByteString getPublic() {
+      return public_;
     }
 
     public static final int SECRET_FIELD_NUMBER = 2;
@@ -18157,7 +18157,7 @@ public final class DarcProto {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
-      if (!hasPoint()) {
+      if (!hasPublic()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -18177,7 +18177,7 @@ public final class DarcProto {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, point_);
+        output.writeBytes(1, public_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeBytes(2, secret_);
@@ -18196,7 +18196,7 @@ public final class DarcProto {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, point_);
+          .computeBytesSize(1, public_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
@@ -18221,10 +18221,10 @@ public final class DarcProto {
       ch.epfl.dedis.lib.proto.DarcProto.SignerDID other = (ch.epfl.dedis.lib.proto.DarcProto.SignerDID) obj;
 
       boolean result = true;
-      result = result && (hasPoint() == other.hasPoint());
-      if (hasPoint()) {
-        result = result && getPoint()
-            .equals(other.getPoint());
+      result = result && (hasPublic() == other.hasPublic());
+      if (hasPublic()) {
+        result = result && getPublic()
+            .equals(other.getPublic());
       }
       result = result && (hasSecret() == other.hasSecret());
       if (hasSecret()) {
@@ -18247,9 +18247,9 @@ public final class DarcProto {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasPoint()) {
-        hash = (37 * hash) + POINT_FIELD_NUMBER;
-        hash = (53 * hash) + getPoint().hashCode();
+      if (hasPublic()) {
+        hash = (37 * hash) + PUBLIC_FIELD_NUMBER;
+        hash = (53 * hash) + getPublic().hashCode();
       }
       if (hasSecret()) {
         hash = (37 * hash) + SECRET_FIELD_NUMBER;
@@ -18397,7 +18397,7 @@ public final class DarcProto {
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        point_ = com.google.protobuf.ByteString.EMPTY;
+        public_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
         secret_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -18434,7 +18434,7 @@ public final class DarcProto {
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
         }
-        result.point_ = point_;
+        result.public_ = public_;
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
         }
@@ -18492,8 +18492,8 @@ public final class DarcProto {
 
       public Builder mergeFrom(ch.epfl.dedis.lib.proto.DarcProto.SignerDID other) {
         if (other == ch.epfl.dedis.lib.proto.DarcProto.SignerDID.getDefaultInstance()) return this;
-        if (other.hasPoint()) {
-          setPoint(other.getPoint());
+        if (other.hasPublic()) {
+          setPublic(other.getPublic());
         }
         if (other.hasSecret()) {
           setSecret(other.getSecret());
@@ -18510,7 +18510,7 @@ public final class DarcProto {
 
       @java.lang.Override
       public final boolean isInitialized() {
-        if (!hasPoint()) {
+        if (!hasPublic()) {
           return false;
         }
         if (!hasSecret()) {
@@ -18542,37 +18542,37 @@ public final class DarcProto {
       }
       private int bitField0_;
 
-      private com.google.protobuf.ByteString point_ = com.google.protobuf.ByteString.EMPTY;
+      private com.google.protobuf.ByteString public_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required bytes point = 1;</code>
+       * <code>required bytes public = 1;</code>
        */
-      public boolean hasPoint() {
+      public boolean hasPublic() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>required bytes point = 1;</code>
+       * <code>required bytes public = 1;</code>
        */
-      public com.google.protobuf.ByteString getPoint() {
-        return point_;
+      public com.google.protobuf.ByteString getPublic() {
+        return public_;
       }
       /**
-       * <code>required bytes point = 1;</code>
+       * <code>required bytes public = 1;</code>
        */
-      public Builder setPoint(com.google.protobuf.ByteString value) {
+      public Builder setPublic(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000001;
-        point_ = value;
+        public_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required bytes point = 1;</code>
+       * <code>required bytes public = 1;</code>
        */
-      public Builder clearPoint() {
+      public Builder clearPublic() {
         bitField0_ = (bitField0_ & ~0x00000001);
-        point_ = getDefaultInstance().getPoint();
+        public_ = getDefaultInstance().getPublic();
         onChanged();
         return this;
       }
@@ -21717,14 +21717,14 @@ public final class DarcProto {
       "oint\030\001 \002(\014\022\016\n\006secret\030\002 \002(\014\"\035\n\014SignerX509" +
       "EC\022\r\n\005point\030\001 \002(\014\"+\n\013SignerProxy\022\014\n\004data" +
       "\030\001 \002(\t\022\016\n\006public\030\002 \002(\014\"$\n\021SignerEvmContr" +
-      "act\022\017\n\007address\030\001 \002(\014\"7\n\tSignerDID\022\r\n\005poi" +
-      "nt\030\001 \002(\014\022\016\n\006secret\030\002 \002(\014\022\013\n\003did\030\003 \002(\t\"n\n" +
-      "\007Request\022\016\n\006baseid\030\001 \002(\014\022\016\n\006action\030\002 \002(\t" +
-      "\022\013\n\003msg\030\003 \002(\014\022\"\n\nidentities\030\004 \003(\0132\016.darc" +
-      ".Identity\022\022\n\nsignatures\030\005 \003(\014\"!\n\005Rules\022\030" +
-      "\n\004list\030\001 \003(\0132\n.darc.Rule\"$\n\004Rule\022\016\n\006acti" +
-      "on\030\001 \002(\t\022\014\n\004expr\030\002 \002(\014B$\n\027ch.epfl.dedis." +
-      "lib.protoB\tDarcProto"
+      "act\022\017\n\007address\030\001 \002(\014\"8\n\tSignerDID\022\016\n\006pub" +
+      "lic\030\001 \002(\014\022\016\n\006secret\030\002 \002(\014\022\013\n\003did\030\003 \002(\t\"n" +
+      "\n\007Request\022\016\n\006baseid\030\001 \002(\014\022\016\n\006action\030\002 \002(" +
+      "\t\022\013\n\003msg\030\003 \002(\014\022\"\n\nidentities\030\004 \003(\0132\016.dar" +
+      "c.Identity\022\022\n\nsignatures\030\005 \003(\014\"!\n\005Rules\022" +
+      "\030\n\004list\030\001 \003(\0132\n.darc.Rule\"$\n\004Rule\022\016\n\006act" +
+      "ion\030\001 \002(\t\022\014\n\004expr\030\002 \002(\014B$\n\027ch.epfl.dedis" +
+      ".lib.protoB\tDarcProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -21851,7 +21851,7 @@ public final class DarcProto {
     internal_static_darc_SignerDID_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_darc_SignerDID_descriptor,
-        new java.lang.String[] { "Point", "Secret", "Did", });
+        new java.lang.String[] { "Public", "Secret", "Did", });
     internal_static_darc_Request_descriptor =
       getDescriptor().getMessageTypes().get(19);
     internal_static_darc_Request_fieldAccessorTable = new
