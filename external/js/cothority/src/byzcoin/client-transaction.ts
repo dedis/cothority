@@ -116,6 +116,8 @@ export default class ClientTransaction extends Message<ClientTransaction> {
     }
 }
 
+type InstructionType = 0 | 1 | 2;
+
 /**
  * An instruction represents one action
  */
@@ -128,7 +130,7 @@ export class Instruction extends Message<Instruction> {
      * Get the type of the instruction
      * @returns the type as a number
      */
-    get type(): number {
+    get type(): InstructionType {
         if (this.spawn) {
             return Instruction.typeSpawn;
         }

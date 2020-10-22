@@ -10,6 +10,7 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "importHelpers": true,
+    "baseUrl": "./",
     "typeRoots": [
       "../types",
       "./node_modules/@types"
