@@ -45,7 +45,7 @@ export class WebSocketConnection implements IConnection {
         if (url.username !== "" || url.password !== "") {
             throw new Error("addr contains authentication, which is not supported");
         }
-        if (url.hash !== "") {
+        if (Object.entries(url.query).length > 0 || url.hash !== "") {
             throw new Error("addr contains more data than the origin");
         }
 
