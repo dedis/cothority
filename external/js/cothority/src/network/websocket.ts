@@ -141,7 +141,68 @@ export class WebSocketConnection implements IConnection {
                 // nativescript-websocket on iOS doesn't return error-code 1002 in case of error, but sets the 'reason'
                 // to non-null in case of error.
                 if (code !== 1000 || (reason && reason !== "")) {
-                    sub.error(new Error(reason));
+                    let err = "Unknown close error";
+                    switch (code) {
+                        case 1001:
+                            err = `Endpoint is "going away": server going down or a browser
+                            having navigated away from the page.`;
+                            break;
+                        case 1002:
+                            err = `Endpoint is terminated the connection due to a protocol error.`;
+                            break;
+                        case 1003:
+                            err = `Endpoint is terminated the connection
+                            because it has received a type of data it cannot accept (e.g., an
+                            endpoint that understands only text data MAY send this if it
+                            receives a binary message).`;
+                            break;
+                        case 1004:
+                            err = `Reserved. The specific meaning might be defined in the future.`;
+                            break;
+                        case 1005:
+                            err = `No status code was actually present.`;
+                            break;
+                        case 1006:
+                            err = `Connection was closed abnormally, e.g., without sending or
+                            receiving a Close control frame.`;
+                            break;
+                        case 1007:
+                            err = `Endpoint terminated the connection
+                            because it has received data within a message that was not
+                            consistent with the type of the message (e.g., non-UTF-8 [RFC3629]
+                            data within a text message).`;
+                            break;
+                        case 1008:
+                            err = `Endpoint terminated the connection
+                            because it has received a message that violates its policy.`;
+                            break;
+                        case 1009:
+                            err = `Endpoint terminated the connection
+                            because it has received a message that is too big for it to
+                            process.`;
+                            break;
+                        case 1010:
+                            err = `Endpoint terminated the
+                            connection because it has expected the server to negotiate one or
+                            more extension, but the server didn't return them in the response
+                            message of the WebSocket handshake.`;
+                            break;
+                        case 1011:
+                            err = `Server terminated the connection because
+                            it encountered an unexpected condition that prevented it from
+                            fulfilling the request.`;
+                            break;
+                        case 1015:
+                            err = `Connection was closed due to a failure to perform a TLS handshake
+                            (e.g., the server certificate can't be verified).`;
+                            break;
+                    }
+                    if (reason && reason !== "") {
+                        err += " Reason: " + reason;
+                    }
+
+                    sub.error(new Error(err.replace(/\n/g, "").
+                        replace(/ +/g, " ")));
                 } else {
                     sub.complete();
                 }

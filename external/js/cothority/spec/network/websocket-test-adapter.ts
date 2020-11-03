@@ -30,7 +30,7 @@ export default class TestWebSocket extends WebSocketAdapter {
 
     onClose(callback: (code: number, reason: string) => void): void {
         if (this.code) {
-            callback(this.code, "reason to close");
+            callback(this.code, "onClose called");
         } else {
             this.onclose = callback;
         }
