@@ -468,8 +468,14 @@ func dbCheck(c *cli.Context) error {
 		sb = fb.db.GetByID(sb.ForwardLink[0].To)
 	}
 
+	last, err := fb.db.GetLatestByID(sb.SkipChainID())
+	if err != nil {
+		return fmt.Errorf("couldn't get last block: %v", err)
+	}
+
 	blocks := 0
 	process := c.Int("process")
+	skipSig := c.Bool("skipSig")
 	for sb != nil {
 		blocks++
 		if blocks%process == 0 {
@@ -496,8 +502,6 @@ func dbCheck(c *cli.Context) error {
 					continue
 				}
 				if len(previous.ForwardLink) <= i {
-					log.Warnf("%s points to block with not enough forward"+
-						"-links", errStrBl)
 					continue
 				}
 				if previous.ForwardLink[i].IsEmpty() {
@@ -507,6 +511,23 @@ func dbCheck(c *cli.Context) error {
 					log.Errorf(
 						"%s pointing backwards to a block that doesn't"+
 							" reference it", errStrBl)
+				}
+			}
+		}
+
+		indexes := sb.GetFLIndexes()
+		for i, index := range indexes {
+			if index <= last.Index {
+				if i >= len(sb.ForwardLink) {
+					maxLink := len(indexes) - 1
+					for ; indexes[maxLink] > last.Index; maxLink-- {
+					}
+					log.Warnf("%s only %d out of %d forward-links",
+						errStr, i, maxLink+1)
+					break
+				}
+				if sb.ForwardLink[i].IsEmpty() {
+					log.Warnf("%s empty forward-link to %d", errStr, index)
 				}
 			}
 		}
@@ -525,12 +546,22 @@ func dbCheck(c *cli.Context) error {
 					errStrFl)
 				continue
 			}
-			err := fl.VerifyWithScheme(pairing.NewSuiteBn256(),
-				sb.Roster.ServicePublics(skipchain.ServiceName),
-				sb.SignatureScheme)
-			if err != nil {
-				log.Errorf("%s fails signature verification: %+v",
-					errStrFl, err)
+			if len(next.BackLinkIDs) <= i {
+				log.Errorf("%s points to a block with too few backlinks", errStrFl)
+				continue
+			}
+			if !next.BackLinkIDs[i].Equal(sb.Hash) {
+				log.Errorf("%s points to block %d which doesn't point back",
+					errStrFl, next.Index)
+			}
+			if !skipSig {
+				err := fl.VerifyWithScheme(pairing.NewSuiteBn256(),
+					sb.Roster.ServicePublics(skipchain.ServiceName),
+					sb.SignatureScheme)
+				if err != nil {
+					log.Errorf("%s fails signature verification: %+v",
+						errStrFl, err)
+				}
 			}
 			if fl.NewRoster != nil {
 				equal, err := fl.NewRoster.Equal(next.Roster)
