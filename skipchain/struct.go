@@ -279,6 +279,19 @@ type SkipBlockFix struct {
 	Roster *onet.Roster
 }
 
+// GetFLIndexes returns the block-Indexes of the forwardlinks that are/will
+// be present in the block.
+func (sbf *SkipBlockFix) GetFLIndexes() []int {
+	indexes := make([]int, sbf.Height)
+	index := sbf.Index
+	mult := 1
+	for h := range indexes {
+		indexes[h] = index + mult
+		mult *= sbf.BaseHeight
+	}
+	return indexes
+}
+
 // Copy returns a deep copy of SkipBlockFix
 func (sbf *SkipBlockFix) Copy() *SkipBlockFix {
 	backLinkIDs := make([]SkipBlockID, len(sbf.BackLinkIDs))

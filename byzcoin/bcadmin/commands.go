@@ -724,6 +724,10 @@ var cmds = cli.Commands{
 						Usage: "show process indicator every n blocks",
 						Value: 100,
 					},
+					cli.BoolFlag{
+						Name:  "skipSig",
+						Usage: "skip verifying of signatures",
+					},
 				},
 			},
 		},
