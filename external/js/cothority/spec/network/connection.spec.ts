@@ -1,4 +1,5 @@
 import { Message } from "protobufjs/light";
+import { Log } from "../../src";
 import {
     BrowserWebSocketAdapter,
     LeaderConnection,
@@ -38,17 +39,40 @@ describe("WebSocketAdapter Tests", () => {
         const conn = new WebSocketConnection("http://example.com", "");
         const msg = new Roster();
 
-        await expectAsync(conn.send(msg, Roster)).toBeRejectedWith(new Error("reason to close"));
+        await expectAsync(conn.send(msg, Roster)).toBeRejected();
     });
 
-    it("should timeout when no message is sent back", async () => {
-        setFactory(() => new TestWebSocket(null, null, null));
-
-        const conn = new WebSocketConnection("http://example.com", "");
-        conn.setTimeout(200);
+    it("should throw an explanation for the error", async () => {
+        const errors: Array<[number, string]> = [
+            [1001, "going away"],
+            [1002, "protocol error"],
+            [1003, "data it cannot accept"],
+            [1004, "Reserved"],
+            [1005, "No status code"],
+            [1006, "closed abnormally"],
+            [1007, "not consistent"],
+            [1008, "violates its policy"],
+            [1009, "too big"],
+            [1010, "more extension"],
+            [1011, "unexpected condition"],
+            [1015, "TLS handshake"],
+            [1999, "Unknown close"],
+        ];
         const msg = new Roster();
 
-        await expectAsync(conn.send(msg, Roster)).toBeRejectedWith(new Error("timeout"));
+        for (const err of errors) {
+            setFactory(() => new TestWebSocket(null, null, err[0]));
+
+            const conn = new WebSocketConnection("http://example.com", "");
+
+            try {
+                await conn.send(msg, Roster);
+                expect(true).toBeFalsy("Should never send successfully");
+            } catch (e) {
+                expect(e.toString()).toContain(err[1]);
+                expect(e.toString()).toContain(`Reason: onClose called`);
+            }
+        }
     });
 
     it("should throw on protobuf error", async () => {
@@ -200,7 +224,7 @@ describe("WebSocketAdapter Tests with sendStream", () => {
                 throw new Error("should not complete");
             },
             error: (err: Error) => {
-                expect(err).toEqual(new Error("reason to close"));
+                expect(err.toString()).toContain("onClose called");
                 done();
             },
             next: () => {
@@ -221,7 +245,7 @@ describe("WebSocketAdapter Tests with sendStream", () => {
                 throw new Error("should not complete");
             },
             error: (err: Error) => {
-                expect(err).toEqual(new Error("timeout"));
+                expect(err.toString()).toContain("timeout");
                 done();
             },
             next: () => {
