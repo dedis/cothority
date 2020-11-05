@@ -5,6 +5,7 @@ import { Message, Properties } from "protobufjs/light";
 import IdentityWrapper, { IIdentity } from "../darc/identity-wrapper";
 import Signer from "../darc/signer";
 import { EMPTY_BUFFER, registerMessage } from "../protobuf";
+import { ConfigBeautifier, DarcBeautifier, DefaultBeautifier, IBeautifierSchema } from "./beautifier/index";
 import Instance, { InstanceID } from "./instance";
 
 export interface ICounterUpdater {
@@ -122,9 +123,6 @@ type InstructionType = 0 | 1 | 2;
  * An instruction represents one action
  */
 export class Instruction extends Message<Instruction> {
-    static readonly typeSpawn = 0;
-    static readonly typeInvoke = 1;
-    static readonly typeDelete = 2;
 
     /**
      * Get the type of the instruction
@@ -142,6 +140,9 @@ export class Instruction extends Message<Instruction> {
         }
         throw new Error("instruction without type");
     }
+    static readonly typeSpawn = 0;
+    static readonly typeInvoke = 1;
+    static readonly typeDelete = 2;
 
     /**
      * @see README#Message classes
@@ -318,6 +319,93 @@ export class Instruction extends Message<Instruction> {
             return Instance.calcInstID(this.spawn.contractID, id.value);
         }
         return this.deriveId(what);
+    }
+
+    /**
+     * Return a general-purpose json representation of an instruction that is
+     * contracts aware, ie. knows how to render specific contracts arguments. It
+     * returns the following status:
+     *
+     * 0: the default hex representation is used
+     * 1: has been specifically interpreted
+     *
+     * The JSON has the following structure:
+     *
+     *  {
+     *      status: 0 | 1
+     *      type: "spawn|invoke|delete",
+     *      contract: "config|darc|..."
+     *      args: [
+     *          {
+     *              "name": "<NAME>",
+     *              "value": "<VALUE>",    // Arg value or its summary
+     *              "full": "<FULL VALUE>" // Optional. useful if the argument
+     *                                     // have a very long representation.
+     *          }
+     *          ...
+     *      ]
+     *  }
+     *
+     */
+    beautify(): IBeautifierSchema {
+        const res: IBeautifierSchema = {status: 0, type: "spawn", contract: "", args: []};
+
+        switch (this.type) {
+            case Instruction.typeSpawn:
+                res.type = "spawn";
+
+                switch (this.spawn.contractID) {
+                    case "config":
+                        res.contract = "config";
+                        const args = Array<Argument>();
+                        res.args = ConfigBeautifier.Spawn(args);
+                        break;
+                    case "darc":
+                        res.contract = "darc";
+                        res.args = DarcBeautifier.Spawn(this.spawn.args);
+                        break;
+                    default:
+                        res.status = 1;
+                        res.args = DefaultBeautifier.Hex(this.spawn.args);
+                }
+
+                break;
+
+            case Instruction.typeInvoke:
+                res.type = "invoke";
+
+                switch (this.invoke.contractID) {
+                    case "config":
+                        res.contract = "config";
+                        res.args = ConfigBeautifier.Invoke(this.invoke.args);
+                        break;
+                    case "darc":
+                        res.contract = "darc";
+                        res.args = DarcBeautifier.Invoke(this.invoke.args);
+                        break;
+                    default:
+                        res.status = 1;
+                        res.args = DefaultBeautifier.Hex(this.spawn.args);
+                }
+
+                break;
+
+            case Instruction.typeDelete:
+                res.type = "delete";
+
+                switch (this.delete.contractID) {
+                    default:
+                        res.status = 1;
+                        res.args = DefaultBeautifier.Hex(this.spawn.args);
+                }
+
+                break;
+
+            default:
+                throw new Error("unknown instruction type");
+        }
+
+        return res;
     }
 
     protected hashForVersion(version: number): Buffer {
