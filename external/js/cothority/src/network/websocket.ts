@@ -148,7 +148,7 @@ export class WebSocketConnection implements IConnection {
                             having navigated away from the page.`;
                             break;
                         case 1002:
-                            err = `Endpoint is terminated the connection due to a protocol error.`;
+                            err = `Endpoint terminated the connection due to a protocol error.`;
                             break;
                         case 1003:
                             err = `Endpoint is terminated the connection
