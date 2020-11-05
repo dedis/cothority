@@ -151,7 +151,7 @@ export class WebSocketConnection implements IConnection {
                             err = `Endpoint terminated the connection due to a protocol error.`;
                             break;
                         case 1003:
-                            err = `Endpoint is terminated the connection
+                            err = `Endpoint terminated the connection
                             because it has received a type of data it cannot accept (e.g., an
                             endpoint that understands only text data MAY send this if it
                             receives a binary message).`;
