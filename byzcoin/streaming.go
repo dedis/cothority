@@ -106,14 +106,10 @@ func (s *Service) StreamTransactions(msg *StreamingRequest) (chan *StreamingResp
 	outChan := s.streamingMan.newListener(key)
 
 	go func() {
-		s.closedMutex.Lock()
-		if s.closed {
-			s.closedMutex.Unlock()
+		if !s.tasks.Add(1) {
 			return
 		}
-		s.working.Add(1)
-		defer s.working.Done()
-		s.closedMutex.Unlock()
+		defer s.tasks.Done()
 
 		// Either the service is closing and we force the connection to stop or
 		// the streaming connection is closed upfront.

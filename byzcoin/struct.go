@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"go.dedis.ch/cothority/v3"
@@ -740,3 +741,75 @@ const (
 	// instances. If not present, missing instances are ignored.
 	GUFSendMissingProofs
 )
+
+// runSingleWG allows to ensure a single execution of a method.
+type runSingleWG struct {
+	sync.WaitGroup
+	running int32
+}
+
+// Increment on Start - returns false if wg is already running
+func (cg *runSingleWG) Start() bool {
+	fresh := atomic.CompareAndSwapInt32(&cg.running, 0, 1)
+	if !fresh {
+		return false
+	}
+	cg.Add(1)
+	return true
+}
+
+// Decrement on Done
+func (cg *runSingleWG) Done() {
+	if !cg.Running() {
+		panic("cannot call done on idle runSingleWG")
+	}
+	atomic.AddInt32(&cg.running, -1)
+	cg.WaitGroup.Done()
+}
+
+// Check if currently running
+func (cg *runSingleWG) Running() bool {
+	return atomic.LoadInt32(&cg.running) > 0
+}
+
+// tasksWG is a special workGroup that can be paused or resumed.
+type tasksWG struct {
+	sync.Mutex
+	sync.WaitGroup
+	running bool
+}
+
+func (wwg *tasksWG) Add(delta int) bool {
+	wwg.Lock()
+	defer wwg.Unlock()
+	if !wwg.running {
+		return false
+	}
+	wwg.WaitGroup.Add(delta)
+	return true
+}
+
+func (wwg *tasksWG) Pause() bool {
+	wwg.Lock()
+	defer wwg.Unlock()
+	if !wwg.running {
+		return false
+	}
+	wwg.running = false
+	return true
+}
+
+func (wwg *tasksWG) Resume() {
+	wwg.Lock()
+	defer wwg.Unlock()
+	if wwg.running {
+		panic("cannot open a closed wwg")
+	}
+	wwg.running = true
+}
+
+func (wwg *tasksWG) Running() bool {
+	wwg.Lock()
+	defer wwg.Unlock()
+	return wwg.running
+}
