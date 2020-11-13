@@ -549,9 +549,9 @@ func TestService_AutomaticVersionUpgrade(t *testing.T) {
 
 	// Simulate an upgrade of the conodes.
 	for _, srv := range b.Services {
-		srv.defaultVersionLock.Lock()
+		srv.defaultVersionMutex.Lock()
 		srv.defaultVersion = CurrentVersion
-		srv.defaultVersionLock.Unlock()
+		srv.defaultVersionMutex.Unlock()
 	}
 
 	for i := 0; i < 10; i++ {
@@ -2524,16 +2524,16 @@ func TestService_Repair(t *testing.T) {
 
 	// Introduce an artificial corruption and then try to repair it.
 	genesisHex := fmt.Sprintf("%x", b.Genesis.SkipChainID())
-	b.Services[0].stateTriesLock.Lock()
+	b.Services[0].stateTriesMutex.Lock()
 	b.Services[0].stateTries[genesisHex] = intermediateStateTrie
-	b.Services[0].stateTriesLock.Unlock()
+	b.Services[0].stateTriesMutex.Unlock()
 
 	err := b.Services[0].fixInconsistencyIfAny(b.Genesis.SkipChainID(), intermediateStateTrie)
 	require.NoError(t, err)
 
-	b.Services[0].stateTriesLock.Lock()
+	b.Services[0].stateTriesMutex.Lock()
 	newRoot := b.Services[0].stateTries[genesisHex].GetRoot()
-	b.Services[0].stateTriesLock.Unlock()
+	b.Services[0].stateTriesMutex.Unlock()
 	require.Equal(t, finalRoot, newRoot)
 }
 

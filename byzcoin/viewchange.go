@@ -158,7 +158,6 @@ func (s *Service) sendViewChangeReq(view viewchange.View) error {
 				delay = bi.BlockInterval * factor / time.Duration(2000)
 			}
 			for i := 0; i < 2; i++ {
-				log.Print(s.ServerIdentity(), i)
 				if err := s.SendRaw(id, &req); err != nil {
 					// Having an error here is fine because not all the
 					// nodes are guaranteed to be online. So we log a
@@ -209,9 +208,11 @@ func (s *Service) sendNewView(proof []viewchange.InitReq) error {
 		return fmt.Errorf("couldn't get header of block: %+v", err)
 	}
 
-	s.working.Add(1)
+	if !s.tasks.Add(1) {
+		return xerrors.New("cannot start while in closing state")
+	}
 	go func() {
-		defer s.working.Done()
+		defer s.tasks.Done()
 		var sig []byte
 		// Only version < VersionViewchange uses the signing of the view-change
 		// request.

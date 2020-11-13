@@ -315,7 +315,6 @@ func newTestService(c *onet.Context) (onet.Service, error) {
 		stateChangeStorage: newStateChangeStorage(c),
 		viewChangeMan:      newViewChangeManager(),
 		streamingMan:       streamingManager{},
-		closed:             true,
 	}
 
 	cs := &corruptedService{Service: s}

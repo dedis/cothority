@@ -112,8 +112,8 @@ type Service struct {
 	*onet.ServiceProcessor
 	// stateTries contains a reference to all the tries that the service is
 	// responsible for, one for each skipchain.
-	stateTries     map[string]*stateTrie
-	stateTriesLock sync.Mutex
+	stateTries      map[string]*stateTrie
+	stateTriesMutex sync.Mutex
 	// We need to store the state changes for keeping track
 	// of the history of an instance
 	stateChangeStorage *stateChangeStorage
@@ -141,18 +141,15 @@ type Service struct {
 
 	stateChangeCache stateChangeCache
 
-	closed        bool
-	closedMutex   sync.Mutex
-	working       sync.WaitGroup
+	tasks         tasksWG
 	viewChangeMan viewChangeManager
 
 	streamingMan streamingManager
 
-	updateTrieLock        sync.Mutex
-	catchingLock          sync.Mutex
-	catchingUp            bool
-	catchingUpHistory     map[string]time.Time
-	catchingUpHistoryLock sync.Mutex
+	updateTrieMutex        sync.Mutex
+	catchingUpWG           runSingleWG
+	catchingUpHistory      map[string]time.Time
+	catchingUpHistoryMutex sync.Mutex
 
 	downloadState downloadState
 
@@ -162,8 +159,8 @@ type Service struct {
 
 	// defaultVersion is the new version to use for new
 	// ByzCoin chains.
-	defaultVersion     Version
-	defaultVersionLock sync.Mutex
+	defaultVersion      Version
+	defaultVersionMutex sync.Mutex
 }
 
 type downloadState struct {
@@ -197,9 +194,9 @@ type bcStorage struct {
 // GetProtocolVersion returns the version of the Byzcoin protocol for the current
 // conode.
 func (s *Service) GetProtocolVersion() Version {
-	s.defaultVersionLock.Lock()
+	s.defaultVersionMutex.Lock()
 	v := s.defaultVersion
-	s.defaultVersionLock.Unlock()
+	s.defaultVersionMutex.Unlock()
 	return v
 }
 
@@ -378,17 +375,10 @@ func (s *Service) prepareTxResponse(req *AddTxRequest, tx *TxResult) (*AddTxResp
 // Every node that cannot send it to the leader will request a viewChange.
 // If enough nodes fail to send it to the leader, a new leader will be elected.
 func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
-	s.closedMutex.Lock()
-	if s.closed {
-		s.closedMutex.Unlock()
+	if !s.tasks.Add(1) {
 		return nil, xerrors.New("node is closed")
 	}
-	// Make sure AddTransaction is done before the node closes down - mostly
-	// for testing.
-	s.working.Add(1)
-	defer s.working.Done()
-
-	s.closedMutex.Unlock()
+	defer s.tasks.Done()
 
 	if len(req.Transaction.Instructions) == 0 {
 		return nil, xerrors.New("no transactions to add")
@@ -556,17 +546,11 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 // GetProof searches for a key and returns a proof of the
 // presence or the absence of this key.
 func (s *Service) GetProof(req *GetProof) (*GetProofResponse, error) {
-	s.catchingLock.Lock()
-	s.updateTrieLock.Lock()
+	s.updateTrieMutex.Lock()
 
-	defer func() {
-		s.updateTrieLock.Unlock()
-		s.catchingLock.Unlock()
-	}()
+	defer s.updateTrieMutex.Unlock()
 
-	s.closedMutex.Lock()
-	defer s.closedMutex.Unlock()
-	if s.closed {
+	if !s.tasks.Running() {
 		// This should only ever happen during testing
 		log.Lvl2(s.ServerIdentity(), "cannot get proof while in closed state")
 		sb := skipchain.NewSkipBlock()
@@ -686,11 +670,8 @@ func (s *Service) GetSignerCounters(req *GetSignerCounters) (*GetSignerCountersR
 // GetUpdates returns instances that have a newer versions than the ones
 // passed to it.
 func (s *Service) GetUpdates(pr *GetUpdatesRequest) (*GetUpdatesReply, error) {
-	s.catchingLock.Lock()
-	defer s.catchingLock.Unlock()
-
-	s.updateTrieLock.Lock()
-	defer s.updateTrieLock.Unlock()
+	s.updateTrieMutex.Lock()
+	defer s.updateTrieMutex.Unlock()
 
 	scID := pr.SkipchainID
 	if scID.IsNull() {
@@ -751,8 +732,6 @@ func (s *Service) GetUpdates(pr *GetUpdatesRequest) (*GetUpdatesReply, error) {
 // DownloadState creates a snapshot of the current state and then returns the
 // instances in small chunks.
 func (s *Service) DownloadState(req *DownloadState) (resp *DownloadStateResponse, err error) {
-	s.catchingLock.Lock()
-	defer s.catchingLock.Unlock()
 	if req.Length <= 0 {
 		return nil, xerrors.New("length must be bigger than 0")
 	}
@@ -1034,7 +1013,7 @@ func (s *Service) DebugRemove(req *DebugRemoveRequest) (*DebugResponse, error) {
 	}
 	s.stopTxPipelineMut.Unlock()
 
-	s.stateTriesLock.Lock()
+	s.stateTriesMutex.Lock()
 	idStrHex := fmt.Sprintf("%x", req.ByzCoinID)
 	_, exists = s.stateTries[idStrHex]
 	if exists {
@@ -1055,7 +1034,7 @@ func (s *Service) DebugRemove(req *DebugRemoveRequest) (*DebugResponse, error) {
 			log.Error("couldn't remove the whole chain:", err)
 		}
 	}
-	s.stateTriesLock.Unlock()
+	s.stateTriesMutex.Unlock()
 
 	s.darcToScMut.Lock()
 	for k, sc := range s.darcToSc {
@@ -1117,9 +1096,9 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		}
 		sst = et
 		// Use the latest version of the byzcoin protocol.
-		s.defaultVersionLock.Lock()
+		s.defaultVersionMutex.Lock()
 		version = s.defaultVersion
-		s.defaultVersionLock.Unlock()
+		s.defaultVersionMutex.Unlock()
 	} else {
 		// For all other blocks, we try to verify the signature using
 		// the darcs and remove those that do not have a valid
@@ -1286,7 +1265,7 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 	err := func() error {
 		// First delete an existing stateTrie. There
 		// cannot be another write-access to the
-		// database because of catchingLock.
+		// database because of catchingUpWG.
 		_, err := s.getStateTrie(sb.SkipChainID())
 		if err == nil {
 			// Suppose we _do_ have a statetrie
@@ -1297,9 +1276,9 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 			if err != nil {
 				return xerrors.Errorf("Cannot delete existing trie while trying to download: %v", err)
 			}
-			s.stateTriesLock.Lock()
+			s.stateTriesMutex.Lock()
 			delete(s.stateTries, idStr)
-			s.stateTriesLock.Unlock()
+			s.stateTriesMutex.Unlock()
 		}
 
 		// Then start downloading the stateTrie over the network.
@@ -1368,9 +1347,9 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 		}
 
 		// Finally initialize the stateTrie using the new database.
-		s.stateTriesLock.Lock()
+		s.stateTriesMutex.Lock()
 		s.stateTries[idStr] = st
-		s.stateTriesLock.Unlock()
+		s.stateTriesMutex.Unlock()
 		chain, err := skCl.GetUpdateChain(sb.Roster, sb.SkipChainID())
 		if err != nil {
 			return xerrors.Errorf("getting chain: %v", err)
@@ -1392,26 +1371,10 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 
 // catchupAll calls catchup for every byzcoin instance stored in this system.
 func (s *Service) catchupAll() error {
-	s.closedMutex.Lock()
-	if s.closed {
-		s.closedMutex.Unlock()
+	if !s.tasks.Add(1) {
 		return xerrors.New("cannot sync all while closing")
 	}
-	s.working.Add(1)
-	defer s.working.Done()
-	s.closedMutex.Unlock()
-
-	s.catchingLock.Lock()
-	s.updateTrieLock.Lock()
-	s.catchingUp = true
-	s.updateTrieLock.Unlock()
-
-	defer func() {
-		s.updateTrieLock.Lock()
-		s.catchingUp = false
-		s.updateTrieLock.Unlock()
-		s.catchingLock.Unlock()
-	}()
+	defer s.tasks.Done()
 
 	gas := &skipchain.GetAllSkipChainIDs{}
 	gasr, err := s.skService().GetAllSkipChainIDs(gas)
@@ -1473,21 +1436,9 @@ func (s *Service) catchupAll() error {
 // known and then we limit the number of catch up requests per skipchain by waiting
 // for a minimal amount of time.
 func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID, sbID skipchain.SkipBlockID) error {
-	s.catchingLock.Lock()
-	if s.catchingUp {
-		s.catchingLock.Unlock()
+	if s.catchingUpWG.Running() {
 		return xerrors.New("already catching up")
 	}
-	s.updateTrieLock.Lock()
-	s.catchingUp = true
-	s.updateTrieLock.Unlock()
-
-	defer func() {
-		s.updateTrieLock.Lock()
-		s.catchingUp = false
-		s.updateTrieLock.Unlock()
-		s.catchingLock.Unlock()
-	}()
 
 	// Catch up only friendly skipchains to avoid unnecessary requests
 	if s.db().GetByID(scID) == nil {
@@ -1499,15 +1450,15 @@ func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID, sbID
 	}
 
 	// The size of the map is limited here by the number of known skipchains
-	s.catchingUpHistoryLock.Lock()
+	s.catchingUpHistoryMutex.Lock()
 	ts := s.catchingUpHistory[string(scID)]
 	if ts.After(time.Now()) {
-		s.catchingUpHistoryLock.Unlock()
+		s.catchingUpHistoryMutex.Unlock()
 		return xerrors.New("catch up request already processed recently")
 	}
 
 	s.catchingUpHistory[string(scID)] = time.Now().Add(catchupMinimumInterval)
-	s.catchingUpHistoryLock.Unlock()
+	s.catchingUpHistoryMutex.Unlock()
 
 	log.Lvlf1("%s: catching up with chain %x", s.ServerIdentity(), scID)
 
@@ -1537,6 +1488,12 @@ func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID, sbID
 // `catchupDownloadAll` behind, or calls downloadDB to start the download of
 // the full DB over the network.
 func (s *Service) catchUp(sb *skipchain.SkipBlock) {
+	if !s.catchingUpWG.Start() {
+		log.Lvlf2("Already in progress of catching up %x", sb.SkipChainID()[:])
+		return
+	}
+	defer s.catchingUpWG.Done()
+
 	log.Lvlf1("%v Catching up %x / %d", s.ServerIdentity(), sb.SkipChainID(), sb.Index)
 
 	// Load the trie.
@@ -1643,7 +1600,13 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 		trieIndex = latest.Index
 	}
 
-	log.Lvlf2("%v Done catch up %x / %d", s.ServerIdentity(), sb.SkipChainID(), trieIndex)
+	err = s.skService().SyncChain(latest.Roster, latest.SkipChainID())
+	if err != nil {
+		log.Errorf("Couldn't update chain: %+v", err)
+	}
+
+	log.LLvlf2("%v Done catch up %x / %d", s.ServerIdentity(),
+		sb.SkipChainID(), trieIndex)
 }
 
 // updateTrieCallback is registered in skipchain and is called after a
@@ -1652,14 +1615,13 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 // Hence, we need to figure out when a new block is added. This can be done by
 // looking at the latest skipblock cache from Service.state.
 func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
-	s.updateTrieLock.Lock()
-	defer s.updateTrieLock.Unlock()
+	s.updateTrieMutex.Lock()
+	defer s.updateTrieMutex.Unlock()
 
-	s.closedMutex.Lock()
-	defer s.closedMutex.Unlock()
-	if s.closed {
+	if !s.tasks.Add(1) {
 		return nil
 	}
+	defer s.tasks.Done()
 
 	defer log.Lvlf4("%s updated trie for %x", s.ServerIdentity(), sbID)
 
@@ -1715,15 +1677,10 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		return nil
 	} else if sb.Index > trieIndex+1 {
 		log.Warn(s.ServerIdentity(), "Got new block while catching up - ignoring block for now")
-		s.working.Add(1)
 		go func() {
-			defer s.working.Done()
-
 			// This new block will catch up at the end of the current catch up (if any)
 			// and be ignored if the block is already known.
-			s.catchingLock.Lock()
 			s.catchUp(sb)
-			s.catchingLock.Unlock()
 		}()
 
 		return nil
@@ -1790,10 +1747,12 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	if err != nil {
 		return xerrors.Errorf("getting initial duration: %v", err)
 	}
+
 	// Check if the polling needs to be updated.
 	s.stopTxPipelineMut.Lock()
 	scIDstr := string(sb.SkipChainID())
-	if nodeIsLeader && !s.catchingUp {
+	catchingUp := s.catchingUpWG.Running()
+	if nodeIsLeader && !catchingUp {
 		if _, ok := s.stopTxPipeline[scIDstr]; !ok {
 			log.Lvlf2("%s new leader started polling for %x", s.ServerIdentity(), sb.SkipChainID())
 			s.stopTxPipeline[scIDstr] = s.startTxPipeline(sb.SkipChainID())
@@ -1808,7 +1767,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	s.stopTxPipelineMut.Unlock()
 
 	// Check if viewchange needs to be started/stopped
-	if nodeInNew && !s.catchingUp {
+	if nodeInNew && !catchingUp {
 		// If it is a view-change transaction, confirm it's done
 		view := isViewChangeTx(body.TxResults)
 
@@ -1878,8 +1837,8 @@ func (s *Service) GetReadOnlyStateTrie(scID skipchain.SkipBlockID) (ReadOnlyStat
 }
 
 func (s *Service) hasStateTrie(id skipchain.SkipBlockID) bool {
-	s.stateTriesLock.Lock()
-	defer s.stateTriesLock.Unlock()
+	s.stateTriesMutex.Lock()
+	defer s.stateTriesMutex.Unlock()
 
 	idStr := fmt.Sprintf("%x", id)
 	_, ok := s.stateTries[idStr]
@@ -1891,8 +1850,8 @@ func (s *Service) getStateTrie(id skipchain.SkipBlockID) (*stateTrie, error) {
 	if len(id) == 0 {
 		return nil, xerrors.New("no skipchain ID")
 	}
-	s.stateTriesLock.Lock()
-	defer s.stateTriesLock.Unlock()
+	s.stateTriesMutex.Lock()
+	defer s.stateTriesMutex.Unlock()
 	idStr := fmt.Sprintf("%x", id)
 	col := s.stateTries[idStr]
 	if col == nil {
@@ -1911,8 +1870,8 @@ func (s *Service) createStateTrie(id skipchain.SkipBlockID, nonce []byte) (*stat
 	if len(id) == 0 {
 		return nil, xerrors.New("no skipchain ID")
 	}
-	s.stateTriesLock.Lock()
-	defer s.stateTriesLock.Unlock()
+	s.stateTriesMutex.Lock()
+	defer s.stateTriesMutex.Unlock()
 	idStr := fmt.Sprintf("%x", id)
 	if s.stateTries[idStr] != nil {
 		return nil, xerrors.New("state trie already exists")
@@ -2023,21 +1982,14 @@ func (s *Service) startTxPipeline(scID skipchain.SkipBlockID) chan struct{} {
 	}
 
 	stopChan := make(chan struct{})
-	s.stopTxPipelineWG.Add(1)
-	go func() {
-		defer s.stopTxPipelineWG.Done()
-
-		s.closedMutex.Lock()
-		if s.closed {
-			s.closedMutex.Unlock()
-			return
-		}
-
-		s.working.Add(1)
-		defer s.working.Done()
-		s.closedMutex.Unlock()
-		pipeline.start(&initialState, stopChan)
-	}()
+	if s.tasks.Add(1) {
+		s.stopTxPipelineWG.Add(1)
+		go func() {
+			pipeline.start(&initialState, stopChan)
+			s.stopTxPipelineWG.Done()
+			s.tasks.Done()
+		}()
+	}
 	return stopChan
 }
 
@@ -2666,15 +2618,11 @@ func loadNonceFromTxs(txs TxResults) ([]byte, error) {
 // exported because we need it in tests, it should not be used in non-test code
 // outside of this package.
 func (s *Service) TestClose() {
-	s.closedMutex.Lock()
-	if !s.closed {
+	if s.tasks.Pause() {
 		s.skService().TestClose()
-		s.closed = true
-		s.closedMutex.Unlock()
 		s.cleanupGoroutines()
-		s.working.Wait()
-	} else {
-		s.closedMutex.Unlock()
+		s.tasks.Wait()
+		s.catchingUpWG.Wait()
 	}
 }
 
@@ -2684,7 +2632,12 @@ func (s *Service) TestRestart() error {
 	if err := s.skService().TestRestart(); err != nil {
 		return err
 	}
-	return s.startAllChains()
+	started, err := s.startAllChains()
+	if err != nil {
+		return xerrors.Errorf("couldn't start all chains: %v", err)
+	}
+	<-started
+	return nil
 }
 
 func (s *Service) cleanupGoroutines() {
@@ -2703,14 +2656,10 @@ func (s *Service) cleanupGoroutines() {
 
 func (s *Service) startViewChange(gen skipchain.SkipBlockID,
 	tx *ClientTransaction) error {
-	s.closedMutex.Lock()
-	if s.closed {
-		s.closedMutex.Unlock()
+	if !s.tasks.Add(1) {
 		return xerrors.New("cannot start viewchange when closing")
 	}
-	s.working.Add(1)
-	defer s.working.Done()
-	s.closedMutex.Unlock()
+	defer s.tasks.Done()
 
 	latest, err := s.db().GetLatestByID(gen)
 	if err != nil {
@@ -2760,31 +2709,26 @@ func (s *Service) startViewChange(gen skipchain.SkipBlockID,
 // startAllChains loads the configuration, updates the data in the service if
 // it finds a valid config-file and synchronises skipblocks if it can contact
 // other nodes.
-func (s *Service) startAllChains() error {
-	s.closedMutex.Lock()
-	if !s.closed {
-		s.closedMutex.Unlock()
-		return xerrors.New("can only call startAllChains if the service has been closed before")
+func (s *Service) startAllChains() (chan struct{}, error) {
+	if s.tasks.Running() {
+		return nil, xerrors.New("can only call startAllChains if the service" +
+			" has been closed before")
 	}
-	s.closedMutex.Unlock()
-	// Why ??
-	// s.SetPropagationTimeout(120 * time.Second)
+
 	msg, err := s.Load(storageID)
 	if err != nil {
-		return xerrors.Errorf("loading storage: %v", err)
+		return nil, xerrors.Errorf("loading storage: %v", err)
 	}
 	if msg != nil {
 		var ok bool
 		s.storage, ok = msg.(*bcStorage)
 		if !ok {
-			return xerrors.New("data of wrong type")
+			return nil, xerrors.New("data of wrong type")
 		}
 	}
 	s.stateTries = make(map[string]*stateTrie)
 	s.notifications = bcNotifications{}
-	s.closedMutex.Lock()
-	s.closed = false
-	s.closedMutex.Unlock()
+	s.tasks.Resume()
 
 	// Recreate the polling channles.
 	s.stopTxPipelineMut.Lock()
@@ -2795,11 +2739,12 @@ func (s *Service) startAllChains() error {
 
 	// All the logic necessary to start the chains is delayed to a goroutine so that
 	// the other services can start immediately and are not blocked by Byzcoin.
-	s.working.Add(1)
+	s.tasks.Add(1)
+	done := make(chan struct{}, 1)
 	go func() {
 		s.txPipelinesMutex.Lock()
 		defer s.txPipelinesMutex.Unlock()
-		defer s.working.Done()
+		defer s.tasks.Done()
 
 		// Catch up is done before starting the chains to prevent undesired events
 		err = s.catchupAll()
@@ -2823,9 +2768,10 @@ func (s *Service) startAllChains() error {
 				log.Error("catch up error: ", err)
 			}
 		}
+		done <- struct{}{}
 	}()
 
-	return nil
+	return done, nil
 }
 
 // Cleans up buckets from previous versions where each new block created a
@@ -3092,7 +3038,6 @@ func newService(c *onet.Context) (onet.Service, error) {
 		stateChangeStorage: newStateChangeStorage(c),
 		viewChangeMan:      newViewChangeManager(),
 		streamingMan:       streamingManager{},
-		closed:             true,
 		catchingUpHistory:  make(map[string]time.Time),
 		rotationWindow:     defaultRotationWindow,
 		defaultVersion:     CurrentVersion,
@@ -3188,7 +3133,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		}
 	}()
 
-	if err := s.startAllChains(); err != nil {
+	if _, err := s.startAllChains(); err != nil {
 		return nil, xerrors.Errorf("starting chains: %v", err)
 	}
 

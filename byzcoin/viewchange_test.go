@@ -298,6 +298,7 @@ func TestViewChange_NeedCatchUp(t *testing.T) {
 	// Kill the leader, and unpause the sleepy node
 	b.Services[0].TestClose()
 	b.Servers[0].Pause()
+	log.Lvl1("Unpause latest node")
 	b.Servers[nodes-1].Unpause()
 	require.NoError(t, b.Services[nodes-1].TestRestart())
 
