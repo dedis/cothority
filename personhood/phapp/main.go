@@ -258,7 +258,7 @@ func spawner(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("%+v", ctx.Instructions[0])
+	log.Infof("%+v", ctx.Instructions[0])
 	spawnerIID := ctx.Instructions[0].DeriveID("")
 	log.Infof("Creating Spawner instance: %x", spawnerIID.Slice())
 	_, err = cl.AddTransactionAndWait(ctx, 5)

@@ -162,6 +162,8 @@ func (b *BCTest) SendTx(args *TxArgs, ctx ClientTransaction) AddTxResponse {
 		args = &TxArgsDefault
 	}
 
+	latest, err := b.Services[args.Node].db().GetLatestByID(b.Genesis.Hash)
+	require.NoError(b.T, err)
 	resp, err := b.Services[args.Node].AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   b.Genesis.SkipChainID(),
@@ -174,7 +176,7 @@ func (b *BCTest) SendTx(args *TxArgs, ctx ClientTransaction) AddTxResponse {
 		require.Empty(b.T, resp.Error)
 	}
 	if args.WaitPropagation {
-		require.NoError(b.T, b.Client.WaitPropagation(-1))
+		require.NoError(b.T, b.Client.WaitPropagation(latest.Index+1))
 	}
 	return *resp
 }

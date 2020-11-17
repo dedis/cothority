@@ -146,7 +146,7 @@ func verify(fileName, sigFileName, groupToml string) error {
 	log.Lvl4("Reading signature")
 	var sigBytes []byte
 	if sigFileName == "" {
-		log.Print("[+] Reading signature from standard input ...")
+		log.Info("[+] Reading signature from standard input ...")
 		sigBytes, err = ioutil.ReadAll(os.Stdin)
 	} else {
 		sigBytes, err = ioutil.ReadFile(sigFileName)

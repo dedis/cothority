@@ -210,7 +210,7 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 	// try to read the transaction back again
 	log.Lvl1("reading the transactions back")
 	txs := []ClientTransaction{tx1, tx2}
-	b.Client.UseNode(sendToIdx)
+	require.NoError(t, b.Client.UseNode(sendToIdx))
 	for i := 0; i < 2; i++ {
 		if i == 1 {
 			// Now read the key/values from a new service

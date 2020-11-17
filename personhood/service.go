@@ -411,7 +411,7 @@ func (s *Service) Challenge(rq *Challenge) (*ChallengeReply, error) {
 	sort.Slice(reply.List, func(i, j int) bool {
 		return reply.List[i].Score > reply.List[j].Score
 	})
-	log.Print(reply)
+	log.Info(reply)
 	return reply, nil
 	//return nil, nil
 }
@@ -434,7 +434,7 @@ func (s *Service) SetAdminDarcIDs(rq *SetAdminDarcIDs) (*SetAdminDarcIDsReply,
 	for _, adid := range rq.NewAdminDarcIDs {
 		msg = append(msg, adid[:]...)
 	}
-	log.Printf("message is: %x", msg)
+	log.Infof("message is: %x", msg)
 	err := schnorr.Verify(cothority.Suite, s.ServerIdentity().Public, msg,
 		rq.Signature)
 	if err != nil {

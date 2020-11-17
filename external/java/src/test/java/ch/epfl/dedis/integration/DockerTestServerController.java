@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class DockerTestServerController extends TestServerController {
     private static final Logger logger = LoggerFactory.getLogger(DockerTestServerController.class);
@@ -29,7 +30,8 @@ public class DockerTestServerController extends TestServerController {
         super();
         logger.warn("local docker will be started for tests.");
         logger.info("This test run assumes that image " + TEST_SERVER_IMAGE_NAME + " is available in your system.");
-        logger.info("To build such image you should run `make docker docker_test` - such run will create base image and image with test keys.");
+        logger.info("To build this image you should run `make docker` - this will create the test image with test " +
+                "keys.");
         logger.info("For a test run this code will create additional docker image with name " + TEMPORARY_DOCKER_IMAGE +
                 ", at the end this additional image will be automatically deleted");
         try {
@@ -89,6 +91,14 @@ public class DockerTestServerController extends TestServerController {
         }
     }
 
+    @Override
+    public void cleanDBs() throws IOException, InterruptedException {
+        logger.info("Removing all accumulated databases");
+        // cannot use `rm *.db` here because there is no shell expansion done.
+        Container.ExecResult psResults = blockchainContainer.execInContainer("find", ".", "-name", "*.db", "-exec", "rm", "-vf", "{}", ";");
+        logger.info("DBs removed: {}", psResults.getStdout());
+    }
+
     /**
      * We only get 4 conodes because the run_conode.sh file (from the Dockerfile) only starts 4 conodes.
      * The other conodes (5 to 7) are used for testing roster changes.
@@ -132,7 +142,10 @@ public class DockerTestServerController extends TestServerController {
         fc.addConsumer(OutputFrame.OutputType.STDOUT, logConsumer);
         fc.addConsumer(OutputFrame.OutputType.STDERR, logConsumer);
 
-        dockerClient.execStartCmd(execCreateCmdResponse.getId())
-                .exec(fc).awaitStarted();
+        boolean started = dockerClient.execStartCmd(execCreateCmdResponse.getId())
+                .exec(fc).awaitStarted(10, TimeUnit.SECONDS);
+        if (!started){
+            logger.error("Couldn't start node in time: {}", String.join(" ", cmd));
+        }
     }
 }

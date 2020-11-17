@@ -101,6 +101,7 @@ class CalypsoTest {
             for (int i = 1; i <= 4; i++) {
                 testInstanceController.killConode(i);
             }
+            testInstanceController.cleanDBs();
             Thread.sleep(1000);
             for (int i = 1; i <= 4; i++) {
                 testInstanceController.startConode(i);

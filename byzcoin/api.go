@@ -699,11 +699,8 @@ func (c *Client) ResolveInstanceID(darcID darc.ID, name string) (InstanceID, err
 func (c *Client) WaitPropagation(index int) error {
 	var sb skipchain.SkipBlock
 	sb.SkipBlockFix = &skipchain.SkipBlockFix{}
-	if index >= 0 {
-		sb.Index = index
-	}
 searchLatest:
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 10; i++ {
 		log.Lvl2("Starting search")
 		if i > 0 {
 			time.Sleep(100 * time.Millisecond)
@@ -746,7 +743,10 @@ searchLatest:
 				log.Lvl2("Node", node, "returned same block as other nodes")
 			}
 		}
-		return nil
+		if sb.Index >= index {
+			return nil
+		}
+		log.Lvlf2("Only got block %d, waiting for %d", sb.Index, index)
 	}
 	return xerrors.New("didn't get the same blocks from everybody within 10 seconds")
 }

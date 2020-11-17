@@ -54,6 +54,8 @@ public abstract class TestServerController {
 
     public abstract void killConode(int nodeNumber) throws IOException, InterruptedException;
 
+    public abstract void cleanDBs() throws IOException, InterruptedException;
+
     public abstract List<ServerIdentity> getConodes();
 
     public Roster getRoster() {
@@ -75,7 +77,8 @@ public abstract class TestServerController {
 
     /**
      * Read the public.toml file in the test resources and create the server identities from it
-     * @throws IOException for file errors
+     *
+     * @throws IOException        for file errors
      * @throws URISyntaxException for conode address errors
      */
     private void parseServerIdentities() throws IOException, URISyntaxException {
