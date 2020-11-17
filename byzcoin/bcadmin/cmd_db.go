@@ -481,12 +481,17 @@ func dbCheck(c *cli.Context) error {
 		if blocks%process == 0 {
 			log.Infof("Processed %d blocks so far", blocks)
 		}
+
+		// Basic sanity check of the block header
 		errStr := fmt.Sprintf("found block %d with", sb.Index)
 		if !sb.Hash.Equal(sb.CalculateHash()) {
 			log.Errorf("%s wrong hash: %x instead"+
 				" of %x", errStr, sb.Hash, sb.CalculateHash())
 		}
 
+		// Check backward-links for all blocks except the genesis-block,
+		// as its backward-link only serves as random input to the hash of
+		// the genesis block.
 		if sb.Index > 0 {
 			if !sb.SkipChainID().Equal(*fb.bcID) {
 				log.Errorf(
@@ -509,33 +514,29 @@ func dbCheck(c *cli.Context) error {
 				}
 				if !previous.ForwardLink[i].To.Equal(sb.Hash) {
 					log.Errorf(
-						"%s pointing backwards to a block that doesn't"+
-							" reference it", errStrBl)
+						"%s pointing backwards to a block that references"+
+							" another block, which indicates a fork", errStrBl)
 				}
 			}
 		}
 
+		// Verify available forward-links to match the backward-links of the
+		// blocks they point to.
+		// If enabled, also verify the signature of the forward-links.
 		indexes := sb.GetFLIndexes()
 		for i, index := range indexes {
-			if index <= last.Index {
-				if i >= len(sb.ForwardLink) {
-					maxLink := len(indexes) - 1
-					for ; indexes[maxLink] > last.Index; maxLink-- {
-					}
-					log.Warnf("%s only %d out of %d forward-links",
-						errStr, i, maxLink+1)
-					break
-				}
-				if sb.ForwardLink[i].IsEmpty() {
-					log.Warnf("%s empty forward-link to %d", errStr, index)
-				}
-			}
-		}
-		for i, fl := range sb.ForwardLink {
-			if fl.IsEmpty() {
-				continue
+			if index > last.Index {
+				break
 			}
 			errStrFl := fmt.Sprintf("%s forwardLink at height %d", errStr, i)
+
+			if i > sb.GetForwardLen() || sb.ForwardLink[i].IsEmpty() {
+				log.Warnf("%s missing: should point to %d", errStrFl,
+					index)
+				continue
+			}
+
+			fl := sb.ForwardLink[i]
 			if !fl.From.Equal(sb.Hash) {
 				log.Errorf(
 					"%s not originating from itself", errStrFl)
@@ -554,6 +555,7 @@ func dbCheck(c *cli.Context) error {
 				log.Errorf("%s points to block %d which doesn't point back",
 					errStrFl, next.Index)
 			}
+
 			if !skipSig {
 				err := fl.VerifyWithScheme(pairing.NewSuiteBn256(),
 					sb.Roster.ServicePublics(skipchain.ServiceName),
@@ -563,11 +565,13 @@ func dbCheck(c *cli.Context) error {
 						errStrFl, err)
 				}
 			}
+
 			if fl.NewRoster != nil {
 				equal, err := fl.NewRoster.Equal(next.Roster)
 				if err != nil {
 					log.Errorf(
-						"%s cannot test if new roster is the same: %+v",
+						"%s cannot test if roster in forward-link is the same"+
+							" as the roster in the block it points to: %+v",
 						errStrFl, err)
 					continue
 				}
@@ -576,8 +580,18 @@ func dbCheck(c *cli.Context) error {
 				}
 			}
 		}
+
+		// Get lowest forwardLink available.
 		if len(sb.ForwardLink) > 0 {
-			sb = fb.db.GetByID(sb.ForwardLink[0].To)
+			for i, fl := range sb.ForwardLink {
+				if !fl.IsEmpty() {
+					if i > 0 {
+						log.Errorf("%s has empty level-0 forward link, "+
+							"trying to continue anyway", errStr)
+					}
+					sb = fb.db.GetByID(fl.To)
+				}
+			}
 		} else {
 			break
 		}
