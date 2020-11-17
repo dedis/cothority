@@ -79,7 +79,7 @@ func (c *Client) SetAdminDarcIDs(si *network.ServerIdentity, adminDarcIDs []darc
 	for _, adid := range adminDarcIDs {
 		msg = append(msg, adid...)
 	}
-	log.Printf("message is: %x", msg)
+	log.Infof("message is: %x", msg)
 	var err error
 	sadid.Signature, err = schnorr.Sign(cothority.Suite, priv, msg)
 	if err != nil {

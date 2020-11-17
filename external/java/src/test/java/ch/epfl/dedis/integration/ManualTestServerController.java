@@ -1,6 +1,8 @@
 package ch.epfl.dedis.integration;
 
 import ch.epfl.dedis.lib.network.ServerIdentity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,6 +13,8 @@ import java.util.stream.Collectors;
 
 
 public class ManualTestServerController extends TestServerController {
+    private static final Logger logger = LoggerFactory.getLogger(ManualTestServerController.class);
+
     @Override
     public void startConode(int nodeNumber) throws InterruptedException, IOException {
         Runtime.getRuntime().exec("../scripts/start_4th_conode.sh");
@@ -29,6 +33,11 @@ public class ManualTestServerController extends TestServerController {
         if ( exitValue != 0 ) {
             throw new IllegalStateException("something is wrong I'm not able to kill node");
         }
+    }
+
+    @Override
+    public void cleanDBs(){
+        logger.info("Not cleaning DBs in manual mode");
     }
 
     @Override

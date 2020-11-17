@@ -235,7 +235,10 @@ func (p *GetBlocks) Start() error {
 	go func() {
 		errs := p.SendToChildrenInParallel(p.GetBlocks)
 		if len(errs) > 0 {
-			log.Lvlf1("Error while sending to children: %+v", errs)
+			for _, err := range errs {
+				log.Warnf("Error while sending to children: %v", err)
+				p.replies++
+			}
 		}
 	}()
 	return nil
@@ -295,6 +298,7 @@ func (p *GetBlocks) HandleGetBlocksReply(msg ProtoStructGetBlocksReply) error {
 	p.replies++
 	blocksReply := msg.SkipBlocks
 	if p.replies == len(p.Children()) || len(blocksReply) > 0 {
+		log.Lvlf2("Got %d blocks from %s", len(blocksReply), msg.ServerIdentity)
 		p.GetBlocksReply <- blocksReply
 		p.Done()
 	}

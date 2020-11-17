@@ -441,19 +441,21 @@ public class ByzCoinRPCTest {
             testInstanceController.startConode(6);
             testInstanceController.startConode(7);
 
-            logger.info("updating real roster");
+            logger.info("updating to roster[0..4]");
             Roster newRoster = new Roster(testInstanceController.getIdentities().subList(0, 5));
-
             bc.setRoster(newRoster, admins, counters.getCounters(), 10);
             counters.increment();
+            logger.info("updating to roster[0..5]");
             newRoster = new Roster(testInstanceController.getIdentities().subList(0, 6));
             bc.setRoster(newRoster, admins, counters.getCounters(), 10);
             counters.increment();
+            logger.info("updating to roster[0..6]");
             newRoster = new Roster(testInstanceController.getIdentities().subList(0, 7));
             bc.setRoster(newRoster, admins, counters.getCounters(), 10);
             counters.increment();
 
             // Need to send in at least two blocks before the new node is active
+            logger.info("Sending two transactions to settle new roster");
             bc.setMaxBlockSize(1000 * 1000, admins, counters.getCounters(), 20);
             counters.increment();
             bc.setMaxBlockSize(1000 * 1000, admins, counters.getCounters(), 20);
