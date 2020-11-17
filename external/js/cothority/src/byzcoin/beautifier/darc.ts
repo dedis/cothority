@@ -17,6 +17,9 @@ export class DarcBeautifier {
                     const darc = d.decode(arg.value);
                     res.push({name: "darc", value: darc.description.toString(), full: darc.toString()});
                     break;
+                default:
+                    res.push({name: arg.name, value: "unspecified", full: arg.value.toString("hex")});
+                    break;
             }
         });
 
@@ -30,6 +33,9 @@ export class DarcBeautifier {
                 case "darc":
                     const darc = d.decode(arg.value);
                     res.push({name: "darc", value: darc.description.toString(), full: darc.toString()});
+                    break;
+                default:
+                    res.push({name: arg.name, value: "unspecified", full: arg.value.toString("hex")});
                     break;
             }
         });

@@ -36,6 +36,9 @@ export class ConfigBeautifier {
                 case "darc_contracts":
                     res.push({name: "darc_contracts", value: arg.value.toString("hex")});
                     break;
+                default:
+                    res.push({name: arg.name, value: "unspecified", full: arg.value.toString("hex")});
+                    break;
             }
         });
 
@@ -52,6 +55,9 @@ export class ConfigBeautifier {
                     // const config = ChainConfig.decode(arg.value);
                     // res.push({name: "darc", value: "chain config", full: config.toString()});
                     res.push({name: "darc", value: "chain config"});
+                    break;
+                default:
+                    res.push({name: arg.name, value: "unspecified", full: arg.value.toString("hex")});
                     break;
             }
         });
