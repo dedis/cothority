@@ -744,72 +744,94 @@ const (
 
 // runSingleWG allows to ensure a single execution of a method.
 type runSingleWG struct {
-	sync.WaitGroup
+	wg      sync.WaitGroup
 	running int32
 }
 
 // Increment on Start - returns false if wg is already running
-func (cg *runSingleWG) Start() bool {
+func (cg *runSingleWG) start() bool {
 	fresh := atomic.CompareAndSwapInt32(&cg.running, 0, 1)
 	if !fresh {
 		return false
 	}
-	cg.Add(1)
+	cg.wg.Add(1)
 	return true
 }
 
 // Decrement on Done
-func (cg *runSingleWG) Done() {
-	if !cg.Running() {
+func (cg *runSingleWG) done() {
+	if !cg.isRunning() {
 		panic("cannot call done on idle runSingleWG")
 	}
 	atomic.AddInt32(&cg.running, -1)
-	cg.WaitGroup.Done()
+	cg.wg.Done()
 }
 
 // Check if currently running
-func (cg *runSingleWG) Running() bool {
+func (cg *runSingleWG) isRunning() bool {
 	return atomic.LoadInt32(&cg.running) > 0
 }
 
+// wait for the single task to be done
+func (cg *runSingleWG) wait() {
+	cg.wg.Wait()
+}
+
 // tasksWG is a special workGroup that can be paused or resumed.
+// The default state is paused.
 type tasksWG struct {
-	sync.Mutex
-	sync.WaitGroup
-	running bool
+	m            sync.Mutex
+	wg           sync.WaitGroup
+	tasksAllowed bool
 }
 
-func (wwg *tasksWG) Add(delta int) bool {
-	wwg.Lock()
-	defer wwg.Unlock()
-	if !wwg.running {
+// Add returns false if tasksWG is paused, and the WaitGroup is not increased.
+// Only if tasksWG is resumed Add returns true and the WaitGroup is
+// increased.
+func (wwg *tasksWG) add(delta int) bool {
+	wwg.m.Lock()
+	defer wwg.m.Unlock()
+	if !wwg.tasksAllowed {
 		return false
 	}
-	wwg.WaitGroup.Add(delta)
+	wwg.wg.Add(delta)
 	return true
 }
 
-func (wwg *tasksWG) Pause() bool {
-	wwg.Lock()
-	defer wwg.Unlock()
-	if !wwg.running {
+// pauses tasksWG so that no new tasks are allowed.
+func (wwg *tasksWG) pause() bool {
+	wwg.m.Lock()
+	defer wwg.m.Unlock()
+	if !wwg.tasksAllowed {
 		return false
 	}
-	wwg.running = false
+	wwg.tasksAllowed = false
 	return true
 }
 
-func (wwg *tasksWG) Resume() {
-	wwg.Lock()
-	defer wwg.Unlock()
-	if wwg.running {
-		panic("cannot open a closed wwg")
+// resumes tasksWG to allow new tasks again.
+func (wwg *tasksWG) resume() {
+	wwg.m.Lock()
+	defer wwg.m.Unlock()
+	if wwg.tasksAllowed {
+		panic("cannot resume when already resumed")
 	}
-	wwg.running = true
+	wwg.tasksAllowed = true
 }
 
-func (wwg *tasksWG) Running() bool {
-	wwg.Lock()
-	defer wwg.Unlock()
-	return wwg.running
+// areTasksAllowed returns the state of tasksWG.
+func (wwg *tasksWG) areTasksAllowed() bool {
+	wwg.m.Lock()
+	defer wwg.m.Unlock()
+	return wwg.tasksAllowed
+}
+
+// finish one of the tasks
+func (wwg *tasksWG) done() {
+	wwg.wg.Done()
+}
+
+// wait for all the tasks to be finished
+func (wwg *tasksWG) wait() {
+	wwg.wg.Wait()
 }

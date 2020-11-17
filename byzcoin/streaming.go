@@ -106,10 +106,10 @@ func (s *Service) StreamTransactions(msg *StreamingRequest) (chan *StreamingResp
 	outChan := s.streamingMan.newListener(key)
 
 	go func() {
-		if !s.tasks.Add(1) {
+		if !s.tasks.add(1) {
 			return
 		}
-		defer s.tasks.Done()
+		defer s.tasks.done()
 
 		// Either the service is closing and we force the connection to stop or
 		// the streaming connection is closed upfront.
