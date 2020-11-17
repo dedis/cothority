@@ -51,10 +51,8 @@ export class ConfigBeautifier {
         args.forEach((arg) => {
             switch (arg.name) {
                 case "config":
-                    // Calypso tests won't pass if we use ChainConfig.
-                    // const config = ChainConfig.decode(arg.value);
-                    // res.push({name: "darc", value: "chain config", full: config.toString()});
-                    res.push({name: "darc", value: "chain config"});
+                    const config = ChainConfig.decode(arg.value);
+                    res.push({name: "darc", value: "chain config", full: config.toString()});
                     break;
                 default:
                     res.push({name: arg.name, value: "unspecified", full: arg.value.toString("hex")});

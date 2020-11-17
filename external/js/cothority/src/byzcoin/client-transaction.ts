@@ -19,7 +19,7 @@ export interface ICounterUpdater {
 /**
  * List of instructions to send to a byzcoin chain
  */
-export default class ClientTransaction extends Message<ClientTransaction> {
+export class ClientTransaction extends Message<ClientTransaction> {
 
     /**
      * @see README#Message classes

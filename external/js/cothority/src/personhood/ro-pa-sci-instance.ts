@@ -4,8 +4,8 @@ import { LongTermSecret } from "../calypso";
 
 import { curve } from "@dedis/kyber";
 import ByzCoinRPC from "../byzcoin/byzcoin-rpc";
-import ClientTransaction, { Argument, Instruction } from "../byzcoin/client-transaction";
 import CoinInstance, { Coin } from "../byzcoin/contracts/coin-instance";
+import { Argument, ClientTransaction, Instruction } from "../byzcoin/index";
 import Instance, { InstanceID } from "../byzcoin/instance";
 import Signer from "../darc/signer";
 import { EMPTY_BUFFER, registerMessage } from "../protobuf";

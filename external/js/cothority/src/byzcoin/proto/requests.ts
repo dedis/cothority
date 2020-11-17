@@ -4,7 +4,7 @@ import Darc from "../../darc/darc";
 import { Roster } from "../../network/proto";
 import { registerMessage } from "../../protobuf";
 import { ForwardLink, SkipBlock } from "../../skipchain/skipblock";
-import ClientTransaction from "../client-transaction";
+import { ClientTransaction } from "../index";
 import Proof, { InclusionProof, StateChangeBody } from "../proof";
 
 /**

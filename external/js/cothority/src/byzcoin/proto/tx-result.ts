@@ -1,6 +1,6 @@
 import { Message, Properties } from "protobufjs/light";
 import { registerMessage } from "../../protobuf";
-import ClientTransaction from "../client-transaction";
+import { ClientTransaction } from "../index";
 
 export default class TxResult extends Message<TxResult> {
     /**

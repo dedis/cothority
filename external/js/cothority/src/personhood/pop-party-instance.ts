@@ -1,7 +1,7 @@
 import { Point, PointFactory, Scalar, sign } from "@dedis/kyber";
 import ByzCoinRPC from "../byzcoin/byzcoin-rpc";
-import ClientTransaction, { Argument, Instruction } from "../byzcoin/client-transaction";
 import DarcInstance from "../byzcoin/contracts/darc-instance";
+import { Argument, ClientTransaction, Instruction } from "../byzcoin/index";
 import Instance, { InstanceID } from "../byzcoin/instance";
 import Darc from "../darc/darc";
 import IdentityDarc from "../darc/identity-darc";

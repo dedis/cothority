@@ -4,8 +4,7 @@ import Keccak from "keccak";
 import Long from "long";
 
 import ByzCoinRPC from "../byzcoin/byzcoin-rpc";
-import ClientTransaction, { Argument, Instruction } from "../byzcoin/client-transaction";
-import Instance, { InstanceID } from "../byzcoin/instance";
+import { Argument, ClientTransaction, Instance, InstanceID, Instruction } from "../byzcoin/index";
 import Signer from "../darc/signer";
 import Log from "../log";
 
