@@ -375,10 +375,10 @@ func (s *Service) prepareTxResponse(req *AddTxRequest, tx *TxResult) (*AddTxResp
 // Every node that cannot send it to the leader will request a viewChange.
 // If enough nodes fail to send it to the leader, a new leader will be elected.
 func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
-	if !s.tasks.Add(1) {
+	if !s.tasks.add(1) {
 		return nil, xerrors.New("node is closed")
 	}
-	defer s.tasks.Done()
+	defer s.tasks.done()
 
 	if len(req.Transaction.Instructions) == 0 {
 		return nil, xerrors.New("no transactions to add")
@@ -550,7 +550,7 @@ func (s *Service) GetProof(req *GetProof) (*GetProofResponse, error) {
 
 	defer s.updateTrieMutex.Unlock()
 
-	if !s.tasks.Running() {
+	if !s.tasks.areTasksAllowed() {
 		// This should only ever happen during testing
 		log.Lvl2(s.ServerIdentity(), "cannot get proof while in closed state")
 		sb := skipchain.NewSkipBlock()
@@ -1371,10 +1371,10 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 
 // catchupAll calls catchup for every byzcoin instance stored in this system.
 func (s *Service) catchupAll() error {
-	if !s.tasks.Add(1) {
+	if !s.tasks.add(1) {
 		return xerrors.New("cannot sync all while closing")
 	}
-	defer s.tasks.Done()
+	defer s.tasks.done()
 
 	gas := &skipchain.GetAllSkipChainIDs{}
 	gasr, err := s.skService().GetAllSkipChainIDs(gas)
@@ -1436,7 +1436,7 @@ func (s *Service) catchupAll() error {
 // known and then we limit the number of catch up requests per skipchain by waiting
 // for a minimal amount of time.
 func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID, sbID skipchain.SkipBlockID) error {
-	if s.catchingUpWG.Running() {
+	if s.catchingUpWG.isRunning() {
 		return xerrors.New("already catching up")
 	}
 
@@ -1488,11 +1488,11 @@ func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID, sbID
 // `catchupDownloadAll` behind, or calls downloadDB to start the download of
 // the full DB over the network.
 func (s *Service) catchUp(sb *skipchain.SkipBlock) {
-	if !s.catchingUpWG.Start() {
+	if !s.catchingUpWG.start() {
 		log.Lvlf2("Already in progress of catching up %x", sb.SkipChainID()[:])
 		return
 	}
-	defer s.catchingUpWG.Done()
+	defer s.catchingUpWG.done()
 
 	log.Lvlf1("%v Catching up %x / %d", s.ServerIdentity(), sb.SkipChainID(), sb.Index)
 
@@ -1618,10 +1618,10 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	s.updateTrieMutex.Lock()
 	defer s.updateTrieMutex.Unlock()
 
-	if !s.tasks.Add(1) {
+	if !s.tasks.add(1) {
 		return nil
 	}
-	defer s.tasks.Done()
+	defer s.tasks.done()
 
 	defer log.Lvlf4("%s updated trie for %x", s.ServerIdentity(), sbID)
 
@@ -1751,7 +1751,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	// Check if the polling needs to be updated.
 	s.stopTxPipelineMut.Lock()
 	scIDstr := string(sb.SkipChainID())
-	catchingUp := s.catchingUpWG.Running()
+	catchingUp := s.catchingUpWG.isRunning()
 	if nodeIsLeader && !catchingUp {
 		if _, ok := s.stopTxPipeline[scIDstr]; !ok {
 			log.Lvlf2("%s new leader started polling for %x", s.ServerIdentity(), sb.SkipChainID())
@@ -1982,12 +1982,12 @@ func (s *Service) startTxPipeline(scID skipchain.SkipBlockID) chan struct{} {
 	}
 
 	stopChan := make(chan struct{})
-	if s.tasks.Add(1) {
+	if s.tasks.add(1) {
 		s.stopTxPipelineWG.Add(1)
 		go func() {
 			pipeline.start(&initialState, stopChan)
 			s.stopTxPipelineWG.Done()
-			s.tasks.Done()
+			s.tasks.done()
 		}()
 	}
 	return stopChan
@@ -2618,11 +2618,11 @@ func loadNonceFromTxs(txs TxResults) ([]byte, error) {
 // exported because we need it in tests, it should not be used in non-test code
 // outside of this package.
 func (s *Service) TestClose() {
-	if s.tasks.Pause() {
+	if s.tasks.pause() {
 		s.skService().TestClose()
 		s.cleanupGoroutines()
-		s.tasks.Wait()
-		s.catchingUpWG.Wait()
+		s.tasks.wait()
+		s.catchingUpWG.wait()
 	}
 }
 
@@ -2656,10 +2656,10 @@ func (s *Service) cleanupGoroutines() {
 
 func (s *Service) startViewChange(gen skipchain.SkipBlockID,
 	tx *ClientTransaction) error {
-	if !s.tasks.Add(1) {
+	if !s.tasks.add(1) {
 		return xerrors.New("cannot start viewchange when closing")
 	}
-	defer s.tasks.Done()
+	defer s.tasks.done()
 
 	latest, err := s.db().GetLatestByID(gen)
 	if err != nil {
@@ -2710,7 +2710,7 @@ func (s *Service) startViewChange(gen skipchain.SkipBlockID,
 // it finds a valid config-file and synchronises skipblocks if it can contact
 // other nodes.
 func (s *Service) startAllChains() (chan struct{}, error) {
-	if s.tasks.Running() {
+	if s.tasks.areTasksAllowed() {
 		return nil, xerrors.New("can only call startAllChains if the service" +
 			" has been closed before")
 	}
@@ -2728,7 +2728,7 @@ func (s *Service) startAllChains() (chan struct{}, error) {
 	}
 	s.stateTries = make(map[string]*stateTrie)
 	s.notifications = bcNotifications{}
-	s.tasks.Resume()
+	s.tasks.resume()
 
 	// Recreate the polling channles.
 	s.stopTxPipelineMut.Lock()
@@ -2739,12 +2739,12 @@ func (s *Service) startAllChains() (chan struct{}, error) {
 
 	// All the logic necessary to start the chains is delayed to a goroutine so that
 	// the other services can start immediately and are not blocked by Byzcoin.
-	s.tasks.Add(1)
+	s.tasks.add(1)
 	done := make(chan struct{}, 1)
 	go func() {
 		s.txPipelinesMutex.Lock()
 		defer s.txPipelinesMutex.Unlock()
-		defer s.tasks.Done()
+		defer s.tasks.done()
 
 		// Catch up is done before starting the chains to prevent undesired events
 		err = s.catchupAll()

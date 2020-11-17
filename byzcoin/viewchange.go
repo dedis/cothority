@@ -208,11 +208,11 @@ func (s *Service) sendNewView(proof []viewchange.InitReq) error {
 		return fmt.Errorf("couldn't get header of block: %+v", err)
 	}
 
-	if !s.tasks.Add(1) {
+	if !s.tasks.add(1) {
 		return xerrors.New("cannot start while in closing state")
 	}
 	go func() {
-		defer s.tasks.Done()
+		defer s.tasks.done()
 		var sig []byte
 		// Only version < VersionViewchange uses the signing of the view-change
 		// request.
