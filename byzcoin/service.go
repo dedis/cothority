@@ -50,10 +50,10 @@ var catchupDownloadAll = 100
 var catchupMinimumInterval = 10 * time.Minute
 
 // How many blocks it should fetch in one go.
-var catchupFetchBlocks = 10
+var catchupFetchBlocks = 100
 
 // How many DB-entries to download in one go.
-var catchupFetchDBEntries = 100
+var catchupFetchDBEntries = 10000
 
 const defaultRotationWindow = 10
 
@@ -1675,14 +1675,17 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		// don't need to update the trie in that case.
 		log.Lvlf4("%v updating trie for block %d refused, current trie block is %d", s.ServerIdentity(), sb.Index, trieIndex)
 		return nil
-	} else if sb.Index > trieIndex+1 {
-		log.Warn(s.ServerIdentity(), "Got new block while catching up - ignoring block for now")
-		go func() {
-			// This new block will catch up at the end of the current catch up (if any)
-			// and be ignored if the block is already known.
-			s.catchUp(sb)
-		}()
+	}
 
+	// Set the server's set of valid peers from the roster in the latest block.
+	ctx := s.ServiceProcessor.Context
+	ctx.SetValidPeers(ctx.NewPeerSetID(sb.SkipChainID()), sb.Roster.List)
+
+	if sb.Index > trieIndex+1 {
+		log.Warn(s.ServerIdentity(), "Got new block while catching up - ignoring block for now")
+		// This new block will catch up at the end of the current catch up (if any)
+		// and be ignored if the block is already known.
+		go s.catchUp(sb)
 		return nil
 	}
 
@@ -1789,10 +1792,6 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		log.Lvlf2("%s not in roster, but viewChangeMonitor started - stopping now for %x", s.ServerIdentity(), sb.SkipChainID())
 		s.viewChangeMan.stop(sb.SkipChainID())
 	}
-
-	// Set the server's set of valid peers from the roster in the latest block.
-	ctx := s.ServiceProcessor.Context
-	ctx.SetValidPeers(ctx.NewPeerSetID(sb.SkipChainID()), sb.Roster.List)
 
 	// Notify all waiting channels for processed ClientTransactions.
 	s.notifications.informBlock(sb, body.TxResults)
@@ -2637,6 +2636,7 @@ func (s *Service) TestRestart() error {
 		return xerrors.Errorf("couldn't start all chains: %v", err)
 	}
 	<-started
+	s.catchingUpWG.wait()
 	return nil
 }
 
