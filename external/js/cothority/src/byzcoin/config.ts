@@ -46,6 +46,19 @@ export default class ChainConfig extends Message<ChainConfig> {
             },
         });
     }
+
+    /**
+     * Return a string representation of a config
+     */
+    toString(): string {
+        let res = "Chainconfig:\n";
+        res += "- roster:\n";
+        res += this.roster.toTOML() + "\n";
+        res += "- blockInterval: " + this.blockInterval + "\n";
+        res += "- maxBlockSize: " + this.maxBlockSize + "\n";
+
+        return res;
+    }
 }
 
 ChainConfig.register();
