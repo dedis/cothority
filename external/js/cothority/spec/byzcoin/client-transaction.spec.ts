@@ -1,6 +1,6 @@
 import Long from "long";
+import { Argument, ClientTransaction, Instruction } from "../../src/byzcoin";
 import DarcInstance from "../../src/byzcoin/contracts/darc-instance";
-import { Argument, ClientTransaction, Instruction } from "../../src/byzcoin/index";
 import { IIdentity } from "../../src/darc";
 import { SIGNER } from "../support/conondes";
 

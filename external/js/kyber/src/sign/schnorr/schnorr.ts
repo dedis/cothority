@@ -1,5 +1,5 @@
 import { createHash } from "crypto-browserify";
-import { Group, Point, Scalar } from "../../index";
+import { Group, Point, Scalar } from "../..";
 
 /**
  * Sign computes a Schnorr signature over the given message.

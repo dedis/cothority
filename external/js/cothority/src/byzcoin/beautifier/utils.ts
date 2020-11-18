@@ -1,4 +1,4 @@
-import { Argument } from "../index";
+import { Argument } from "..";
 
 export interface IBeautifierSchema {
     status: 0 | 1;

@@ -1,7 +1,6 @@
+import { Argument, ChainConfig } from "..";
 import { Darc } from "../../darc";
 import { Roster } from "../../network";
-import { Argument } from "../index";
-import { ChainConfig } from "../index";
 import { IBeautifyArgument } from "./utils";
 // tslint:disable-next-line
 const varint = require("varint");

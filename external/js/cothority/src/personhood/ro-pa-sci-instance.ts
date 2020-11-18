@@ -3,9 +3,9 @@ import { Message, Properties } from "protobufjs/light";
 import { LongTermSecret } from "../calypso";
 
 import { curve } from "@dedis/kyber";
+import { Argument, ClientTransaction, Instruction } from "../byzcoin";
 import ByzCoinRPC from "../byzcoin/byzcoin-rpc";
 import CoinInstance, { Coin } from "../byzcoin/contracts/coin-instance";
-import { Argument, ClientTransaction, Instruction } from "../byzcoin/index";
 import Instance, { InstanceID } from "../byzcoin/instance";
 import Signer from "../darc/signer";
 import { EMPTY_BUFFER, registerMessage } from "../protobuf";

@@ -1,10 +1,10 @@
 import Long from "long";
 import { Message, Properties } from "protobufjs/light";
+import { ClientTransaction } from "..";
 import Darc from "../../darc/darc";
 import { Roster } from "../../network/proto";
 import { registerMessage } from "../../protobuf";
 import { ForwardLink, SkipBlock } from "../../skipchain/skipblock";
-import { ClientTransaction } from "../index";
 import Proof, { InclusionProof, StateChangeBody } from "../proof";
 
 /**

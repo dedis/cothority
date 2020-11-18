@@ -1,9 +1,9 @@
+import { Argument, ClientTransaction, Instruction } from "..";
 import { IIdentity } from "../../darc";
 import Darc from "../../darc/darc";
 import Signer from "../../darc/signer";
 import Log from "../../log";
 import ByzCoinRPC from "../byzcoin-rpc";
-import { Argument, ClientTransaction, Instruction } from "../index";
 import Instance, { InstanceID } from "../instance";
 
 export default class DarcInstance extends Instance {

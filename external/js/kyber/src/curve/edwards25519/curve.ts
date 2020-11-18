@@ -1,7 +1,7 @@
 import BN from "bn.js";
 import { createHash, randomBytes } from "crypto-browserify";
 import { curve, eddsa } from "elliptic";
-import { Group, Point, Scalar } from "../../index";
+import { Group, Point, Scalar } from "../..";
 import Ed25519Point from "./point";
 import Ed25519Scalar from "./scalar";
 

@@ -1,8 +1,8 @@
 import { Point } from "@dedis/kyber";
 import { createHash, randomBytes } from "crypto-browserify";
 import { Message, Properties } from "protobufjs/light";
+import { Argument, ClientTransaction, Instruction } from "../byzcoin";
 import ByzCoinRPC, { versionPreID } from "../byzcoin/byzcoin-rpc";
-import { Argument, ClientTransaction, Instruction } from "../byzcoin/index";
 import Instance, { InstanceID } from "../byzcoin/instance";
 import Signer from "../darc/signer";
 import { EMPTY_BUFFER, registerMessage } from "../protobuf";

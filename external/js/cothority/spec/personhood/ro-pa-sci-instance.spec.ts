@@ -1,8 +1,8 @@
 import { createHash } from "crypto-browserify";
 import Long from "long";
+import { Argument, ClientTransaction, Instruction } from "../../src/byzcoin";
 import ByzCoinRPC from "../../src/byzcoin/byzcoin-rpc";
 import CoinInstance, { Coin } from "../../src/byzcoin/contracts/coin-instance";
-import { Argument, ClientTransaction, Instruction } from "../../src/byzcoin/index";
 import Darc from "../../src/darc/darc";
 import { Rule } from "../../src/darc/rules";
 import Signer from "../../src/darc/signer";

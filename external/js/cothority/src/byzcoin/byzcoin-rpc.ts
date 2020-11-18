@@ -7,7 +7,7 @@ import IdentityEd25519 from "../darc/identity-ed25519";
 import IdentityWrapper, { IIdentity } from "../darc/identity-wrapper";
 import Log from "../log";
 import { IConnection, LeaderConnection, Roster, RosterWSConnection, WebSocketAdapter } from "../network";
-import { SkipBlock, SkipchainRPC } from "../skipchain/index";
+import { SkipBlock, SkipchainRPC } from "../skipchain";
 import { ClientTransaction, ICounterUpdater } from "./client-transaction";
 import ChainConfig from "./config";
 import DarcInstance from "./contracts/darc-instance";

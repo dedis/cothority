@@ -1,8 +1,8 @@
 // tslint:disable:no-bitwise
 import BN from "bn.js";
 import elliptic from "elliptic";
+import { Group, Point, Scalar } from "../..";
 import { BNType } from "../../constants";
-import { Group, Point, Scalar } from "../../index";
 import NistPoint from "./point";
 import NistScalar from "./scalar";
 

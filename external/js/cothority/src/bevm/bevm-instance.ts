@@ -3,8 +3,8 @@ import { ec } from "elliptic";
 import Keccak from "keccak";
 import Long from "long";
 
+import { Argument, ClientTransaction, Instance, InstanceID, Instruction } from "../byzcoin";
 import ByzCoinRPC from "../byzcoin/byzcoin-rpc";
-import { Argument, ClientTransaction, Instance, InstanceID, Instruction } from "../byzcoin/index";
 import Signer from "../darc/signer";
 import Log from "../log";
 

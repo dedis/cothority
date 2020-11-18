@@ -1,6 +1,6 @@
 import { Point, PointFactory, Scalar } from "@dedis/kyber";
 import { Message, Properties } from "protobufjs/light";
-import { Argument, ByzCoinRPC, ClientTransaction, InstanceID, Instruction, Proof } from "../byzcoin/index";
+import { Argument, ByzCoinRPC, ClientTransaction, InstanceID, Instruction, Proof } from "../byzcoin";
 import { Signer } from "../darc";
 import { IConnection, Roster, ServerIdentity, WebSocketConnection } from "../network";
 import { RosterWSConnection } from "../network";

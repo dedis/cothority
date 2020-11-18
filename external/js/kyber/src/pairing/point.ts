@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto-browserify";
-import { Point } from "../index";
+import { Point } from "..";
 import { BNType, G1, G2, GT } from "./bn";
 import BN256Scalar from "./scalar";
 
