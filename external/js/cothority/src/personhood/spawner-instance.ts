@@ -1,8 +1,8 @@
 import { createHash, randomBytes } from "crypto-browserify";
 import Long from "long";
 import { Message, Properties } from "protobufjs/light";
+import { Argument, ClientTransaction, Instruction } from "../byzcoin";
 import ByzCoinRPC, { versionPreID } from "../byzcoin/byzcoin-rpc";
-import ClientTransaction, { Argument, Instruction } from "../byzcoin/client-transaction";
 import CoinInstance, { Coin } from "../byzcoin/contracts/coin-instance";
 import DarcInstance from "../byzcoin/contracts/darc-instance";
 import ValueInstance from "../byzcoin/contracts/value-instance";

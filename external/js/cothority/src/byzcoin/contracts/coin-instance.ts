@@ -1,10 +1,10 @@
 import { createHash } from "crypto-browserify";
 import Long from "long";
 import { Message, Properties } from "protobufjs/light";
+import { Argument, ClientTransaction, Instruction } from "..";
 import Signer from "../../darc/signer";
 import { EMPTY_BUFFER, registerMessage } from "../../protobuf";
 import ByzCoinRPC, { versionPreID } from "../byzcoin-rpc";
-import ClientTransaction, { Argument, Instruction } from "../client-transaction";
 import Instance, { InstanceID } from "../instance";
 
 export default class CoinInstance extends Instance {

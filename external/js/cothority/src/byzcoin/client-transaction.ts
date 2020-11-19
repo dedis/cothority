@@ -5,7 +5,7 @@ import { Message, Properties } from "protobufjs/light";
 import IdentityWrapper, { IIdentity } from "../darc/identity-wrapper";
 import Signer from "../darc/signer";
 import { EMPTY_BUFFER, registerMessage } from "../protobuf";
-import { ConfigBeautifier, DarcBeautifier, DefaultBeautifier, IBeautifierSchema } from "./beautifier/index";
+import { ConfigBeautifier, DarcBeautifier, DefaultBeautifier, IBeautifierSchema } from "./beautifier";
 import Instance, { InstanceID } from "./instance";
 
 export interface ICounterUpdater {
@@ -19,7 +19,7 @@ export interface ICounterUpdater {
 /**
  * List of instructions to send to a byzcoin chain
  */
-export default class ClientTransaction extends Message<ClientTransaction> {
+export class ClientTransaction extends Message<ClientTransaction> {
 
     /**
      * @see README#Message classes

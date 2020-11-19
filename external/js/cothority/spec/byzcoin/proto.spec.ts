@@ -1,5 +1,5 @@
 import Long from "long";
-import ClientTransaction from "../../src/byzcoin/client-transaction";
+import { ClientTransaction } from "../../src/byzcoin";
 import { DataBody, DataHeader, TxResult } from "../../src/byzcoin/proto";
 import {
     AddTxRequest, CreateGenesisBlock,

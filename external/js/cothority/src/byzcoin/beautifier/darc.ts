@@ -1,6 +1,6 @@
+import { Argument } from "..";
 import { Darc as d } from "../../darc";
 import { Roster } from "../../network";
-import { Argument } from "../index";
 import { IBeautifyArgument } from "./utils";
 
 /**

@@ -1,7 +1,7 @@
 import { Message, Properties } from "protobufjs/light";
+import { ClientTransaction } from "..";
 import IdentityWrapper from "../../darc/identity-wrapper";
 import { registerMessage } from "../../protobuf";
-import ClientTransaction from "../client-transaction";
 import { InstanceID } from "../instance";
 
 export default class CheckAuthorization extends Message<CheckAuthorization> {

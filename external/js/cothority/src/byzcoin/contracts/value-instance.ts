@@ -1,6 +1,6 @@
+import { Argument, ClientTransaction, Instruction } from "..";
 import Signer from "../../darc/signer";
 import ByzCoinRPC, { versionPreID } from "../byzcoin-rpc";
-import ClientTransaction, { Argument, Instruction } from "../client-transaction";
 import Instance, { InstanceID } from "../instance";
 
 export default class ValueInstance extends Instance {

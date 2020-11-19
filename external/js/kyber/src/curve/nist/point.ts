@@ -1,8 +1,8 @@
 // tslint:disable:no-bitwise
 import BN from "bn.js";
 import { randomBytes } from "crypto-browserify";
+import { Point } from "../..";
 import { BNType, zeroBN } from "../../constants";
-import { Point } from "../../index";
 import Weierstrass from "./curve";
 import NistScalar from "./scalar";
 

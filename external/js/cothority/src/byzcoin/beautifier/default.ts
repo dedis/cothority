@@ -1,4 +1,4 @@
-import { Argument } from "../index";
+import { Argument } from "..";
 import { IBeautifyArgument } from "./utils";
 
 /**
