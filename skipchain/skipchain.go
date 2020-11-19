@@ -564,9 +564,8 @@ func (s *Service) RegisterStoreSkipblockCallback(f func(SkipBlockID) error) {
 // the database when SyncChain returns!
 func (s *Service) SyncChain(roster *onet.Roster, latest SkipBlockID) error {
 	// loop on getBlocks, fetching 10 at a time
-	var allBlocks []*SkipBlock
 	for {
-		blocks, err := s.getBlocks(roster, latest, 10)
+		blocks, err := s.getBlocks(roster, latest, 100)
 		if err != nil {
 			return err
 		}
@@ -579,10 +578,15 @@ func (s *Service) SyncChain(roster *onet.Roster, latest SkipBlockID) error {
 			if latest.Equal(fBlock.SkipChainID()) {
 				return errors.New("synching failed even when trying to start at the genesis block")
 			}
-			log.Lvl3("couldn't store synched block - synching from genesis block")
+			log.Lvl3("couldn't store synched block - synching from genesis" +
+				" block")
 			return s.SyncChain(fBlock.Roster, fBlock.SkipChainID())
 		}
-		allBlocks = append(allBlocks, blocks...)
+
+		_, err = s.db.StoreBlocks(blocks)
+		if err != nil {
+			return xerrors.Errorf("couldn't store blocks: %v", err)
+		}
 
 		lBlock := blocks[len(blocks)-1]
 		if len(lBlock.ForwardLink) == 0 {
@@ -590,8 +594,7 @@ func (s *Service) SyncChain(roster *onet.Roster, latest SkipBlockID) error {
 		}
 		latest = lBlock.Hash
 	}
-	_, err := s.db.StoreBlocks(allBlocks)
-	return err
+	return nil
 }
 
 // getBlocks uses ProtocolGetBlocks to return up to n blocks, traversing the

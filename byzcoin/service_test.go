@@ -1845,21 +1845,19 @@ func TestService_CheckValidPeers(t *testing.T) {
 
 		ctx, _ := createConfigTxWithCounter(b, b.PropagationInterval,
 			*goodRoster, defaultMaxBlockSize)
-		cl := NewClient(b.Genesis.SkipChainID(), *goodRoster)
-		require.NoError(t, cl.UseNode(1))
-		resp, err := cl.AddTransactionAndWait(ctx, 10)
-		transactionOK(t, resp, err)
+		b.SendTx(&TxArgsDefault, ctx)
 
 		b.Services = append(b.Services,
 			newServers[index].Service(ServiceName).(*Service))
 
 		// Add dummy transaction to ensure new node is updated
-		addDummyTxs(b, 1, 1)
+		b.SpawnDummy(&TxArgsDefault)
 
 		// Check valid peers in all current servers
-		for _, srv := range allServers[index : index+len(expectedValidPeers)] {
+		for _, srv := range allServers[index : index+len(
+			expectedValidPeers)-1] {
 			require.ElementsMatch(t,
-				srv.GetValidPeers(peerSetID), expectedValidPeers)
+				expectedValidPeers, srv.GetValidPeers(peerSetID), srv.ServerIdentity)
 		}
 
 		log.Lvl1("Removing", goodRoster.List[0])
@@ -1868,13 +1866,10 @@ func TestService_CheckValidPeers(t *testing.T) {
 
 		ctx, _ = createConfigTxWithCounter(b, b.PropagationInterval,
 			*goodRoster, defaultMaxBlockSize)
-		resp, err = cl.AddTransactionAndWait(ctx, 10)
-		transactionOK(t, resp, err)
+		b.SendTx(&TxArgsDefault, ctx)
 
 		b.Services = b.Services[1:]
-
-		// Wait until all servers have included the block
-		require.NoError(t, cl.WaitPropagation(-1))
+		b.SpawnDummy(&TxArgsDefault)
 
 		// Check valid peers in all current servers
 		for _, srv := range allServers[index+1 : index+len(expectedValidPeers)] {
