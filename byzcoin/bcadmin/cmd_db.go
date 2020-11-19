@@ -530,7 +530,7 @@ func dbCheck(c *cli.Context) error {
 			}
 			errStrFl := fmt.Sprintf("%s forwardLink at height %d", errStr, i)
 
-			if i > sb.GetForwardLen() || sb.ForwardLink[i].IsEmpty() {
+			if i >= sb.GetForwardLen() || sb.ForwardLink[i].IsEmpty() {
 				log.Warnf("%s missing: should point to %d", errStrFl,
 					index)
 				continue
