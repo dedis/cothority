@@ -357,14 +357,14 @@ export class Instruction extends Message<Instruction> {
                 switch (this.spawn.contractID) {
                     case "config":
                         res.contract = "config";
-                        const args = Array<Argument>();
-                        res.args = ConfigBeautifier.Spawn(args);
+                        res.args = ConfigBeautifier.Spawn(this.spawn.args);
                         break;
                     case "darc":
                         res.contract = "darc";
                         res.args = DarcBeautifier.Spawn(this.spawn.args);
                         break;
                     default:
+                        res.contract = this.spawn.contractID;
                         res.status = 1;
                         res.args = DefaultBeautifier.Hex(this.spawn.args);
                 }
@@ -384,8 +384,9 @@ export class Instruction extends Message<Instruction> {
                         res.args = DarcBeautifier.Invoke(this.invoke.args);
                         break;
                     default:
+                        res.contract = this.invoke.contractID;
                         res.status = 1;
-                        res.args = DefaultBeautifier.Hex(this.spawn.args);
+                        res.args = DefaultBeautifier.Hex(this.invoke.args);
                 }
 
                 break;
@@ -395,8 +396,8 @@ export class Instruction extends Message<Instruction> {
 
                 switch (this.delete.contractID) {
                     default:
+                        res.contract = this.delete.contractID;
                         res.status = 1;
-                        res.args = DefaultBeautifier.Hex(this.spawn.args);
                 }
 
                 break;
