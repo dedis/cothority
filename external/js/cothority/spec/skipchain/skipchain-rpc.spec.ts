@@ -64,6 +64,8 @@ describe("SkipchainRPC Tests", () => {
             // nodes in order.
             for (const node of roster.list) {
                 const c = new RosterWSConnection(new Roster({list: [node]}), "");
+                c.setTimeout(999999);
+
                 const update = await new SkipchainRPC(c).getUpdateChain(genesis.hash, false);
                 expect(update.length).toBe(blocks);
             }

@@ -39,6 +39,8 @@ export class BCTest {
         try {
             const ws = new RosterWSConnection(roster4, StatusRPC.serviceName);
             ws.setParallel(1);
+            ws.setTimeout(999999);
+
             await ws.send(new StatusRequest(), StatusResponse);
             Log.warn("Using already running nodes for test!");
             usesDocker = false;

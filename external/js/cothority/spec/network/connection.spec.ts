@@ -114,6 +114,8 @@ describe("WebSocketAdapter Tests", () => {
         });
 
         const conn = new RosterWSConnection(roster, "");
+        conn.setTimeout(999999);
+
         const reply = await conn.send(roster, Roster);
 
         expect(reply instanceof Roster).toBeTruthy();
@@ -135,6 +137,7 @@ describe("WebSocketAdapter Tests", () => {
         });
 
         const conn = new RosterWSConnection(roster, "");
+        conn.setTimeout(999999);
 
         await expectAsync(conn.send(roster, Roster)).toBeRejected();
     });
