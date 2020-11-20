@@ -197,7 +197,10 @@ describe("WebSocketAdapter Tests with sendStream", () => {
     it("should send and receive data", async (done) => {
         const ret = Buffer.from(Roster.encode(new Roster()).finish());
         setFactory(() => new TestWebSocket(ret, null, null));
+
         const conn = new WebSocketConnection("http://example.com", "");
+        conn.setTimeout(999999);
+
         const msg = new Roster();
 
         conn.sendStream(msg, Roster).subscribe({

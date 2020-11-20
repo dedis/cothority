@@ -56,7 +56,8 @@ export class WebSocketConnection implements IConnection {
         }
 
         this.service = service;
-        this.timeout = 30 * 1000; // 30s by default
+        // 50s by default. Onet will close a connection after 1 minute.
+        this.timeout = 50 * 1000;
         this.url = url;
     }
 
@@ -117,7 +118,7 @@ export class WebSocketConnection implements IConnection {
             Log.lvl4(`Socket: new WebSocket(${url.href})`);
             const ws = factory(url.href);
             const bytes = Buffer.from(message.$type.encode(message).finish());
-            const timer = setTimeout(() => ws.close(1000, "timeout"), this.timeout);
+            let timer = setTimeout(() => ws.close(1000, "timeout"), this.timeout);
 
             ws.onOpen(() => {
                 Log.lvl3("Sending message to", url.href);
@@ -125,7 +126,11 @@ export class WebSocketConnection implements IConnection {
             });
 
             ws.onMessage((data: Buffer) => {
+
+                // clear the timer and set a new one
                 clearTimeout(timer);
+                timer = setTimeout(() => ws.close(1000, "timeout"), this.timeout);
+
                 const buf = Buffer.from(data);
                 Log.lvl4("Getting message with length:", buf.length);
 
