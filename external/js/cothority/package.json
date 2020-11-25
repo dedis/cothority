@@ -34,8 +34,8 @@
   "dependencies": {
     "@babel/polyfill": "^7.2.5",
     "@dedis/kyber": "^3.4.4",
-    "@ethersproject/abi": "^5.0.2",
-    "@ethersproject/bignumber": "^5.0.5",
+    "@ethersproject/abi": "^5.0.5",
+    "@ethersproject/bignumber": "^5.0.11",
     "@stablelib/blake2xs": "^0.10.4",
     "@types/ethereumjs-abi": "^0.6.3",
     "@types/varint": "^5.0.0",

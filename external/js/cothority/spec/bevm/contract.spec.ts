@@ -50,6 +50,25 @@ ateMutability":"nonpayable","type":"constructor"}]
         expect(contract.addresses[1]).not.toEqual(expectedContractAddress);
     });
 
+    it("should correctly parse the ABI", () => {
+        const contract = new EvmContract("candy", candyBytecode, candyAbi);
+
+        const expectedTransactions = [
+            "eatCandy",
+        ];
+        const expectedViewMetehods = [
+            "getRemainingCandies",
+        ];
+
+        expect(contract.transactions).toEqual(expectedTransactions);
+        expect(contract.viewMethods).toEqual(expectedViewMetehods);
+
+        const abi = JSON.parse(candyAbi);
+        expect(contract.getMethodAbi("eatCandy")).toEqual(abi[0]);
+        expect(contract.getMethodAbi("getRemainingCandies")).toEqual(abi[1]);
+        expect(contract.getMethodAbi("")).toEqual(abi[2]);
+    });
+
     it("should be able to serialize and deserialize", () => {
         const contract = new EvmContract("candy", candyBytecode, candyAbi);
 

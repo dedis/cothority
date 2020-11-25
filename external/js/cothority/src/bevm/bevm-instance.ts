@@ -107,6 +107,8 @@ export class EvmContract {
         return address;
     }
 
+    readonly transactions: string[];
+    readonly viewMethods: string[];
     private methodAbi: Map<string, any>;
 
     /**
@@ -126,6 +128,8 @@ export class EvmContract {
                 private abiJson: string,
                 readonly addresses: Buffer[] = []) {
         this.methodAbi = new Map();
+        this.transactions = [];
+        this.viewMethods = [];
 
         const abiObj = JSON.parse(abiJson);
         abiObj.forEach((item: any) => {
@@ -137,10 +141,26 @@ export class EvmContract {
 
                     case "function": {
                         this.methodAbi.set(item.name, item);
+
+                        if (item.stateMutability === "view") {
+                            this.viewMethods.push(item.name);
+                        } else {
+                            this.transactions.push(item.name);
+                        }
+
                         break;
                     }
                 }
             });
+    }
+
+    getMethodAbi(method: string): any {
+        const entry = this.methodAbi.get(method);
+        if (entry === undefined) {
+            throw Error(`Method "${method}" does not exist in the ABI`);
+        }
+
+        return entry;
     }
 
     encodeDeployData(...args: any[]): Buffer {
@@ -194,10 +214,7 @@ export class EvmContract {
     }
 
     private getMethodFragment(method: string): string {
-        const entry = this.methodAbi.get(method);
-        if (entry === undefined) {
-            throw Error(`Method "${method}" does not exist in the ABI`);
-        }
+        const entry = this.getMethodAbi(method);
 
         const types = entry.inputs.map((arg: any) => arg.type);
         const fragment = `${method}(${types.join(",")})`;
