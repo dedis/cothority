@@ -99,7 +99,9 @@ func main() {
 			Subcommands: []cli.Command{
 				{
 					Name:  "serve",
-					Usage: "exposes the connectivity check results on HTTP. Assumes -findFaulty",
+					Usage: "exposes the connectivity check results on HTTP. Assumes -findFaulty\n   " +
+						"Note: The HTTP server does not rate limit connections. Administrators are advised\n   " +
+						"to rate-limit connections or firewall the HTTP port themselves.",
 					Flags: []cli.Flag{
 						cli.StringFlag{
 							Name:  "format, fo",
