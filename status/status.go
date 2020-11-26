@@ -358,10 +358,13 @@ func serve(c *cli.Context) error {
 	}
 
 	port := c.Int("port")
-	interval := c.Int("interval")
+	interval, err := time.ParseDuration(c.String("interval"))
+	if err != nil {
+		return errors.New("invalid interval: " + err.Error())
+	}
 
 	s := &server{
-		interval: time.Duration(interval) * time.Second,
+		interval: interval,
 		timeout:  to,
 		list:     list,
 		si:       si,
