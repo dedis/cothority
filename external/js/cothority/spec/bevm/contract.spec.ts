@@ -67,6 +67,10 @@ ateMutability":"nonpayable","type":"constructor"}]
         expect(contract.getMethodAbi("eatCandy")).toEqual(abi[0]);
         expect(contract.getMethodAbi("getRemainingCandies")).toEqual(abi[1]);
         expect(contract.getMethodAbi("")).toEqual(abi[2]);
+
+        // Nonexistent method
+        expect(() => contract.getMethodAbi("XYZZY")).
+            toThrowError(/does not exist/);
     });
 
     it("should be able to serialize and deserialize", () => {
