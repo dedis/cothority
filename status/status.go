@@ -33,7 +33,7 @@ const prometheusTemplate = `
 # TYPE voting_conodes_status gauge
 voting_conodes_status{} {{ .Connectivity }}
 
-# HELP voting_conodes_status_timestamp timestamp in milliseconds since epoch denoting last probe time
+# HELP voting_conodes_status_timestamp timestamp in seconds since epoch denoting last probe time
 # TYPE voting_conodes_status_timestamp counter
 voting_conodes_status_timestamp{} {{ .LastCheckedAt }}
 
