@@ -31,14 +31,21 @@ import (
 const prometheusTemplate = `
 # HELP voting_conodes_status voting global conodes status: X is the number of conodes; X >= 0.66 OK, 0 < X < 0.66 KO
 # TYPE voting_conodes_status gauge
-voting_conodes_status{} {{.Connectivity}}
+voting_conodes_status{} {{ .Connectivity }}
+
+# HELP voting_conodes_status_timestamp timestamp in milliseconds since epoch denoting last probe time
+# TYPE voting_conodes_status_timestamp counter
+voting_conodes_status_timestamp{} {{ .LastCheckedAt }}
+
+# HELP probe error: {{ .ProbeError }}
+
 # HELP voting_conode_status voting conode status: 1=OK, 0=KO
 # TYPE voting_conode_status gauge
 {{- range $conode, $status := .Matrix -}}
 {{ if eq $conode $.Self }}
-voting_conode_status{conode="{{ $conode}}", critical="true"} {{$status}}
+voting_conode_status{conode="{{ $conode}}", critical="true"} {{ $status }}
 {{ else }}
-voting_conode_status{conode="{{ $conode}}", critical="false"} {{$status}}
+voting_conode_status{conode="{{ $conode}}", critical="false"} {{ $status }}
 {{ end }}
 {{- end -}}
 `
@@ -296,9 +303,11 @@ func printJSON(all []se) {
 }
 
 type serveResponse struct {
-	Connectivity float64
-	Matrix       map[string]int
-	Self         string
+	Connectivity  float64
+	Matrix        map[string]int
+	Self          string
+	LastCheckedAt int64
+	ProbeError    string
 }
 
 type server struct {
@@ -398,9 +407,12 @@ func (s *server) probe() chan struct{} {
 			case <-tick:
 				log.Infof("Probing servers...")
 				s.mu.Lock()
-				s.response = serveResponse{Matrix: make(map[string]int)}
-				s.response.Connectivity = 0
-				s.response.Self = s.si.Address.String()
+				s.response = serveResponse{
+					Matrix:        make(map[string]int),
+					Connectivity:  0,
+					Self:          s.si.Address.String(),
+					LastCheckedAt: time.Now().Unix(),
+				}
 				for _, si := range s.list {
 					s.response.Matrix[si.String()] = 0
 				}
@@ -414,6 +426,7 @@ func (s *server) probe() chan struct{} {
 
 				if err != nil {
 					log.Errorf("error checking connectivity: %s", err)
+					s.response.ProbeError = err.Error()
 				}
 
 				for _, si := range resp {
