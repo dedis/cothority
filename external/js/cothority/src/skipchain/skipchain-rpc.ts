@@ -149,7 +149,7 @@ export default class SkipchainRPC {
      * @param verify    Verify the integrity of the chain when true
      * @returns a promise that resolves with the list of blocks
      */
-    async getUpdateChain(latestID: Buffer, verify = true): Promise<SkipBlock[]> {
+    async getUpdateChain(latestID: Buffer, verify = true, acceptForeigner = false): Promise<SkipBlock[]> {
         const blocks: SkipBlock[] = [];
         // Run as long as there is a new blockID to be checked
         for (let previousID = Buffer.alloc(0); !previousID.equals(latestID);) {
@@ -178,26 +178,31 @@ export default class SkipchainRPC {
             // First check if the replying node is in the roster of the
             // latest block.
             const last = newBlocks[newBlocks.length - 1];
-            let isInRoster = false;
-            for (const n of last.roster.list) {
-                if (n.getWebSocketAddress().replace(/^ws+:\/\//, "") ===
-                    this.conn.getURL().replace(/^ws+:\/\//, "")) {
-                    isInRoster = true;
-                    break;
+
+            if (!acceptForeigner) {
+                let isInRoster = false;
+
+                for (const n of last.roster.list) {
+                    if (n.getWebSocketAddress().replace(/^ws+:\/\//, "") ===
+                        this.conn.getURL().replace(/^ws+:\/\//, "")) {
+                        isInRoster = true;
+                        break;
+                    }
                 }
-            }
-            if (!isInRoster) {
-                // A correct node will never return a last block where it is not in the roster.
-                // So this is in fact a wrong node.
-                Log.warn("A node replied that is not in the roster", this.conn.getURL());
-                latestID = last.hash;
-                if (this.conn instanceof RosterWSConnection) {
-                    this.conn.invalidate(this.conn.getURL());
-                    this.conn.setRoster(last.roster);
-                } else {
-                    this.conn = new RosterWSConnection(last.roster, SkipchainRPC.serviceName);
+
+                if (!isInRoster) {
+                    // A correct node will never return a last block where it is not in the roster.
+                    // So this is in fact a wrong node.
+                    Log.warn("A node replied that is not in the roster", this.conn.getURL());
+                    latestID = last.hash;
+                    if (this.conn instanceof RosterWSConnection) {
+                        this.conn.invalidate(this.conn.getURL());
+                        this.conn.setRoster(last.roster);
+                    } else {
+                        this.conn = new RosterWSConnection(last.roster, SkipchainRPC.serviceName);
+                    }
+                    continue;
                 }
-                continue;
             }
 
             if (last.forwardLinks.length === 0) {
@@ -225,8 +230,8 @@ export default class SkipchainRPC {
      * @param verify    Verify the integrity of the chain
      * @returns a promise that resolves with the block, or reject with an error
      */
-    async getLatestBlock(latestID: Buffer, verify = true): Promise<SkipBlock> {
-        const blocks = await this.getUpdateChain(latestID, verify);
+    async getLatestBlock(latestID: Buffer, verify = true, acceptForeigner = false): Promise<SkipBlock> {
+        const blocks = await this.getUpdateChain(latestID, verify, acceptForeigner);
 
         return blocks.pop();
     }
