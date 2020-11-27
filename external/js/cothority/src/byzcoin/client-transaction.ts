@@ -5,7 +5,8 @@ import { Message, Properties } from "protobufjs/light";
 import IdentityWrapper, { IIdentity } from "../darc/identity-wrapper";
 import Signer from "../darc/signer";
 import { EMPTY_BUFFER, registerMessage } from "../protobuf";
-import { ConfigBeautifier, DarcBeautifier, DefaultBeautifier, IBeautifierSchema } from "./beautifier";
+import { CoinBeautifier, ConfigBeautifier, CredentialBeautifier, DarcBeautifier,
+    DefaultBeautifier, IBeautifierSchema } from "./beautifier";
 import Instance, { InstanceID } from "./instance";
 
 export interface ICounterUpdater {
@@ -363,6 +364,14 @@ export class Instruction extends Message<Instruction> {
                         res.contract = "darc";
                         res.args = DarcBeautifier.Spawn(this.spawn.args);
                         break;
+                    case "coin":
+                        res.contract = "coin";
+                        res.args = CoinBeautifier.Spawn(this.spawn.args);
+                        break;
+                    case "credential":
+                        res.contract = "credential";
+                        res.args = CredentialBeautifier.Spawn(this.spawn.args);
+                        break;
                     default:
                         res.contract = this.spawn.contractID;
                         res.status = 1;
@@ -382,6 +391,14 @@ export class Instruction extends Message<Instruction> {
                     case "darc":
                         res.contract = "darc";
                         res.args = DarcBeautifier.Invoke(this.invoke.args);
+                        break;
+                    case "coin":
+                        res.contract = "coin";
+                        res.args = CoinBeautifier.Invoke(this.invoke.args);
+                        break;
+                    case "credential":
+                        res.contract = "credential";
+                        res.args = CredentialBeautifier.Invoke(this.invoke.args);
                         break;
                     default:
                         res.contract = this.invoke.contractID;
