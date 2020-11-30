@@ -149,7 +149,7 @@ export default class SkipchainRPC {
      * @param verify    Verify the integrity of the chain when true
      * @returns a promise that resolves with the list of blocks
      */
-    async getUpdateChain(latestID: Buffer, verify = true, acceptForeigner = false): Promise<SkipBlock[]> {
+    async getUpdateChain(latestID: Buffer, verify = true, acceptProxy = false): Promise<SkipBlock[]> {
         const blocks: SkipBlock[] = [];
         // Run as long as there is a new blockID to be checked
         for (let previousID = Buffer.alloc(0); !previousID.equals(latestID);) {
@@ -179,7 +179,7 @@ export default class SkipchainRPC {
             // latest block.
             const last = newBlocks[newBlocks.length - 1];
 
-            if (!acceptForeigner) {
+            if (!acceptProxy) {
                 let isInRoster = false;
 
                 for (const n of last.roster.list) {
@@ -230,8 +230,8 @@ export default class SkipchainRPC {
      * @param verify    Verify the integrity of the chain
      * @returns a promise that resolves with the block, or reject with an error
      */
-    async getLatestBlock(latestID: Buffer, verify = true, acceptForeigner = false): Promise<SkipBlock> {
-        const blocks = await this.getUpdateChain(latestID, verify, acceptForeigner);
+    async getLatestBlock(latestID: Buffer, verify = true, acceptProxy = false): Promise<SkipBlock> {
+        const blocks = await this.getUpdateChain(latestID, verify, acceptProxy);
 
         return blocks.pop();
     }
