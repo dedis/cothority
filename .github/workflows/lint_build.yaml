@@ -1,0 +1,90 @@
+name: Lint and Build
+
+on:
+  pull_request:
+
+jobs:
+  javascript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 10
+
+      - name: JavaScript - kyber
+        run: |
+          cd external/js/kyber
+          npm ci
+          npm run linter
+          npm run build
+
+      - name: JavaScript - cothority
+        run: |
+          cd external/js/cothority
+          npm ci
+          npm run linter
+          npm link @dedis/kyber
+          npm run build
+
+  golang:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        golang-version: [1.14, 1.15]
+
+    steps:
+      - uses: actions/checkout@master
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.golang-version }}
+
+      - name: Installing golint
+        run: GO111MODULE=off go get -u golang.org/x/lint/golint
+
+      - name: Testing proto-files
+        run: |
+          make test_proto
+          go version
+
+      - name: Running make-tests
+        run: |
+          make -C conode verify
+          make test_{fmt,lint}
+          go version
+
+  # As pre-commit doesn't like to be run in parallel, this step runs it only
+  # for the latest go-version.
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.15
+
+      - name: Installing golint
+        run: GO111MODULE=off go get -u golang.org/x/lint/golint
+
+      - name: Running pre-commit
+        uses: pre-commit/action@v2.0.0
+
+  sonarqube:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - uses: c4dt/sonarqube-action@master
+        with:
+          host: ${{ secrets.SONARQUBE_HOST }}
+          login: ${{ secrets.SONARQUBE_TOKEN }}
+          exclusions: external/**/*.java

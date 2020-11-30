@@ -1,0 +1,35 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  npm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+        with:
+          fetch-depth: 1
+
+      - name: Setup npm registry
+        env:
+          NPM_TOKEN: ${{ secrets.DEPLOY_NPM_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" \
+            > $HOME/.npmrc
+
+      - name: Kyber
+        run: |
+          cd external/js/kyber &&
+          npm ci &&
+          npm version prerelease --preid=p`date +%y%m.%d%H.%M%S` &&
+          ./publish.sh --tag dev
+
+      - name: Cothority
+        run: |
+          cd external/js/cothority &&
+          npm ci &&
+          npm version prerelease --preid=p`date +%y%m.%d%H.%M%S` &&
+          ./publish.sh --tag dev
