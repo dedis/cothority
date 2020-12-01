@@ -5,6 +5,9 @@ on:
     branches:
       - master
 
+env:
+  NODE_VERSION: 10
+
 jobs:
   npm:
     runs-on: ubuntu-latest
@@ -12,6 +15,9 @@ jobs:
       - uses: actions/checkout@master
         with:
           fetch-depth: 1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Setup npm registry
         env:
@@ -22,14 +28,14 @@ jobs:
 
       - name: Kyber
         run: |
-          cd external/js/kyber &&
-          npm ci &&
-          npm version prerelease --preid=p`date +%y%m.%d%H.%M%S` &&
+          cd external/js/kyber
+          npm ci
+          npm version prerelease --preid=p`date +%y%m.%d%H.%M%S`
           ./publish.sh --tag dev
 
       - name: Cothority
         run: |
-          cd external/js/cothority &&
-          npm ci &&
-          npm version prerelease --preid=p`date +%y%m.%d%H.%M%S` &&
+          cd external/js/cothority
+          npm ci
+          npm version prerelease --preid=p`date +%y%m.%d%H.%M%S`
           ./publish.sh --tag dev
