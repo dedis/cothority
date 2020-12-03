@@ -126,7 +126,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
         const di = await DarcInstance.fromByzcoin(rpc, ccProof.stateChangeBody.darcID, waitMatch, interval);
 
         rpc.genesisDarc = di.darc;
-        rpc.db = storage;
+        rpc.db = storage ? storage : new LocalCache();
 
         return rpc;
     }

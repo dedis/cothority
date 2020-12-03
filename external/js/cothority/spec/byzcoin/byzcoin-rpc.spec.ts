@@ -1,5 +1,5 @@
 import Long from "long";
-import { ByzCoinRPC } from "../../src/byzcoin";
+import { ByzCoinRPC, CONFIG_INSTANCE_ID } from "../../src/byzcoin";
 import { LocalCache } from "../../src/byzcoin/byzcoin-rpc";
 import DarcInstance from "../../src/byzcoin/contracts/darc-instance";
 import Instance from "../../src/byzcoin/instance";
@@ -46,6 +46,17 @@ describe("ByzCoinRPC Tests", () => {
 
         expect(rpc.getDarc().id).toEqual(rpc2.getDarc().id);
         expect(rpc2.getConfig().blockInterval.toNumber()).toEqual(rpc.getConfig().blockInterval.toNumber());
+    });
+
+    it("should use a LocalCache when no DB is given", async () => {
+        const darc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster);
+        const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
+
+        const rpc2 = await ByzCoinRPC.fromByzcoin(roster, rpc.getGenesis().hash);
+        await rpc2.updateConfig();
+
+        const config = await rpc2.instanceObservable(CONFIG_INSTANCE_ID);
+        expect(config.getValue().contractID).toBe("config");
     });
 
     it("should throw an error for non-existing instance or wrong type", async () => {
