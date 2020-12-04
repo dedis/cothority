@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  GO_VERSION: 1.15
+
+jobs:
+  go:
+    name: Upload release binaries
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Set RELEASE env
+        run: echo "RELEASE=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Build binaries
+        working-directory: ./conode
+        run: |
+          make bindist
+          make tooldist
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+      - name: Upload conode tarball
+        id: upload-bindist
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./conode/conode-${{ env.RELEASE }}.tar.gz
+          asset_name: conode-${{ env.RELEASE }}.tar.gz
+          asset_content_type: application/gzip
+      - name: Upload conode tools tarball
+        id: upload-bintools
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./conode/conode-tools-${{ env.RELEASE }}.tar.gz
+          asset_name: conode-tools-${{ env.RELEASE }}.tar.gz
+          asset_content_type: application/gzip
