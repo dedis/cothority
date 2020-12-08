@@ -338,9 +338,14 @@ func TestSkipBlock_PathForIndex(t *testing.T) {
 		{0, 6, 2, 31, 16},
 		{0, 1, 2, 0, 0},
 		{1, 1, 2, 1, 1},
+		// bigger numbers
+		{1 << 24, 12, 4, 1<<24 + 1<<20, 1<<24 + 1<<20},
+		{1 << 24, 12, 4, 1<<24 + 1<<20 - 1, 1<<24 + 1<<18},
 		// backwards test
 		{32, 6, 2, 0, 0},
 		{32, 6, 2, 1, 16},
+		// base 1 test
+		{0, 1, 1, 2, 1},
 	}
 
 	for _, v := range vectors {
@@ -355,7 +360,7 @@ func TestSkipBlock_PathForIndex(t *testing.T) {
 
 // This checks if the it returns the shortest path or an error
 // when blocks are missing
-func TestSkipBlockDB_GetProof(t *testing.T) {
+func TestSkipBlockDB_GetFullProof(t *testing.T) {
 	local := onet.NewLocalTest(suite)
 	_, ro, _ := local.GenTree(2, false)
 	defer local.CloseAll()
@@ -395,7 +400,13 @@ func TestSkipBlockDB_GetProof(t *testing.T) {
 	_, err := db.StoreBlocks([]*SkipBlock{root, sb1, sb2})
 	require.NoError(t, err)
 
-	blocks, err := db.GetProof(root.Hash)
+	links, blocks, err := db.GetFullProof(root.Hash, -1)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(links))
+	require.True(t, links[0].To.Equal(root.Hash))
+	require.True(t, links[1].To.Equal(sb2.Hash))
+
+	blocks, err = db.GetProof(root.Hash)
 	require.NoError(t, err)
 	require.Equal(t, 2, len(blocks))
 	require.True(t, blocks[1].Hash.Equal(sb2.Hash))
@@ -410,10 +421,9 @@ func TestSkipBlockDB_GetProof(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// last block is missing so it should return only until sb1.
-	bb, err := db.GetProof(root.Hash)
-	require.NoError(t, err)
-	require.Equal(t, 2, len(bb))
+	// last block is missing so it should return an error.
+	_, err = db.GetProof(root.Hash)
+	require.Error(t, err)
 
 	_, err = db.GetProofForID(sb2.Hash)
 	require.Error(t, err)

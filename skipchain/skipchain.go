@@ -681,43 +681,11 @@ func (s *Service) GetSingleBlock(id *GetSingleBlock) (*SkipBlock, error) {
 // GetSingleBlockByIndex searches for the given block and returns it. If no such block is
 // found, a nil is returned.
 func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*GetSingleBlockByIndexReply, error) {
-	sb := s.db.GetByID(id.Genesis)
-	if sb == nil {
-		return nil, errors.New("No such genesis-block")
+	links, sbs, err := s.db.GetFullProof(id.Genesis, id.Index)
+	if err != nil {
+		return nil, xerrors.Errorf("couldn't get path to block: %v", err)
 	}
-	links := []*ForwardLink{{
-		To:        id.Genesis,
-		NewRoster: sb.Roster,
-	}}
-	if sb.Index == id.Index {
-		return &GetSingleBlockByIndexReply{sb, links}, nil
-	}
-	for len(sb.ForwardLink) > 0 {
-		// Search for the highest ForwardLink that doesn't shoot over the target
-		sb = func() *SkipBlock {
-			for i := len(sb.ForwardLink) - 1; i >= 0; i-- {
-				to := sb.ForwardLink[i].To
-				// We can have holes in the forward links
-				if to != nil {
-					tmp := s.db.GetByID(to)
-					if tmp != nil && tmp.Index <= id.Index {
-						links = append(links, sb.ForwardLink[i])
-						return tmp
-					}
-				}
-			}
-			return nil
-		}()
-		if sb == nil {
-			return nil, errors.New("didn't find block in forward link")
-		}
-		if sb.Index == id.Index {
-			return &GetSingleBlockByIndexReply{sb, links}, nil
-		}
-	}
-	err := fmt.Errorf("no block with index \"%d\" found", id.Index)
-	log.Error(s.ServerIdentity(), err)
-	return nil, err
+	return &GetSingleBlockByIndexReply{sbs[len(sbs)-1], links}, nil
 }
 
 // GetAllSkipchains currently returns a list of all the known blocks.
