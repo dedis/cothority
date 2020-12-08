@@ -730,6 +730,28 @@ var cmds = cli.Commands{
 					},
 				},
 			},
+			{
+				Name: "optimize",
+				Usage: "Verify all blocks for missing forward-links and ask" +
+					" the nodes to update missing links.",
+				Action: dbOptimize,
+				Flags: []cli.Flag{
+					cli.IntFlag{
+						Name:  "start",
+						Usage: "Indicate first block to verify",
+						Value: -1,
+					},
+					cli.IntFlag{
+						Name:  "stop",
+						Usage: "Indicate the last block to verify",
+						Value: -1,
+					},
+					cli.BoolFlag{
+						Name:  "skipMissing",
+						Usage: "Do not download missing blocks",
+					},
+				},
+			},
 		},
 	},
 

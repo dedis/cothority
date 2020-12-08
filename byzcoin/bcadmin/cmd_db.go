@@ -600,6 +600,49 @@ func dbCheck(c *cli.Context) error {
 	return nil
 }
 
+// dbCheck verifies all the hashes and links from the blocks.
+func dbOptimize(c *cli.Context) error {
+	dbArgs, err := newDbOptArgs(c)
+	if err != nil {
+		return xerrors.Errorf("couldn't create dbOptArgs: %v", err)
+	}
+
+	log.Infof("Starting to check blocks from %d to %d", dbArgs.currentSB.Index,
+		dbArgs.stop)
+	for dbArgs.currentSB.Index <= dbArgs.stop {
+		if dbArgs.currentSB.Index%1000 == 0 {
+			log.Infof("Checking block %d", dbArgs.currentSB.Index)
+		}
+
+		if err := dbArgs.optimizeBlock(); err != nil {
+			return xerrors.Errorf("couldn't optimize block: %v", err)
+		}
+
+		if err := dbArgs.getNextBlock(); err != nil {
+			return xerrors.Errorf("couldn't get next block: %v", err)
+		}
+	}
+
+	log.Infof("Done optimizing blockchain %x", *dbArgs.fb.bcID)
+	log.Infof("Updated blocks with missing links from network: %d",
+		dbArgs.updatedFromRoster)
+	log.Infof("Optimized blocks by creating new forward lins: %d",
+		dbArgs.optimized)
+
+	return nil
+}
+
+// Returns the optimal length given a latest block index.
+func getOptimalHeight(block *skipchain.SkipBlock, latest int) int {
+	indexes := block.GetFLIndexes()
+	for i, index := range indexes {
+		if index > latest {
+			return i
+		}
+	}
+	return len(indexes)
+}
+
 // fetchBlocks is used by all db-related bcadmin commands.
 type fetchBlocks struct {
 	cl               *skipchain.Client
@@ -652,11 +695,11 @@ func newFetchBlocks(c *cli.Context) (*fetchBlocks,
 		fb.bcID = &bi
 		fb.genesis = fb.db.GetByID(*fb.bcID)
 		if fb.genesis != nil {
-			latest, err := fb.db.GetLatestByID(fb.genesis.SkipChainID())
+			fb.latest, err = fb.db.GetLatestByID(fb.genesis.SkipChainID())
 			if err != nil {
 				return nil, fmt.Errorf("couldn't get latest block: %v", err)
 			}
-			fb.roster = latest.Roster
+			fb.roster = fb.latest.Roster
 		}
 	} else {
 		err = fb.getBCID()
@@ -692,7 +735,7 @@ func (fb *fetchBlocks) getBCID() error {
 		for sbID, sb := range sbs {
 			bcID := skipchain.SkipBlockID(sbID)
 			fb.bcID = &bcID
-			fb.genesis = sb
+			fb.genesis = fb.db.GetByID(sb.GenesisID)
 			fb.latest, err = fb.db.GetLatest(sb)
 			if err != nil {
 				return fmt.Errorf("couldn't get latest skipblock: %v", err)
