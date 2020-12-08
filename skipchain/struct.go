@@ -649,19 +649,36 @@ func (sbs Proof) verifyChain() error {
 				return errors.New("Missing backlink")
 			}
 		}
+
+		// Check if there is a forward link to the next block - this might
+		// not be the highest link,
+		// as the block to be optimized might be in nthe middle of the chain.
 		if i < len(sbs)-1 {
-			// Check if there is a forward link to the next block
 			if len(sb.ForwardLink) == 0 {
 				return errors.New("Missing forward links")
 			}
 
-			fl := sb.ForwardLink[len(sb.ForwardLink)-1]
-			if err := fl.VerifyWithScheme(suite, sb.Roster.ServicePublics(ServiceName), sb.SignatureScheme); err != nil {
-				return err
-			}
+			flOK := false
+			for flIndex := len(sb.ForwardLink) - 1; flIndex >= 0; flIndex-- {
+				fl := sb.ForwardLink[flIndex]
+				if fl.IsEmpty() {
+					continue
+				}
 
-			if !sbs[i+1].Hash.Equal(fl.To) || !fl.From.Equal(sb.Hash) {
-				return errors.New("Wrong targets for the forward link")
+				if err := fl.VerifyWithScheme(suite,
+					sb.Roster.ServicePublics(ServiceName), sb.SignatureScheme); err != nil {
+					return err
+				}
+
+				if !sbs[i+1].Hash.Equal(fl.To) || !fl.From.Equal(sb.Hash) {
+					continue
+				}
+				flOK = true
+				break
+			}
+			if !flOK {
+				return xerrors.New("encountered invalid or missing forward" +
+					"-links in proof")
 			}
 		}
 	}

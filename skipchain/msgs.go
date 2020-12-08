@@ -88,9 +88,14 @@ type StoreSkipBlockReply struct {
 	Latest   *SkipBlock
 }
 
-// OptimizeProofRequest is request to create missing forward links
+// OptimizeProofRequest is request to create missing forward links.
+// If the ID is the skipchain-ID,
+// the proofs from the genesis block to the latest block are optimized.
+// If the ID is a block in the chain,
+// the proofs from that block only are optimized.
 type OptimizeProofRequest struct {
-	ID     SkipBlockID
+	ID SkipBlockID
+	// Deprecated: will not be used in the new call to OptimizeProof
 	Roster *onet.Roster
 }
 

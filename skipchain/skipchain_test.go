@@ -764,7 +764,7 @@ func TestService_ForgedPropagationMessage(t *testing.T) {
 	// checks that the targets have to match
 	err = service.propagateProofHandler(&PropagateProof{append(p1[:2], p2[2], p1[3])})
 	require.NotNil(t, err)
-	require.Contains(t, err.Error(), "Wrong targets")
+	require.Contains(t, err.Error(), "invalid or missing forward-links")
 
 	// checks that the signature must match
 	forgedBlock := NewSkipBlock()
@@ -1627,7 +1627,8 @@ func testOptimizeProof(t *testing.T, numBlock, base, max, expected int) {
 	sk5 := srvs[4].Service(ServiceName).(*Service)
 	sk6 := srvs[5].Service(ServiceName).(*Service)
 
-	sbRoot, err := makeGenesisRosterArgs(sk1, roster, nil, VerificationStandard, base, max)
+	sbRoot, err := makeGenesisRosterArgs(sk1, ro, nil, VerificationStandard,
+		base, max)
 	require.NoError(t, err)
 
 	sb := NewSkipBlock()
@@ -1646,12 +1647,79 @@ func testOptimizeProof(t *testing.T, numBlock, base, max, expected int) {
 	log.Lvl1("Request to optimize the proof")
 
 	// Ask host 5 to optimize (not the leader)
-	opr, err := sk5.OptimizeProof(&OptimizeProofRequest{Roster: ro, ID: reply.Latest.Hash})
+	opr, err := sk5.OptimizeProof(&OptimizeProofRequest{ID: sbRoot.SkipChainID()})
 	require.NoError(t, err)
 	require.Equal(t, expected, len(opr.Proof))
 
-	// And verify the proof is propagated to the roster we asked for
-	sbs, err := sk6.db.GetProofForID(reply.Latest.Hash)
+	// If base == 1, there is nothing to optimize,
+	// so the blocks won't be sent to the other nodes.
+	if base > 1 {
+		// And verify the proof is propagated to the roster we asked for
+		sbs, err := sk6.db.GetProofForID(reply.Latest.Hash)
+		require.NoError(t, err)
+		require.Equal(t, expected, len(sbs))
+	}
+}
+
+// This tests what happens when a block in the middle of the chain is
+// optimized. One corner-case was when a block is optimized while a previous
+// block points further. Given a skipchain with base-height 2 and the
+// following blocks with [block-index, max-height, current/height]:
+//   0 4 4
+//   1 1 1
+//   2 2 1
+// Now if block #2 is optimized, the proof that will be sent includes block
+// 0 and 2, but block 0 points further than 2.
+// This needs to be handled correctly.
+func TestOptimizeMiddle(t *testing.T) {
+	numBlock := 9
+
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+	srvs, roster, _ := local.MakeSRS(cothority.Suite, 3, skipchainSID)
+
+	sks := make([]*Service, len(srvs))
+	for i, srv := range srvs {
+		sks[i] = srv.Service(ServiceName).(*Service)
+	}
+	leader := sks[0]
+
+	blocks := make([]*SkipBlock, numBlock)
+	var err error
+	blocks[0], err = makeGenesisRosterArgs(leader, roster, nil,
+		VerificationStandard, 2, 10)
 	require.NoError(t, err)
-	require.Equal(t, expected, len(sbs))
+
+	leader.disableForwardLink = true
+
+	for i := 1; i < numBlock; i++ {
+		sb := NewSkipBlock()
+		sb.Roster = roster
+		reply, err := leader.StoreSkipBlock(
+			&StoreSkipBlock{TargetSkipChainID: blocks[0].Hash, NewBlock: sb})
+		require.NoError(t, err)
+		blocks[i] = reply.Latest
+	}
+
+	leader.disableForwardLink = false
+
+	// Optimize the genesis-block,
+	// will create an empty forward-link at index 1,
+	// plus a valid forward-link at index 2.
+	log.Lvl1("Request to optimize the proof for the chain")
+	opr, err := sks[2].OptimizeProof(&OptimizeProofRequest{ID: blocks[0].Hash})
+	require.NoError(t, err)
+	require.Equal(t, 4, opr.Proof[0].GetForwardLen())
+
+	log.Lvl1("Request to optimize the proof for block index 2")
+	opr, err = sks[2].OptimizeProof(&OptimizeProofRequest{ID: blocks[2].Hash})
+	require.NoError(t, err)
+	require.Equal(t, 3, len(opr.Proof))
+	require.Equal(t, 2, opr.Proof[2].GetForwardLen())
+
+	log.Lvl1("Request to optimize the proof for block index 4")
+	opr, err = sks[2].OptimizeProof(&OptimizeProofRequest{ID: blocks[4].Hash})
+	require.NoError(t, err)
+	require.Equal(t, 4, len(opr.Proof))
+	require.Equal(t, 3, opr.Proof[3].GetForwardLen())
 }

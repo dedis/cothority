@@ -480,15 +480,11 @@ func scOptimize(c *cli.Context) error {
 
 	// If a genesis block is provided, we optimize the entire chain
 	if sb.Index == 0 {
-		reply, err := cl.GetUpdateChain(roster, id)
-		if err != nil {
-			return fmt.Errorf("couldn't get the latest block: %v", err)
-		}
-
-		sb = reply.Update[len(reply.Update)-1]
+		log.Infof("Optimizing chain %x", sb.SkipChainID())
+	} else {
+		log.Infof("Optimizing block with index %d in chain %x",
+			sb.Index, sb.SkipChainID())
 	}
-
-	log.Infof("Optimizing chain %x for block at index %d...", sb.SkipChainID(), sb.Index)
 
 	reply, err := cl.OptimizeProof(roster, sb.Hash)
 	if err != nil {
