@@ -605,6 +605,32 @@ func (sbs Proof) VerifyFromID(id SkipBlockID) error {
 	return sbs.verifyChain()
 }
 
+// GetForwardLinks creates a slice of ForwardLinks of the proof,
+// starting with a forwardlink pointing out of nil to the genesis block to
+// give the roster.
+func (sbs Proof) GetForwardLinks() (links []*ForwardLink, err error) {
+	if len(sbs) == 0 {
+		return nil, xerrors.New("cannot create links for empty proof")
+	}
+	links = make([]*ForwardLink, len(sbs))
+	links[0] = &ForwardLink{
+		To:        sbs[0].Hash,
+		NewRoster: sbs[0].Roster,
+	}
+
+	logBH := math.Log(float64(sbs[0].BaseHeight))
+	for i, sb := range sbs[:len(sbs)-1] {
+		logDist := math.Log(float64(sbs[i+1].Index - sb.Index))
+		// Using math.Round here to ignore rounding errors in math.Log
+		height := int(math.Round(logDist / logBH))
+		if len(sb.ForwardLink) <= height || sb.ForwardLink[height].IsEmpty() {
+			return nil, xerrors.New("missing forward-link in proof")
+		}
+		links[i+1] = sb.ForwardLink[height]
+	}
+	return
+}
+
 func (sbs Proof) verifyChain() error {
 	for i, sb := range sbs {
 		if !sb.CalculateHash().Equal(sb.Hash) {
@@ -1151,11 +1177,11 @@ func (db *SkipBlockDB) GetFuzzy(id string) (*SkipBlock, error) {
 	return sb, err
 }
 
-// GetFullProof returns the shortest chain from the genesis to the block
+// GetProofFromIndex returns the shortest chain from the genesis to the block
 // with index dest using the highest forward-links available in the local db.
 // If dest < 0, search up to the latest block.
-func (db *SkipBlockDB) GetFullProof(sid SkipBlockID,
-	dest int) (links []*ForwardLink, sbs Proof, err error) {
+func (db *SkipBlockDB) GetProofFromIndex(sid SkipBlockID,
+	dest int) (pr Proof, err error) {
 	err = db.View(func(tx *bbolt.Tx) error {
 		sb, err := db.getFromTx(tx, sid)
 		if err != nil {
@@ -1164,53 +1190,48 @@ func (db *SkipBlockDB) GetFullProof(sid SkipBlockID,
 		if sb == nil {
 			return xerrors.New("didn't find genesis block")
 		}
-		sbs = append(sbs, sb)
-		links = append(links, &ForwardLink{
-			To:        sb.Hash,
-			NewRoster: sb.Roster,
-		})
-		if dest == 0 {
-			return nil
+
+		pr, err = db.getPath(tx, sb, dest)
+		if err != nil {
+			return xerrors.Errorf("couldn't get path: %v", err)
 		}
 
-		if err := db.getPath(tx, sbs, links, dest); err != nil {
-			return xerrors.Errorf("couldn't get path: %v")
-		}
-
-		// the search was supposed to go to the latest block.
-		if dest < 0 {
-			return nil
-		}
-		return xerrors.New("didn't find destination block")
+		return nil
 	})
 	return
 }
 
 // Iterate over all blocks until it's either the last block or the
 // one required by the call.
-func (db *SkipBlockDB) getPath(tx *bbolt.Tx, sbs Proof, links []*ForwardLink,
-	dest int) error {
-	sb := sbs[0]
+func (db *SkipBlockDB) getPath(tx *bbolt.Tx, sb *SkipBlock,
+	dest int) (pr Proof, err error) {
+	pr = append(pr, sb)
+	if dest == 0 {
+		return
+	}
+
 	for len(sb.ForwardLink) > 0 {
-		var fl *ForwardLink
-		var err error
-		fl, sb, err = db.getHighestJump(tx, sb, dest)
+		sb, err = db.getHighestJump(tx, sb, dest)
 		if err != nil {
-			return xerrors.Errorf("while fetching next jump: %v", err)
+			return nil, xerrors.Errorf("while fetching next jump: %v", err)
 		}
-		links = append(links, fl)
-		sbs = append(sbs, sb)
+		pr = append(pr, sb)
 		if sb.Index == dest {
-			return nil
+			return
 		}
 	}
-	return nil
+
+	// When looking for latest block, it's normal that there is no match found.
+	if dest == -1 {
+		return
+	}
+	return nil, xerrors.New("didn't find destination block")
 }
 
 // Search for the closest block that is reachable before or at the destination.
 // dest < 0 indicates to chose the highest forward-link.
 func (db *SkipBlockDB) getHighestJump(tx *bbolt.Tx, start *SkipBlock,
-	dest int) (*ForwardLink, *SkipBlock, error) {
+	dest int) (*SkipBlock, error) {
 	for i := len(start.ForwardLink) - 1; i >= 0; i-- {
 		// We can have holes in the forward links
 		if start.ForwardLink[i].IsEmpty() {
@@ -1218,7 +1239,7 @@ func (db *SkipBlockDB) getHighestJump(tx *bbolt.Tx, start *SkipBlock,
 		}
 		sb, err := db.getFromTx(tx, start.ForwardLink[i].To)
 		if err != nil {
-			return nil, nil, xerrors.Errorf("while fetching block from db: %v",
+			return nil, xerrors.Errorf("while fetching block from db: %v",
 				err)
 		}
 
@@ -1227,31 +1248,33 @@ func (db *SkipBlockDB) getHighestJump(tx *bbolt.Tx, start *SkipBlock,
 				dest = sb.Index
 			}
 			if sb.Index <= dest {
-				return start.ForwardLink[i], sb, nil
+				return sb, nil
 			}
 		}
 	}
-	return nil, nil, xerrors.New("didn't find any appropriate block")
+	return nil, xerrors.New("didn't find any appropriate block")
 }
 
-// GetProof returns the shortest chain from the genesis to the latest block
+// GetProofForLatest returns the shortest chain from the genesis to the latest block
 // using the highest forward-links available in the local db
-// Deprecated: please use GetFullProof(sid, -1).
-func (db *SkipBlockDB) GetProof(sid SkipBlockID) (sbs []*SkipBlock,
-	err error) {
-	_, sbs, err = db.GetFullProof(sid, -1)
-	return
+func (db *SkipBlockDB) GetProofForLatest(sid SkipBlockID) (Proof, error) {
+	return db.GetProofFromIndex(sid, -1)
+}
+
+// GetProof for API compatibility
+// Deprecated: please use GetProofForLatest(sid).
+func (db *SkipBlockDB) GetProof(sid SkipBlockID) (Proof, error) {
+	return db.GetProofFromIndex(sid, -1)
 }
 
 // GetProofForID returns the shortest known chain from the genesis to the given
 // block using the highest forward-links available in the local db.
-func (db *SkipBlockDB) GetProofForID(bid SkipBlockID) (sbs Proof, err error) {
+func (db *SkipBlockDB) GetProofForID(bid SkipBlockID) (Proof, error) {
 	sb := db.GetByID(bid)
 	if sb == nil {
 		return nil, xerrors.New("couldn't find block")
 	}
-	_, sbs, err = db.GetFullProof(sb.SkipChainID(), sb.Index)
-	return
+	return db.GetProofFromIndex(sb.SkipChainID(), sb.Index)
 }
 
 // GetSkipchains returns all latest skipblocks from all skipchains.

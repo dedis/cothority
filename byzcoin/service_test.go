@@ -299,7 +299,7 @@ func TestService_AddTransaction_WrongNode(t *testing.T) {
 	// force the synchronization as the new node needs to get the
 	// propagation to know about the skipchain but we're not testing that
 	// here
-	proof, err := b.Services[0].db().GetProof(b.Genesis.Hash)
+	proof, err := b.Services[0].db().GetProofForLatest(b.Genesis.Hash)
 	require.NoError(t, err)
 	_, err = outside.db().StoreBlocks(proof)
 	require.NoError(t, err)
