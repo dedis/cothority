@@ -338,9 +338,14 @@ func TestSkipBlock_PathForIndex(t *testing.T) {
 		{0, 6, 2, 31, 16},
 		{0, 1, 2, 0, 0},
 		{1, 1, 2, 1, 1},
+		// bigger numbers
+		{1 << 24, 12, 4, 1<<24 + 1<<20, 1<<24 + 1<<20},
+		{1 << 24, 12, 4, 1<<24 + 1<<20 - 1, 1<<24 + 1<<18},
 		// backwards test
 		{32, 6, 2, 0, 0},
 		{32, 6, 2, 1, 16},
+		// base 1 test
+		{0, 1, 1, 2, 1},
 	}
 
 	for _, v := range vectors {
@@ -355,7 +360,7 @@ func TestSkipBlock_PathForIndex(t *testing.T) {
 
 // This checks if the it returns the shortest path or an error
 // when blocks are missing
-func TestSkipBlockDB_GetProof(t *testing.T) {
+func TestSkipBlockDB_GetProofFromIndex(t *testing.T) {
 	local := onet.NewLocalTest(suite)
 	_, ro, _ := local.GenTree(2, false)
 	defer local.CloseAll()
@@ -392,10 +397,37 @@ func TestSkipBlockDB_GetProof(t *testing.T) {
 	require.NoError(t, root.ForwardLink[0].sign(ro))
 	require.NoError(t, root.ForwardLink[1].sign(ro))
 
-	_, err := db.StoreBlocks([]*SkipBlock{root, sb1, sb2})
+	blockIDs, err := db.StoreBlocks([]*SkipBlock{root, sb1, sb2})
 	require.NoError(t, err)
 
-	blocks, err := db.GetProof(root.Hash)
+	tests := []struct {
+		dest   int
+		links  int
+		blocks int
+	}{{0, 1, 1},
+		{1, 2, 2},
+		{2, 2, 2},
+		{-1, 2, 2}}
+
+	for _, test := range tests {
+		blocks, err := db.GetProofFromIndex(root.Hash, test.dest)
+		require.NoError(t, err)
+		require.Equal(t, test.blocks, len(blocks))
+		require.True(t, blocks[0].Equal(root))
+		latestBlock := test.dest
+		if test.dest == -1 {
+			latestBlock = 2
+		}
+		require.True(t, blocks[len(blocks)-1].Hash.Equal(blockIDs[latestBlock]))
+
+		links, err := blocks.GetForwardLinks()
+		require.NoError(t, err)
+		require.Equal(t, test.links, len(links))
+		require.True(t, links[0].To.Equal(root.Hash))
+		require.True(t, links[len(links)-1].To.Equal(blockIDs[latestBlock]))
+	}
+
+	blocks, err := db.GetProofForLatest(root.Hash)
 	require.NoError(t, err)
 	require.Equal(t, 2, len(blocks))
 	require.True(t, blocks[1].Hash.Equal(sb2.Hash))
@@ -410,10 +442,9 @@ func TestSkipBlockDB_GetProof(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// last block is missing so it should return only until sb1.
-	bb, err := db.GetProof(root.Hash)
-	require.NoError(t, err)
-	require.Equal(t, 2, len(bb))
+	// last block is missing so it should return an error.
+	_, err = db.GetProofForLatest(root.Hash)
+	require.Error(t, err)
 
 	_, err = db.GetProofForID(sb2.Hash)
 	require.Error(t, err)

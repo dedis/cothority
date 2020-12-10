@@ -681,43 +681,15 @@ func (s *Service) GetSingleBlock(id *GetSingleBlock) (*SkipBlock, error) {
 // GetSingleBlockByIndex searches for the given block and returns it. If no such block is
 // found, a nil is returned.
 func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*GetSingleBlockByIndexReply, error) {
-	sb := s.db.GetByID(id.Genesis)
-	if sb == nil {
-		return nil, errors.New("No such genesis-block")
+	pr, err := s.db.GetProofFromIndex(id.Genesis, id.Index)
+	if err != nil {
+		return nil, xerrors.Errorf("couldn't get path to block: %v", err)
 	}
-	links := []*ForwardLink{{
-		To:        id.Genesis,
-		NewRoster: sb.Roster,
-	}}
-	if sb.Index == id.Index {
-		return &GetSingleBlockByIndexReply{sb, links}, nil
+	links, err := pr.GetForwardLinks()
+	if err != nil {
+		return nil, xerrors.Errorf("couldn't get forward-links: %v", err)
 	}
-	for len(sb.ForwardLink) > 0 {
-		// Search for the highest ForwardLink that doesn't shoot over the target
-		sb = func() *SkipBlock {
-			for i := len(sb.ForwardLink) - 1; i >= 0; i-- {
-				to := sb.ForwardLink[i].To
-				// We can have holes in the forward links
-				if to != nil {
-					tmp := s.db.GetByID(to)
-					if tmp != nil && tmp.Index <= id.Index {
-						links = append(links, sb.ForwardLink[i])
-						return tmp
-					}
-				}
-			}
-			return nil
-		}()
-		if sb == nil {
-			return nil, errors.New("didn't find block in forward link")
-		}
-		if sb.Index == id.Index {
-			return &GetSingleBlockByIndexReply{sb, links}, nil
-		}
-	}
-	err := fmt.Errorf("no block with index \"%d\" found", id.Index)
-	log.Error(s.ServerIdentity(), err)
-	return nil, err
+	return &GetSingleBlockByIndexReply{pr[len(pr)-1], links}, nil
 }
 
 // GetAllSkipchains currently returns a list of all the known blocks.
@@ -1163,7 +1135,7 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 
 	// We send the shortest chain to the new conodes to let
 	// them know they joined the cothority
-	proof, err := s.db.GetProof(src.SkipChainID())
+	proof, err := s.db.GetProofForLatest(src.SkipChainID())
 	if err != nil {
 		return err
 	}
@@ -1647,7 +1619,7 @@ func (s *Service) propagateForwardLinkHandler(msg network.Message) error {
 // PropagateProof is a simple function that will build the proof of a given
 // skipchain and send it the given roster.
 func (s *Service) PropagateProof(roster *onet.Roster, sid SkipBlockID) error {
-	proof, err := s.db.GetProof(sid)
+	proof, err := s.db.GetProofForLatest(sid)
 	if err != nil {
 		return err
 	}

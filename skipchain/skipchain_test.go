@@ -725,7 +725,7 @@ func createSkipchain(service *Service, ro *onet.Roster) (Proof, error) {
 		}
 	}
 
-	blocks, err := service.db.GetProof(sbRoot.SkipChainID())
+	blocks, err := service.db.GetProofForLatest(sbRoot.SkipChainID())
 	return Proof(blocks), err
 }
 
