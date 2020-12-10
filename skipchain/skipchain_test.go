@@ -1672,7 +1672,7 @@ func testOptimizeProof(t *testing.T, numBlock, base, max, expected int) {
 // 0 and 2, but block 0 points further than 2.
 // This needs to be handled correctly.
 func TestOptimizeMiddle(t *testing.T) {
-	numBlock := 9
+	const numBlock = 9
 
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()

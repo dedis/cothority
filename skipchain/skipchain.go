@@ -439,6 +439,8 @@ func (s *Service) OptimizeProof(req *OptimizeProofRequest) (*OptimizeProofReply,
 }
 
 // optimizeBlock adds missing forward-links to one block only.
+// It requests all missing forward-links,
+// but cannot guarantee that any of them will be created.
 func (s *Service) optimizeBlock(sb *SkipBlock) (*OptimizeProofReply, error) {
 	latest, err := s.db.GetLatestByID(sb.SkipChainID())
 	if err != nil {
@@ -592,27 +594,21 @@ func (s *Service) optimizeCheck(pr Proof, current, target int) (index int,
 // optimizeSend propagates the new blocks to all nodes.
 func (s *Service) optimizeSend(newProof Proof) error {
 	log.Lvl2("Done creating forwardlinks, propagating new proofs")
-	var nodes []*network.ServerIdentity
-	for i, pr := range newProof {
-		for _, si := range pr.Roster.List {
-			exists := false
-			for _, siExist := range nodes {
-				exists = exists || siExist.Equal(si)
+	roster := onet.NewRoster(newProof[0].Roster.List)
+	if len(newProof) > 1 {
+		for i, pr := range newProof[1:] {
+			roster = roster.Concat(pr.Roster.List...)
+
+			if pr.GetForwardLen() > 0 {
+				to := pr.ForwardLink[pr.GetForwardLen()-1].To
+				log.Lvlf3("%d: Block %d / %x with fl-len %d pointing to %x",
+					i, pr.Index, pr.Hash[:], pr.GetForwardLen(), to[:])
 			}
-			if !exists {
-				nodes = append(nodes, si)
-			}
-		}
-		if pr.GetForwardLen() > 0 {
-			to := pr.ForwardLink[pr.GetForwardLen()-1].To
-			log.Lvlf3("%d: Block %d / %x with fl-len %d pointing to %x",
-				i, pr.Index, pr.Hash[:], pr.GetForwardLen(), to[:])
 		}
 	}
 
 	// Propagate the optimized proof to all nodes that were defined in any of
 	// the blocks.
-	roster := onet.NewRoster(nodes)
 	return s.startPropagation(s.propagateProof, roster,
 		&PropagateProof{newProof})
 }

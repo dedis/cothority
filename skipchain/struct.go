@@ -667,7 +667,7 @@ func (sbs Proof) verifyChain() error {
 
 				if err := fl.VerifyWithScheme(suite,
 					sb.Roster.ServicePublics(ServiceName), sb.SignatureScheme); err != nil {
-					return err
+					return xerrors.Errorf("verify with scheme: %v", err)
 				}
 
 				if !sbs[i+1].Hash.Equal(fl.To) || !fl.From.Equal(sb.Hash) {
