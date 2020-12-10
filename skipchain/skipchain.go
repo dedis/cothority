@@ -15,6 +15,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -423,18 +424,116 @@ func sendForwardLinkRequest(ro *onet.Roster, req *ForwardSignature, reply *Forwa
 	return err
 }
 
-// OptimizeProof creates missing forward links to optimize the proof of the block
-// at the given index.
+// OptimizeProof creates missing forward links to optimize the proof either
+//   - from the genesis block to the latest block of the given skipchain-ID
+//   - for the given block
 func (s *Service) OptimizeProof(req *OptimizeProofRequest) (*OptimizeProofReply, error) {
-	pr, err := s.db.GetProofForID(req.ID)
+	sb := s.db.GetByID(req.ID)
+	if sb == nil {
+		return nil, xerrors.New("didn't find that block-id in our DB")
+	}
+	if sb.Index == 0 {
+		return s.optimizeChain(req.ID)
+	}
+	return s.optimizeBlock(sb)
+}
+
+// optimizeBlock adds missing forward-links to one block only.
+// It requests all missing forward-links,
+// but cannot guarantee that any of them will be created.
+func (s *Service) optimizeBlock(sb *SkipBlock) (*OptimizeProofReply, error) {
+	latest, err := s.db.GetLatestByID(sb.SkipChainID())
+	if err != nil {
+		return nil, xerrors.Errorf("couldn't get latest block: %v", err)
+	}
+
+	maxHeight, _ := sb.pathForIndex(latest.Index)
+	if sb.GetForwardLen() > maxHeight {
+		return nil, xerrors.New("nothing to optimize for this block")
+	}
+
+	optimized := false
+	for height := sb.GetForwardLen(); height <= maxHeight; height++ {
+		indexTo := sb.Index +
+			int(math.Pow(float64(sb.BaseHeight), float64(height)))
+		if indexTo > latest.Index {
+			break
+		}
+		pr, err := s.db.GetProofFromIndex(sb.SkipChainID(), indexTo)
+		if err != nil {
+			return nil, xerrors.Errorf("couldn't get block at index %d: %v",
+				indexTo, err)
+		}
+		to := pr[len(pr)-1]
+
+		log.Lvlf2("Adding forward-link level %d to block %d", height, sb.Index)
+		if err := s.addForwardLink(height, sb, to); err != nil {
+			log.Warnf("Couldn't add a forwardlink from %d to %d "+
+				"with height %d: %v",
+				sb.Index, to.Index, height, err)
+		} else {
+			optimized = true
+		}
+	}
+
+	if !optimized {
+		return nil, xerrors.New("couldn't optimize this block")
+	}
+
+	pr, err := s.db.GetProofForID(sb.Hash)
+	if err != nil {
+		return nil, xerrors.Errorf("couldn't get proof for latest block: %v",
+			err)
+	}
+	if err := s.optimizeSend(pr); err != nil {
+		return nil, xerrors.Errorf("couldn't propagate proof: %v", err)
+	}
+	return &OptimizeProofReply{Proof: pr}, nil
+}
+
+// addForwardLink asks the roster of the block to create the forward-links,
+// but does not propagate those links.
+func (s *Service) addForwardLink(targetHeight int, from, to *SkipBlock) error {
+	req := &ForwardSignature{
+		TargetHeight: targetHeight,
+		Previous:     from.Hash,
+		Newest:       to,
+	}
+	reply := &ForwardSignatureReply{}
+
+	log.Lvlf2("requesting missing forward-link from index %d to"+
+		" %d with height %d", from.Index, to.Index, targetHeight)
+	// The signature must be created by the roster of the block
+	err := sendForwardLinkRequest(from.Roster, req, reply)
+
+	if err != nil {
+		return xerrors.Errorf("could not create a missing forward link: %v",
+			err)
+	}
+
+	// save the new forward link
+	err = from.AddForwardLink(reply.Link, targetHeight)
+	if err != nil {
+		return xerrors.Errorf("could not store the missing forward-link"+
+			": %v", err)
+	}
+	return nil
+}
+
+// optimizeChain optimizes all forward-links from the genesis to the latest
+// block.
+func (s *Service) optimizeChain(scID SkipBlockID) (
+	*OptimizeProofReply, error) {
+	sbs, err := s.db.GetProof(scID)
 	if err != nil {
 		return nil, err
 	}
+	pr := Proof(sbs)
 
 	target := pr[len(pr)-1]
 	index := 0
-	h := 0
 	newProof := Proof{}
+	optimized := false
 
 	for _, sb := range pr[:len(pr)-1] {
 		if sb.Index < index {
@@ -442,48 +541,76 @@ func (s *Service) OptimizeProof(req *OptimizeProofRequest) (*OptimizeProofReply,
 			continue
 		}
 
-		h, index = sb.pathForIndex(target.Index)
-
-		if h > 0 && len(sb.ForwardLink) <= h {
-			to := pr.Search(index)
-			if to == nil {
-				return nil, fmt.Errorf("chain is inconsistent: block at index %d not found", index)
-			}
-
-			req := &ForwardSignature{
-				TargetHeight: h,
-				Previous:     sb.Hash,
-				Newest:       to,
-			}
-			reply := &ForwardSignatureReply{}
-
-			log.Lvlf2("requesting missing forward-link at index %d with height %d / %d", sb.Index, h, index)
-			// The signature must be created by the roster of the block
-			err := sendForwardLinkRequest(sb.Roster, req, reply)
-
-			if err != nil {
-				log.Error("could not create a missing forward link:", err)
-				// reset the index to try to create lower levels
-				index = sb.Index
-			} else {
-				// save the new forward link
-				err = sb.AddForwardLink(reply.Link, h)
-				if err != nil {
-					log.Error("could not store the missing forward-link:", err)
-					index = sb.Index
-				}
-			}
+		var opt bool
+		index, opt, err = s.optimizeCheck(pr, sb.Index, target.Index)
+		if err != nil {
+			return nil, xerrors.Errorf("couldn't optimize block: %v", err)
 		}
+		optimized = optimized || opt
 
+		// sb is already updated, as we're only using a pointer.
 		newProof = append(newProof, sb)
 	}
 
 	newProof = append(newProof, target)
 
-	// Propagate the optimized proof to the given roster
-	err = s.startPropagation(s.propagateProof, req.Roster, &PropagateProof{newProof})
+	if optimized {
+		if err := s.optimizeSend(newProof); err != nil {
+			return nil, xerrors.Errorf("couldn't propagate proof: %v", err)
+		}
+	}
 
-	return &OptimizeProofReply{newProof}, err
+	return &OptimizeProofReply{newProof}, nil
+}
+
+// checks whether the current block is missing a forward-link and requests a
+// new if required.
+func (s *Service) optimizeCheck(pr Proof, current, target int) (index int,
+	optimized bool, err error) {
+	sb := pr.Search(current)
+	if sb == nil {
+		return -1, false, xerrors.New("didn't find current block")
+	}
+	var h int
+	h, index = sb.pathForIndex(target)
+	if h > 0 && len(sb.ForwardLink) <= h {
+		to := pr.Search(index)
+		if to == nil {
+			return -1, false, xerrors.Errorf(
+				"chain is inconsistent: block at index %d not found", index)
+		}
+
+		err := s.addForwardLink(h, sb, to)
+		if err != nil {
+			log.Errorf("Couldn't create forward-link: %v", err)
+			index = sb.Index
+		} else {
+			optimized = true
+		}
+	}
+	return
+}
+
+// optimizeSend propagates the new blocks to all nodes.
+func (s *Service) optimizeSend(newProof Proof) error {
+	log.Lvl2("Done creating forwardlinks, propagating new proofs")
+	roster := onet.NewRoster(newProof[0].Roster.List)
+	if len(newProof) > 1 {
+		for i, pr := range newProof[1:] {
+			roster = roster.Concat(pr.Roster.List...)
+
+			if pr.GetForwardLen() > 0 {
+				to := pr.ForwardLink[pr.GetForwardLen()-1].To
+				log.Lvlf3("%d: Block %d / %x with fl-len %d pointing to %x",
+					i, pr.Index, pr.Hash[:], pr.GetForwardLen(), to[:])
+			}
+		}
+	}
+
+	// Propagate the optimized proof to all nodes that were defined in any of
+	// the blocks.
+	return s.startPropagation(s.propagateProof, roster,
+		&PropagateProof{newProof})
 }
 
 // GetUpdateChain returns a slice of SkipBlocks which describe the part of the
