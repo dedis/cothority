@@ -31,7 +31,6 @@ func newDbOptArgs(c *cli.Context) (dba dbOptArgs, err error) {
 	}
 	fb.cl.UseNode(len(fb.latest.Roster.List))
 
-	log.Printf("Genesis is: %+v", fb.genesis.Index)
 	currentSB := fb.genesis
 	if dba.start = c.Int("start"); dba.start > 0 {
 		log.Infof("Getting start block %d", dba.start)
@@ -75,9 +74,7 @@ func (dba *dbOptArgs) optimizeBlock() error {
 
 		updated := dba.queryOptimizedBlock(optimal)
 		if !updated {
-			var err error
-			err = dba.askOptimization(optimal)
-			if err != nil {
+			if err := dba.askOptimization(optimal); err != nil {
 				log.Warnf("Failed to optimize: %v", err)
 			}
 		}
@@ -156,36 +153,31 @@ func (dba *dbOptArgs) askOptimization(optimal int) error {
 	currentSB := dba.currentSB
 	updates, err := dba.optimizeProof()
 	if err != nil {
-		log.Warn(err)
-	} else {
-		// The optimization might fail because the roster is not
-		// online anymore. In this case only print a warning,
-		// as there is nothing we can do.
-		updatedSB := updates.Search(currentSB.Index)
-		if updatedSB == nil || updatedSB.GetForwardLen() < optimal {
-			log.Warn("Something went wrong when updating this block.")
-		} else {
-			dba.optimized++
-			_, err := fb.db.StoreBlocks(updates)
-			if err != nil {
-				return xerrors.Errorf(
-					"couldn't store updated blocks: %v", err)
-			}
-			dba.currentSB = updatedSB
-			return nil
-		}
+		return xerrors.Errorf("couldn't optimize proof; %v", err)
 	}
-	return xerrors.New("something went wrong while optimizing")
+
+	// The optimization might fail because the roster is not
+	// online anymore.
+	updatedSB := updates.Search(currentSB.Index)
+	if updatedSB == nil || updatedSB.GetForwardLen() < optimal {
+		return xerrors.New("the optimization failed")
+	}
+	if _, err := fb.db.StoreBlocks(updates); err != nil {
+		return xerrors.Errorf(
+			"couldn't store updated blocks: %v", err)
+	}
+
+	dba.optimized++
+	dba.currentSB = updatedSB
+	return nil
 }
 
 // This tries to call all nodes until one can optimize the block.
 func (dba *dbOptArgs) optimizeProof() (skipchain.Proof, error) {
 	sb := dba.currentSB
-	log.Print(sb.Index, sb.Roster.List, sb.GetForwardLen())
 	cl := dba.fb.cl
 	for _, si := range sb.Roster.List {
 		roster := onet.NewRoster([]*network.ServerIdentity{si})
-		log.Print("Optimizing with", roster.List)
 		update, err := cl.OptimizeProof(roster, sb.Hash)
 		if err != nil {
 			log.Warnf("Couldn't contact %s: %v", si.Address, err)
