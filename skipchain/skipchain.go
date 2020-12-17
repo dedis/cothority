@@ -690,7 +690,11 @@ func (s *Service) RegisterStoreSkipblockCallback(f func(SkipBlockID) error) {
 // skipblock. However, this means that the 'latest' skipblock might _not_ be in
 // the database when SyncChain returns!
 func (s *Service) SyncChain(roster *onet.Roster, latest SkipBlockID) error {
-	// loop on getBlocks, fetching 10 at a time
+	sb := s.db.GetByID(latest)
+	if sb != nil {
+		log.Lvlf1("Syncing chain %x", sb.SkipChainID()[:])
+	}
+	// loop on getBlocks, fetching 100 at a time
 	for {
 		blocks, err := s.getBlocks(roster, latest, 100)
 		if err != nil {
@@ -703,9 +707,9 @@ func (s *Service) SyncChain(roster *onet.Roster, latest SkipBlockID) error {
 		fBlock := blocks[0]
 		if !s.db.HasForwardLink(fBlock) {
 			if latest.Equal(fBlock.SkipChainID()) {
-				return errors.New("synching failed even when trying to start at the genesis block")
+				return errors.New("syncing failed even when trying to start at the genesis block")
 			}
-			log.Lvl3("couldn't store synched block - synching from genesis" +
+			log.Lvl3("couldn't store synced block - syncing from genesis" +
 				" block")
 			return s.SyncChain(fBlock.Roster, fBlock.SkipChainID())
 		}

@@ -7,11 +7,12 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"go.dedis.ch/protobuf"
 	"math"
 	"strconv"
 	"sync"
 	"time"
+
+	"go.dedis.ch/protobuf"
 
 	"go.dedis.ch/cothority/v3/blscosi/bdnproto"
 	"go.dedis.ch/cothority/v3/blscosi/protocol"
@@ -860,7 +861,8 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 	var result []SkipBlockID
 	err := db.Update(func(tx *bbolt.Tx) error {
 		for i, sb := range blocks {
-			log.Lvlf2("Storing skipblock %d / %x", sb.Index, sb.Hash)
+			log.Lvlf3("Checking if new for skipblock %d / %x",
+				sb.Index, sb.Hash)
 			sbOld, err := db.getFromTx(tx, sb.Hash)
 			if err != nil {
 				return errors.New("failed to get skipblock with error: " + err.Error())
@@ -903,10 +905,11 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 							log.Error(err)
 						}
 					}
-				}
-				err := db.storeToTx(tx, sbOld)
-				if err != nil {
-					return err
+					log.Lvlf2("Updating skipblock %d", sbOld.Index)
+					err := db.storeToTx(tx, sbOld)
+					if err != nil {
+						return err
+					}
 				}
 			} else {
 				if !db.HasForwardLink(sb) {
@@ -948,6 +951,7 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 					}
 				}
 
+				log.Lvlf2("Added new skipblock %d", sb.Index)
 				err := db.storeToTx(tx, sb)
 				if err != nil {
 					return err

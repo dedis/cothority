@@ -1358,8 +1358,9 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 			log.Lvlf2("Storing block %d: %x", sb.Index, sb.CalculateHash())
 			s.db().Store(sb)
 		}
-		log.Lvlf1("%s: successfully downloaded database for chain %s up to block %d/%d", s.ServerIdentity(),
-			idStr, sb.Index, st.GetIndex())
+		log.Lvlf1("%s: successfully downloaded database for chain %s up to"+
+			" block (latest in db: %d/ latest in statetrie: %d",
+			s.ServerIdentity(), idStr, sb.Index, st.GetIndex())
 		return nil
 	}()
 	if err == nil {
@@ -1410,16 +1411,12 @@ func (s *Service) catchupAll() error {
 			}
 		}
 
-		if reply == nil {
+		if reply == nil || len(reply.Update) == 0 {
 			// Might be that the other nodes are not yet up,
 			// so just continue with the other chains.
 			// Call to s.catchup will probably also fail, so skip it.
 			log.Error("couldn't get a new latest block")
 			continue
-		}
-
-		if len(reply.Update) == 0 {
-			return xerrors.New("no block found in chain update")
 		}
 
 		sb = reply.Update[len(reply.Update)-1]
@@ -1498,10 +1495,11 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 
 	// Load the trie.
 	download := false
-	st, err := s.getStateTrie(sb.SkipChainID())
 	cl := skipchain.NewClient()
 	cl.DontContact(s.ServerIdentity())
+	st, err := s.getStateTrie(sb.SkipChainID())
 	if err != nil {
+		log.Warnf("getStateTrie failed for %x: %+v", sb.SkipChainID()[:], err)
 		if sb.Index < catchupDownloadAll {
 			// Asked to catch up on an unknown chain, but don't want to download, instead only replay
 			// the blocks. This is mostly useful for testing, in a real deployement the catchupDownloadAll
@@ -1533,6 +1531,7 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 				return
 			}
 		} else {
+			log.Warn("Couldn't get trie - downloading everything")
 			download = true
 		}
 	} else {
@@ -1853,16 +1852,17 @@ func (s *Service) getStateTrie(id skipchain.SkipBlockID) (*stateTrie, error) {
 	defer s.stateTriesMutex.Unlock()
 	idStr := fmt.Sprintf("%x", id)
 	col := s.stateTries[idStr]
-	if col == nil {
-		db, name := s.GetAdditionalBucket([]byte(idStr))
-		st, err := loadStateTrie(db, name)
-		if err != nil {
-			return nil, xerrors.Errorf("getting trie: %v", err)
-		}
-		s.stateTries[idStr] = st
-		return s.stateTries[idStr], nil
+	if col != nil {
+		return col, nil
 	}
-	return col, nil
+
+	db, name := s.GetAdditionalBucket([]byte(idStr))
+	st, err := loadStateTrie(db, name)
+	if err != nil {
+		return nil, xerrors.Errorf("getting trie: %v", err)
+	}
+	s.stateTries[idStr] = st
+	return s.stateTries[idStr], nil
 }
 
 func (s *Service) createStateTrie(id skipchain.SkipBlockID, nonce []byte) (*stateTrie, error) {

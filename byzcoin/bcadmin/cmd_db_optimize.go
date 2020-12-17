@@ -187,6 +187,8 @@ func (dba *dbOptArgs) optimizeProof() (skipchain.Proof, error) {
 			log.Warnf("Node %s didn't create higher forward link", si.Address)
 			continue
 		}
+		log.Infof("Node %s updated proof to height %d", si,
+			update.Proof.Search(sb.Index).GetForwardLen())
 		return update.Proof, nil
 	}
 	return nil, xerrors.New("couldn't get any of the nodes to optimize")
