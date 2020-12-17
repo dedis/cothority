@@ -29,7 +29,7 @@ proto:
 
 docker:
 	docker run -t -v $(PWD):/cothority golang:1.15-buster \
-		bash -c "cd /cothority; go build -o external/docker/conode ./conode"
+		bash -c "cd /cothority; go build -o external/docker/conode -tags test ./conode"
 	cp conode/run_nodes.sh external/docker
 	docker build -t $(TEST_IMAGE_NAME) external/docker
 
