@@ -57,6 +57,10 @@ For the typescript libraries, we do use semantic versioning, as they are
  included by external apps.
 Please have a look at [PUBLISH.md](./PUBLISH.md) to see how that works.
 
+The exception to the above are the e-voting binaries which are published
+by tagging a release in this repository. Please have a look at
+[PUBLISH.md](./PUBLISH.md) for information on creating a release for e-voting.
+
 
 ### Release v3.1.0
 
