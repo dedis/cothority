@@ -2,7 +2,10 @@
 
 For the latest version of the conodes, please use
 https://github.com/c4dt/byzcoin, which provides a continuous release of valid
- conodes.
+ conodes for all use cases apart from e-voting.
+
+For e-voting, we provide a tagged release with built binaries for Linux, Windows
+MacOS and FreeBSD.
 
 For the `@dedis/kyber` and `@dedis/cothority` npm libraries, we provide a
  development and a somewhat stable build.
@@ -12,6 +15,19 @@ The development build is always up-to-date with the latest commit and can be
 npm i -s @dedis/cothority@dev
 ```
 This pins the library to the latest available development version.
+
+## Releasing a new version for e-voting conode
+
+Tag the release using
+
+```bash
+git tag -s vX.Y.Z -m "Cothority Release vX.Y.Z"
+```
+
+and push it to master with `git push origin vX.Y.Z`. A tag push would trigger
+the `release` action workflow with new release binaries available at
+`https://github.com/dedis/cothority/releases/tag/vX.Y.Z`. Please make sure to
+add the release description by editing that page.
 
 ## Releasing a new version for npm @dedis/*
 
