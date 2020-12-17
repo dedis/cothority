@@ -1,5 +1,3 @@
-// +build !test
-
 // Conode is the main binary for running a Cothority server.
 // A conode can participate in various distributed protocols using the
 // *onet* library as a network and overlay library and the *kyber*
