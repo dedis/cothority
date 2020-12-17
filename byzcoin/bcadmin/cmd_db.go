@@ -275,6 +275,7 @@ func dbMerge(c *cli.Context) error {
 		return xerrors.Errorf("couldn't create fetchBlock: %+v", err)
 	}
 
+	// Open backup db and get starting block
 	dbBack, _, err := fb.openDB(c.Args().Get(2))
 	if err != nil {
 		return xerrors.Errorf("couldn't open DB: %+v", err)
@@ -288,50 +289,61 @@ func dbMerge(c *cli.Context) error {
 			sb = dbBack.GetByID(sbLatest.Hash)
 		}
 	}
-	var latest int
+	if sb == nil {
+		return xerrors.New("something went wrong - didn't find skipblock")
+	}
+
+	// Get how many blocks to copy
 	var blocks int
-	maxBlocks := c.Int("blocks")
-	if c.Bool("overwrite") {
+	copyBlocks := c.Int("blocks")
+	if copyBlocks == 0 {
+		if c.Bool("append") {
+			latest, err := dbBack.GetLatestByID(sb.SkipChainID())
+			if err != nil {
+				return xerrors.Errorf(
+					"couldn't get latest block from backup: %v", err)
+			}
+			copyBlocks = latest.Index - sb.Index
+			if copyBlocks < 0 {
+				return xerrors.New("no blocks to append in backup-db")
+			}
+		} else {
+			copyBlocks = sb.Index
+		}
+	}
+
+	// Apply the flags
+	if c.Bool("wipe") {
 		err = fb.db.RemoveSkipchain(*fb.bcID)
 		if err != nil {
 			return xerrors.Errorf("couldn't remove skipchain: %+v", err)
 		}
+	}
+	if !c.Bool("append") {
 		sb = dbBack.GetByID(*fb.bcID)
-		for sb != nil {
-			blocks++
-			latest = sb.Index
-			if blocks%100 == 0 {
-				log.Infof("Stored %d blocks so far", blocks)
-			}
-			fb.db.Store(sb)
-			if maxBlocks > 0 && blocks == maxBlocks+1 {
-				log.Infof("Stopping after applying %d blocks", maxBlocks)
-				break
-			}
-			if len(sb.ForwardLink) > 0 {
-				sb = dbBack.GetByID(sb.ForwardLink[0].To)
-			} else {
-				break
-			}
+	}
+
+	// Copy blocks
+	log.Infof("Going to copy up to %d blocks, starting at index %d",
+		copyBlocks, sb.Index)
+	for sb != nil {
+		blocks++
+		if blocks%1000 == 0 {
+			log.Infof("Stored %d blocks so far", blocks)
 		}
-	} else {
-		for sb != nil {
-			latest = sb.Index
-			blocks++
-			fb.db.Store(sb)
-			if len(sb.ForwardLink) > 0 {
-				sb = dbBack.GetByID(sb.ForwardLink[0].To)
-			} else {
-				break
-			}
-			if blocks%100 == 0 {
-				log.Infof("Stored %d blocks - latest block-index is: %d",
-					blocks, latest)
-			}
+		fb.db.Store(sb)
+		if blocks > copyBlocks {
+			log.Infof("Stopping after applying %d blocks", copyBlocks)
+			break
+		}
+		if len(sb.ForwardLink) > 0 {
+			sb = dbBack.GetByID(sb.ForwardLink[0].To)
+		} else {
+			break
 		}
 	}
-	log.Infof("Found %d blocks in backup. Latest index: %d", blocks,
-		latest)
+
+	log.Infof("Copied %d blocks from backup.", blocks)
 	return nil
 }
 
