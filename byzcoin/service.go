@@ -1746,7 +1746,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	i, _ := bcConfig.Roster.Search(s.ServerIdentity().ID)
 	nodeInNew := i >= 0
 	nodeIsLeader := bcConfig.Roster.List[0].Equal(s.ServerIdentity())
-	initialDur, err := s.computeInitialDuration(sb.Hash)
+	initialDur, err := s.computeInitialDuration(sb.SkipChainID())
 	if err != nil {
 		return xerrors.Errorf("getting initial duration: %v", err)
 	}
