@@ -682,8 +682,14 @@ var cmds = cli.Commands{
 						Usage: "maximum number of blocks to merge",
 					},
 					cli.BoolFlag{
-						Name:  "overwrite",
-						Usage: "replace whole blocks if they are duplicate",
+						Name: "wipe",
+						Usage: "delete the whole block db and replace with" +
+							" backup",
+					},
+					cli.BoolFlag{
+						Name: "append",
+						Usage: "adds newer block from backup - this will" +
+							" invalidate an eventual state trie!",
 					},
 				},
 			},

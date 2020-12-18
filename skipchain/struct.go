@@ -1309,6 +1309,10 @@ func (db *SkipBlockDB) RemoveSkipchain(scid SkipBlockID) error {
 		if err != nil {
 			return err
 		}
+		if b == nil {
+			return xerrors.Errorf("cannot remove non-existent bucket %s",
+				string(db.bucketName))
+		}
 		for {
 			err := b.Delete(sb.Hash)
 			if err != nil {
