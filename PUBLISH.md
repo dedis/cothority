@@ -25,7 +25,7 @@ git tag -s vX.Y.Z -m "Cothority Release vX.Y.Z"
 ```
 
 and push it to master with `git push origin vX.Y.Z`. A tag push triggers
-the `release` action workflow with new release binaries available at
+the `release` action workflow which releases new binaries in
 `https://github.com/dedis/cothority/releases/tag/vX.Y.Z`. Please make sure to
 add the release description by editing that page.
 
