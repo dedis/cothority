@@ -142,7 +142,7 @@ Please have a look at [PUBLISH.md](../../../PUBLISH.md) for how to create
  releases.
 
 # Notes on using the library with Webpack v5
- 
+
 As the version 5 of Webpack doesn't include node polyfills anymore, one needs to
 manually set them with the fallback directive. Here is a webpack configuration
 example:
