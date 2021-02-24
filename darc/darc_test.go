@@ -522,6 +522,84 @@ func TestDarc_Attr(t *testing.T) {
 	require.Contains(t, err.Error(), "scanner is not empty")
 }
 
+func TestDarc_Threshold_Simple(t *testing.T) {
+	getDarc := func(id string, latest bool) *Darc {
+		return nil
+	}
+
+	id1 := createIdentity()
+	expr := []byte(fmt.Sprintf("threshold<1/1,%s>", id1.String()))
+	require.NoError(t, EvalExprAttr(expr, getDarc, nil, id1.String()))
+
+	id2 := createIdentity()
+	expr = []byte(fmt.Sprintf("threshold<1/1,%s,%s>", id1.String(), id2.String()))
+	err := EvalExprAttr(expr, getDarc, nil, id1.String())
+	require.EqualError(t, err, "failed to evaluate threshold: computed fraction is lower than threshold: 0.500000 < 1.000000")
+
+	expr = []byte(fmt.Sprintf("threshold<1/2,%s,%s>", id1.String(), id2.String()))
+	err = EvalExprAttr(expr, getDarc, nil, id1.String())
+	require.NoError(t, err)
+
+	expr = []byte(fmt.Sprintf("threshold<1/1,%s,%s>", id1.String(), id2.String()))
+	err = EvalExprAttr(expr, getDarc, nil, id1.String(), id2.String())
+	require.NoError(t, err)
+}
+
+func TestDarc_Threshold_Darc(t *testing.T) {
+
+	darc1 := createDarc(1, "darc 1")
+	id1 := darc1.owners[0].Identity()
+
+	getDarc := func(id string, latest bool) *Darc {
+		return darc1.darc
+	}
+
+	expr := []byte(fmt.Sprintf("threshold<1/1,%s>", darc1.darc.GetIdentityString()))
+
+	// it shouldn't work because we didn't add the identity on the _sign
+	// expression.
+	err := EvalExprAttr(expr, getDarc, nil, id1.String())
+	require.Error(t, err)
+
+	darc1.darc.Rules.UpdateSign([]byte(id1.String()))
+
+	err = EvalExprAttr(expr, getDarc, nil, id1.String())
+	require.NoError(t, err)
+}
+
+func TestDarc_Threshold_Cycle_Darc(t *testing.T) {
+	// let's create a loop, where darc1 delegates to darc2, which delegates to
+	// darc1: darc1 -> darc2 -> darc1
+
+	darc1 := createDarc(1, "darc 1")
+	darc2 := createDarc(1, "darc 2")
+
+	darcID1 := darc1.darc.GetIdentityString()
+	darcID2 := darc2.darc.GetIdentityString()
+
+	err := darc1.darc.Rules.UpdateSign([]byte(fmt.Sprintf("threshold<1/1,%s>", darcID2)))
+	require.NoError(t, err)
+
+	err = darc2.darc.Rules.UpdateSign([]byte(fmt.Sprintf("threshold<1/1,%s>", darcID1)))
+	require.NoError(t, err)
+
+	getDarc := func(id string, latest bool) *Darc {
+		switch id {
+		case darcID1:
+			return darc1.darc
+		case darcID2:
+			return darc2.darc
+		}
+		return nil
+	}
+
+	expr := []byte(fmt.Sprintf("threshold<1/1,%s>", darcID1))
+	err = EvalExpr([]byte(expr), getDarc, darc1.ids[0].String(), darc2.ids[0].String())
+	// We shouldn't end up with an infinite loop, and the expression should not
+	// be accepted.
+	require.Error(t, err)
+}
+
 type testDarc struct {
 	darc   *Darc
 	owners []Signer

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	parsec "github.com/prataprc/goparsec"
+	"github.com/stretchr/testify/require"
 )
 
 func trueFn(s string) bool {
@@ -230,6 +231,79 @@ func TestParsing_Attr(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestParsing_Threshold_Simple(t *testing.T) {
+	getFn := func(expected string) func(s string) bool {
+		return func(expr string) bool {
+			require.Equal(t, expected, expr)
+			return true
+		}
+	}
+
+	expr := []byte(`threshold<1/2>`)
+	_, err := Evaluate(InitParser(getFn("threshold<1/2>")), expr)
+	require.NoError(t, err)
+
+	expr = []byte(`threshold<1/2,darc:aa>`)
+	_, err = Evaluate(InitParser(getFn("threshold<1/2,darc:aa>")), expr)
+	require.NoError(t, err)
+
+	expr = []byte(`threshold<1/2,darc:aa,ed25519:bb>`)
+	_, err = Evaluate(InitParser(getFn("threshold<1/2,darc:aa,ed25519:bb>")), expr)
+	require.NoError(t, err)
+
+	expr = []byte(`threshold< 1/2 , darc:aa ,ed25519:bb >`)
+	_, err = Evaluate(InitParser(getFn("threshold<1/2,darc:aa,ed25519:bb>")), expr)
+	require.NoError(t, err)
+
+	expr = []byte(`threshold<7/10, darc:aa, ed25519:bb,>`)
+	_, err = Evaluate(InitParser(getFn("threshold<7/10,darc:aa,ed25519:bb>")), expr)
+	require.NoError(t, err)
+}
+
+func TestParsing_Threshold_Integrated(t *testing.T) {
+	expr := []byte(`(darc:ed | darc:aa) & (threshold<1/2,darc:ee, ed25519:ff>|(darc:ae))`)
+	_, err := Evaluate(InitParser(trueFn), expr)
+	require.NoError(t, err)
+
+	expr = []byte(`(darc:ed | darc:aa)&(threshold<51/100, darc:ee, ed25519:ff  > |(darc:ae))`)
+	_, err = Evaluate(InitParser(trueFn), expr)
+	require.NoError(t, err)
+
+	expr = []byte(`((darc:ed | darc:aa)&threshold< 1/1, darc:ee, ed25519:ff>)& darc:ae`)
+	_, err = Evaluate(InitParser(trueFn), expr)
+	require.NoError(t, err)
+}
+
+func TestParsing_Threshold_Error(t *testing.T) {
+	expr := []byte(`threshold<`)
+	_, err := Evaluate(InitParser(trueFn), expr)
+	require.Error(t, err)
+
+	expr = []byte(`threshold<1/2,darc:aa`)
+	_, err = Evaluate(InitParser(trueFn), expr)
+	require.Error(t, err)
+
+	expr = []byte(`(darc:ed | darc:aa) & (threshold <1/2, darc:ee, ed25519:ff>|(darc:ae))`)
+	_, err = Evaluate(InitParser(trueFn), expr)
+	require.Error(t, err)
+
+	expr = []byte(`(darc:ed | darc:aa) & (threshold<1/2, darc:ee, ed25519:ff) |(darc:ae))`)
+	_, err = Evaluate(InitParser(trueFn), expr)
+	require.Error(t, err)
+
+	expr = []byte(`((darc:ed | darc:aa)&threshold< 1 / 1, darc:ee, ed25519:ff>)& darc:ae`)
+	_, err = Evaluate(InitParser(trueFn), expr)
+	require.Error(t, err)
+
+	expr = []byte(`((darc:ed | darc:aa)&threshold< 1/ 1, darc:ee, ed25519:ff>)& darc:ae`)
+	_, err = Evaluate(InitParser(trueFn), expr)
+	require.Error(t, err)
+
+	expr = []byte(`((darc:ed | darc:aa)&threshold< 1 /1, darc:ee, ed25519:ff>)& darc:ae`)
+	_, err = Evaluate(InitParser(trueFn), expr)
+	require.Error(t, err)
 }
 
 func TestParsing_Empty(t *testing.T) {

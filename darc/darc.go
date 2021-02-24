@@ -42,6 +42,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -664,6 +665,16 @@ func evalExprDarc(visited map[string]bool, expr expression.Expr, getDarc GetDarc
 			return true
 		}
 
+		if strings.HasPrefix(s, "threshold<") {
+			err := evalThreshold(visited, getDarc, attrFuncs, acceptDarc, s, ids)
+			if err != nil {
+				issue = xerrors.Errorf("failed to evaluate threshold: %v", err)
+				return false
+			}
+
+			return true
+		}
+
 		found := false
 		for _, id := range ids {
 			if id == s {
@@ -1178,6 +1189,103 @@ func parseIDEvmContract(in string) (Identity, error) {
 			Address: address,
 		},
 	}, nil
+}
+
+func evalThreshold(visited map[string]bool, getDarc GetDarc,
+	attrFuncs AttrInterpreters, acceptDarc bool, s string, ids []string) error {
+
+	// we have something of form 'threshold<1/2,darc:aa,ed25519:bb,...>'
+
+	s = strings.TrimPrefix(s, "threshold<")
+	s = strings.TrimSuffix(s, ">")
+
+	entries := strings.Split(s, ",")
+
+	if len(entries) < 1 {
+		return xerrors.Errorf("expected at least the threshold fraction: %s", s)
+	}
+
+	fractionStr := entries[0]
+
+	ok := regexp.MustCompile(`\d+/\d+`).MatchString(fractionStr)
+	if !ok {
+		return xerrors.Errorf("the threshold fraction is incorrect: %s", fractionStr)
+	}
+
+	fractionElem := strings.Split(fractionStr, "/")
+	numerator, err := strconv.Atoi(fractionElem[0])
+	if err != nil {
+		return xerrors.Errorf("failed to convert numerator: %v", err)
+	}
+
+	denominator, err := strconv.Atoi(fractionElem[1])
+	if err != nil {
+		return xerrors.Errorf("failed to convert denominator: %v", err)
+	}
+
+	threshold := float64(numerator) / float64(denominator)
+
+	uniqIds := map[string]struct{}{}
+	validIds := map[string]struct{}{}
+
+	for _, entry := range entries[1:] {
+		uniqIds[entry] = struct{}{}
+
+		for _, id := range ids {
+			if id == entry {
+				validIds[id] = struct{}{}
+				break
+			}
+		}
+
+		// In case of a DARC, we need to check the _sign of that DARC and ensure
+		// we don't fall in a loop.
+		if strings.HasPrefix(entry, "darc") {
+			_, found := validIds[entry]
+			if found && acceptDarc {
+				continue
+			}
+
+			if _, ok := visited[entry]; ok {
+				return xerrors.Errorf("cycle detected")
+			}
+
+			// we make a copy so that diamond delegation will work,
+			// see TestDarc_DelegationDiamond
+			newVisited := make(map[string]bool)
+			for k, v := range visited {
+				newVisited[k] = v
+			}
+			newVisited[entry] = true
+
+			// get the latest DARC
+			d := getDarc(entry, true)
+			if d == nil {
+				continue
+			}
+
+			signExpr := d.Rules.GetSignExpr()
+			if signExpr == nil {
+				continue // no _sign on that DARC
+			}
+
+			// Recursively evaluate the sign expression of the DARC.
+			err := evalExprDarc(newVisited, signExpr, getDarc, attrFuncs, acceptDarc, ids...)
+			if err != nil {
+				continue
+			}
+
+			validIds[entry] = struct{}{}
+		}
+	}
+
+	computedFraction := float64(len(validIds)) / float64(len(uniqIds))
+	if computedFraction < threshold {
+		return xerrors.Errorf("computed fraction is lower than threshold: %f < %f",
+			computedFraction, threshold)
+	}
+
+	return nil
 }
 
 // NewSignerEd25519 initializes a new SignerEd25519 signer given public and
