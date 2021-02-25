@@ -1194,7 +1194,11 @@ func parseIDEvmContract(in string) (Identity, error) {
 func evalThreshold(visited map[string]bool, getDarc GetDarc,
 	attrFuncs AttrInterpreters, acceptDarc bool, s string, ids []string) error {
 
-	// we have something of form 'threshold<1/2,darc:aa,ed25519:bb,...>'
+	// A provided threshold of 0/0 is undefined,
+	// A provided threshold of 1/0 will always make the validation fail,
+	// A provided threshold of 0/N will always make the validation pass.
+
+	// s is of form 'threshold<1/2,darc:aa,ed25519:bb,id...>'
 
 	s = strings.TrimPrefix(s, "threshold<")
 	s = strings.TrimSuffix(s, ">")
@@ -1207,26 +1211,25 @@ func evalThreshold(visited map[string]bool, getDarc GetDarc,
 
 	fractionStr := entries[0]
 
-	ok := regexp.MustCompile(`\d+/\d+`).MatchString(fractionStr)
-	if !ok {
+	r := regexp.MustCompile(`(\d+)/(\d+)`)
+	matches := r.FindStringSubmatch(fractionStr)
+	// One match for the entire expression, one for the Num, and one for Denum.
+	if len(matches) != 3 {
 		return xerrors.Errorf("the threshold fraction is incorrect: %s", fractionStr)
 	}
 
-	fractionElem := strings.Split(fractionStr, "/")
-	numerator, err := strconv.Atoi(fractionElem[0])
+	numerator, err := strconv.Atoi(matches[1])
 	if err != nil {
 		return xerrors.Errorf("failed to convert numerator: %v", err)
 	}
 
-	denominator, err := strconv.Atoi(fractionElem[1])
+	denominator, err := strconv.Atoi(matches[2])
 	if err != nil {
 		return xerrors.Errorf("failed to convert denominator: %v", err)
 	}
 
-	threshold := float64(numerator) / float64(denominator)
-
-	uniqIds := map[string]struct{}{}
-	validIds := map[string]struct{}{}
+	uniqIds := make(map[string]struct{}, len(entries)-1)
+	validIds := make(map[string]struct{}, len(entries)-1)
 
 	for _, entry := range entries[1:] {
 		uniqIds[entry] = struct{}{}
@@ -1241,10 +1244,6 @@ func evalThreshold(visited map[string]bool, getDarc GetDarc,
 		// In case of a DARC, we need to check the _sign of that DARC and ensure
 		// we don't fall in a loop.
 		if strings.HasPrefix(entry, "darc") {
-			_, found := validIds[entry]
-			if found && acceptDarc {
-				continue
-			}
 
 			if _, ok := visited[entry]; ok {
 				return xerrors.Errorf("cycle detected")
@@ -1279,10 +1278,15 @@ func evalThreshold(visited map[string]bool, getDarc GetDarc,
 		}
 	}
 
-	computedFraction := float64(len(validIds)) / float64(len(uniqIds))
-	if computedFraction < threshold {
-		return xerrors.Errorf("computed fraction is lower than threshold: %f < %f",
-			computedFraction, threshold)
+	// we floor the number of identities to 1, so we avoid 0/0.
+	if len(uniqIds) == 0 {
+		uniqIds["fake"] = struct{}{}
+	}
+
+	// a1/a2 < b1/b2 <=> a1*b2 < a2*b1
+	if denominator*len(validIds) < numerator*len(uniqIds) {
+		return xerrors.Errorf("computed fraction is lower than threshold: "+
+			"%d/%d < %d/%d", len(validIds), len(uniqIds), numerator, denominator)
 	}
 
 	return nil
