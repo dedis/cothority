@@ -1248,9 +1248,14 @@ func evalThreshold(visited map[string]bool, getDarc GetDarc,
 		if strings.HasPrefix(entry, "darc") {
 
 			_, found := validIds[entry]
-			if acceptDarc && found {
+			if found && acceptDarc {
 				continue
 			}
+
+			// At this stage the entry might be added, but we don't accept DARC
+			// rule. We remove it so that it is added back only if the DARC
+			// check passes.
+			delete(validIds, entry)
 
 			if _, ok := visited[entry]; ok {
 				return xerrors.Errorf("cycle detected")
