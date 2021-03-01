@@ -1194,7 +1194,8 @@ func parseIDEvmContract(in string) (Identity, error) {
 func evalThreshold(visited map[string]bool, getDarc GetDarc,
 	attrFuncs AttrInterpreters, acceptDarc bool, s string, ids []string) error {
 
-	// A provided threshold of 0/0 is undefined,
+	// A provided threshold of 0/0 is wrong, but will always make the validation
+	//   pass,
 	// A provided threshold of 1/0 will always make the validation fail,
 	// A provided threshold of 0/N will always make the validation pass.
 
