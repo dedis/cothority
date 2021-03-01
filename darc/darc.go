@@ -1242,8 +1242,14 @@ func evalThreshold(visited map[string]bool, getDarc GetDarc,
 		}
 
 		// In case of a DARC, we need to check the _sign of that DARC and ensure
-		// we don't fall in a loop.
+		// we don't fall in a loop. A wrong evaluation will continue the loop
+		// and not include the DARC in the valid identities.
 		if strings.HasPrefix(entry, "darc") {
+
+			_, found := validIds[entry]
+			if acceptDarc && found {
+				continue
+			}
 
 			if _, ok := visited[entry]; ok {
 				return xerrors.Errorf("cycle detected")
@@ -1278,7 +1284,7 @@ func evalThreshold(visited map[string]bool, getDarc GetDarc,
 		}
 	}
 
-	// we floor the number of identities to 1, so we avoid 0/0.
+	// we clamp the number of identities to at least 1, so we avoid 0/0.
 	if len(uniqIds) == 0 {
 		uniqIds["fake"] = struct{}{}
 	}
