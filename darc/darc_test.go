@@ -522,6 +522,113 @@ func TestDarc_Attr(t *testing.T) {
 	require.Contains(t, err.Error(), "scanner is not empty")
 }
 
+func TestDarc_Threshold_Simple(t *testing.T) {
+	getDarc := func(id string, latest bool) *Darc {
+		return nil
+	}
+
+	id1 := createIdentity().String()
+	id2 := createIdentity().String()
+	id3 := createIdentity().String()
+
+	for _, test := range []struct {
+		threshold string
+		pass      []bool
+	}{
+		{"1/1", []bool{false, false, false, true}},
+		{"1/2", []bool{false, false, true, true}},
+		{"1/3", []bool{false, true, true, true}},
+		{"2/3", []bool{false, false, true, true}},
+		{"1/0", []bool{false, false, false, false}},
+		{"0/1", []bool{true, true, true, true}},
+	} {
+		expr := []byte(fmt.Sprintf("threshold<%s,%s,%s,%s>", test.threshold,
+			id1, id2, id3))
+
+		// Test 0 ids
+		res := EvalExprAttr(expr, getDarc, nil)
+		require.Equal(t, res == nil, test.pass[0],
+			fmt.Sprintf("Wrong result for %+v with no id given", test))
+
+		// Test 1 id, also test double and triple ids
+		for _, ids := range [][]string{{id1}, {id2}, {id3},
+			{id1, id1}, {id1, id1, id1}} {
+			res := EvalExprAttr(expr, getDarc, nil, ids...)
+			require.Equal(t, res == nil, test.pass[1],
+				fmt.Sprintf("Wrong result for %+v with 1 id (%+v)", test, ids))
+		}
+
+		// Test 2 ids
+		for _, ids := range [][]string{{id1, id2}, {id1, id3}, {id2, id3}} {
+			res := EvalExprAttr(expr, getDarc, nil, ids...)
+			require.Equal(t, res == nil, test.pass[2],
+				fmt.Sprintf("Wrong result for %+v with 2 ids (%+v)", test, ids))
+		}
+
+		// Test 3 ids
+		for _, ids := range [][]string{{id1, id2, id3}} {
+			res := EvalExprAttr(expr, getDarc, nil, ids...)
+			require.Equal(t, res == nil, test.pass[3],
+				fmt.Sprintf("Wrong result for %+v with 3 ids (%+v)", test, ids))
+		}
+	}
+}
+
+func TestDarc_Threshold_Darc(t *testing.T) {
+
+	darc1 := createDarc(1, "darc 1")
+	id1 := darc1.owners[0].Identity()
+
+	getDarc := func(id string, latest bool) *Darc {
+		return darc1.darc
+	}
+
+	expr := []byte(fmt.Sprintf("threshold<1/1,%s>", darc1.darc.GetIdentityString()))
+
+	// it shouldn't work because we didn't add the identity on the _sign
+	// expression.
+	err := EvalExprAttr(expr, getDarc, nil, id1.String())
+	require.Error(t, err)
+
+	darc1.darc.Rules.UpdateSign([]byte(id1.String()))
+
+	err = EvalExprAttr(expr, getDarc, nil, id1.String())
+	require.NoError(t, err)
+}
+
+func TestDarc_Threshold_Cycle_Darc(t *testing.T) {
+	// let's create a loop, where darc1 delegates to darc2, which delegates to
+	// darc1: darc1 -> darc2 -> darc1
+
+	darc1 := createDarc(1, "darc 1")
+	darc2 := createDarc(1, "darc 2")
+
+	darcID1 := darc1.darc.GetIdentityString()
+	darcID2 := darc2.darc.GetIdentityString()
+
+	err := darc1.darc.Rules.UpdateSign([]byte(fmt.Sprintf("threshold<1/1,%s>", darcID2)))
+	require.NoError(t, err)
+
+	err = darc2.darc.Rules.UpdateSign([]byte(fmt.Sprintf("threshold<1/1,%s>", darcID1)))
+	require.NoError(t, err)
+
+	getDarc := func(id string, latest bool) *Darc {
+		switch id {
+		case darcID1:
+			return darc1.darc
+		case darcID2:
+			return darc2.darc
+		}
+		return nil
+	}
+
+	expr := []byte(fmt.Sprintf("threshold<1/1,%s>", darcID1))
+	err = EvalExpr([]byte(expr), getDarc, darc1.ids[0].String(), darc2.ids[0].String())
+	// We shouldn't end up with an infinite loop, and the expression should not
+	// be accepted.
+	require.Error(t, err)
+}
+
 type testDarc struct {
 	darc   *Darc
 	owners []Signer

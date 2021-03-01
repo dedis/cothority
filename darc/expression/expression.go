@@ -10,6 +10,7 @@ the syntax we use is from: https://en.wikipedia.org/wiki/Extended_Backus%E2%80%9
 	proxy = proxy:[0-9a-fA-F]+:[^ \n\t]*
 	evm_identity = evm_contract:[0-9a-fA-F]+:0x[0-9a-fA-F]+
 	attr = attr:[0-9a-zA-Z\-\_]+:[^ \n\t]*
+	threshold = threshold<\d+/\d+ [',' id]* >
 
 Examples:
 
@@ -63,6 +64,18 @@ func InitParser(fn ValueCheckFn) parsec.Parser {
 	var andop = parsec.Token(`&`, "AND")
 	var orop = parsec.Token(`\|`, "OR")
 
+	// Threshold expression.
+	tElems := parsec.OrdChoice(one2one, identity(), proxy(), evmIdentity())
+	startT := parsec.Token("threshold<", "STARTT")
+	endT := parsec.Token(">", "ENDT")
+	tVal := parsec.Token(`\d+/\d+`, "TVAL")
+	tSep := parsec.Token(`,`, "TSEP")
+
+	threshold := parsec.And(exprThresholeNode(fn),
+		startT,
+		parsec.Kleene(one2one, tVal, tSep),
+		parsec.Kleene(nil, tElems, tSep), endT)
+
 	// NonTerminal rats
 	// sumOp -> "&" |  "|"
 	var sumOp = parsec.OrdChoice(one2one, andop, orop)
@@ -78,7 +91,7 @@ func InitParser(fn ValueCheckFn) parsec.Parser {
 	sum = parsec.And(sumNode(fn), &value, prodK)
 	// value -> id | "(" expr ")"
 	value = parsec.OrdChoice(exprValueNode(fn), identity(), proxy(),
-		evmIdentity(), attr(), groupExpr)
+		evmIdentity(), attr(), threshold, groupExpr)
 	// expr  -> sum
 	Y = parsec.OrdChoice(one2one, sum)
 	return Y
@@ -189,6 +202,27 @@ func exprValueNode(fn ValueCheckFn) func(ns []parsec.ParsecNode) parsec.ParsecNo
 			return fn(term.Value)
 		}
 		return ns[0]
+	}
+}
+
+// exprThresholeNode groups the matching elements of the threshold expression
+// and sends it to the callback function. We are expecting ns to contain 4
+// elements: the opening tag 'threshold<', the threshold '1/2', the list of ids
+// [darc:aa, ...], and the closing tag '>'.
+func exprThresholeNode(fn ValueCheckFn) func(ns []parsec.ParsecNode) parsec.ParsecNode {
+	return func(ns []parsec.ParsecNode) parsec.ParsecNode {
+		// the threshold '1/2'
+		elems := []string{ns[1].(*parsec.Terminal).Value}
+
+		// the list of ids
+		nodes := ns[2].([]parsec.ParsecNode)
+		for _, n := range nodes {
+			elems = append(elems, n.(*parsec.Terminal).Value)
+		}
+
+		res := ns[0].(*parsec.Terminal).Value + strings.Join(elems, ",") +
+			ns[3].(*parsec.Terminal).Value
+		return fn(res)
 	}
 }
 
