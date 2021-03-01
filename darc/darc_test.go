@@ -527,65 +527,51 @@ func TestDarc_Threshold_Simple(t *testing.T) {
 		return nil
 	}
 
-	id1 := createIdentity()
-	id2 := createIdentity()
-	id3 := createIdentity()
+	id1 := createIdentity().String()
+	id2 := createIdentity().String()
+	id3 := createIdentity().String()
 
-	buildExpr := func(threshold string) []byte {
-		return []byte(fmt.Sprintf("threshold<%s,%s, %s, %s>", threshold,
-			id1.String(), id2.String(), id3.String()))
+	for _, test := range []struct {
+		threshold string
+		pass      []bool
+	}{
+		{"1/1", []bool{false, false, false, true}},
+		{"1/2", []bool{false, false, true, true}},
+		{"1/3", []bool{false, true, true, true}},
+		{"2/3", []bool{false, false, true, true}},
+		{"1/0", []bool{false, false, false, false}},
+		{"0/1", []bool{true, true, true, true}},
+	} {
+		expr := []byte(fmt.Sprintf("threshold<%s,%s,%s,%s>", test.threshold,
+			id1, id2, id3))
+
+		// Test 0 ids
+		res := EvalExprAttr(expr, getDarc, nil)
+		require.Equal(t, res == nil, test.pass[0],
+			fmt.Sprintf("Wrong result for %+v with no id given", test))
+
+		// Test 1 id, also test double and triple ids
+		for _, ids := range [][]string{{id1}, {id2}, {id3},
+			{id1, id1}, {id1, id1, id1}} {
+			res := EvalExprAttr(expr, getDarc, nil, ids...)
+			require.Equal(t, res == nil, test.pass[1],
+				fmt.Sprintf("Wrong result for %+v with 1 id (%+v)", test, ids))
+		}
+
+		// Test 2 ids
+		for _, ids := range [][]string{{id1, id2}, {id1, id3}, {id2, id3}} {
+			res := EvalExprAttr(expr, getDarc, nil, ids...)
+			require.Equal(t, res == nil, test.pass[2],
+				fmt.Sprintf("Wrong result for %+v with 2 ids (%+v)", test, ids))
+		}
+
+		// Test 3 ids
+		for _, ids := range [][]string{{id1, id2, id3}} {
+			res := EvalExprAttr(expr, getDarc, nil, ids...)
+			require.Equal(t, res == nil, test.pass[3],
+				fmt.Sprintf("Wrong result for %+v with 3 ids (%+v)", test, ids))
+		}
 	}
-
-	// With 1/1
-	expr := buildExpr("1/1")
-	require.NoError(t, EvalExprAttr(expr, getDarc, nil, id1.String(), id2.String(), id3.String()))
-
-	err := EvalExprAttr(expr, getDarc, nil, id1.String(), id2.String())
-	require.EqualError(t, err, "failed to evaluate threshold: computed fraction is lower than threshold: 2/3 < 1/1")
-
-	err = EvalExprAttr(expr, getDarc, nil, id1.String())
-	require.EqualError(t, err, "failed to evaluate threshold: computed fraction is lower than threshold: 1/3 < 1/1")
-
-	err = EvalExprAttr(expr, getDarc, nil)
-	require.EqualError(t, err, "failed to evaluate threshold: computed fraction is lower than threshold: 0/3 < 1/1")
-
-	// With 1/2
-	expr = buildExpr("1/2")
-	require.NoError(t, EvalExprAttr(expr, getDarc, nil, id1.String(), id2.String(), id3.String()))
-
-	require.NoError(t, EvalExprAttr(expr, getDarc, nil, id1.String(), id2.String()))
-
-	err = EvalExprAttr(expr, getDarc, nil, id1.String())
-	require.EqualError(t, err, "failed to evaluate threshold: computed fraction is lower than threshold: 1/3 < 1/2")
-
-	err = EvalExprAttr(expr, getDarc, nil)
-	require.EqualError(t, err, "failed to evaluate threshold: computed fraction is lower than threshold: 0/3 < 1/2")
-
-	// With 1/3
-	expr = buildExpr("1/3")
-	require.NoError(t, EvalExprAttr(expr, getDarc, nil, id1.String(), id2.String(), id3.String()))
-
-	require.NoError(t, EvalExprAttr(expr, getDarc, nil, id1.String(), id2.String()))
-
-	require.NoError(t, EvalExprAttr(expr, getDarc, nil, id1.String()))
-
-	err = EvalExprAttr(expr, getDarc, nil)
-	require.EqualError(t, err, "failed to evaluate threshold: computed fraction is lower than threshold: 0/3 < 1/3")
-
-	// a provided 1/0 threshold means it will never be accepted
-	expr = []byte(fmt.Sprintf("threshold<1/0,%s,%s>", id1.String(), id2.String()))
-	err = EvalExprAttr(expr, getDarc, nil, id1.String(), id2.String())
-	require.EqualError(t, err, "failed to evaluate threshold: computed fraction is lower than threshold: 2/2 < 1/0")
-
-	// a provided 0/N threshold means it will always be accepted
-	expr = []byte(fmt.Sprintf("threshold<0/7,%s,%s>", id1.String(), id2.String()))
-	err = EvalExprAttr(expr, getDarc, nil)
-	require.NoError(t, err)
-
-	// if multiple same identities are present, it should count for one
-	expr = []byte(fmt.Sprintf("threshold<1/1,%s,%s>", id1.String(), id1.String()))
-	err = EvalExprAttr(expr, getDarc, nil, id1.String())
-	require.NoError(t, err)
 }
 
 func TestDarc_Threshold_Darc(t *testing.T) {
