@@ -290,7 +290,7 @@ export class BEvmInstance extends Instance {
         }
 
         // Use first cothority server for service
-        const bevmRPC = new BEvmRPC(byzcoinRPC.getConfig().roster.list[0]);
+        const bevmRPC = new BEvmRPC(byzcoinRPC.getConfig().roster);
         bevmRPC.setTimeout(1000);
 
         this.bevmRPC = bevmRPC;

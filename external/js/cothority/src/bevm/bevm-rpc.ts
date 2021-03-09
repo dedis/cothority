@@ -1,5 +1,5 @@
 import Log from "../log";
-import { ServerIdentity, WebSocketConnection } from "../network";
+import { Roster, WebSocketConnection } from "../network";
 import { ViewCallRequest, ViewCallResponse } from "./proto";
 
 /**
@@ -8,13 +8,41 @@ import { ViewCallRequest, ViewCallResponse } from "./proto";
 export class BEvmRPC {
     static serviceName = "BEvm";
 
-    private conn: WebSocketConnection;
+    // Simple implementation of Promise.any()
+    // Return a promise that resolves when the first given promise resolves,
+    // or fails when they all do.
+    static anyPromise<T>(promises: Array<Promise<T>>): Promise<T> {
+        // Number of promises, used to determine when all have failed
+        let count = promises.length;
+        // Array to collect the promise failures
+        const errors: any[] = new Array(count);
+
+        if (count === 0) {
+            return new Promise(
+                (_, reject) => reject(Error("Empty list of promises")) );
+        }
+
+        return new Promise(
+            (resolve, reject) => promises.forEach(
+                (p, index) => p.then(
+                    (value) => resolve(value),
+                    (reason) => {
+                        errors[index] = reason;
+                        count--;
+                        if (count === 0) {
+                            reject(errors);
+                        }
+                    })));
+    }
+
+    private conns: WebSocketConnection[];
     private timeout: number;
 
-    constructor(srvid: ServerIdentity) {
+    constructor(roster: Roster) {
         this.timeout = 60 * 1000; // 60 seconds
-        this.conn = new WebSocketConnection(srvid.getWebSocketAddress(),
-                                            BEvmRPC.serviceName);
+        this.conns = roster.list.map(
+            (srvid) => new WebSocketConnection(srvid.getWebSocketAddress(),
+                                               BEvmRPC.serviceName));
     }
 
     /**
@@ -43,7 +71,7 @@ export class BEvmRPC {
                    contractAddress: Buffer,
                    callData: Buffer):
                        Promise<ViewCallResponse> {
-        this.conn.setTimeout(this.timeout);
+        this.conns.forEach( (conn) => conn.setTimeout(this.timeout) );
 
         Log.lvl3("Sending BEvm call request...");
 
@@ -55,6 +83,8 @@ export class BEvmRPC {
                 contractAddress,
             });
 
-        return this.conn.send(msg, ViewCallResponse);
+        // Send to the whole roster, use the first answer received
+        return BEvmRPC.anyPromise(this.conns.map(
+            (conn) => conn.send<ViewCallResponse>(msg, ViewCallResponse)));
     }
 }
