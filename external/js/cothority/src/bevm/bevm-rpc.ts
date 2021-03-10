@@ -62,6 +62,8 @@ export class BEvmRPC {
      * @param accountAddress    Address of the EVM account
      * @param contractAddress   Address of the smart contract
      * @param callData          ABI-packed call arguments
+     * @param minBlockIndex     Minimum block index that nodes must have to
+     *                          execute the view method
      *
      * @return Result of the view method execution
      */
@@ -69,7 +71,8 @@ export class BEvmRPC {
                    bevmInstanceId: Buffer,
                    accountAddress: Buffer,
                    contractAddress: Buffer,
-                   callData: Buffer):
+                   callData: Buffer,
+                   minBlockIndex: number = 0):
                        Promise<ViewCallResponse> {
         this.conns.forEach( (conn) => conn.setTimeout(this.timeout) );
 
@@ -81,6 +84,7 @@ export class BEvmRPC {
                 byzcoinId,
                 callData,
                 contractAddress,
+                minBlockIndex,
             });
 
         // Send to the whole roster, use the first answer received

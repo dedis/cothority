@@ -281,6 +281,7 @@ export class BEvmInstance extends Instance {
     }
 
     private bevmRPC: BEvmRPC;
+    private currentBlockIndex: number = undefined;
 
     constructor(private byzcoinRPC: ByzCoinRPC, inst: Instance) {
         super(inst);
@@ -431,7 +432,8 @@ export class BEvmInstance extends Instance {
             this.id,
             account.address,
             contract.addresses[instanceIndex],
-            callData);
+            callData,
+            this.currentBlockIndex);
 
         const decodedResult = contract.decodeCallResult(method, response.result);
 
@@ -475,6 +477,9 @@ export class BEvmInstance extends Instance {
             ));
 
         await ctx.updateCountersAndSign(this.byzcoinRPC, [signers]);
-        await this.byzcoinRPC.sendTransactionAndWait(ctx, wait);
+        const resp = await this.byzcoinRPC.sendTransactionAndWait(ctx, wait);
+
+        // Update current block index
+        this.currentBlockIndex = resp.proof.latest.index;
     }
 }
