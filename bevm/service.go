@@ -36,6 +36,41 @@ func init() {
 	log.ErrFatal(err)
 }
 
+// Retrieve the StateTrie, waiting some time in case the minimum block index
+// required has not yet been reached.
+func getReadOnlyStateTrie(bcService *byzcoin.Service, byzcoinID []byte,
+	minBlockIndex int) (rst byzcoin.ReadOnlyStateTrie, err error) {
+	const maxTries = 3
+
+	for triesLeft := maxTries; ; {
+		rst, err = bcService.GetReadOnlyStateTrie(byzcoinID)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to retrieve ReadOnlyStateTrie: "+
+				"%v", err)
+		}
+
+		currentIndex := rst.GetIndex()
+
+		log.Lvlf2("[%v] rst index: %v >= %v?", maxTries-triesLeft,
+			currentIndex, minBlockIndex)
+
+		if currentIndex >= minBlockIndex {
+			break
+		}
+
+		triesLeft--
+		if triesLeft == 0 {
+			// Give up
+			return nil, xerrors.Errorf("failed to reach minimum block "+
+				"(%v < %v)", rst.GetIndex(), minBlockIndex)
+		}
+
+		time.Sleep(1 * time.Second)
+	}
+
+	return
+}
+
 // ViewCall executes a R-only method on a previously deployed EVM contract
 // instance by contacting a ByzCoin cothority. Returns the call response.
 func (service *Service) ViewCall(req *ViewCallRequest) (*ViewCallResponse,
@@ -54,7 +89,7 @@ func (service *Service) ViewCall(req *ViewCallRequest) (*ViewCallResponse,
 			xerrors.New("internal error: service is not a byzcoin.Service")
 	}
 
-	rst, err := bcService.GetReadOnlyStateTrie(req.ByzCoinID)
+	rst, err := getReadOnlyStateTrie(bcService, req.ByzCoinID, req.MinBlockIndex)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to retrieve ReadOnlyStateTrie: %v",
 			err)
