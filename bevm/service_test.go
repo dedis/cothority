@@ -150,48 +150,8 @@ func TestService_Call(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, resp.Result, expectedResult)
-}
 
-func TestService_FailedCall(t *testing.T) {
-	// Create a new ledger and prepare for proper closing
-	bct := newBCTest(t)
-	defer bct.CloseAll()
-
-	// Spawn a new BEvm instance
-	instanceID, err := NewBEvm(bct.Client, bct.Signer, bct.GenesisDarc)
-	require.NoError(t, err)
-
-	// Create a new BEvm client
-	bevmClient, err := NewClient(bct.Client, bct.Signer, instanceID)
-	require.NoError(t, err)
-
-	// Initialize an account
-	a, err := NewEvmAccount(testPrivateKeys[0])
-	require.NoError(t, err)
-
-	// Credit the account
-	_, err = bevmClient.CreditAccount(big.NewInt(5*WeiPerEther), a.Address)
-	require.NoError(t, err)
-
-	// Deploy a Candy contract
-	candyAbi := getContractData(t, "Candy", "abi")
-	candyBytecode := getContractData(t, "Candy", "bin")
-	candySupply := big.NewInt(1103)
-	candyContract, err := NewEvmContract(
-		"Candy", candyAbi, candyBytecode)
-	require.NoError(t, err)
-	_, candyInstance, err := bevmClient.Deploy(
-		txParams.GasLimit, txParams.GasPrice, 0, a, candyContract,
-		candySupply)
-	require.NoError(t, err)
-
-	// Ensure transaction is propagated to all nodes
-	require.NoError(t, bct.Client.WaitPropagation(-1))
-
-	callData, err := candyInstance.packMethod("getRemainingCandies")
-	require.NoError(t, err)
-
-	// Get remaining candies
+	// Get remaining candies, using a minBlockIndex that the nodes cannot reach
 	_, err = bevmClient.viewCall(
 		bct.Roster.List[0],
 		bct.Client.ID,
@@ -199,7 +159,7 @@ func TestService_FailedCall(t *testing.T) {
 		a.Address[:],
 		candyInstance.Address[:],
 		callData,
-		1000, // Use a minBlockIndex that the nodes cannot reach
+		1000,
 	)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "failed to reach minimum block")

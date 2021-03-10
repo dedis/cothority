@@ -15,11 +15,10 @@ export class BEvmRPC {
         // Number of promises, used to determine when all have failed
         let count = promises.length;
         // Array to collect the promise failures
-        const errors: any[] = new Array(count);
+        const errors: any[] = Array.from({length: count});
 
         if (count === 0) {
-            return new Promise(
-                (_, reject) => reject(Error("Empty list of promises")) );
+            return Promise.reject("Empty list of promises");
         }
 
         return new Promise(
@@ -35,7 +34,7 @@ export class BEvmRPC {
                     })));
     }
 
-    private conns: WebSocketConnection[];
+    readonly conns: WebSocketConnection[];
     private timeout: number;
 
     constructor(roster: Roster) {
@@ -72,7 +71,7 @@ export class BEvmRPC {
                    accountAddress: Buffer,
                    contractAddress: Buffer,
                    callData: Buffer,
-                   minBlockIndex: number = 0):
+                   minBlockIndex = 0):
                        Promise<ViewCallResponse> {
         this.conns.forEach( (conn) => conn.setTimeout(this.timeout) );
 
