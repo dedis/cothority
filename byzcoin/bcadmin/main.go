@@ -18,7 +18,7 @@ import (
 
 	"golang.org/x/xerrors"
 
-	"github.com/qantik/qrgo"
+	"github.com/c4dt/qrgo"
 	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3"
 	_ "go.dedis.ch/cothority/v3/bevm"
