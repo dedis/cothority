@@ -11,6 +11,7 @@ export class ViewCallRequest extends Message<ViewCallRequest> {
     readonly accountAddress: Buffer;
     readonly contractAddress: Buffer;
     readonly callData: Buffer;
+    readonly minBlockIndex: number;
 
     constructor(props?: Properties<ViewCallRequest>) {
         super(props);
@@ -58,6 +59,15 @@ export class ViewCallRequest extends Message<ViewCallRequest> {
             },
             set(value: Buffer) {
                 this.callData = value;
+            },
+        });
+
+        Object.defineProperty(this, "minblockindex", {
+            get(): number {
+                return this.minBlockIndex;
+            },
+            set(value: number) {
+                this.minBlockIndex = value;
             },
         });
     }

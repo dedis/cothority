@@ -72,6 +72,17 @@ public final class BEvmProto {
      * @return The calldata.
      */
     com.google.protobuf.ByteString getCalldata();
+
+    /**
+     * <code>required sint32 minblockindex = 6;</code>
+     * @return Whether the minblockindex field is set.
+     */
+    boolean hasMinblockindex();
+    /**
+     * <code>required sint32 minblockindex = 6;</code>
+     * @return The minblockindex.
+     */
+    int getMinblockindex();
   }
   /**
    * <pre>
@@ -151,6 +162,11 @@ public final class BEvmProto {
             case 42: {
               bitField0_ |= 0x00000010;
               calldata_ = input.readBytes();
+              break;
+            }
+            case 48: {
+              bitField0_ |= 0x00000020;
+              minblockindex_ = input.readSInt32();
               break;
             }
             default: {
@@ -281,6 +297,25 @@ public final class BEvmProto {
       return calldata_;
     }
 
+    public static final int MINBLOCKINDEX_FIELD_NUMBER = 6;
+    private int minblockindex_;
+    /**
+     * <code>required sint32 minblockindex = 6;</code>
+     * @return Whether the minblockindex field is set.
+     */
+    @java.lang.Override
+    public boolean hasMinblockindex() {
+      return ((bitField0_ & 0x00000020) != 0);
+    }
+    /**
+     * <code>required sint32 minblockindex = 6;</code>
+     * @return The minblockindex.
+     */
+    @java.lang.Override
+    public int getMinblockindex() {
+      return minblockindex_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -308,6 +343,10 @@ public final class BEvmProto {
         memoizedIsInitialized = 0;
         return false;
       }
+      if (!hasMinblockindex()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -329,6 +368,9 @@ public final class BEvmProto {
       }
       if (((bitField0_ & 0x00000010) != 0)) {
         output.writeBytes(5, calldata_);
+      }
+      if (((bitField0_ & 0x00000020) != 0)) {
+        output.writeSInt32(6, minblockindex_);
       }
       unknownFields.writeTo(output);
     }
@@ -358,6 +400,10 @@ public final class BEvmProto {
       if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(5, calldata_);
+      }
+      if (((bitField0_ & 0x00000020) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt32Size(6, minblockindex_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -399,6 +445,11 @@ public final class BEvmProto {
         if (!getCalldata()
             .equals(other.getCalldata())) return false;
       }
+      if (hasMinblockindex() != other.hasMinblockindex()) return false;
+      if (hasMinblockindex()) {
+        if (getMinblockindex()
+            != other.getMinblockindex()) return false;
+      }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -429,6 +480,10 @@ public final class BEvmProto {
       if (hasCalldata()) {
         hash = (37 * hash) + CALLDATA_FIELD_NUMBER;
         hash = (53 * hash) + getCalldata().hashCode();
+      }
+      if (hasMinblockindex()) {
+        hash = (37 * hash) + MINBLOCKINDEX_FIELD_NUMBER;
+        hash = (53 * hash) + getMinblockindex();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -577,6 +632,8 @@ public final class BEvmProto {
         bitField0_ = (bitField0_ & ~0x00000008);
         calldata_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000010);
+        minblockindex_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
 
@@ -625,6 +682,10 @@ public final class BEvmProto {
           to_bitField0_ |= 0x00000010;
         }
         result.calldata_ = calldata_;
+        if (((from_bitField0_ & 0x00000020) != 0)) {
+          result.minblockindex_ = minblockindex_;
+          to_bitField0_ |= 0x00000020;
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -689,6 +750,9 @@ public final class BEvmProto {
         if (other.hasCalldata()) {
           setCalldata(other.getCalldata());
         }
+        if (other.hasMinblockindex()) {
+          setMinblockindex(other.getMinblockindex());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -709,6 +773,9 @@ public final class BEvmProto {
           return false;
         }
         if (!hasCalldata()) {
+          return false;
+        }
+        if (!hasMinblockindex()) {
           return false;
         }
         return true;
@@ -940,6 +1007,45 @@ public final class BEvmProto {
       public Builder clearCalldata() {
         bitField0_ = (bitField0_ & ~0x00000010);
         calldata_ = getDefaultInstance().getCalldata();
+        onChanged();
+        return this;
+      }
+
+      private int minblockindex_ ;
+      /**
+       * <code>required sint32 minblockindex = 6;</code>
+       * @return Whether the minblockindex field is set.
+       */
+      @java.lang.Override
+      public boolean hasMinblockindex() {
+        return ((bitField0_ & 0x00000020) != 0);
+      }
+      /**
+       * <code>required sint32 minblockindex = 6;</code>
+       * @return The minblockindex.
+       */
+      @java.lang.Override
+      public int getMinblockindex() {
+        return minblockindex_;
+      }
+      /**
+       * <code>required sint32 minblockindex = 6;</code>
+       * @param value The minblockindex to set.
+       * @return This builder for chaining.
+       */
+      public Builder setMinblockindex(int value) {
+        bitField0_ |= 0x00000020;
+        minblockindex_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required sint32 minblockindex = 6;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearMinblockindex() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        minblockindex_ = 0;
         onChanged();
         return this;
       }
@@ -1559,12 +1665,13 @@ public final class BEvmProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\nbevm.proto\022\004bevm\"\177\n\017ViewCallRequest\022\021\n" +
-      "\tbyzcoinid\030\001 \002(\014\022\026\n\016bevminstanceid\030\002 \002(\014" +
-      "\022\026\n\016accountaddress\030\003 \002(\014\022\027\n\017contractaddr" +
-      "ess\030\004 \002(\014\022\020\n\010calldata\030\005 \002(\014\"\"\n\020ViewCallR" +
-      "esponse\022\016\n\006result\030\001 \002(\014B$\n\027ch.epfl.dedis" +
-      ".lib.protoB\tBEvmProto"
+      "\n\nbevm.proto\022\004bevm\"\226\001\n\017ViewCallRequest\022\021" +
+      "\n\tbyzcoinid\030\001 \002(\014\022\026\n\016bevminstanceid\030\002 \002(" +
+      "\014\022\026\n\016accountaddress\030\003 \002(\014\022\027\n\017contractadd" +
+      "ress\030\004 \002(\014\022\020\n\010calldata\030\005 \002(\014\022\025\n\rminblock" +
+      "index\030\006 \002(\021\"\"\n\020ViewCallResponse\022\016\n\006resul" +
+      "t\030\001 \002(\014B$\n\027ch.epfl.dedis.lib.protoB\tBEvm" +
+      "Proto"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -1575,7 +1682,7 @@ public final class BEvmProto {
     internal_static_bevm_ViewCallRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_bevm_ViewCallRequest_descriptor,
-        new java.lang.String[] { "Byzcoinid", "Bevminstanceid", "Accountaddress", "Contractaddress", "Calldata", });
+        new java.lang.String[] { "Byzcoinid", "Bevminstanceid", "Accountaddress", "Contractaddress", "Calldata", "Minblockindex", });
     internal_static_bevm_ViewCallResponse_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_bevm_ViewCallResponse_fieldAccessorTable = new

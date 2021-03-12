@@ -13,6 +13,7 @@ type ViewCallRequest struct {
 	AccountAddress  []byte
 	ContractAddress []byte
 	CallData        []byte
+	MinBlockIndex   int
 }
 
 // ViewCallResponse is the response to ViewCallRequest, containing the method
