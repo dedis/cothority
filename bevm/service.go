@@ -62,7 +62,7 @@ func getReadOnlyStateTrie(bcService *byzcoin.Service, byzcoinID []byte,
 		if triesLeft == 0 {
 			// Give up
 			return nil, xerrors.Errorf("failed to reach minimum block "+
-				"(%v < %v)", rst.GetIndex(), minBlockIndex)
+				"(%v < %v)", currentIndex, minBlockIndex)
 		}
 
 		time.Sleep(1 * time.Second)

@@ -290,7 +290,6 @@ export class BEvmInstance extends Instance {
             throw new Error(`mismatch contract name: ${inst.contractID} vs ${BEvmInstance.contractID}`);
         }
 
-        // Use first cothority server for service
         const bevmRPC = new BEvmRPC(byzcoinRPC.getConfig().roster);
         bevmRPC.setTimeout(1000);
 
