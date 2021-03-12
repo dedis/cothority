@@ -8,6 +8,7 @@ require (
 	github.com/aristanetworks/goarista v0.0.0-20191023202215-f096da5361bb // indirect
 	github.com/bford/golang-x-crypto v0.0.0-20160518072526-27db609c9d03
 	github.com/btcsuite/btcd v0.20.1-beta // indirect
+	github.com/c4dt/qrgo v0.0.0-20210312092726-8242850e1027
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/daviddengcn/go-colortext v1.0.0 // indirect
@@ -22,7 +23,6 @@ require (
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
 	github.com/prataprc/goparsec v0.0.0-20180806094145-2600a2a4a410
-	github.com/qantik/qrgo v0.0.0-20160917134849-0c6b902c59f6
 	github.com/rs/cors v1.7.0 // indirect
 	github.com/satori/go.uuid v1.2.0
 	github.com/stretchr/testify v1.5.1
