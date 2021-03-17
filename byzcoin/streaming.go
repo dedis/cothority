@@ -120,57 +120,123 @@ func (s *Service) StreamTransactions(msg *StreamingRequest) (chan *StreamingResp
 	return outChan, stopChan, nil
 }
 
-// PaginateBlocks returns blocks with pagination, ie. N asynchronous requests
-// that contain each K consecutive block. The caller is responsible for closing
-// the close chan when the caller wants to close the connection.
-func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, chan bool, error) {
+// getPaginateService returns a paginate service. We need to use the same output
+// channel across client calls, and one closing channel. Which is why we use a
+// "statefull" service.
+func (s *Service) getPaginateService() func(msg *PaginateRequest) (chan *PaginateResponse, chan bool, error) {
+	paginateService := paginateService{
+		once:     sync.Once{},
+		outChan:  make(chan *PaginateResponse, 100),
+		stopChan: make(chan bool),
+		s:        s,
+	}
 
-	outChan := make(chan *PaginateResponse)
-	stopChan := make(chan bool)
+	return paginateService.PaginateBlocks
+}
 
+type paginateService struct {
+	once     sync.Once
+	outChan  chan *PaginateResponse
+	stopChan chan bool
+
+	s *Service
+}
+
+func (p *paginateService) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, chan bool, error) {
+	go p.handleMsg(msg)
+
+	// We must close the outChan only once when we receive the stop signal.
 	go func() {
+		<-p.stopChan
+		p.once.Do(func() {
+			close(p.outChan)
+		})
+	}()
 
-		if msg.PageSize < 1 {
-			outChan <- &PaginateResponse{
-				ErrorCode: PaginateWrongInput,
-				ErrorText: []string{fmt.Sprintf("PageSize should be >= 1, "+
-					"but we found %d", msg.PageSize)},
+	return p.outChan, p.stopChan, nil
+}
+
+func (p *paginateService) handleMsg(msg *PaginateRequest) {
+	if msg.PageSize < 1 {
+		p.outChan <- &PaginateResponse{
+			ErrorCode: PaginateWrongInput,
+			ErrorText: []string{fmt.Sprintf("PageSize should be >= 1, "+
+				"but we found %d", msg.PageSize)},
+		}
+		return
+	}
+
+	if msg.NumPages < 1 {
+		p.outChan <- &PaginateResponse{
+			ErrorCode: PaginateWrongInput,
+			ErrorText: []string{fmt.Sprintf("NumPages should be >= 1, "+
+				"but we found %d", msg.NumPages)},
+		}
+		return
+	}
+
+	if msg.StartID == nil {
+		p.outChan <- &PaginateResponse{
+			ErrorCode: PaginateWrongStart,
+			ErrorText: []string{"StartID is nil"},
+		}
+		return
+	}
+
+	nextID := msg.StartID
+
+	for pageNum := uint64(0); pageNum < msg.NumPages; pageNum++ {
+		_, skipBlock, err := p.s.getBlockTx(nextID)
+
+		blocks := make([]*skipchain.SkipBlock, msg.PageSize)
+		if err != nil {
+			p.outChan <- &PaginateResponse{
+				ErrorCode: PaginatePageFailed,
+				ErrorText: []string{"failed to get the first block with ID",
+					fmt.Sprintf("%x", msg.StartID), fmt.Sprintf("%v", err)},
 			}
 			return
 		}
+		blocks[0] = skipBlock
 
-		if msg.NumPages < 1 {
-			outChan <- &PaginateResponse{
-				ErrorCode: PaginateWrongInput,
-				ErrorText: []string{fmt.Sprintf("NumPages should be >= 1, "+
-					"but we found %d", msg.NumPages)},
+		if msg.Backward {
+			if len(skipBlock.BackLinkIDs) != 0 {
+				nextID = skipBlock.BackLinkIDs[0]
+			} else {
+				nextID = nil
 			}
-			return
+		} else {
+			if len(skipBlock.ForwardLink) != 0 {
+				nextID = skipBlock.ForwardLink[0].To
+			} else {
+				nextID = nil
+			}
 		}
 
-		if msg.StartID == nil {
-			outChan <- &PaginateResponse{
-				ErrorCode: PaginateWrongStart,
-				ErrorText: []string{"StartID is nil"},
-			}
-			return
-		}
+		for i := uint64(1); i < msg.PageSize; i++ {
 
-		nextID := msg.StartID
-
-		for pageNum := uint64(0); pageNum < msg.NumPages; pageNum++ {
-			_, skipBlock, err := s.getBlockTx(nextID)
-
-			blocks := make([]*skipchain.SkipBlock, msg.PageSize)
-			if err != nil {
-				outChan <- &PaginateResponse{
-					ErrorCode: PaginatePageFailed,
-					ErrorText: []string{"failed to get the first block with ID",
-						fmt.Sprintf("%x", msg.StartID), fmt.Sprintf("%v", err)},
+			if nextID == nil {
+				p.outChan <- &PaginateResponse{
+					ErrorCode: PaginateLinkMissing,
+					ErrorText: []string{"couldn't find a nextID for block",
+						fmt.Sprintf("%x", skipBlock.Hash), "page number",
+						fmt.Sprintf("%d", pageNum), "index", fmt.Sprintf("%d", i)},
 				}
 				return
 			}
-			blocks[0] = skipBlock
+
+			_, skipBlock, err = p.s.getBlockTx(nextID)
+			if err != nil {
+				p.outChan <- &PaginateResponse{
+					ErrorCode: PaginateGetBlockFailed,
+					ErrorText: []string{"failed to get block with ID",
+						fmt.Sprintf("%x", nextID), "page number",
+						fmt.Sprintf("%d", pageNum), "index",
+						fmt.Sprintf("%d", i), fmt.Sprintf("%v", err)},
+				}
+				return
+			}
+			blocks[i] = skipBlock
 
 			if msg.Backward {
 				if len(skipBlock.BackLinkIDs) != 0 {
@@ -185,63 +251,13 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 					nextID = nil
 				}
 			}
-
-			for i := uint64(1); i < msg.PageSize; i++ {
-
-				if nextID == nil {
-					outChan <- &PaginateResponse{
-						ErrorCode: PaginateLinkMissing,
-						ErrorText: []string{"couldn't find a nextID for block",
-							fmt.Sprintf("%x", skipBlock.Hash), "page number",
-							fmt.Sprintf("%d", pageNum), "index", fmt.Sprintf("%d", i)},
-					}
-					return
-				}
-
-				_, skipBlock, err = s.getBlockTx(nextID)
-				if err != nil {
-					outChan <- &PaginateResponse{
-						ErrorCode: PaginateGetBlockFailed,
-						ErrorText: []string{"failed to get block with ID",
-							fmt.Sprintf("%x", nextID), "page number",
-							fmt.Sprintf("%d", pageNum), "index",
-							fmt.Sprintf("%d", i), fmt.Sprintf("%v", err)},
-					}
-					return
-				}
-				blocks[i] = skipBlock
-
-				if msg.Backward {
-					if len(skipBlock.BackLinkIDs) != 0 {
-						nextID = skipBlock.BackLinkIDs[0]
-					} else {
-						nextID = nil
-					}
-				} else {
-					if len(skipBlock.ForwardLink) != 0 {
-						nextID = skipBlock.ForwardLink[0].To
-					} else {
-						nextID = nil
-					}
-				}
-			}
-			response := &PaginateResponse{
-				Blocks:     blocks,
-				PageNumber: pageNum,
-				Backward:   msg.Backward,
-			}
-			// Allows the service to exit prematurely if the connection stops
-			select {
-			case <-stopChan:
-				return
-			default:
-				outChan <- response
-			}
 		}
-		// Waiting for the streaming connection to stop. This signal comes
-		// from onet, which sets it when the client closes the connection.
-		<-stopChan
-	}()
+		response := &PaginateResponse{
+			Blocks:     blocks,
+			PageNumber: pageNum,
+			Backward:   msg.Backward,
+		}
 
-	return outChan, stopChan, nil
+		p.outChan <- response
+	}
 }
