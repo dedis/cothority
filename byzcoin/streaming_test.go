@@ -23,7 +23,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 		NumPages: 1,
 		Backward: false,
 	}
-	paginateResponse, closeChan, err := service.PaginateBlocks(paginateRequest)
+	paginateResponse, closeChan, err := service.getPaginateService()(paginateRequest)
 	require.NoError(t, err)
 
 	select {
@@ -53,7 +53,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 		NumPages: 1,
 		Backward: false,
 	}
-	paginateResponse, closeChan, err = service.PaginateBlocks(paginateRequest)
+	paginateResponse, closeChan, err = service.getPaginateService()(paginateRequest)
 	require.NoError(t, err)
 
 	select {
@@ -79,7 +79,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 		NumPages: 2,
 		Backward: false,
 	}
-	paginateResponse, closeChan, err = service.PaginateBlocks(paginateRequest)
+	paginateResponse, closeChan, err = service.getPaginateService()(paginateRequest)
 	require.NoError(t, err)
 
 	select {
@@ -128,7 +128,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 		NumPages: 1,
 		Backward: false,
 	}
-	paginateResponse, closeChan, err = service.PaginateBlocks(paginateRequest)
+	paginateResponse, closeChan, err = service.getPaginateService()(paginateRequest)
 	require.NoError(t, err)
 	var secondBlockHash skipchain.SkipBlockID
 
@@ -159,7 +159,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 		NumPages: 2,
 		Backward: false,
 	}
-	paginateResponse, closeChan, err = service.PaginateBlocks(paginateRequest)
+	paginateResponse, closeChan, err = service.getPaginateService()(paginateRequest)
 	require.NoError(t, err)
 
 	select {
@@ -200,7 +200,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 		NumPages: 1,
 		Backward: true,
 	}
-	paginateResponse, closeChan, err = service.PaginateBlocks(paginateRequest)
+	paginateResponse, closeChan, err = service.getPaginateService()(paginateRequest)
 	require.NoError(t, err)
 
 	select {
@@ -232,7 +232,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 		NumPages: 2,
 		Backward: true,
 	}
-	paginateResponse, closeChan, err = service.PaginateBlocks(paginateRequest)
+	paginateResponse, closeChan, err = service.getPaginateService()(paginateRequest)
 	require.NoError(t, err)
 
 	select {
@@ -269,7 +269,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 		NumPages: 1,
 		Backward: true,
 	}
-	paginateResponse, closeChan, err = service.PaginateBlocks(paginateRequest)
+	paginateResponse, closeChan, err = service.getPaginateService()(paginateRequest)
 	require.NoError(t, err)
 
 	select {
@@ -300,7 +300,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 		NumPages: 2,
 		Backward: true,
 	}
-	paginateResponse, closeChan, err = service.PaginateBlocks(paginateRequest)
+	paginateResponse, closeChan, err = service.getPaginateService()(paginateRequest)
 	require.NoError(t, err)
 
 	select {
@@ -340,7 +340,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 		NumPages: 1,
 		Backward: false,
 	}
-	paginateResponse, closeChan, err = service.PaginateBlocks(paginateRequest)
+	paginateResponse, closeChan, err = service.getPaginateService()(paginateRequest)
 	require.NoError(t, err)
 
 	select {
@@ -370,7 +370,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 		Backward: false,
 	}
 
-	paginateResponse, closeChan, err = service.PaginateBlocks(paginateRequest)
+	paginateResponse, closeChan, err = service.getPaginateService()(paginateRequest)
 	require.NoError(t, err)
 
 	select {
