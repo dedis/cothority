@@ -46,13 +46,12 @@ require (
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/urfave/cli v1.22.3
 	go.dedis.ch/kyber/v3 v3.0.13
-	go.dedis.ch/kyber/v4 v4.0.0-pre2
 	go.dedis.ch/onet/v3 v3.2.6
 	go.dedis.ch/onet/v4 v4.0.0-pre1
 	go.dedis.ch/protobuf v1.0.11
 	go.etcd.io/bbolt v1.3.4
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37 // indirect
-	golang.org/x/net v0.0.0-20200319234117-63522dbf7eec
+	golang.org/x/net v0.0.0-20200319234117-63522dbf7eec // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sys v0.0.0-20200831180312-196b9ba8737a
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
