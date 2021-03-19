@@ -15,6 +15,8 @@ import (
 // Registry is used by the test to cleanly stop all db connections.
 var Registry ConnRegistry = ConnRegistry{}
 
+// ConnRegistry is a global registry of opened DB connections. We use it in
+// tests to be sure every connections are closed.
 type ConnRegistry struct {
 	sync.Mutex
 	conns []*sql.DB
@@ -27,7 +29,8 @@ func (r *ConnRegistry) add(conn *sql.DB) {
 	r.conns = append(r.conns, conn)
 }
 
-func (r *ConnRegistry) StopAll() {
+// CloseAll closes all the connections registers in the registry.
+func (r *ConnRegistry) CloseAll() {
 	r.Lock()
 	defer r.Unlock()
 	for _, db := range r.conns {
@@ -75,6 +78,7 @@ type SQL struct {
 	dbRo *sql.DB
 }
 
+// Close closes the connections
 func (s SQL) Close() {
 	s.db.Close()
 	s.dbRo.Close()
@@ -168,13 +172,10 @@ func rowsToJSON(columnTypes []*sql.ColumnType, rows *sql.Rows) ([]byte, error) {
 			switch v.DatabaseTypeName() {
 			case "VARCHAR", "TEXT", "UUID", "TIMESTAMP":
 				scanArgs[i] = new(sql.NullString)
-				break
 			case "BOOL":
 				scanArgs[i] = new(sql.NullBool)
-				break
 			case "INT4":
 				scanArgs[i] = new(sql.NullInt64)
-				break
 			default:
 				scanArgs[i] = new(sql.NullString)
 			}

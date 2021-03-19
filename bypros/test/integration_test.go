@@ -45,7 +45,7 @@ func TestIntegration_Simple(t *testing.T) {
 	defer bct.CloseAll()
 	defer cli.Close()
 	defer stopPostgresDocker(t, cli, id)
-	defer sqlstore.Registry.StopAll()
+	defer sqlstore.Registry.CloseAll()
 
 	bct.AddGenesisRules(spawnRule)
 	bct.CreateByzCoin()
@@ -177,7 +177,7 @@ func TestIntegration_Intense(t *testing.T) {
 	// order is important: last-in first-out
 	defer bct.CloseAll()
 	defer cli.Close()
-	defer sqlstore.Registry.StopAll()
+	defer sqlstore.Registry.CloseAll()
 
 	bct.AddGenesisRules(spawnRule)
 	bct.CreateByzCoin()
@@ -198,8 +198,6 @@ func TestIntegration_Intense(t *testing.T) {
 				},
 			})
 		}
-
-		fmt.Println("adding tx ok")
 	}()
 
 	time.Sleep(time.Second * 2)
@@ -223,8 +221,6 @@ func TestIntegration_Intense(t *testing.T) {
 		// follow again
 		err = client.Follow(bct.Roster.Get(0), bct.Roster.Get(0), bct.Genesis.Hash)
 		require.NoError(t, err)
-
-		fmt.Println("unfollow done")
 	}()
 
 	wait.Add(1)
@@ -237,7 +233,6 @@ func TestIntegration_Intense(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		fmt.Println("start catch up ")
 		// let's catch up
 		resps, err := client.CatchUP(ctx, bct.Roster.Get(0), bct.Roster.Get(0), bct.Genesis.Hash, bct.Genesis.Hash, 100)
 		require.NoError(t, err)
@@ -245,7 +240,6 @@ func TestIntegration_Intense(t *testing.T) {
 		for resp := range resps {
 			t.Log(resp)
 		}
-		fmt.Println("catch up done")
 	}()
 
 	wait.Wait()
