@@ -11,6 +11,8 @@ import (
 	"go.dedis.ch/cothority/v3/skipchain"
 )
 
+const valueRule = "spawn:value"
+
 func TestProxyFollow_No_Token(t *testing.T) {
 	s := Service{}
 
@@ -26,7 +28,7 @@ func TestProxyFollow_One_Block(t *testing.T) {
 	bct := byzcoin.NewBCTestDefault(t)
 	defer bct.CloseAll()
 
-	bct.AddGenesisRules("spawn:value")
+	bct.AddGenesisRules(valueRule)
 	bct.CreateByzCoin()
 
 	storage := &fakeStorage{}
@@ -68,7 +70,7 @@ func TestProxyFollow_Many_Blocks(t *testing.T) {
 	bct := byzcoin.NewBCTestDefault(t)
 	defer bct.CloseAll()
 
-	bct.AddGenesisRules("spawn:value")
+	bct.AddGenesisRules(valueRule)
 	bct.CreateByzCoin()
 
 	bct.SendInst(&byzcoin.TxArgsDefault, byzcoin.Instruction{
@@ -124,7 +126,7 @@ func TestProxyFollow_UnFollow(t *testing.T) {
 	bct := byzcoin.NewBCTestDefault(t)
 	defer bct.CloseAll()
 
-	bct.AddGenesisRules("spawn:value")
+	bct.AddGenesisRules(valueRule)
 	bct.CreateByzCoin()
 
 	storage := &fakeStorage{}
@@ -192,7 +194,7 @@ func TestProxyCatchUp_Genesis(t *testing.T) {
 	bct := byzcoin.NewBCTestDefault(t)
 	defer bct.CloseAll()
 
-	bct.AddGenesisRules("spawn:value")
+	bct.AddGenesisRules(valueRule)
 	bct.CreateByzCoin()
 
 	storage := &fakeStorage{}
@@ -250,7 +252,7 @@ func TestProxyCatchUp_Multiple_Blocks(t *testing.T) {
 	bct := byzcoin.NewBCTestDefault(t)
 	defer bct.CloseAll()
 
-	bct.AddGenesisRules("spawn:value")
+	bct.AddGenesisRules(valueRule)
 	bct.CreateByzCoin()
 
 	storage := &fakeStorage{}
@@ -326,7 +328,7 @@ func TestProxyCatchUp_Query(t *testing.T) {
 	bct := byzcoin.NewBCTestDefault(t)
 	defer bct.CloseAll()
 
-	bct.AddGenesisRules("spawn:value")
+	bct.AddGenesisRules(valueRule)
 	bct.CreateByzCoin()
 
 	storage := &fakeStorage{}

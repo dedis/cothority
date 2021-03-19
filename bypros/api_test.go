@@ -12,6 +12,8 @@ import (
 	"golang.org/x/xerrors"
 )
 
+const status = "fake status"
+
 func TestClientFollow(t *testing.T) {
 	overlay := &fakeOverlay{}
 	overlayClient = overlay
@@ -94,9 +96,9 @@ func TestClientCatchUP(t *testing.T) {
 	require.NoError(t, err)
 
 	expected := []CatchUpResponse{
-		{Status: CatchUpStatus{Message: "fake status", BlockIndex: 0, BlockHash: []byte{}}},
-		{Status: CatchUpStatus{Message: "fake status", BlockIndex: 1, BlockHash: []byte{}}},
-		{Status: CatchUpStatus{Message: "fake status", BlockIndex: 2, BlockHash: []byte{}}},
+		{Status: CatchUpStatus{Message: status, BlockIndex: 0, BlockHash: []byte{}}},
+		{Status: CatchUpStatus{Message: status, BlockIndex: 1, BlockHash: []byte{}}},
+		{Status: CatchUpStatus{Message: status, BlockIndex: 2, BlockHash: []byte{}}},
 		{Done: true, Status: CatchUpStatus{BlockHash: []byte{}}},
 	}
 
@@ -158,7 +160,7 @@ func (f *fakeWs) Read() (messageType int, p []byte, err error) {
 	if f.cur == f.n {
 		resp.Done = true
 	} else {
-		resp.Status = CatchUpStatus{Message: "fake status", BlockIndex: f.cur}
+		resp.Status = CatchUpStatus{Message: status, BlockIndex: f.cur}
 	}
 
 	f.cur++

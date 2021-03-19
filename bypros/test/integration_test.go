@@ -26,9 +26,13 @@ import (
 	"go.dedis.ch/cothority/v3/byzcoin/contracts"
 )
 
+const spawnRule = "spawn:value"
+const countQuery = "select count(*) as result from cothority.transaction"
+
 func TestIntegration_Simple(t *testing.T) {
-	os.Setenv("PROXY_DB_URL", "postgres://bypros:docker@localhost:4567/bypros")
-	os.Setenv("PROXY_DB_URL_RO", "postgres://bypros:docker@localhost:4567/bypros")
+	const url = "postgres://bypros:docker@localhost:4567/bypros"
+	os.Setenv("PROXY_DB_URL", url)
+	os.Setenv("PROXY_DB_URL_RO", url)
 
 	cli, err := client.NewClientWithOpts()
 	require.NoError(t, err)
@@ -43,7 +47,7 @@ func TestIntegration_Simple(t *testing.T) {
 	defer stopPostgresDocker(t, cli, id)
 	defer sqlstore.Registry.StopAll()
 
-	bct.AddGenesisRules("spawn:value")
+	bct.AddGenesisRules(spawnRule)
 	bct.CreateByzCoin()
 
 	client := bypros.NewClient()
@@ -73,7 +77,7 @@ func TestIntegration_Simple(t *testing.T) {
 	}
 
 	// query the number of transactions, should be 10
-	res, err := client.Query(bct.Roster.Get(0), "select count(*) as result from cothority.transaction")
+	res, err := client.Query(bct.Roster.Get(0), countQuery)
 	require.NoError(t, err)
 	require.Equal(t, `[
   {
@@ -138,7 +142,7 @@ func TestIntegration_Simple(t *testing.T) {
 
 	// Now we should get 21 transactions: the 20 we added, + the genesis one to
 	// create the config.
-	res, err = client.Query(bct.Roster.Get(0), "select count(*) as result from cothority.transaction")
+	res, err = client.Query(bct.Roster.Get(0), countQuery)
 	require.NoError(t, err)
 	require.Equal(t, `[
   {
@@ -150,132 +154,10 @@ func TestIntegration_Simple(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestIntegration_Simple2(t *testing.T) {
-	os.Setenv("PROXY_DB_URL", "postgres://bypros:docker@localhost:4567/bypros")
-	os.Setenv("PROXY_DB_URL_RO", "postgres://bypros:docker@localhost:4567/bypros")
-
-	cli, err := client.NewClientWithOpts()
-	require.NoError(t, err)
-
-	id := startPostgresDocker(t, cli, 4567)
-
-	bct := byzcoin.NewBCTestDefault(t)
-
-	// order is important: last-in first-out
-	defer bct.CloseAll()
-	defer cli.Close()
-	defer stopPostgresDocker(t, cli, id)
-	defer sqlstore.Registry.StopAll()
-
-	bct.AddGenesisRules("spawn:value")
-	bct.CreateByzCoin()
-
-	client := bypros.NewClient()
-
-	// add 10 transactions
-	for i := 0; i < 10; i++ {
-		bct.SendInst(&byzcoin.TxArgsDefault, byzcoin.Instruction{
-			InstanceID: byzcoin.NewInstanceID(bct.GenesisDarc.GetBaseID()),
-			Spawn: &byzcoin.Spawn{
-				ContractID: contracts.ContractValueID,
-			},
-		})
-	}
-
-	// start following
-	err = client.Follow(bct.Roster.Get(0), bct.Roster.Get(0), bct.Genesis.Hash)
-	require.NoError(t, err)
-
-	// add again 10 transactions
-	for i := 0; i < 10; i++ {
-		bct.SendInst(&byzcoin.TxArgsDefault, byzcoin.Instruction{
-			InstanceID: byzcoin.NewInstanceID(bct.GenesisDarc.GetBaseID()),
-			Spawn: &byzcoin.Spawn{
-				ContractID: contracts.ContractValueID,
-			},
-		})
-	}
-
-	// query the number of transactions, should be 10
-	res, err := client.Query(bct.Roster.Get(0), "select count(*) as result from cothority.transaction")
-	require.NoError(t, err)
-	require.Equal(t, `[
-  {
-    "result": "10"
-  }
-]`, string(res))
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	// let's catch up
-	resps, err := client.CatchUP(ctx, bct.Roster.Get(0), bct.Roster.Get(0), bct.Genesis.Hash, bct.Genesis.Hash, 5)
-	require.NoError(t, err)
-
-	expected := []bypros.CatchUpResponse{
-		{
-			Status: bypros.CatchUpStatus{
-				Message:    "parsed block 4",
-				BlockIndex: 4,
-			},
-		},
-		{
-			Status: bypros.CatchUpStatus{
-				Message:    "parsed block 9",
-				BlockIndex: 9,
-			},
-		},
-		{
-			Status: bypros.CatchUpStatus{
-				Message:    "parsed block 14",
-				BlockIndex: 14,
-			},
-		},
-		{
-			Status: bypros.CatchUpStatus{
-				Message:    "parsed block 19",
-				BlockIndex: 19,
-			},
-		},
-		{
-			Done: true,
-		},
-	}
-
-	for i := 0; i < len(expected); i++ {
-		select {
-		case resp := <-resps:
-			require.Equal(t, expected[i].Status.Message, resp.Status.Message)
-			require.Equal(t, expected[i].Status.BlockIndex, resp.Status.BlockIndex)
-			require.Equal(t, expected[i].Err, resp.Err)
-			require.Equal(t, expected[i].Done, resp.Done)
-		case <-time.After(time.Second):
-			t.Error("didn't received after timeout")
-		}
-	}
-
-	select {
-	case resp, more := <-resps:
-		require.False(t, more, resp)
-	default:
-	}
-
-	// Now we should get 21 transactions: the 20 we added, + the genesis one to
-	// create the config.
-	res, err = client.Query(bct.Roster.Get(0), "select count(*) as result from cothority.transaction")
-	require.NoError(t, err)
-	require.Equal(t, `[
-  {
-    "result": "21"
-  }
-]`, string(res))
-
-	err = client.UnFollow(bct.Roster.Get(0))
-	require.NoError(t, err)
-}
 func TestIntegration_Intense(t *testing.T) {
-	os.Setenv("PROXY_DB_URL", "postgres://bypros:docker@localhost:4566/bypros")
-	os.Setenv("PROXY_DB_URL_RO", "postgres://bypros:docker@localhost:4566/bypros")
+	const url = "postgres://bypros:docker@localhost:4566/bypros"
+	os.Setenv("PROXY_DB_URL", url)
+	os.Setenv("PROXY_DB_URL_RO", url)
 
 	n := 50
 
@@ -297,7 +179,7 @@ func TestIntegration_Intense(t *testing.T) {
 	defer cli.Close()
 	defer sqlstore.Registry.StopAll()
 
-	bct.AddGenesisRules("spawn:value")
+	bct.AddGenesisRules(spawnRule)
 	bct.CreateByzCoin()
 
 	client := bypros.NewClient()
@@ -386,7 +268,7 @@ func TestIntegration_Intense(t *testing.T) {
 
 	// Now we should get 21 transactions: the 20 we added, + the genesis one to
 	// create the config.
-	res, err := client.Query(bct.Roster.Get(0), "select count(*) as result from cothority.transaction")
+	res, err := client.Query(bct.Roster.Get(0), countQuery)
 	require.NoError(t, err)
 	require.Equal(t, fmt.Sprintf(`[
   {

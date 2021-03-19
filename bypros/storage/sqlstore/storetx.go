@@ -107,7 +107,7 @@ func (s storeTx) storeInstruction(instruction byzcoin.Instruction, transactionID
 	}
 
 	if len(instruction.SignerIdentities) != len(instruction.SignerCounter) &&
-		len(instruction.SignerIdentities) != len(instruction.SignerCounter) {
+		len(instruction.SignerIdentities) != len(instruction.Signatures) {
 
 		return -1, xerrors.Errorf("invalid instruction: %v", instruction)
 	}
