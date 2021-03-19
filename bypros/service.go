@@ -1,5 +1,4 @@
 // Package bypros contains the Byzcoin Proxy Service
-
 package bypros
 
 import (

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	// register the sql driver
 	_ "github.com/jackc/pgx/stdlib"
 	"go.dedis.ch/cothority/v3/bypros/browse/paginate"
 	"go.dedis.ch/cothority/v3/byzcoin"
