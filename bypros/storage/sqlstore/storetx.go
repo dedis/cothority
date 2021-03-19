@@ -19,8 +19,8 @@ type storeTx struct {
 func (s storeTx) store() (int, error) {
 	var blockID int
 
-	query := `INSERT INTO cothority.block (hash) 
-	VALUES ($1) 
+	query := `INSERT INTO cothority.block (hash)
+	VALUES ($1)
 	RETURNING block_id`
 
 	err := s.sqlTx.QueryRow(query, s.block.Hash).Scan(&blockID)
@@ -48,8 +48,8 @@ func (s storeTx) store() (int, error) {
 func (s storeTx) storeTransaction(transaction byzcoin.TxResult, blockID int) (int, error) {
 	var transactionID int
 
-	query := `INSERT INTO cothority.transaction (accepted, block_id) 
-	VALUES ($1, $2) 
+	query := `INSERT INTO cothority.transaction (accepted, block_id)
+	VALUES ($1, $2)
 	RETURNING transaction_id`
 
 	err := s.sqlTx.QueryRow(query, transaction.Accepted, blockID).Scan(&transactionID)
@@ -94,9 +94,9 @@ func (s storeTx) storeInstruction(instruction byzcoin.Instruction, transactionID
 		typeID = 4
 	}
 
-	query := `INSERT INTO cothority.instruction (transaction_id, type_id, 
-		action, instance_iid, contract_iid, contract_name) 
-	VALUES ($1, $2, $3, $4, $5, $6) 
+	query := `INSERT INTO cothority.instruction (transaction_id, type_id,
+		action, instance_iid, contract_iid, contract_name)
+	VALUES ($1, $2, $3, $4, $5, $6)
 	RETURNING instruction_id`
 
 	err := s.sqlTx.QueryRow(query, transactionID, typeID, instruction.Action(),
@@ -140,9 +140,9 @@ func (s storeTx) storeSigner(identity string, signature []byte, counter uint64,
 
 	var signerID int
 
-	query := `INSERT INTO cothority.signer (identity, signature, counter, 
-		instruction_id) 
-	VALUES ($1, $2, $3, $4) 
+	query := `INSERT INTO cothority.signer (identity, signature, counter,
+		instruction_id)
+	VALUES ($1, $2, $3, $4)
 	RETURNING signer_id`
 
 	err := s.sqlTx.QueryRow(query, identity, signature, counter,
@@ -157,8 +157,8 @@ func (s storeTx) storeSigner(identity string, signature []byte, counter uint64,
 func (s storeTx) storeArgument(name string, value []byte, instructionID int) (int, error) {
 	var argumentID int
 
-	query := `INSERT INTO cothority.argument (name, value, instruction_id) 
-	VALUES ($1, $2, $3) 
+	query := `INSERT INTO cothority.argument (name, value, instruction_id)
+	VALUES ($1, $2, $3)
 	RETURNING argument_id`
 
 	err := s.sqlTx.QueryRow(query, name, value, instructionID).Scan(&argumentID)

@@ -392,4 +392,3 @@ GRANT SELECT ON TABLE cothority.transaction TO proxy;
 --
 -- PostgreSQL database dump complete
 --
-

@@ -31,8 +31,8 @@ export PROXY_DB_URL_RO="postgres://proxy:1234@localhost:5432/bypros"
 This is the kind of query that can be sent:
 
 ```sql
-select encode(instruction.contract_iid::bytea, 'hex'), instruction.contract_name from cothority.instruction 
-where instruction.action = 'spawn:deferred' 
+select encode(instruction.contract_iid::bytea, 'hex'), instruction.contract_name from cothority.instruction
+where instruction.action = 'spawn:deferred'
 and instruction.contract_iid not in (
 	select instruction.contract_iid from cothority.instruction
 	join cothority.transaction on

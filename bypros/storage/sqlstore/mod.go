@@ -85,8 +85,8 @@ func (s SQL) Close() {
 func (s SQL) GetBlock(blockHash []byte) (int, error) {
 	var blockID int
 
-	query := `SELECT block_id 
-	FROM cothority.block 
+	query := `SELECT block_id
+	FROM cothority.block
 	WHERE hash=$1`
 
 	err := s.db.QueryRow(query, blockHash).Scan(&blockID)
