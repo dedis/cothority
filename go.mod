@@ -39,7 +39,6 @@ require (
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
 	github.com/prataprc/goparsec v0.0.0-20180806094145-2600a2a4a410
-	github.com/qantik/qrgo v0.0.0-20160917134849-0c6b902c59f6
 	github.com/rs/cors v1.7.0 // indirect
 	github.com/satori/go.uuid v1.2.0
 	github.com/shopspring/decimal v1.2.0 // indirect
@@ -62,5 +61,3 @@ require (
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 	gotest.tools/v3 v3.0.3 // indirect
 )
-
-replace go.dedis.ch/onet/v3 => /Users/nkocher/Github/onet

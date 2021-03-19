@@ -365,16 +365,18 @@ func (client *Client) GetAccountBalance(address common.Address) (
 
 // viewCall sends a request to a conode to execute a read-only, "view method"
 // call on a previously deployed EVM contract instance. Returns the call
-// response.
+// response. This method is private and used for tests only.
 func (client *Client) viewCall(dst *network.ServerIdentity, byzcoinID []byte,
 	bevmInstanceID byzcoin.InstanceID, accountAddress []byte,
-	contractAddress []byte, callData []byte) (*ViewCallResponse, error) {
+	contractAddress []byte, callData []byte, minBlockIndex int) (
+	*ViewCallResponse, error) {
 	request := &ViewCallRequest{
 		ByzCoinID:       byzcoinID,
 		BEvmInstanceID:  bevmInstanceID[:],
 		AccountAddress:  accountAddress,
 		ContractAddress: contractAddress,
 		CallData:        callData,
+		MinBlockIndex:   minBlockIndex,
 	}
 	response := &ViewCallResponse{}
 

@@ -141,6 +141,7 @@ func TestService_Call(t *testing.T) {
 		a.Address[:],
 		candyInstance.Address[:],
 		callData,
+		0,
 	)
 	require.NoError(t, err)
 
@@ -149,4 +150,17 @@ func TestService_Call(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, resp.Result, expectedResult)
+
+	// Get remaining candies, using a minBlockIndex that the nodes cannot reach
+	_, err = bevmClient.viewCall(
+		bct.Roster.List[0],
+		bct.Client.ID,
+		bevmClient.instanceID,
+		a.Address[:],
+		candyInstance.Address[:],
+		callData,
+		1000,
+	)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "failed to reach minimum block")
 }

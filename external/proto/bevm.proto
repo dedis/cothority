@@ -11,6 +11,7 @@ message ViewCallRequest {
   required bytes accountaddress = 3;
   required bytes contractaddress = 4;
   required bytes calldata = 5;
+  required sint32 minblockindex = 6;
 }
 
 // ViewCallResponse is the response to ViewCallRequest, containing the method
