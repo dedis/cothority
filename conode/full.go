@@ -4,6 +4,7 @@ package main
 
 import (
 	_ "go.dedis.ch/cothority/v3/authprox"
+	_ "go.dedis.ch/cothority/v3/bypros"
 	_ "go.dedis.ch/cothority/v3/byzcoin"
 	_ "go.dedis.ch/cothority/v3/byzcoin/contracts"
 	_ "go.dedis.ch/cothority/v3/calypso"
