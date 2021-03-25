@@ -187,3 +187,26 @@ func isChangingEvolveUnrestricted(oldD *darc.Darc, newD *darc.Darc) bool {
 	}
 	return true
 }
+
+// ContractDarcSpawnInstructions creates one or more Instructions for
+// spawning a darc.
+func ContractDarcSpawnInstructions(spawnerID darc.ID,
+	darcs ...darc.Darc) (instr []Instruction, err error) {
+	for _, d := range darcs {
+		darcBuf, err := d.ToProto()
+		if err != nil {
+			return nil, xerrors.Errorf("encoding darc: %v", err)
+		}
+		instr = append(instr, Instruction{
+			InstanceID: NewInstanceID(spawnerID),
+			Spawn: &Spawn{
+				ContractID: ContractDarcID,
+				Args: Arguments{{
+					Name:  "darc",
+					Value: darcBuf,
+				}},
+			},
+		})
+	}
+	return
+}

@@ -1025,4 +1025,38 @@ var cmds = cli.Commands{
 			},
 		},
 	},
+
+	{
+		Name:  "user",
+		Usage: "handle a dynacred user",
+		Subcommands: cli.Commands{
+			{
+				Name:      "new",
+				ArgsUsage: "bc-xxx.cfg key-xxx.cfg name",
+				Usage:     "Adds a new user and outputs a device-url",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:        "base-url",
+						Usage:       "change the base-url of the output",
+						Required:    false,
+						Value:       "https://login.c4dt.org/register/device",
+						Destination: nil,
+					},
+				},
+				Action: userNew,
+			},
+			{
+				Name:      "show",
+				ArgsUsage: "bc-xxx.cfg [credentialIID]",
+				Usage:     "fetches the latest configuration of the user and shows it",
+				Action:    userShow,
+			},
+			{
+				Name:      "connect",
+				ArgsUsage: "bc-xxx.cfg http(s)://...",
+				Usage:     "Connects to an existing user defined by a device-url",
+				Action:    userConnect,
+			},
+		},
+	},
 }
