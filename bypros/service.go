@@ -9,6 +9,7 @@ import (
 
 	"go.dedis.ch/cothority/v3/bypros/storage"
 	"go.dedis.ch/cothority/v3/bypros/storage/sqlstore"
+	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/network"
 	"golang.org/x/xerrors"
@@ -37,6 +38,9 @@ type Service struct {
 	stopFollow chan struct{}
 
 	storage storage.Storage
+
+	// the proxy should only use one skipchain. We keep track of it there.
+	scID skipchain.SkipBlockID
 }
 
 // newProxyService returns a new proxy service for onet
@@ -55,7 +59,7 @@ func newProxyService(c *onet.Context) (onet.Service, error) {
 	// initial token to start following
 	s.follow <- struct{}{}
 
-	err = s.RegisterHandlers(s.Follow, s.UnFollow, s.Query)
+	err = s.RegisterHandlers(s.Follow, s.Unfollow, s.Query)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to register handlers: %v", err)
 	}

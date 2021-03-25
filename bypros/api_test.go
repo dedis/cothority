@@ -45,13 +45,13 @@ func TestClientUnFollow(t *testing.T) {
 	host := &network.ServerIdentity{Description: "fake1"}
 
 	client := NewClient()
-	err := client.UnFollow(host)
+	err := client.Unfollow(host)
 	require.NoError(t, err)
 
 	require.Len(t, overlay.dest, 1)
 	require.Equal(t, host, overlay.dest[0])
 
-	expected := &UnFollow{}
+	expected := &Unfollow{}
 
 	require.Len(t, overlay.sent, 1)
 	require.Equal(t, expected, overlay.sent[0])

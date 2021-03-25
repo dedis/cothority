@@ -26,6 +26,10 @@ import (
 	"go.dedis.ch/cothority/v3/byzcoin/contracts"
 )
 
+// schemaRelativePath should point to a folder containing the schema of the
+// database. This schema will be executed upon starting the container.
+const schemaRelativePath = "../storage/sqlstore/schema"
+
 const spawnRule = "spawn:value"
 const countQuery = "select count(*) as result from cothority.transaction"
 
@@ -150,7 +154,7 @@ func TestIntegration_Simple(t *testing.T) {
   }
 ]`, string(res))
 
-	err = client.UnFollow(bct.Roster.Get(0))
+	err = client.Unfollow(bct.Roster.Get(0))
 	require.NoError(t, err)
 }
 
@@ -213,7 +217,7 @@ func TestIntegration_Intense(t *testing.T) {
 		time.Sleep(time.Second * 5)
 
 		// Simulates a pause in following
-		err = client.UnFollow(bct.Roster.Get(0))
+		err = client.Unfollow(bct.Roster.Get(0))
 		require.NoError(t, err)
 
 		time.Sleep(time.Second * 5)
@@ -257,7 +261,7 @@ func TestIntegration_Intense(t *testing.T) {
 		t.Log(resp)
 	}
 
-	err = client.UnFollow(bct.Roster.Get(0))
+	err = client.Unfollow(bct.Roster.Get(0))
 	require.NoError(t, err)
 
 	// Now we should get 21 transactions: the 20 we added, + the genesis one to
@@ -287,7 +291,7 @@ func startPostgresDocker(t *testing.T, cli *client.Client, port int) string {
 
 	require.NoError(t, err)
 
-	archive, err := NewTarArchiveFromPath("docker-entrypoint-initdb.d")
+	archive, err := NewTarArchiveFromPath(schemaRelativePath)
 	require.NoError(t, err)
 
 	err = cli.CopyToContainer(ctx, res.ID, "/docker-entrypoint-initdb.d", archive, types.CopyToContainerOptions{})

@@ -18,8 +18,8 @@ type Follow struct {
 type EmptyReply struct {
 }
 
-// UnFollow is a request to stop following.
-type UnFollow struct{}
+// Unfollow is a request to stop following.
+type Unfollow struct{}
 
 // Query is a request to send an SQL query.
 type Query struct {

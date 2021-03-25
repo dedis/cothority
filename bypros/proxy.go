@@ -34,11 +34,65 @@ func (s *Service) Follow(req *Follow) (*EmptyReply, error) {
 		return nil, xerrors.Errorf("already following")
 	}
 
+	if s.scID == nil {
+		s.scID = req.ScID
+	}
+
+	if !s.scID.Equal(req.ScID) {
+		return nil, xerrors.Errorf("wrong skipchain ID: expected '%x', got '%x'", s.scID, req.ScID)
+	}
+
 	s.following = true
 	s.stopFollow = make(chan struct{}, 1)
 
-	waitDone := sync.WaitGroup{}
+	conn, err := subscribe(req)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to subscribe: %v", err)
+	}
 
+	waitDone := sync.WaitGroup{}
+	stopPing := make(chan struct{})
+
+	// When the stop signal is received, close the ws connection and allow new
+	// call to follow. Note that the ws could already be closed.
+	go func() {
+		<-s.stopFollow
+
+		close(stopPing)
+
+		err := conn.WriteControl(websocket.CloseMessage, nil, time.Now().Add(time.Second*5))
+		if err != nil {
+			log.Warnf("failed to write close: %v", err)
+		}
+
+		conn.Close()
+
+		waitDone.Wait()
+		log.LLvl1("done following")
+		s.follow <- struct{}{}
+		s.following = false
+	}()
+
+	// keep the ws connection alive
+	waitDone.Add(1)
+	go func() {
+		defer waitDone.Done()
+		keepAlive(stopPing, conn)
+	}()
+
+	// listen to new blocks and save them in the database
+	waitDone.Add(1)
+	go func() {
+		defer waitDone.Done()
+		s.listenBlocks(conn)
+	}()
+
+	return &EmptyReply{}, nil
+}
+
+// subscribe send a request to start listening on new added blocks. It return a
+// ws connection that will be filled with each new block.
+func subscribe(req *Follow) (*websocket.Conn, error) {
 	apiEndpoint, err := getWsAddr(req.Target)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get ws addr: %v", err)
@@ -64,78 +118,50 @@ func (s *Service) Follow(req *Follow) (*EmptyReply, error) {
 		return nil, xerrors.Errorf("failed to send streaming request: %v", err)
 	}
 
-	stopPing := make(chan struct{})
+	return c, nil
+}
 
-	// When the stop signal is received, cancel the context and allow a new call
-	// to start following.
-	go func() {
-		<-s.stopFollow
+// keepAlive sends regularly a ping on the connection to keep it alive
+func keepAlive(stop chan struct{}, conn *websocket.Conn) {
+	for {
+		select {
+		case <-time.After(pingWsInterval):
+			err := conn.WriteMessage(websocket.PingMessage, nil)
+			if err != nil {
+				log.Warnf("failed to ping: %v", err)
+				return
+			}
+		case <-stop:
+			return
+		}
 
-		close(stopPing)
+	}
+}
 
-		err := c.WriteControl(websocket.CloseMessage, nil, time.Now().Add(time.Second*5))
+// listenBlocks reads for new blocks and parse them.
+func (s *Service) listenBlocks(conn *websocket.Conn) {
+	for {
+		_, buf, err := conn.ReadMessage()
 		if err != nil {
-			log.Warnf("failed to write close: %v", err)
+			_, ok := err.(*websocket.CloseError)
+			if !ok {
+				// that can happen when we close the connection
+				log.Warnf("failed to read request: %v", err)
+			}
+			s.notifyStop()
+			return
 		}
 
-		c.Close()
-
-		waitDone.Wait()
-		log.LLvl1("done following")
-		s.follow <- struct{}{}
-		s.following = false
-	}()
-
-	// listen to new blocks and save them in the database
-	waitDone.Add(1)
-	go func() {
-		defer waitDone.Done()
-
-		for {
-			_, buf, err := c.ReadMessage()
-			if err != nil {
-				_, ok := err.(*websocket.CloseError)
-				if !ok {
-					// that can happen when we close the connection
-					log.Warnf("failed to read request: %v", err)
-				}
-				s.notifyStop()
-				return
-			}
-
-			streamResp := byzcoin.StreamingResponse{}
-			err = protobuf.Decode(buf, &streamResp)
-			if err != nil {
-				log.Errorf("failed to decode request: %v", err)
-				s.notifyStop()
-				return
-			}
-
-			s.followCallback(streamResp, nil)
+		streamResp := byzcoin.StreamingResponse{}
+		err = protobuf.Decode(buf, &streamResp)
+		if err != nil {
+			log.Errorf("failed to decode request: %v", err)
+			s.notifyStop()
+			return
 		}
-	}()
 
-	// keep the connection alive be regularly sending a ping
-	waitDone.Add(1)
-	go func() {
-		defer waitDone.Done()
-
-		for {
-			select {
-			case <-time.After(pingWsInterval):
-				err := c.WriteMessage(websocket.PingMessage, nil)
-				if err != nil {
-					log.Warnf("failed to ping: %v", err)
-					return
-				}
-			case <-stopPing:
-				return
-			}
-
-		}
-	}()
-
-	return &EmptyReply{}, nil
+		s.followCallback(streamResp, nil)
+	}
 }
 
 // notifyStop can be called multiple times to stop the current following
@@ -152,6 +178,15 @@ func (s *Service) notifyStop() {
 // It uses the streaming service to periodically send back the catch up state to
 // the client. This is appropriate since a catch up can be quite long.
 func (s *Service) CatchUP(req *CatchUpMsg) (chan *CatchUpResponse, chan bool, error) {
+	if s.scID == nil {
+		s.scID = req.ScID
+	}
+
+	if !s.scID.Equal(req.ScID) {
+		return nil, nil, xerrors.Errorf("wrong skipchain ID: "+
+			"expected '%x', got '%x'", s.scID, req.ScID)
+	}
+
 	wsAddr, err := getWsAddr(req.Target)
 	if err != nil {
 		return nil, nil, xerrors.Errorf("failed to get ws addr: %v", err)
@@ -171,10 +206,13 @@ func (s *Service) doCatchUP(outChan catchUpOut, stopChan chan bool, req *CatchUp
 	ctx, cancel := context.WithCancel(context.Background())
 	count := 0
 
+	browseDone := make(chan struct{})
+
 	// cancel the context in case we receive a stop signal
 	go func() {
 		<-stopChan
 		cancel()
+		<-browseDone // wait for the "done" message to be sent
 		close(outChan)
 	}()
 
@@ -202,8 +240,8 @@ func (s *Service) doCatchUP(outChan catchUpOut, stopChan chan bool, req *CatchUp
 			outChan.errf("browsing failed: %v", err)
 			return
 		}
-
 		outChan.done()
+		close(browseDone)
 	}()
 }
 
@@ -250,8 +288,8 @@ func (s *Service) parseBlock(block *skipchain.SkipBlock) error {
 	return nil
 }
 
-// UnFollow stop the following session.
-func (s *Service) UnFollow(req *UnFollow) (*EmptyReply, error) {
+// Unfollow stop the following session.
+func (s *Service) Unfollow(req *Unfollow) (*EmptyReply, error) {
 	if !s.following {
 		return nil, xerrors.Errorf("not following")
 	}
@@ -292,8 +330,13 @@ func (o catchUpOut) statusf(blockIndex int, blockHash []byte) {
 	}
 }
 
+// done sends a done message if someone is willing to take it, otherwise it does
+// nothing. That could be the case when the client just wants to stop listening.
 func (o catchUpOut) done() {
-	o <- &CatchUpResponse{
+	select {
+	case o <- &CatchUpResponse{
 		Done: true,
+	}:
+	default:
 	}
 }

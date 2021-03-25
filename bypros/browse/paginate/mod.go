@@ -144,12 +144,12 @@ func (p *Paginate) handlePages(ctx context.Context, numPages int, ws *websocket.
 		// The first block of the page couldn't be fetched. That means we're
 		// at then end. It could also mean the very first block we're trying
 		// to get doesn't exist.
-		if paginateResponse.ErrorCode == 4 {
+		if paginateResponse.ErrorCode == byzcoin.PaginatePageFailed {
 			log.LLvl1("done with the chain")
 			return nil, nil
 		}
 
-		if paginateResponse.ErrorCode == 5 {
+		if paginateResponse.ErrorCode == byzcoin.PaginateLinkMissing {
 			// We couldn't find a next block. That means we're at end of
 			// chain. We should load blocks that are left in the page.
 
@@ -175,7 +175,7 @@ func (p *Paginate) handlePages(ctx context.Context, numPages int, ws *websocket.
 			return nil, nil
 		}
 
-		if paginateResponse.ErrorCode == 6 {
+		if paginateResponse.ErrorCode == byzcoin.PaginateGetBlockFailed {
 			// we couldn't get that block, that's bad
 			return nil, xerrors.Errorf("failed to read paginate response: %v", err)
 		}

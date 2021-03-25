@@ -1,6 +1,8 @@
 package bypros
 
 import (
+	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -13,6 +15,11 @@ import (
 
 const valueRule = "spawn:value"
 
+func TestMain(m *testing.M) {
+	storageFac = newFakeStorage
+	os.Exit(m.Run())
+}
+
 func TestProxyFollow_No_Token(t *testing.T) {
 	s := Service{}
 
@@ -23,8 +30,6 @@ func TestProxyFollow_No_Token(t *testing.T) {
 }
 
 func TestProxyFollow_One_Block(t *testing.T) {
-	storageFac = newFakeStorage
-
 	bct := byzcoin.NewBCTestDefault(t)
 	defer bct.CloseAll()
 
@@ -65,7 +70,6 @@ func TestProxyFollow_One_Block(t *testing.T) {
 }
 
 func TestProxyFollow_Many_Blocks(t *testing.T) {
-	storageFac = newFakeStorage
 
 	bct := byzcoin.NewBCTestDefault(t)
 	defer bct.CloseAll()
@@ -120,8 +124,45 @@ func TestProxyFollow_Many_Blocks(t *testing.T) {
 	require.Len(t, storage.storeBlocks, 2)
 }
 
+func TestProxyFollow_Wrong_Skipchain(t *testing.T) {
+	// once the services uses a specific skipchain, it prevents users from
+	// providing another one.
+
+	bct := byzcoin.NewBCTestDefault(t)
+	defer bct.CloseAll()
+
+	bct.AddGenesisRules(valueRule)
+	bct.CreateByzCoin()
+
+	storage := &fakeStorage{}
+
+	s := Service{
+		follow:  make(chan struct{}, 2),
+		storage: storage,
+	}
+
+	defer s.notifyStop()
+
+	s.follow <- struct{}{}
+	s.follow <- struct{}{}
+
+	req := &Follow{
+		ScID:   bct.Genesis.Hash,
+		Target: bct.Roster.Get(0),
+	}
+	_, err := s.Follow(req)
+	require.NoError(t, err)
+
+	sbID2 := skipchain.SkipBlockID{0xaa}
+	req.ScID = sbID2
+
+	_, err = s.Follow(req)
+	require.EqualError(t, err, fmt.Sprintf("wrong skipchain ID: expected '%x', got '%x'", bct.Genesis.Hash, sbID2))
+
+	time.Sleep(time.Second)
+}
+
 func TestProxyFollow_UnFollow(t *testing.T) {
-	storageFac = newFakeStorage
 
 	bct := byzcoin.NewBCTestDefault(t)
 	defer bct.CloseAll()
@@ -161,7 +202,7 @@ func TestProxyFollow_UnFollow(t *testing.T) {
 	// we should have received the added block
 	require.Len(t, storage.storeBlocks, 1)
 
-	_, err = s.UnFollow(&UnFollow{})
+	_, err = s.Unfollow(&Unfollow{})
 	require.NoError(t, err)
 
 	bct.SendInst(&byzcoin.TxArgsDefault, byzcoin.Instruction{
@@ -189,7 +230,6 @@ func TestProxyFollow_UnFollow(t *testing.T) {
 }
 
 func TestProxyCatchUp_Genesis(t *testing.T) {
-	storageFac = newFakeStorage
 
 	bct := byzcoin.NewBCTestDefault(t)
 	defer bct.CloseAll()
@@ -246,8 +286,43 @@ func TestProxyCatchUp_Genesis(t *testing.T) {
 	require.Len(t, storage.storeBlocks, 1)
 }
 
+func TestProxyCatchUp_Wrong_Skipchain(t *testing.T) {
+
+	bct := byzcoin.NewBCTestDefault(t)
+	defer bct.CloseAll()
+
+	bct.AddGenesisRules(valueRule)
+	bct.CreateByzCoin()
+
+	storage := &fakeStorage{}
+
+	s := Service{
+		storage: storage,
+	}
+
+	_, stop, err := s.CatchUP(&CatchUpMsg{
+		ScID:        bct.Genesis.Hash,
+		Target:      bct.Roster.Get(0),
+		FromBlock:   bct.Genesis.Hash,
+		UpdateEvery: 9,
+	})
+
+	close(stop)
+	require.NoError(t, err)
+
+	sbID2 := skipchain.SkipBlockID{0xaa}
+	_, stop2, err := s.CatchUP(&CatchUpMsg{
+		ScID:        sbID2,
+		Target:      bct.Roster.Get(0),
+		FromBlock:   bct.Genesis.Hash,
+		UpdateEvery: 9,
+	})
+
+	require.EqualError(t, err, fmt.Sprintf("wrong skipchain ID: expected '%x', got '%x'", bct.Genesis.Hash, sbID2))
+	require.Nil(t, stop2)
+}
+
 func TestProxyCatchUp_Multiple_Blocks(t *testing.T) {
-	storageFac = newFakeStorage
 
 	bct := byzcoin.NewBCTestDefault(t)
 	defer bct.CloseAll()
@@ -323,7 +398,6 @@ func TestProxyCatchUp_Multiple_Blocks(t *testing.T) {
 }
 
 func TestProxyCatchUp_Query(t *testing.T) {
-	storageFac = newFakeStorage
 
 	bct := byzcoin.NewBCTestDefault(t)
 	defer bct.CloseAll()
@@ -350,7 +424,6 @@ func TestProxyCatchUp_Query(t *testing.T) {
 }
 
 func TestProxyUnFollow_Error(t *testing.T) {
-	storageFac = newFakeStorage
 
 	bct := byzcoin.NewBCTestDefault(t)
 	defer bct.CloseAll()
@@ -359,8 +432,8 @@ func TestProxyUnFollow_Error(t *testing.T) {
 		following: false,
 	}
 
-	req := &UnFollow{}
-	_, err := s.UnFollow(req)
+	req := &Unfollow{}
+	_, err := s.Unfollow(req)
 	require.EqualError(t, err, "not following")
 }
 

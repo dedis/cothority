@@ -6,15 +6,33 @@ offers a read-only service call that can execute a provided SQL query.
 Apart from listening and executing a query, there is also a service call to
 catch up from a given block to the end of the chain.
 
+This service is meant to be deployed and run in a sidecar pattern to a node, as
+it targets only a specific node and not a roster, as traditionally done with
+cothority services. This implies that you should manage and fully trust the node
+you are talking to. The proxy reflects the state of a specific node, and not
+necessarily the "chain" represented by the collective authority. Note that this
+limitation can be alleviated with a layer handling connection to multiple nodes
+(roster) instead of only one, but this is out of scope of this service.
+
+## Limitations
+
+The proxy should be used to target only one skipchain. Upon a first call to
+follow or catch up, the service saves the skipchain ID and prevents any call to
+another skipchain ID.
+
+A single "follow" is allowed at the same time as this operation, once requested,
+continuously runs in the background until a request to "unfollow" is sent. An
+error is thrown if one tries to follow while the system is already following.
+
 ## Some technical details
 
 ### Run postgres in a docker
 
-If you want to locally run a postgresql database with docker:
+Running the database with docker is only recommended in development
+environments.
 
-```sh
-docker run -e POSTGRES_PASSWORD=docker -e POSTGRES_USER=bypros -d -p 5432:5432 -v ${PWD}/postgres:/var/lib/postgresql/data postgres
-```
+Use the dockerfile in `storage/sqlstore` and follow the instructions written in
+it.
 
 ### Export the database urls
 
@@ -41,15 +59,4 @@ and instruction.contract_iid not in (
 	instruction.action = 'invoke:deferred.execProposedTx'
 	)
 group by instruction.contract_iid, instruction.contract_name
-```
-
-### Create a readonly user
-
-The service uses a read-only user, which can be created as follow:
-
-```sql
-CREATE USER proxy WITH PASSWORD '1234';
-GRANT CONNECT ON DATABASE bypros TO proxy;
-GRANT USAGE ON SCHEMA cothority TO proxy;
-GRANT SELECT ON ALL TABLES IN SCHEMA cothority TO proxy;
 ```

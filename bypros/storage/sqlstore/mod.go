@@ -93,7 +93,7 @@ func (s SQL) GetBlock(blockHash []byte) (int, error) {
 	FROM cothority.block
 	WHERE hash=$1`
 
-	err := s.db.QueryRow(query, blockHash).Scan(&blockID)
+	err := s.dbRo.QueryRow(query, blockHash).Scan(&blockID)
 
 	if err == nil {
 		return blockID, nil

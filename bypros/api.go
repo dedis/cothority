@@ -64,9 +64,9 @@ func (c *Client) Follow(host, target *network.ServerIdentity,
 	return nil
 }
 
-// UnFollow sends a request to stop following a node.
-func (c *Client) UnFollow(host *network.ServerIdentity) error {
-	req := UnFollow{}
+// Unfollow sends a request to stop following a node.
+func (c *Client) Unfollow(host *network.ServerIdentity) error {
+	req := Unfollow{}
 	resp := EmptyReply{}
 
 	err := c.SendProtobuf(host, &req, &resp)
