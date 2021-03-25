@@ -626,6 +626,34 @@ func (c *Client) GetSignerCounters(ids ...string) (*GetSignerCountersResponse, e
 	return &reply, cothority.ErrorOrNil(err, "request failed")
 }
 
+// SignTransaction combines fetching the current SignerCounters from the
+// chain and signing all the instructions in the ClientTransaction.
+// If more than one signer is given, then every instruction will be signed
+// with all the signers.
+func (c *Client) SignTransaction(ctx ClientTransaction,
+	signers ...darc.Signer) error {
+	signersString := make([]string, len(signers))
+	for i, signer := range signers {
+		signersString[i] = signer.Identity().String()
+	}
+	counterReply, err := c.GetSignerCounters(signersString...)
+	if err != nil {
+		return xerrors.Errorf("while getting signers: %v", err)
+	}
+
+	for i := range ctx.Instructions {
+		ctx.Instructions[i].SignerCounter = make([]uint64, len(signers))
+		for j, counter := range counterReply.Counters {
+			ctx.Instructions[i].SignerCounter[j] = counter + uint64(i+1)
+		}
+	}
+	if err := ctx.FillSignersAndSignWith(signers...); err != nil {
+		return xerrors.Errorf("while signing transaction: %v", err)
+	}
+
+	return nil
+}
+
 // DownloadState is used by a new node to ask to download the global state.
 // The first call to DownloadState needs to have start = 0, so that the
 // service creates a snapshot of the current state which it will serve over
