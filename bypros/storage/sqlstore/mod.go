@@ -186,46 +186,51 @@ func rowsToJSON(columnTypes []*sql.ColumnType, rows *sql.Rows) ([]byte, error) {
 			return nil, xerrors.Errorf("failed to scan: %v", err)
 		}
 
-		masterData := map[string]interface{}{}
-
-		for i, v := range columnTypes {
-
-			if z, ok := (scanArgs[i]).(*sql.NullBool); ok {
-				masterData[v.Name()] = z.Bool
-				continue
-			}
-
-			if z, ok := (scanArgs[i]).(*sql.NullString); ok {
-				masterData[v.Name()] = z.String
-				continue
-			}
-
-			if z, ok := (scanArgs[i]).(*sql.NullInt64); ok {
-				masterData[v.Name()] = z.Int64
-				continue
-			}
-
-			if z, ok := (scanArgs[i]).(*sql.NullFloat64); ok {
-				masterData[v.Name()] = z.Float64
-				continue
-			}
-
-			if z, ok := (scanArgs[i]).(*sql.NullInt32); ok {
-				masterData[v.Name()] = z.Int32
-				continue
-			}
-
-			masterData[v.Name()] = scanArgs[i]
-		}
-
+		masterData := parseColumn(columnTypes, scanArgs)
 		finalRows = append(finalRows, masterData)
 	}
 
 	z, err := json.MarshalIndent(finalRows, "", "  ")
-
 	if err != nil {
 		return nil, xerrors.Errorf("failed to marshal JSON: %v", err)
 	}
 
 	return z, nil
+}
+
+func parseColumn(columnTypes []*sql.ColumnType, scanArgs []interface{}) map[string]interface{} {
+
+	masterData := map[string]interface{}{}
+
+	for i, v := range columnTypes {
+
+		if z, ok := (scanArgs[i]).(*sql.NullBool); ok {
+			masterData[v.Name()] = z.Bool
+			continue
+		}
+
+		if z, ok := (scanArgs[i]).(*sql.NullString); ok {
+			masterData[v.Name()] = z.String
+			continue
+		}
+
+		if z, ok := (scanArgs[i]).(*sql.NullInt64); ok {
+			masterData[v.Name()] = z.Int64
+			continue
+		}
+
+		if z, ok := (scanArgs[i]).(*sql.NullFloat64); ok {
+			masterData[v.Name()] = z.Float64
+			continue
+		}
+
+		if z, ok := (scanArgs[i]).(*sql.NullInt32); ok {
+			masterData[v.Name()] = z.Int32
+			continue
+		}
+
+		masterData[v.Name()] = scanArgs[i]
+	}
+
+	return masterData
 }

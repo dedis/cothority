@@ -132,43 +132,47 @@ func (c *Client) CatchUP(ctx context.Context, host, target *network.ServerIdenti
 
 	outChan := make(chan CatchUpResponse)
 
-	go func() {
-		defer func() {
-			err := ws.Write(websocket.CloseMessage, nil)
-			if err != nil {
-				log.Warnf("failed to send close: %v", err)
-			}
-			ws.Close()
-		}()
-
-		for {
-			_, buf, err = ws.Read()
-			if err != nil {
-				outChan <- CatchUpResponse{
-					Err: fmt.Sprintf("failed to read response: %v", err),
-				}
-				return
-			}
-
-			resp := CatchUpResponse{}
-
-			err = protobuf.Decode(buf, &resp)
-			if err != nil {
-				outChan <- CatchUpResponse{
-					Err: fmt.Sprintf("failed to decode response: %v", err),
-				}
-				return
-			}
-
-			outChan <- resp
-			if resp.Done {
-				close(outChan)
-				return
-			}
-		}
-	}()
+	go listenCatchup(ws, outChan)
 
 	return outChan, nil
+}
+
+// listenCatchup listens for messages on the ws and writes the responses to the
+// outChan. It closes the outChan once a done message is received.
+func listenCatchup(ws WsHandler, outChan chan CatchUpResponse) {
+	defer func() {
+		err := ws.Write(websocket.CloseMessage, nil)
+		if err != nil {
+			log.Warnf("failed to send close: %v", err)
+		}
+		ws.Close()
+	}()
+
+	for {
+		_, buf, err := ws.Read()
+		if err != nil {
+			outChan <- CatchUpResponse{
+				Err: fmt.Sprintf("failed to read response: %v", err),
+			}
+			return
+		}
+
+		resp := CatchUpResponse{}
+
+		err = protobuf.Decode(buf, &resp)
+		if err != nil {
+			outChan <- CatchUpResponse{
+				Err: fmt.Sprintf("failed to decode response: %v", err),
+			}
+			return
+		}
+
+		outChan <- resp
+		if resp.Done {
+			close(outChan)
+			return
+		}
+	}
 }
 
 // onetOverlay provides an overlay implementation based on onet and gorilla.

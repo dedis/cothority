@@ -141,43 +141,13 @@ func (p *Paginate) handlePages(ctx context.Context, numPages int, ws *websocket.
 			return nil, xerrors.Errorf("failed to decode response: %v", err)
 		}
 
-		// The first block of the page couldn't be fetched. That means we're
-		// at then end. It could also mean the very first block we're trying
-		// to get doesn't exist.
-		if paginateResponse.ErrorCode == byzcoin.PaginatePageFailed {
-			log.LLvl1("done with the chain")
-			return nil, nil
+		done, err := p.checkError(ctx, paginateResponse, block, ws, firstBlock)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to check error: %v", err)
 		}
 
-		if paginateResponse.ErrorCode == byzcoin.PaginateLinkMissing {
-			// We couldn't find a next block. That means we're at end of
-			// chain. We should load blocks that are left in the page.
-
-			// part of the streaming API, the error text contains the number of
-			// blocks left in the page.
-			index, err := strconv.Atoi(paginateResponse.ErrorText[5])
-			if err != nil {
-				return nil, xerrors.Errorf("failed to read paginate response: %v", err)
-			}
-
-			log.LLvlf1("reached the end, loading remaining %d blocks", index)
-
-			if block == nil {
-				// this is a special case where the first block of the first
-				// page is the last block on the chain.
-				err = p.paginate(ctx, index, 1, firstBlock, ws)
-			} else {
-				err = p.paginate(ctx, index, 1, block.Hash, ws)
-			}
-			if err != nil {
-				return nil, xerrors.Errorf("failed to load last blocks: %v", err)
-			}
+		if done {
 			return nil, nil
-		}
-
-		if paginateResponse.ErrorCode == byzcoin.PaginateGetBlockFailed {
-			// we couldn't get that block, that's bad
-			return nil, xerrors.Errorf("failed to read paginate response: %v", err)
 		}
 
 		for _, block = range paginateResponse.Blocks {
@@ -194,4 +164,54 @@ func (p *Paginate) handlePages(ctx context.Context, numPages int, ws *websocket.
 	}
 
 	return block.ForwardLink[0].To, nil
+}
+
+// checkError checks the paginate response for error. In case we reach the end
+// of the chain, it makes the subsequent call the fetch the remaining blocks.
+// Return if the pagination is done or not.
+func (p *Paginate) checkError(ctx context.Context, resp byzcoin.PaginateResponse,
+	block *skipchain.SkipBlock, ws *websocket.Conn, firstBlock skipchain.SkipBlockID) (bool, error) {
+
+	// The first block of the page couldn't be fetched. That means we're
+	// at then end. It could also mean the very first block we're trying
+	// to get doesn't exist.
+	if resp.ErrorCode == byzcoin.PaginatePageFailed {
+		log.LLvl1("done with the chain")
+		return true, nil
+	}
+
+	if resp.ErrorCode == byzcoin.PaginateLinkMissing {
+		// We couldn't find a next block. That means we're at end of
+		// chain. We should load blocks that are left in the page.
+
+		// part of the streaming API, the error text contains the number of
+		// blocks left in the page.
+		index, err := strconv.Atoi(resp.ErrorText[5])
+		if err != nil {
+			return false, xerrors.Errorf("failed to read paginate response: %v", err)
+		}
+
+		log.LLvlf1("reached the end, loading remaining %d blocks", index)
+
+		if block == nil {
+			// this is a special case where the first block of the first
+			// page is the last block on the chain.
+			err = p.paginate(ctx, index, 1, firstBlock, ws)
+		} else {
+			err = p.paginate(ctx, index, 1, block.Hash, ws)
+		}
+
+		if err != nil {
+			return false, xerrors.Errorf("failed to load last blocks: %v", err)
+		}
+
+		return true, nil
+	}
+
+	if resp.ErrorCode == byzcoin.PaginateGetBlockFailed {
+		// we couldn't get that block, that's bad
+		return false, xerrors.Errorf("failed to read paginate response: %v", resp.ErrorText)
+	}
+
+	return false, nil
 }
