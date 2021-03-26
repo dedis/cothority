@@ -21,14 +21,12 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE cothority.version (
-    version_id integer
-        PRIMARY KEY
-        GENERATED ALWAYS AS IDENTITY,
-
-    database_version integer NOT NULL,
-    ts TIMESTAMP NOT NULL
+    schema_version integer PRIMARY KEY,
+    ts TIMESTAMP DEFAULT now()
 );
 ALTER TABLE cothority.version OWNER TO bypros;
+
+INSERT INTO cothority.version (schema_version) VALUES (0);
 
 --
 -- Block
