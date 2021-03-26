@@ -30,6 +30,9 @@ import (
 // database. This schema will be executed upon starting the container.
 const schemaRelativePath = "../storage/sqlstore/schema"
 
+const registryPath = "docker.io/library"
+const postgresImg = "postgres:13"
+
 const spawnRule = "spawn:value"
 const countQuery = "select count(*) as result from cothority.transaction"
 
@@ -281,8 +284,14 @@ func TestIntegration_Intense(t *testing.T) {
 func startPostgresDocker(t *testing.T, cli *client.Client, port int) string {
 	ctx := context.Background()
 
+	out, err := cli.ImagePull(ctx, registryPath+"/"+postgresImg, types.ImagePullOptions{})
+	require.NoError(t, err)
+	// defer out.Close()
+
+	io.Copy(os.Stdout, out)
+
 	res, err := cli.ContainerCreate(ctx, &container.Config{
-		Image:        "postgres",
+		Image:        postgresImg,
 		ExposedPorts: nat.PortSet{"5432": struct{}{}},
 		Env:          []string{"POSTGRES_PASSWORD=docker", "POSTGRES_USER=bypros", "POSTGRES_DB=bypros"},
 	}, &container.HostConfig{
