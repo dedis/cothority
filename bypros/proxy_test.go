@@ -49,7 +49,7 @@ func TestProxyFollow_One_Block(t *testing.T) {
 	s.follow <- struct{}{}
 
 	req := &Follow{
-		ScID:   bct.Genesis.Hash,
+		ScID:   bct.Genesis.SkipChainID(),
 		Target: bct.Roster.Get(0),
 	}
 	_, err := s.Follow(req)
@@ -97,7 +97,7 @@ func TestProxyFollow_Many_Blocks(t *testing.T) {
 	s.follow <- struct{}{}
 
 	req := &Follow{
-		ScID:   bct.Genesis.Hash,
+		ScID:   bct.Genesis.SkipChainID(),
 		Target: bct.Roster.Get(0),
 	}
 	_, err := s.Follow(req)
@@ -148,7 +148,7 @@ func TestProxyFollow_Wrong_Skipchain(t *testing.T) {
 	s.follow <- struct{}{}
 
 	req := &Follow{
-		ScID:   bct.Genesis.Hash,
+		ScID:   bct.Genesis.SkipChainID(),
 		Target: bct.Roster.Get(0),
 	}
 	_, err := s.Follow(req)
@@ -158,7 +158,7 @@ func TestProxyFollow_Wrong_Skipchain(t *testing.T) {
 	req.ScID = sbID2
 
 	_, err = s.Follow(req)
-	require.EqualError(t, err, fmt.Sprintf("wrong skipchain ID: expected '%x', got '%x'", bct.Genesis.Hash, sbID2))
+	require.EqualError(t, err, fmt.Sprintf("wrong skipchain ID: expected '%x', got '%x'", bct.Genesis.SkipChainID(), sbID2))
 
 	time.Sleep(time.Second)
 }
@@ -183,7 +183,7 @@ func TestProxyFollow_UnFollow(t *testing.T) {
 	s.follow <- struct{}{}
 
 	req := &Follow{
-		ScID:   bct.Genesis.Hash,
+		ScID:   bct.Genesis.SkipChainID(),
 		Target: bct.Roster.Get(0),
 	}
 	_, err := s.Follow(req)
@@ -245,10 +245,12 @@ func TestProxyCatchUp_Genesis(t *testing.T) {
 		storage: storage,
 	}
 
+	fmt.Printf("genesis: %x\n", bct.Genesis.SkipChainID())
+
 	resp, stop, err := s.CatchUP(&CatchUpMsg{
-		ScID:        bct.Genesis.Hash,
+		ScID:        bct.Genesis.SkipChainID(),
 		Target:      bct.Roster.Get(0),
-		FromBlock:   bct.Genesis.Hash,
+		FromBlock:   bct.Genesis.SkipChainID(),
 		UpdateEvery: 1,
 	})
 
@@ -260,7 +262,7 @@ func TestProxyCatchUp_Genesis(t *testing.T) {
 			Status: CatchUpStatus{
 				Message:    "parsed block 0",
 				BlockIndex: 0,
-				BlockHash:  bct.Genesis.Hash,
+				BlockHash:  bct.Genesis.SkipChainID(),
 			},
 		},
 		{
@@ -302,9 +304,9 @@ func TestProxyCatchUp_Wrong_Skipchain(t *testing.T) {
 	}
 
 	_, stop, err := s.CatchUP(&CatchUpMsg{
-		ScID:        bct.Genesis.Hash,
+		ScID:        bct.Genesis.SkipChainID(),
 		Target:      bct.Roster.Get(0),
-		FromBlock:   bct.Genesis.Hash,
+		FromBlock:   bct.Genesis.SkipChainID(),
 		UpdateEvery: 9,
 	})
 
@@ -315,11 +317,11 @@ func TestProxyCatchUp_Wrong_Skipchain(t *testing.T) {
 	_, stop2, err := s.CatchUP(&CatchUpMsg{
 		ScID:        sbID2,
 		Target:      bct.Roster.Get(0),
-		FromBlock:   bct.Genesis.Hash,
+		FromBlock:   bct.Genesis.SkipChainID(),
 		UpdateEvery: 9,
 	})
 
-	require.EqualError(t, err, fmt.Sprintf("wrong skipchain ID: expected '%x', got '%x'", bct.Genesis.Hash, sbID2))
+	require.EqualError(t, err, fmt.Sprintf("wrong skipchain ID: expected '%x', got '%x'", bct.Genesis.SkipChainID(), sbID2))
 	require.Nil(t, stop2)
 }
 
@@ -349,9 +351,9 @@ func TestProxyCatchUp_Multiple_Blocks(t *testing.T) {
 	}
 
 	resp, stop, err := s.CatchUP(&CatchUpMsg{
-		ScID:        bct.Genesis.Hash,
+		ScID:        bct.Genesis.SkipChainID(),
 		Target:      bct.Roster.Get(0),
-		FromBlock:   bct.Genesis.Hash,
+		FromBlock:   bct.Genesis.SkipChainID(),
 		UpdateEvery: 2, // will be notified only for block with index 1 and 3
 	})
 
