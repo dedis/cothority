@@ -272,7 +272,7 @@ func TestProxyCatchUp_Genesis(t *testing.T) {
 		select {
 		case r := <-resp:
 			require.Equal(t, expected[i], r)
-		case <-time.After(time.Second):
+		case <-time.After(time.Second * 5):
 			t.Error("timeout on catch up response")
 		}
 	}

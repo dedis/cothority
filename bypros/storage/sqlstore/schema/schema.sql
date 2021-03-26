@@ -17,6 +17,20 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Migration / Versioning
+--
+
+CREATE TABLE cothority.version (
+    version_id integer
+        PRIMARY KEY
+        GENERATED ALWAYS AS IDENTITY,
+
+    database_version integer NOT NULL,
+    ts TIMESTAMP NOT NULL
+);
+ALTER TABLE cothority.version OWNER TO bypros;
+
+--
 -- Block
 --
 
