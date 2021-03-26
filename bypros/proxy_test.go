@@ -245,8 +245,6 @@ func TestProxyCatchUp_Genesis(t *testing.T) {
 		storage: storage,
 	}
 
-	fmt.Printf("genesis: %x\n", bct.Genesis.SkipChainID())
-
 	resp, stop, err := s.CatchUP(&CatchUpMsg{
 		ScID:        bct.Genesis.SkipChainID(),
 		Target:      bct.Roster.Get(0),
