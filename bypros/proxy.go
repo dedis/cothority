@@ -69,8 +69,8 @@ func (s *Service) Follow(req *Follow) (*EmptyReply, error) {
 
 		waitDone.Wait()
 		log.LLvl1("done following")
-		s.follow <- struct{}{}
 		s.following = false
+		s.follow <- struct{}{}
 	}()
 
 	// keep the ws connection alive

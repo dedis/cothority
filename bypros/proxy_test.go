@@ -3,6 +3,7 @@ package bypros
 import (
 	"fmt"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -56,7 +57,7 @@ func TestProxyFollow_One_Block(t *testing.T) {
 
 	require.True(t, s.following)
 
-	require.Len(t, storage.storeBlocks, 0)
+	require.Len(t, storage.getBlocks(), 0)
 
 	bct.SendInst(&byzcoin.TxArgsDefault, byzcoin.Instruction{
 		InstanceID: byzcoin.NewInstanceID(bct.GenesisDarc.GetBaseID()),
@@ -66,7 +67,7 @@ func TestProxyFollow_One_Block(t *testing.T) {
 	})
 
 	// we should have received the added block
-	require.Len(t, storage.storeBlocks, 1)
+	require.Len(t, storage.getBlocks(), 1)
 }
 
 func TestProxyFollow_Many_Blocks(t *testing.T) {
@@ -104,7 +105,7 @@ func TestProxyFollow_Many_Blocks(t *testing.T) {
 
 	require.True(t, s.following)
 
-	require.Len(t, storage.storeBlocks, 0)
+	require.Len(t, storage.getBlocks(), 0)
 
 	bct.SendInst(&byzcoin.TxArgsDefault, byzcoin.Instruction{
 		InstanceID: byzcoin.NewInstanceID(bct.GenesisDarc.GetBaseID()),
@@ -121,7 +122,7 @@ func TestProxyFollow_Many_Blocks(t *testing.T) {
 	})
 
 	// we should have received the added block
-	require.Len(t, storage.storeBlocks, 2)
+	require.Len(t, storage.getBlocks(), 2)
 }
 
 func TestProxyFollow_Wrong_Skipchain(t *testing.T) {
@@ -190,7 +191,7 @@ func TestProxyFollow_UnFollow(t *testing.T) {
 
 	require.True(t, s.following)
 
-	require.Len(t, storage.storeBlocks, 0)
+	require.Len(t, storage.getBlocks(), 0)
 
 	bct.SendInst(&byzcoin.TxArgsDefault, byzcoin.Instruction{
 		InstanceID: byzcoin.NewInstanceID(bct.GenesisDarc.GetBaseID()),
@@ -200,7 +201,7 @@ func TestProxyFollow_UnFollow(t *testing.T) {
 	})
 
 	// we should have received the added block
-	require.Len(t, storage.storeBlocks, 1)
+	require.Len(t, storage.getBlocks(), 1)
 
 	_, err = s.Unfollow(&Unfollow{})
 	require.NoError(t, err)
@@ -213,7 +214,7 @@ func TestProxyFollow_UnFollow(t *testing.T) {
 	})
 
 	// we should still have the same number of blocks
-	require.Len(t, storage.storeBlocks, 1)
+	require.Len(t, storage.getBlocks(), 1)
 
 	_, err = s.Follow(req)
 	require.NoError(t, err)
@@ -226,7 +227,7 @@ func TestProxyFollow_UnFollow(t *testing.T) {
 	})
 
 	// we should have a new block
-	require.Len(t, storage.storeBlocks, 2)
+	require.Len(t, storage.getBlocks(), 2)
 }
 
 func TestProxyCatchUp_Genesis(t *testing.T) {
@@ -283,7 +284,7 @@ func TestProxyCatchUp_Genesis(t *testing.T) {
 	}
 
 	// we should have the genesis block
-	require.Len(t, storage.storeBlocks, 1)
+	require.Len(t, storage.getBlocks(), 1)
 }
 
 func TestProxyCatchUp_Wrong_Skipchain(t *testing.T) {
@@ -394,7 +395,7 @@ func TestProxyCatchUp_Multiple_Blocks(t *testing.T) {
 	}
 
 	// we should have 4 blocks
-	require.Len(t, storage.storeBlocks, 4)
+	require.Len(t, storage.getBlocks(), 4)
 }
 
 func TestProxyCatchUp_Query(t *testing.T) {
@@ -445,6 +446,8 @@ func newFakeStorage() (storage.Storage, error) {
 }
 
 type fakeStorage struct {
+	sync.Mutex
+
 	storage.Storage
 
 	storeBlocks []*skipchain.SkipBlock
@@ -457,6 +460,9 @@ func (s *fakeStorage) GetBlock(blockHash []byte) (int, error) {
 
 // StoreBlock should store the block.
 func (s *fakeStorage) StoreBlock(block *skipchain.SkipBlock) (int, error) {
+	s.Lock()
+	defer s.Unlock()
+
 	s.storeBlocks = append(s.storeBlocks, block)
 
 	return -1, nil
@@ -465,4 +471,11 @@ func (s *fakeStorage) StoreBlock(block *skipchain.SkipBlock) (int, error) {
 // Query executes the query and returns the result.
 func (s *fakeStorage) Query(query string) ([]byte, error) {
 	return []byte(query), nil
+}
+
+func (s *fakeStorage) getBlocks() []*skipchain.SkipBlock {
+	s.Lock()
+	defer s.Unlock()
+
+	return append([]*skipchain.SkipBlock{}, s.storeBlocks...)
 }

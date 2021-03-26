@@ -2,7 +2,7 @@
 # variables. Use `docker build .` to build an image. Then use it with:
 # `docker run -p 5432:5432 -v ${PWD}/postgres:/var/lib/postgresql/data <docker ID>`
 
-FROM postgres
+FROM postgres:13
 
 COPY schema/schema.sql docker-entrypoint-initdb.d/
 
