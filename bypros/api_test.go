@@ -110,12 +110,6 @@ func TestClientCatchUP(t *testing.T) {
 			t.Error("didn't received after timeout")
 		}
 	}
-
-	select {
-	case resp := <-responses:
-		t.Error("unexpected message", resp)
-	default:
-	}
 }
 
 // -----------------------------------------------------------------------------

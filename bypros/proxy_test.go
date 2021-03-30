@@ -238,6 +238,8 @@ func TestProxyCatchUp_Genesis(t *testing.T) {
 	bct.AddGenesisRules(valueRule)
 	bct.CreateByzCoin()
 
+	time.Sleep(time.Second)
+
 	storage := &fakeStorage{}
 
 	s := Service{
@@ -295,6 +297,8 @@ func TestProxyCatchUp_Wrong_Skipchain(t *testing.T) {
 	bct.AddGenesisRules(valueRule)
 	bct.CreateByzCoin()
 
+	time.Sleep(time.Second)
+
 	storage := &fakeStorage{}
 
 	s := Service{
@@ -330,6 +334,8 @@ func TestProxyCatchUp_Multiple_Blocks(t *testing.T) {
 
 	bct.AddGenesisRules(valueRule)
 	bct.CreateByzCoin()
+
+	time.Sleep(time.Second)
 
 	storage := &fakeStorage{}
 
@@ -405,6 +411,8 @@ func TestProxyCatchUp_Query(t *testing.T) {
 
 	bct.AddGenesisRules(valueRule)
 	bct.CreateByzCoin()
+
+	time.Sleep(time.Second)
 
 	storage := &fakeStorage{}
 
