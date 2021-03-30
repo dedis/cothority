@@ -49,7 +49,7 @@ $ bcadmin contract value invoke update --value "Bye World" --instid ...
 Spawn a deferred contract with a value contract as the proposed transaction:
 
 ```bash
-$ bcadmin --export contract value spawn --value "Hello Word" | bcadmin contract deferred spawn
+$ bcadmin contract --export value spawn --value "Hello Word" | bcadmin contract deferred spawn
 ```
 
 Invoke an addProof on a deferred contract:

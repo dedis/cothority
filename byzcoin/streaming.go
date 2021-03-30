@@ -128,7 +128,10 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 	outChan := make(chan *PaginateResponse)
 	stopChan := make(chan bool)
 
+	done := make(chan struct{})
+
 	go func() {
+		defer close(done)
 
 		if msg.PageSize < 1 {
 			outChan <- &PaginateResponse{
@@ -159,6 +162,7 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 		nextID := msg.StartID
 
 		for pageNum := uint64(0); pageNum < msg.NumPages; pageNum++ {
+
 			_, skipBlock, err := s.getBlockTx(nextID)
 
 			blocks := make([]*skipchain.SkipBlock, msg.PageSize)
@@ -230,6 +234,7 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 				PageNumber: pageNum,
 				Backward:   msg.Backward,
 			}
+
 			// Allows the service to exit prematurely if the connection stops
 			select {
 			case <-stopChan:
@@ -238,9 +243,14 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 				outChan <- response
 			}
 		}
-		// Waiting for the streaming connection to stop. This signal comes
-		// from onet, which sets it when the client closes the connection.
+	}()
+
+	go func() {
+		// Waiting for the streaming connection to stop. This signal comes from
+		// onet, which sets it when the client closes the connection.
 		<-stopChan
+		<-done // wait on the paginate routine to stop
+		close(outChan)
 	}()
 
 	return outChan, stopChan, nil
