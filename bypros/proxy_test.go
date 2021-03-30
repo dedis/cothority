@@ -230,65 +230,6 @@ func TestProxyFollow_UnFollow(t *testing.T) {
 	require.Len(t, storage.getBlocks(), 2)
 }
 
-func TestProxyCatchUp_Genesis(t *testing.T) {
-
-	bct := byzcoin.NewBCTestDefault(t)
-	defer bct.CloseAll()
-
-	bct.AddGenesisRules(valueRule)
-	bct.CreateByzCoin()
-
-	time.Sleep(time.Second)
-
-	storage := &fakeStorage{}
-
-	s := Service{
-		follow:  make(chan struct{}, 1),
-		storage: storage,
-	}
-
-	resp, stop, err := s.CatchUP(&CatchUpMsg{
-		ScID:        bct.Genesis.SkipChainID(),
-		Target:      bct.Roster.Get(0),
-		FromBlock:   bct.Genesis.SkipChainID(),
-		UpdateEvery: 1,
-	})
-
-	require.NoError(t, err)
-	defer close(stop)
-
-	expected := []*CatchUpResponse{
-		{
-			Status: CatchUpStatus{
-				Message:    "parsed block 0",
-				BlockIndex: 0,
-				BlockHash:  bct.Genesis.SkipChainID(),
-			},
-		},
-		{
-			Done: true,
-		},
-	}
-
-	for i := 0; i < len(expected); i++ {
-		select {
-		case r := <-resp:
-			require.Equal(t, expected[i], r)
-		case <-time.After(time.Second * 5):
-			t.Error("timeout on catch up response")
-		}
-	}
-
-	select {
-	case r, more := <-resp:
-		require.False(t, more, "unexpected resp:", r)
-	default:
-	}
-
-	// we should have the genesis block
-	require.Len(t, storage.getBlocks(), 1)
-}
-
 func TestProxyCatchUp_Wrong_Skipchain(t *testing.T) {
 
 	bct := byzcoin.NewBCTestDefault(t)
