@@ -27,32 +27,32 @@ main(){
     startTest
     buildConode go.dedis.ch/cothority/v3/byzcoin go.dedis.ch/cothority/v3/byzcoin/contracts
     [[ ! -x ./bcadmin ]] && exit 1
-#    run testReset
-#    run testDbReplay
-#    run testDbMerge
-#    run testDbCatchup
-#    run testDebugBlock
-#    run testLink
-#    run testLinkScenario
-#    run testCoin
-#    run testRoster
-#    run testCreateStoreRead
-#    run testAddDarc
-#    run testDarcAddDeferred
-#    run testDarcAddRuleMinimum
-#    run testRuleDarc
-#    run testAddDarcFromOtherOne
-#    run testAddDarcWithOwner
-#    run testExpression
-#    run testLinkPermission
-#    run testQR
-#    run testUpdateDarcDesc
-#    run testResolveiid
-#    run testInstructionGet
-#    run testContractValue
-#    run testContractDeferred
-#    run testContractConfig
-#    run testContractName
+    run testReset
+    run testDbReplay
+    run testDbMerge
+    run testDbCatchup
+    run testDebugBlock
+    run testLink
+    run testLinkScenario
+    run testCoin
+    run testRoster
+    run testCreateStoreRead
+    run testAddDarc
+    run testDarcAddDeferred
+    run testDarcAddRuleMinimum
+    run testRuleDarc
+    run testAddDarcFromOtherOne
+    run testAddDarcWithOwner
+    run testExpression
+    run testLinkPermission
+    run testQR
+    run testUpdateDarcDesc
+    run testResolveiid
+    run testInstructionGet
+    run testContractValue
+    run testContractDeferred
+    run testContractConfig
+    run testContractName
     run testUser
     stopTest
 }

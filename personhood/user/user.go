@@ -32,23 +32,20 @@ type User struct {
 func New(cl *byzcoin.Client, credIID byzcoin.InstanceID) (u User, err error) {
 	resp, err := cl.GetProof(credIID[:])
 	if err != nil {
-		err = xerrors.Errorf("while getting proof for credential instance: %v",
-			err)
-		return
+		return u, xerrors.Errorf("while getting proof for credential instance"+
+			": %v", err)
 	}
 	buf, cid, did, err := resp.Proof.Get(credIID[:])
 	if err != nil {
-		err = xerrors.Errorf("reading proof: %v", err)
-		return
+		return u, xerrors.Errorf("reading proof: %v", err)
 	}
 	if cid != contracts.ContractCredentialID {
-		err = xerrors.Errorf("credIID points to wrong contract: %s instead of"+
-			" %s", cid, contracts.ContractCredentialID)
-		return
+		return u, xerrors.Errorf(
+			"credIID points to wrong contract: %s instead of %s", cid,
+			contracts.ContractCredentialID)
 	}
 	if err = protobuf.Decode(buf, &u.credStruct); err != nil {
-		err = xerrors.Errorf("while decoding CredentialStruct: %v", err)
-		return
+		return u, xerrors.Errorf("while decoding CredentialStruct: %v", err)
 	}
 
 	resp, err = cl.GetProof(did)
