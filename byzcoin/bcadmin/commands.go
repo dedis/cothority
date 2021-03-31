@@ -1047,7 +1047,7 @@ var cmds = cli.Commands{
 			},
 			{
 				Name:      "show",
-				ArgsUsage: "bc-xxx.cfg [credentialIID]",
+				ArgsUsage: "bc-xxx.cfg credentialIID",
 				Usage:     "fetches the latest configuration of the user and shows it",
 				Action:    userShow,
 			},
