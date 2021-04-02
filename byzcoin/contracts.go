@@ -4,6 +4,8 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/onet/v3/log"
 	"net/url"
 	"strconv"
 	"strings"
@@ -548,7 +550,10 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 				fmt.Errorf("couldn't get latest skipblock: %v", err)
 		}
 
-		if rst.GetVersion() < VersionViewchange {
+		leaderRotation := len(req.Proof) == 1 &&
+			req.Proof[0].View.ID.IsNull()
+		switch v := rst.GetVersion(); {
+		case v < VersionViewchange:
 			// If everything is correctly signed, then we trust it, no need
 			// to do additional verification.
 			sigBuf := inst.Invoke.Args.Search("multisig")
@@ -556,7 +561,41 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 			if err != nil {
 				return nil, nil, xerrors.Errorf("invalid signature: %v", err)
 			}
-		} else {
+
+		case leaderRotation && v >= VersionAutoViewchange:
+			// Do leader rotation
+			if c.LeaderRotation == 0 {
+				return nil, nil, xerrors.Errorf(
+					"auto-viewchange is not enabled in genesis-config")
+			}
+			autoLeader :=
+				((rst.GetIndex() - c.LastViewchange) / c.LeaderRotation) %
+					len(c.Roster.List)
+			if autoLeader <= 0 {
+				return nil, nil, xerrors.New(
+					"cannot auto-viewchange current leader")
+			}
+			signedLeader := req.Proof[0].View.LeaderIndex
+			if autoLeader != signedLeader {
+				return nil, nil, xerrors.Errorf(
+					"new leader request from wrong leader:"+
+						"required: %d - signed: %d", autoLeader, signedLeader)
+			}
+
+			// Verify signature
+			err := schnorr.Verify(cothority.Suite, c.Roster.List[autoLeader].
+				Public, []byte{}, req.Proof[0].Signature)
+			if err != nil {
+				return nil, nil, xerrors.Errorf(
+					"wronng signature for new leader")
+			}
+
+			// Rotate roster, don't trust what the client sent
+			newRoster := onet.NewRoster(append(c.Roster.List[autoLeader:],
+				c.Roster.List[:autoLeader]...))
+			req.Roster = *newRoster
+
+		default:
 			// For byzcoin version >= VersionViewchange,
 			// the contract has to verify all the proofs.
 			// But it avoids having to do a BLS signature.
@@ -572,6 +611,7 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 			}
 		}
 
+		log.LLvl2("Accepting new roster", req.Roster)
 		sc, err := updateRosterScs(rst, darcID, req.Roster)
 		return sc, coins, cothority.ErrorOrNil(err, "roster scs")
 	default:
