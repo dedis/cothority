@@ -4,6 +4,9 @@ This library offers methods to talk to a cothority node. At this point, it
 offers a socket interface that marshals and unmarshals automatically protobuf
 messages.
 
+This is fork for the TWINS project with commits from [twins-demo-september](https://github.com/dedis/cothority/tree/twins-demo-september)
+branch.
+
 ## Usage
 
 Import the library using
