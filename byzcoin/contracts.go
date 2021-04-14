@@ -442,7 +442,7 @@ func (c *contractConfig) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []
 	c.BlockInterval = time.Duration(interval)
 	c.Roster = roster
 	c.MaxBlockSize = int(maxsz)
-	if err = c.sanityCheck(nil); err != nil {
+	if err = c.sanityCheck(nil, rst.GetVersion()); err != nil {
 		return nil, nil, xerrors.Errorf("sanity check: %v", err)
 	}
 
@@ -507,7 +507,7 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		if err != nil {
 			return nil, nil, xerrors.Errorf("reading trie: %v", err)
 		}
-		if err = newConfig.sanityCheck(oldConfig); err != nil {
+		if err = newConfig.sanityCheck(oldConfig, rst.GetVersion()); err != nil {
 			return nil, nil, xerrors.Errorf("sanity check: %v", err)
 		}
 		var val []byte
