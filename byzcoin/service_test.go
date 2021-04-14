@@ -1580,6 +1580,53 @@ func TestService_SetConfig(t *testing.T) {
 	require.Equal(t, blocksize, newBlocksize)
 }
 
+func TestService_SetConfigRosterWrong(t *testing.T) {
+	bArgs := defaultBCTArgs
+	b := newBCTRun(t, &bArgs)
+	defer b.CloseAll()
+	b.SpawnDummy(nil)
+
+	log.Lvl1("Proposing various wrong new rosters")
+
+	log.Lvl1("Trying ServerIdentity without public key")
+	// Take a copy of the ServerIdentity so we can change it
+	_, si := onet.NewPrivIdentity(cothority.Suite, 2000)
+	si.Public = nil
+	proposeRoster(t, b, si)
+
+	log.Lvl1("Trying ServerIdentity without address")
+	_, si = onet.NewPrivIdentity(cothority.Suite, 2000)
+	si.Address = ""
+	proposeRoster(t, b, si)
+
+	log.Lvl1("Trying ServerIdentity without description")
+	_, si = onet.NewPrivIdentity(cothority.Suite, 2000)
+	si.Description = ""
+	proposeRoster(t, b, si)
+
+	log.Lvl1("Trying ServerIdentity without ServerIdentity")
+	_, si = onet.NewPrivIdentity(cothority.Suite, 2000)
+	si.ServiceIdentities = []network.ServiceIdentity{}
+	proposeRoster(t, b, si)
+}
+
+func proposeRoster(t *testing.T, b *BCTest, newSI *network.ServerIdentity) {
+	_, siDump := onet.NewPrivIdentity(cothority.Suite, 2000)
+	newRoster := onet.NewRoster(append(b.Roster.List, siDump))
+	newRoster.List[3] = newSI
+	ctx, _ := createConfigTxWithCounter(b, b.PropagationInterval,
+		*newRoster, defaultMaxBlockSize)
+	args := TxArgsDefault
+	args.RequireSuccess = false
+	b.SendTx(&args, ctx)
+	log.Lvl2("Verifying the correct roster is in place")
+	latest, err := b.Services[0].db().GetLatestByID(b.Genesis.Hash)
+	require.NoError(t, err)
+	equals, err := latest.Roster.Equal(b.Roster)
+	require.NoError(t, err)
+	require.True(t, equals, "roster has been updated with a wrong element")
+}
+
 func TestService_SetConfigRosterKeepLeader(t *testing.T) {
 	n := 6
 	if testing.Short() {

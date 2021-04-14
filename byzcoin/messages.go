@@ -24,7 +24,7 @@ func init() {
 type Version int
 
 // CurrentVersion is what we're running now
-const CurrentVersion Version = VersionRollup
+const CurrentVersion Version = VersionRosterCheck
 
 const (
 	// VersionInstructionHash is the first version and indicates that a new,
@@ -44,4 +44,7 @@ const (
 	// VersionRollup indicates that the followers send their transactions to
 	// the leader, instead of polling by the leader.
 	VersionRollup = 7
+	// VersionRosterCheck verifies better whether a new proposed roster
+	// configuration is valid
+	VersionRosterCheck = 8
 )

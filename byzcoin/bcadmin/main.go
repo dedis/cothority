@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/BurntSushi/toml"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -510,6 +511,18 @@ func getBcKeyPub(c *cli.Context) (cfg lib.Config, cl *byzcoin.Client,
 		err = xerrors.Errorf("couldn't open %v: %v", fn, err)
 		return
 	}
+	if group.Roster == nil {
+		log.Lvl2("This is no roster file - trying public.toml format")
+		var pubToml app.ServerToml
+		_, err = toml.DecodeFile(fn, &pubToml)
+		if err != nil {
+			err = xerrors.Errorf("while decoding %s as public.toml: %v", fn,
+				err)
+			return
+		}
+		pub, err = pubToml.ToServerIdentity()
+		return
+	}
 	if len(group.Roster.List) != 1 {
 		err = xerrors.New("the TOML file should have exactly one entry")
 		return
@@ -520,6 +533,7 @@ func getBcKeyPub(c *cli.Context) (cfg lib.Config, cl *byzcoin.Client,
 }
 
 func updateConfig(cl *byzcoin.Client, signer *darc.Signer, chainConfig byzcoin.ChainConfig) error {
+	log.Lvl1("Preparing new configuration")
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
 	if err != nil {
 		return xerrors.Errorf("couldn't get counters: %v", err)
@@ -547,11 +561,12 @@ func updateConfig(cl *byzcoin.Client, signer *darc.Signer, chainConfig byzcoin.C
 		return xerrors.Errorf("couldn't sign the clientTransaction: %v", err)
 	}
 
-	log.Lvl1("Sending new roster to byzcoin")
+	log.Info("Sending new roster to byzcoin")
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	if err != nil {
 		return xerrors.Errorf("client transaction wasn't accepted: %v", err)
 	}
+	log.Info("New roster is now active")
 	return nil
 }
 
@@ -756,6 +771,23 @@ func rosterAdd(c *cli.Context) error {
 		return err
 	}
 
+	for _, service := range []string{byzcoin.ServiceName,
+		skipchain.ServiceName} {
+		found := false
+		for _, si := range pub.ServiceIdentities {
+			if si.Name == service {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return xerrors.Errorf("Couldn't find ServiceIdentity[%s]", service)
+		}
+	}
+	if len(pub.ServiceIdentities) == 0 {
+		return xerrors.New("no ServiceIdentities found")
+	}
+
 	old := chainConfig.Roster
 	if i, _ := old.Search(pub.ID); i >= 0 {
 		return xerrors.New("new node is already in roster")
@@ -768,7 +800,6 @@ func rosterAdd(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	log.Lvl1("New roster is now active")
 
 	return lib.WaitPropagation(c, cl)
 }
@@ -800,7 +831,6 @@ func rosterDel(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	log.Lvl1("New roster is now active")
 
 	return lib.WaitPropagation(c, cl)
 }
@@ -824,7 +854,7 @@ func rosterLeader(c *cli.Context) error {
 		return xerrors.New("new node is already leader")
 	}
 	log.Lvl2("Old roster is:", old.List)
-	list := []*network.ServerIdentity(old.List)
+	list := append(old.List)
 	list[0], list[i] = list[i], list[0]
 	chainConfig.Roster = *onet.NewRoster(list)
 	log.Lvl2("New roster is:", chainConfig.Roster.List)
@@ -834,7 +864,6 @@ func rosterLeader(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	log.Lvl1("New roster is now active")
 
 	return lib.WaitPropagation(c, cl)
 }

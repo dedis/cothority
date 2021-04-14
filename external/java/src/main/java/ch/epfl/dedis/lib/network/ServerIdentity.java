@@ -128,7 +128,7 @@ public class ServerIdentity {
         byte[] id = UUIDType5.toBytes(UUIDType5.nameUUIDFromNamespaceAndString(UUIDType5.NAMESPACE_URL, pubStr));
         si.setId(ByteString.copyFrom(id));
         si.setAddress(getAddress().toString());
-        si.setDescription("");
+        si.setDescription(String.format("Node %s", address.toString()));
 
         for (ServiceIdentity srvid : serviceIdentities) {
             NetworkProto.ServiceIdentity.Builder data = NetworkProto.ServiceIdentity.newBuilder();
