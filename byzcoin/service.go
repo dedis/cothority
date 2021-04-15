@@ -1605,7 +1605,7 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 		log.Errorf("Couldn't update chain: %+v", err)
 	}
 
-	log.LLvlf2("%v Done catch up %x / %d", s.ServerIdentity(),
+	log.Lvlf2("%v Done catch up %x / %d", s.ServerIdentity(),
 		sb.SkipChainID(), trieIndex)
 }
 
