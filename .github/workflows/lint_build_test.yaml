@@ -58,7 +58,7 @@ jobs:
       - name: Running lint and formatting
         run: |
           make -C conode verify
-          make test_{fmt,lint}
+          make test_{fmt,lint,llvl}
 
       - name: Building everything
         run: go build ./...

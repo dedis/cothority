@@ -29,7 +29,7 @@ const (
 func (s *Service) Follow(req *Follow) (*EmptyReply, error) {
 	select {
 	case <-s.follow:
-		log.LLvl1("proxy following")
+		log.Lvl1("proxy following")
 	default:
 		return nil, xerrors.Errorf("already following")
 	}
@@ -68,7 +68,7 @@ func (s *Service) Follow(req *Follow) (*EmptyReply, error) {
 		conn.Close()
 
 		waitDone.Wait()
-		log.LLvl1("done following")
+		log.Lvl1("done following")
 		s.following = false
 		s.follow <- struct{}{}
 	}()
@@ -268,7 +268,7 @@ func (s *Service) followCallback(sr byzcoin.StreamingResponse, err error) {
 
 // parseBlock updates the database with the block is not already found.
 func (s *Service) parseBlock(block *skipchain.SkipBlock) error {
-	log.LLvl3("parsing block", block.Index)
+	log.Lvl3("parsing block", block.Index)
 
 	blockID, err := s.storage.GetBlock(block.Hash)
 	if err != nil {
@@ -276,7 +276,7 @@ func (s *Service) parseBlock(block *skipchain.SkipBlock) error {
 	}
 
 	if blockID != -1 {
-		log.LLvlf3("block with index %d already exist: skipping", block.Index)
+		log.Lvlf3("block with index %d already exist: skipping", block.Index)
 		return nil
 	}
 
