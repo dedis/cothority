@@ -149,7 +149,7 @@ func (s *Service) listenBlocks(conn *websocket.Conn) {
 				log.Warnf("failed to read request: %v", err)
 			}
 
-			log.LLvl1("stops listening on blocks")
+			log.Lvl1("stops listening on blocks")
 
 			s.notifyStop()
 			return
@@ -190,6 +190,10 @@ func (s *Service) CatchUP(req *CatchUpMsg) (chan *CatchUpResponse, chan bool, er
 			"expected '%x', got '%x'", s.scID, req.ScID)
 	}
 
+	if req.UpdateEvery < 1 {
+		return nil, nil, xerrors.Errorf("wrong 'updateEvery' value: %d", req.UpdateEvery)
+	}
+
 	wsAddr, err := getWsAddr(req.Target)
 	if err != nil {
 		return nil, nil, xerrors.Errorf("failed to get ws addr: %v", err)
@@ -210,11 +214,6 @@ func (s *Service) doCatchUP(outChan catchUpOut, stopChan chan bool, req *CatchUp
 	count := 0
 
 	browseDone := make(chan struct{})
-
-	if req.UpdateEvery < 1 {
-		log.Warn("got invalid 'updateEvery' value, setting it to 1")
-		req.UpdateEvery = 1
-	}
 
 	// cancel the context in case we receive a stop signal
 	go func() {
