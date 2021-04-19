@@ -45,3 +45,8 @@ test_proto:
 		echo "Please update proto-files with 'make proto'"; \
 		exit 1; \
 	fi
+
+test_llvl:
+	@if find . -name "*.go" | xargs grep -r log.LLvl; then \
+		echo "LLvl is only for debugging"; exit 1; \
+	fi

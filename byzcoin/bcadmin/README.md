@@ -265,3 +265,26 @@ The `--overwrite` is necessary to store all blocks from the `cached.db` file
 to the existing database.
 
 A `cached.db` is available at https://demo.c4dt.org/omniledger/cached.db
+
+## User management
+
+To interact with the (dynacred)[../../personhood/dynacred/README.md]
+structures on ByzCoin, bcadmin allows to link to your personal dynacred-account.
+This supposes you're using the (omniledger)[https://github.com/c4dt
+/omniledger] web-interface to manage your account.
+
+In your account, e.g., https://login.c4dt.org/admin/devices, start by adding a
+ new device.
+You can give it a name like `CLI` or `bcadmin`.
+Instead of opening the link for the new device, copy the URL of the link.
+Then you can link to this account using the following command:
+
+```bash
+bcadmin user connect bc*.cfg https://login.c4dt.org/...
+```
+
+This will search for the given account, and then rotate the key.
+So one link can only be used once.
+
+Once the user account is set up, you can use the new key with the other
+ bcadmin commands.

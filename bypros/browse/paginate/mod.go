@@ -159,7 +159,7 @@ func (p *Paginate) handlePages(ctx context.Context, numPages int, ws *websocket.
 	}
 
 	if len(block.ForwardLink) == 0 {
-		log.LLvl1("we're at the end of the chain")
+		log.Lvl1("we're at the end of the chain")
 		return nil, nil
 	}
 
@@ -176,7 +176,7 @@ func (p *Paginate) checkError(ctx context.Context, resp byzcoin.PaginateResponse
 	// at then end. It could also mean the very first block we're trying
 	// to get doesn't exist.
 	if resp.ErrorCode == byzcoin.PaginatePageFailed {
-		log.LLvl1("done with the chain")
+		log.Lvl1("done with the chain")
 		return true, nil
 	}
 
@@ -191,7 +191,7 @@ func (p *Paginate) checkError(ctx context.Context, resp byzcoin.PaginateResponse
 			return false, xerrors.Errorf("failed to read paginate response: %v", err)
 		}
 
-		log.LLvlf1("reached the end, loading remaining %d blocks", index)
+		log.Lvlf1("reached the end, loading remaining %d blocks", index)
 
 		if block == nil {
 			// this is a special case where the first block of the first

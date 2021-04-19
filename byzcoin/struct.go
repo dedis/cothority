@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 	"sort"
 	"strings"
 	"sync"
@@ -655,7 +656,7 @@ func (bc *bcNotifications) unregisterForBlocks(ch waitChannel) {
 	}
 }
 
-func (c ChainConfig) sanityCheck(old *ChainConfig) error {
+func (c ChainConfig) sanityCheck(old *ChainConfig, version Version) error {
 	if c.BlockInterval <= 0 {
 		return xerrors.New("block interval is less or equal to zero")
 	}
@@ -671,8 +672,41 @@ func (c ChainConfig) sanityCheck(old *ChainConfig) error {
 	if len(c.Roster.List) < 3 {
 		return xerrors.New("need at least 3 nodes to have a majority")
 	}
+
+	if version >= VersionRosterCheck {
+		for i, si := range c.Roster.List {
+			if err := c.nodeCheck(i, si); err != nil {
+				return xerrors.Errorf("while checking roster: %v", err)
+			}
+		}
+	}
+
 	if old != nil {
 		return cothority.ErrorOrNil(old.checkNewRoster(c.Roster), "roster check")
+	}
+	return nil
+}
+
+func (c ChainConfig) nodeCheck(i int, si *network.ServerIdentity) error {
+	err := fmt.Sprintf("node[%d] = %s of roster", i, si.Description)
+	if si.Public == nil {
+		return xerrors.Errorf("%s has no public key", err)
+	}
+	if si.Address == "" {
+		return xerrors.Errorf("%s has no address", err)
+	}
+	if si.Description == "" {
+		return xerrors.Errorf("%s has no description", err)
+	}
+searchService:
+	for _, service := range []string{ServiceName,
+		skipchain.ServiceName} {
+		for _, si := range si.ServiceIdentities {
+			if si.Name == service && si.Public != nil && si.Suite != "" {
+				continue searchService
+			}
+		}
+		return xerrors.Errorf("%s is missing service %s", service)
 	}
 	return nil
 }

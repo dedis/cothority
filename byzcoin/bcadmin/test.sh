@@ -53,6 +53,7 @@ main(){
     run testContractDeferred
     run testContractConfig
     run testContractName
+    run testUser
     stopTest
 }
 
@@ -61,8 +62,8 @@ testReset(){
   rm -f config/* *.db
   runCoBG 1 2 3
   runBA create public.toml --interval .5s
-  bc=config/bc*cfg
-  key=config/key*cfg
+  bc=$( echo config/bc*cfg )
+  key=$( echo config/key*cfg )
   bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
   db=service_storage/$( ls service_storage | tail -n 1 )
   runBA config --blockSize 1000000 $bc $key
@@ -75,8 +76,8 @@ testDbReplay(){
   rm -f config/* *.db
   runCoBG 1 2 3
   testOK runBA create public.toml --interval .5s
-  bc=config/bc*cfg
-  key=config/key*cfg
+  bc=$( echo config/bc*cfg )
+  key=$( echo config/key*cfg )
   bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
   keyPub=$( echo $key | sed -e "s/.*:\(.*\).cfg/\1/" )
 
@@ -99,8 +100,8 @@ testDbMerge(){
   rm -f config/*
   runCoBG 1 2 3
   testOK runBA create public.toml --interval .5s
-  bc=config/bc*cfg
-  key=config/key*cfg
+  bc=$( echo config/bc*cfg )
+  key=$( echo config/key*cfg )
   bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
   keyPub=$( echo $key | sed -e "s/.*:\(.*\).cfg/\1/" )
 
@@ -122,8 +123,8 @@ testDbCatchup(){
   rm -f config/*
   runCoBG 1 2 3
   testOK runBA create public.toml --interval .5s
-  bc=config/bc*cfg
-  key=config/key*cfg
+  bc=$( echo config/bc*cfg )
+  key=$( echo config/key*cfg )
   bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
   keyPub=$( echo $key | sed -e "s/.*:\(.*\).cfg/\1/" )
 
@@ -138,8 +139,8 @@ testDebugBlock(){
   rm -f config/*
   runCoBG 1 2 3
   testOK runBA create public.toml --interval .5s
-  bc=config/bc*cfg
-  key=config/key*cfg
+  bc=$( echo config/bc*cfg )
+  key=$( echo config/key*cfg )
   bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
   keyPub=$( echo $key | sed -e "s/.*:\(.*\).cfg/\1/" )
 
@@ -157,8 +158,8 @@ testLink(){
   rm -f config/*
   runCoBG 1 2 3
   testOK runBA create public.toml --interval .5s
-  bc=config/bc*cfg
-  key=config/key*cfg
+  bc=$( echo config/bc*cfg )
+  key=$( echo config/key*cfg )
   runBA key --save newkey.id
   testOK runBA darc add --bc $bc --id $( cat newkey.id ) --out_id darc.id
 
@@ -229,8 +230,8 @@ testCoin(){
   rm -f config/*
   runCoBG 1 2 3
   testOK runBA create public.toml --interval .5s
-  bc=config/bc*cfg
-  key=config/key*cfg
+  bc=$( echo config/bc*cfg )
+  key=$( echo config/key*cfg )
   keyPub=$( echo $key | sed -e "s/.*key-ed25519:\(.*\).cfg/\1/" )
   testOK runBA mint $bc $key $keyPub 10000
 }
@@ -239,8 +240,8 @@ testRoster(){
   rm -f config/*
   runCoBG 1 2 3 4
   testOK runBA create public.toml --interval .5s
-  bc=config/bc*cfg
-  key=config/key*cfg
+  bc=$( echo config/bc*cfg )
+  key=$( echo config/key*cfg )
   testOK runBA latest $bc
 
   # Adding an already added roster should raise an error
@@ -282,8 +283,8 @@ testLinkPermission() {
   runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
   eval $SED
   [ -z "$BC" ] && exit 1
-  bc=config/bc*cfg
-  key=config/key*cfg
+  bc=$( echo config/bc*cfg )
+  key=$( echo config/key*cfg )
   testOK runBA latest $bc
   build $APPDIR/../../scmgr
   SCMGR_APP="./scmgr"
@@ -562,6 +563,54 @@ testInstructionGet() {
 
   testOK runBA0 instance get -i 0000000000000000000000000000000000000000000000000000000000000000
   testOK runBA0 instance get -i 0000000000000000000000000000000000000000000000000000000000000000 --hex
+}
+
+testUser(){
+  rm -f config/* *.db
+  runCoBG 1 2 3
+  testOK runBA create public.toml --interval .5s
+  bc=$( echo -n config/bc*cfg )
+  key=$( echo -n config/key*cfg )
+  identity=$( runBA0 info --bc $bc | grep Identity | sed -e "s/.* //")
+  bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
+  keyPub=$( echo $key | sed -e "s/.*:\(.*\).cfg/\1/" )
+  testOK runBA darc rule --bc $bc --rule "spawn:credential" \
+    --identity $identity
+
+  testFail runBA user new
+  testFail runBA user new $bc
+  testFail runBA user new $bc $key
+  testGrep "https://login.c4dt.org" runBA user new $bc $key newuser
+  testReGrep "credentialIID"
+  testReGrep "ephemeral"
+  loginURL=$( grep https "$RUNOUT" )
+  credIID=$( grep https "$RUNOUT" | sed -e "s/.*credentialIID=\(.*\)&.*/\1/")
+  echo "CredIID is: $credIID"
+
+  testFail runBA user show
+  testFail runBA user show $bc
+  testFail runBA user show $bc 1234
+  testFail runBA user show $bc "${credIID//[0-9]/1}"
+  testGrep "newuser" runBA user show $bc $credIID
+  credDarcID=$( grep BaseID "$RUNOUT" | sed -e "s/.*darc:\(.*\)/\1/")
+
+  testOK runBA darc rule --bc $bc --sign ed25519:$keyPub --replace \
+    --rule "invoke:darc.evolve" --identity "darc:$credDarcID"
+  testOK runBA darc rule --bc $bc --sign ed25519:$keyPub --replace \
+    --rule "invoke:darc.evolve_unrestricted" --identity "darc:$credDarcID"
+
+  testFail runBA user connect
+  testFail runBA user connect $bc
+  testOK runBA user connect $bc "$loginURL"
+  testFail runBA user connect $bc "$loginURL"
+
+  testFail runBA darc rule --bc $bc --sign ed25519:$keyPub --replace \
+    --rule "invoke:darc.evolve" --identity "darc:$credDarcID"
+  rm -f $key
+  key=$( echo -n config/key*cfg )
+  keyPub=$(echo $key | sed -e "s/.*\key-\(.*\).cfg/\1/")
+  testOK runBA darc rule --bc $bc --sign $keyPub --replace \
+    --rule "invoke:darc.evolve" --identity "darc:$credDarcID"
 }
 
 main

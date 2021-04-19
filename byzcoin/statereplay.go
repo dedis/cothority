@@ -75,7 +75,7 @@ func (s *Service) ReplayState(id skipchain.SkipBlockID,
 		if err != nil {
 			return nil, fmt.Errorf("couldn't copy db-trie to mem-trie: %v", err)
 		}
-		log.LLvl2("Getting latest block:", st.GetIndex()+1)
+		log.Lvl2("Getting latest block:", st.GetIndex()+1)
 		rep, err := s.skService().GetSingleBlockByIndex(&skipchain.
 			GetSingleBlockByIndex{
 			Genesis: sb.SkipChainID(),
