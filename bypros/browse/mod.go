@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/onet/v3/network"
 )
 
 // Handler defines the type of function called on each block
@@ -12,7 +13,7 @@ type Handler func(block *skipchain.SkipBlock) error
 // Service defines the primitive of a browsing service.
 type Service interface {
 	// GetBrowser returns a new browsing actor
-	GetBrowser(handler Handler, id skipchain.SkipBlockID, target string) Actor
+	GetBrowser(handler Handler, id skipchain.SkipBlockID, target *network.ServerIdentity) Actor
 }
 
 // Actor defines the primitives of a browsing actor. An actor is created with a
