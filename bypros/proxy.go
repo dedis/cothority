@@ -148,6 +148,9 @@ func (s *Service) listenBlocks(conn *websocket.Conn) {
 				// that can happen when we close the connection
 				log.Warnf("failed to read request: %v", err)
 			}
+
+			log.LLvl1("stops listening on blocks")
+
 			s.notifyStop()
 			return
 		}
@@ -207,6 +210,11 @@ func (s *Service) doCatchUP(outChan catchUpOut, stopChan chan bool, req *CatchUp
 	count := 0
 
 	browseDone := make(chan struct{})
+
+	if req.UpdateEvery < 1 {
+		log.Warn("got invalid 'updateEvery' value, setting it to 1")
+		req.UpdateEvery = 1
+	}
 
 	// cancel the context in case we receive a stop signal
 	go func() {
@@ -303,7 +311,7 @@ func (s *Service) Unfollow(req *Unfollow) (*EmptyReply, error) {
 func (s *Service) Query(req *Query) (*QueryReply, error) {
 	res, err := s.storage.Query(req.Query)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to query: %v", err)
+		res = []byte(xerrors.Errorf("ERROR: failed to query: %v", err).Error())
 	}
 
 	return &QueryReply{

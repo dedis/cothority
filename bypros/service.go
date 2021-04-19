@@ -84,7 +84,7 @@ func getWsAddr(si *network.ServerIdentity) (string, error) {
 		protocol = "ws"
 	}
 
-	return fmt.Sprintf("%s://%s", protocol, url.Host), nil
+	return fmt.Sprintf("%s://%s%s", protocol, url.Host, url.Path), nil
 }
 
 func getClientAddr(si *network.ServerIdentity) (*url.URL, error) {
