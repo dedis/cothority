@@ -148,6 +148,9 @@ func (s *Service) listenBlocks(conn *websocket.Conn) {
 				// that can happen when we close the connection
 				log.Warnf("failed to read request: %v", err)
 			}
+
+			log.Lvl1("stops listening on blocks")
+
 			s.notifyStop()
 			return
 		}
@@ -185,6 +188,10 @@ func (s *Service) CatchUP(req *CatchUpMsg) (chan *CatchUpResponse, chan bool, er
 	if !s.scID.Equal(req.ScID) {
 		return nil, nil, xerrors.Errorf("wrong skipchain ID: "+
 			"expected '%x', got '%x'", s.scID, req.ScID)
+	}
+
+	if req.UpdateEvery < 1 {
+		return nil, nil, xerrors.Errorf("wrong 'updateEvery' value: %d", req.UpdateEvery)
 	}
 
 	wsAddr, err := getWsAddr(req.Target)
@@ -303,7 +310,7 @@ func (s *Service) Unfollow(req *Unfollow) (*EmptyReply, error) {
 func (s *Service) Query(req *Query) (*QueryReply, error) {
 	res, err := s.storage.Query(req.Query)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to query: %v", err)
+		res = []byte(xerrors.Errorf("ERROR: failed to query: %v", err).Error())
 	}
 
 	return &QueryReply{
