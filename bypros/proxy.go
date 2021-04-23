@@ -111,7 +111,7 @@ func keepAlive(stop chan struct{}, wire *wire) {
 	for {
 		select {
 		case <-time.After(pingWsInterval):
-			err := wire.client.Ping()
+			err := wire.conn.Ping(nil, time.Now().Add(time.Second*10))
 			if err != nil {
 				log.Warnf("failed to ping: %v", err)
 				return
@@ -119,7 +119,6 @@ func keepAlive(stop chan struct{}, wire *wire) {
 		case <-stop:
 			return
 		}
-
 	}
 }
 
@@ -128,9 +127,12 @@ func (s *Service) listenBlocks(wire *wire) {
 	streamResp := byzcoin.StreamingResponse{}
 
 	for {
-		err := wire.conn.ReadMessageKeep(&streamResp)
+		err := wire.conn.ReadMessageWithOpts(&streamResp, onet.StreamingReadOpts{
+			Deadline: time.Time{}, // a zero time will make it block
+		})
 		if err != nil {
-			_, ok := err.(*websocket.CloseError)
+			err2 := xerrors.Unwrap(err)
+			_, ok := err2.(*websocket.CloseError)
 			if !ok {
 				// that can happen when we close the connection
 				log.Warnf("failed to read request: %v", err)
