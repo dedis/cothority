@@ -238,7 +238,7 @@ func (r *IndyVDRResolver) Resolve(id string) (*DIDDoc, error) {
 		pkBuf = append(pkBuf, idBuf...)
 		pkBuf = append(pkBuf, verkeyBuf...)
 	} else {
-		verkeyBuf, err := base58.Decode(nrdata.Verkey[1:])
+		verkeyBuf, err := base58.Decode(nrdata.Verkey)
 		if err != nil {
 			return nil, xerrors.Errorf("error decoding verkey: %s", err)
 		}
