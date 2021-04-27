@@ -9,11 +9,12 @@ import (
 	"github.com/gorilla/websocket"
 	// register the sql driver
 	_ "github.com/jackc/pgx/stdlib"
+	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/bypros/browse/paginate"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
-	"go.dedis.ch/protobuf"
 	"golang.org/x/xerrors"
 )
 
@@ -45,7 +46,7 @@ func (s *Service) Follow(req *Follow) (*EmptyReply, error) {
 	s.following = true
 	s.stopFollow = make(chan struct{}, 1)
 
-	conn, err := subscribe(req)
+	wire, err := subscribe(req)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to subscribe: %v", err)
 	}
@@ -60,12 +61,7 @@ func (s *Service) Follow(req *Follow) (*EmptyReply, error) {
 
 		close(stopPing)
 
-		err := conn.WriteControl(websocket.CloseMessage, nil, time.Now().Add(time.Second*5))
-		if err != nil {
-			log.Warnf("failed to write close: %v", err)
-		}
-
-		conn.Close()
+		wire.client.Close()
 
 		waitDone.Wait()
 		log.Lvl1("done following")
@@ -77,14 +73,14 @@ func (s *Service) Follow(req *Follow) (*EmptyReply, error) {
 	waitDone.Add(1)
 	go func() {
 		defer waitDone.Done()
-		keepAlive(stopPing, conn)
+		keepAlive(stopPing, wire)
 	}()
 
 	// listen to new blocks and save them in the database
 	waitDone.Add(1)
 	go func() {
 		defer waitDone.Done()
-		s.listenBlocks(conn)
+		s.listenBlocks(wire)
 	}()
 
 	return &EmptyReply{}, nil
@@ -92,41 +88,30 @@ func (s *Service) Follow(req *Follow) (*EmptyReply, error) {
 
 // subscribe send a request to start listening on new added blocks. It return a
 // ws connection that will be filled with each new block.
-func subscribe(req *Follow) (*websocket.Conn, error) {
-	apiEndpoint, err := getWsAddr(req.Target)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to get ws addr: %v", err)
-	}
-
-	apiURL := fmt.Sprintf("%s/%s/%s", apiEndpoint, byzcoin.ServiceName, "StreamingRequest")
-	c, _, err := websocket.DefaultDialer.Dial(apiURL, nil)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to dial %s: %v", apiURL, err)
-	}
+func subscribe(req *Follow) (*wire, error) {
+	client := onet.NewClient(cothority.Suite, byzcoin.ServiceName)
 
 	streamReq := byzcoin.StreamingRequest{
 		ID: req.ScID,
 	}
 
-	buf, err := protobuf.Encode(&streamReq)
+	conn, err := client.Stream(req.Target, &streamReq)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to encode streaming request: %v", err)
+		return nil, xerrors.Errorf("failed to stream request: %v", err)
 	}
 
-	err = c.WriteMessage(websocket.BinaryMessage, buf)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to send streaming request: %v", err)
-	}
-
-	return c, nil
+	return &wire{
+		client: client,
+		conn:   conn,
+	}, nil
 }
 
 // keepAlive sends regularly a ping on the connection to keep it alive
-func keepAlive(stop chan struct{}, conn *websocket.Conn) {
+func keepAlive(stop chan struct{}, wire *wire) {
 	for {
 		select {
 		case <-time.After(pingWsInterval):
-			err := conn.WriteMessage(websocket.PingMessage, nil)
+			err := wire.conn.Ping(nil, time.Now().Add(time.Second*10))
 			if err != nil {
 				log.Warnf("failed to ping: %v", err)
 				return
@@ -134,16 +119,20 @@ func keepAlive(stop chan struct{}, conn *websocket.Conn) {
 		case <-stop:
 			return
 		}
-
 	}
 }
 
 // listenBlocks reads for new blocks and parse them.
-func (s *Service) listenBlocks(conn *websocket.Conn) {
+func (s *Service) listenBlocks(wire *wire) {
+	streamResp := byzcoin.StreamingResponse{}
+
 	for {
-		_, buf, err := conn.ReadMessage()
+		err := wire.conn.ReadMessageWithOpts(&streamResp, onet.StreamingReadOpts{
+			Deadline: time.Time{}, // a zero time will make it block
+		})
 		if err != nil {
-			_, ok := err.(*websocket.CloseError)
+			err2 := xerrors.Unwrap(err)
+			_, ok := err2.(*websocket.CloseError)
 			if !ok {
 				// that can happen when we close the connection
 				log.Warnf("failed to read request: %v", err)
@@ -151,14 +140,6 @@ func (s *Service) listenBlocks(conn *websocket.Conn) {
 
 			log.Lvl1("stops listening on blocks")
 
-			s.notifyStop()
-			return
-		}
-
-		streamResp := byzcoin.StreamingResponse{}
-		err = protobuf.Decode(buf, &streamResp)
-		if err != nil {
-			log.Errorf("failed to decode request: %v", err)
 			s.notifyStop()
 			return
 		}
@@ -239,7 +220,7 @@ func (s *Service) doCatchUP(outChan catchUpOut, stopChan chan bool, req *CatchUp
 	}
 
 	browseSrv := paginate.NewService(defaultPageSize, defaultNumPages)
-	browser := browseSrv.GetBrowser(browseHandler, req.ScID, url)
+	browser := browseSrv.GetBrowser(browseHandler, req.ScID, req.Target)
 
 	go func() {
 		err := browser.Browse(ctx, req.FromBlock)
@@ -346,4 +327,10 @@ func (o catchUpOut) done() {
 	}:
 	default:
 	}
+}
+
+// wire bundles the read/write capabilities of the streaming onet
+type wire struct {
+	client *onet.Client
+	conn   onet.StreamingConn
 }
