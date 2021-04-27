@@ -28,8 +28,7 @@ import (
 	"go.dedis.ch/onet/v3/network"
 )
 
-const prometheusTemplate = `
-# HELP voting_conodes_status voting global conodes status: X is the number of conodes; X >= 0.66 OK, 0 < X < 0.66 KO
+const prometheusTemplate = `# HELP voting_conodes_status voting global conodes status: X is the number of conodes; X >= 0.66 OK, 0 < X < 0.66 KO
 # TYPE voting_conodes_status gauge
 voting_conodes_status{} {{ .Connectivity }}
 
@@ -43,9 +42,9 @@ voting_conodes_status_timestamp{} {{ .LastCheckedAt }}
 # TYPE voting_conode_status gauge
 {{- range $conode, $status := .Matrix -}}
 {{ if eq $conode $.Self }}
-voting_conode_status{conode="{{ $conode}}", critical="true"} {{ $status }}
+voting_conode_status{conode="{{ $conode}}", description="{{ $status.Description }}", critical="true"} {{ $status.Status -}}
 {{ else }}
-voting_conode_status{conode="{{ $conode}}", critical="false"} {{ $status }}
+voting_conode_status{conode="{{ $conode}}", description="{{ $status.Description }}", critical="false"} {{ $status.Status -}}
 {{ end }}
 {{- end -}}
 `
@@ -304,9 +303,14 @@ func printJSON(all []se) {
 	out.Flush()
 }
 
+type serverStatus struct {
+	Description string
+	Status      int
+}
+
 type serveResponse struct {
 	Connectivity  float64
-	Matrix        map[string]int
+	Matrix        map[string]*serverStatus
 	Self          string
 	LastCheckedAt int64
 	ProbeError    string
@@ -413,13 +417,16 @@ func (s *server) probe() chan struct{} {
 				log.Infof("Probing servers...")
 				s.mu.Lock()
 				s.response = serveResponse{
-					Matrix:        make(map[string]int),
+					Matrix:        make(map[string]*serverStatus),
 					Connectivity:  0,
 					Self:          s.si.Address.String(),
 					LastCheckedAt: time.Now().Unix(),
 				}
 				for _, si := range s.list {
-					s.response.Matrix[si.String()] = 0
+					s.response.Matrix[si.String()] = &serverStatus{
+						Description: si.Description,
+						Status:      0,
+					}
 				}
 
 				resp, err := status.NewClient().CheckConnectivity(
@@ -435,7 +442,13 @@ func (s *server) probe() chan struct{} {
 				}
 
 				for _, si := range resp {
-					s.response.Matrix[si.String()] = 1
+					server, ok := s.response.Matrix[si.String()]
+					if !ok {
+						log.Lvlf3("unrecognised server in response: %s", si.String())
+						continue
+					}
+
+					server.Status = 1
 				}
 				s.response.Connectivity = float64(len(resp)) / float64(len(s.list))
 				s.mu.Unlock()
