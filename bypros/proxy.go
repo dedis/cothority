@@ -39,6 +39,7 @@ func (s *Service) Follow(req *Follow) (*EmptyReply, error) {
 	}
 
 	if !s.scID.Equal(req.ScID) {
+		s.follow <- struct{}{}
 		return nil, xerrors.Errorf("wrong skipchain ID: expected '%x', got '%x'", s.scID, req.ScID)
 	}
 
@@ -47,6 +48,8 @@ func (s *Service) Follow(req *Follow) (*EmptyReply, error) {
 
 	conn, err := subscribe(req)
 	if err != nil {
+		s.follow <- struct{}{}
+		s.following = false
 		return nil, xerrors.Errorf("failed to subscribe: %v", err)
 	}
 
@@ -134,7 +137,6 @@ func keepAlive(stop chan struct{}, conn *websocket.Conn) {
 		case <-stop:
 			return
 		}
-
 	}
 }
 
@@ -344,6 +346,6 @@ func (o catchUpOut) done() {
 	case o <- &CatchUpResponse{
 		Done: true,
 	}:
-	default:
+	case <-time.After(time.Second * 10):
 	}
 }
