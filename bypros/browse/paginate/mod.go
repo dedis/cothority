@@ -3,14 +3,14 @@ package paginate
 import (
 	"context"
 	"strconv"
-	"time"
 
-	"github.com/gorilla/websocket"
+	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/bypros/browse"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
-	"go.dedis.ch/protobuf"
+	"go.dedis.ch/onet/v3/network"
 	"golang.org/x/xerrors"
 )
 
@@ -32,10 +32,10 @@ type Service struct {
 
 // GetBrowser implements browse.Service.
 func (p Service) GetBrowser(handler browse.Handler, id skipchain.SkipBlockID,
-	wsAddr string) browse.Actor {
+	target *network.ServerIdentity) browse.Actor {
 
 	return &Paginate{
-		wsAddr:  wsAddr,
+		target:  target,
 		handler: handler,
 
 		pageSize: p.pageSize,
@@ -47,7 +47,7 @@ func (p Service) GetBrowser(handler browse.Handler, id skipchain.SkipBlockID,
 //
 // - implements browse.Actor
 type Paginate struct {
-	wsAddr  string
+	target  *network.ServerIdentity
 	handler browse.Handler
 
 	pageSize int
@@ -57,21 +57,14 @@ type Paginate struct {
 // Browse implements browse.Actor
 func (p *Paginate) Browse(ctx context.Context, fromBlock skipchain.SkipBlockID) error {
 
-	ws, _, err := websocket.DefaultDialer.Dial(p.wsAddr+"/ByzCoin/PaginateRequest", nil)
-	if err != nil {
-		return xerrors.Errorf("failed to open ws connection: %v", err)
+	client := onet.NewClientKeep(cothority.Suite, byzcoin.ServiceName)
+	defer client.Close()
+
+	wire := &wire{
+		client: client,
 	}
 
-	defer func() {
-		err = ws.WriteControl(websocket.CloseMessage, nil, time.Now().Add(time.Second*5))
-		if err != nil {
-			log.Warnf("failed to send close: %v", err)
-		}
-
-		ws.Close()
-	}()
-
-	err = p.paginate(ctx, p.pageSize, p.numPages, fromBlock, ws)
+	err := p.paginate(ctx, p.pageSize, p.numPages, fromBlock, wire)
 	if err != nil {
 		return xerrors.Errorf("failed to paginate: %v", err)
 	}
@@ -81,7 +74,7 @@ func (p *Paginate) Browse(ctx context.Context, fromBlock skipchain.SkipBlockID) 
 
 // paginate starts the pagination process.
 func (p *Paginate) paginate(ctx context.Context, pageSize, numPages int,
-	nextBlock skipchain.SkipBlockID, ws *websocket.Conn) error {
+	nextBlock skipchain.SkipBlockID, wire *wire) error {
 
 	for {
 		paginateRequest := byzcoin.PaginateRequest{
@@ -91,17 +84,14 @@ func (p *Paginate) paginate(ctx context.Context, pageSize, numPages int,
 			Backward: false,
 		}
 
-		buf, err := protobuf.Encode(&paginateRequest)
+		conn, err := wire.client.Stream(p.target, &paginateRequest)
 		if err != nil {
-			return xerrors.Errorf("failed to encode request: %v", err)
+			return xerrors.Errorf("failed to send stream: %v", err)
 		}
 
-		err = ws.WriteMessage(websocket.BinaryMessage, buf)
-		if err != nil {
-			return xerrors.Errorf("failed to send request: %v", err)
-		}
+		wire.conn = conn
 
-		nextBlock, err = p.handlePages(ctx, numPages, ws, nextBlock)
+		nextBlock, err = p.handlePages(ctx, numPages, wire, nextBlock)
 
 		if err != nil {
 			return xerrors.Errorf("failed to handle page: %v", err)
@@ -116,7 +106,7 @@ func (p *Paginate) paginate(ctx context.Context, pageSize, numPages int,
 // handlePages retrieves the pages from the client and returns the next block ID
 // that should be loaded. If nil, that means there are no blocks left to be
 // loaded.
-func (p *Paginate) handlePages(ctx context.Context, numPages int, ws *websocket.Conn,
+func (p *Paginate) handlePages(ctx context.Context, numPages int, wire *wire,
 	firstBlock skipchain.SkipBlockID) (skipchain.SkipBlockID, error) {
 
 	var block *skipchain.SkipBlock
@@ -130,18 +120,12 @@ func (p *Paginate) handlePages(ctx context.Context, numPages int, ws *websocket.
 		}
 
 		paginateResponse := byzcoin.PaginateResponse{}
-
-		_, buf, err := ws.ReadMessage()
+		err := wire.conn.ReadMessage(&paginateResponse)
 		if err != nil {
-			return nil, xerrors.Errorf("failed to read response: %v", err)
+			return nil, xerrors.Errorf("failed to read paginate response: %v", err)
 		}
 
-		err = protobuf.Decode(buf, &paginateResponse)
-		if err != nil {
-			return nil, xerrors.Errorf("failed to decode response: %v", err)
-		}
-
-		done, err := p.checkError(ctx, paginateResponse, block, ws, firstBlock)
+		done, err := p.checkError(ctx, paginateResponse, block, wire, firstBlock)
 		if err != nil {
 			return nil, xerrors.Errorf("failed to check error: %v", err)
 		}
@@ -170,7 +154,7 @@ func (p *Paginate) handlePages(ctx context.Context, numPages int, ws *websocket.
 // of the chain, it makes the subsequent call the fetch the remaining blocks.
 // Return if the pagination is done or not.
 func (p *Paginate) checkError(ctx context.Context, resp byzcoin.PaginateResponse,
-	block *skipchain.SkipBlock, ws *websocket.Conn, firstBlock skipchain.SkipBlockID) (bool, error) {
+	block *skipchain.SkipBlock, streaming *wire, firstBlock skipchain.SkipBlockID) (bool, error) {
 
 	// The first block of the page couldn't be fetched. That means we're
 	// at then end. It could also mean the very first block we're trying
@@ -196,9 +180,9 @@ func (p *Paginate) checkError(ctx context.Context, resp byzcoin.PaginateResponse
 		if block == nil {
 			// this is a special case where the first block of the first
 			// page is the last block on the chain.
-			err = p.paginate(ctx, index, 1, firstBlock, ws)
+			err = p.paginate(ctx, index, 1, firstBlock, streaming)
 		} else {
-			err = p.paginate(ctx, index, 1, block.Hash, ws)
+			err = p.paginate(ctx, index, 1, block.Hash, streaming)
 		}
 
 		if err != nil {
@@ -214,4 +198,10 @@ func (p *Paginate) checkError(ctx context.Context, resp byzcoin.PaginateResponse
 	}
 
 	return false, nil
+}
+
+// wire bundles the read/write capabilities of the streaming onet
+type wire struct {
+	client *onet.Client
+	conn   onet.StreamingConn
 }
