@@ -6,7 +6,7 @@
 // distributed key and to request a re-encryption
 //
 // For more details, see
-// https://github.com/dedis/cothority/tree/master/calypso/README.md
+// https://github.com/dedis/cothority/tree/main/calypso/README.md
 //
 // There are two contracts implemented by this package:
 //

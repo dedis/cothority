@@ -377,9 +377,9 @@ it is now running on a different underlying server.
 
 Note: The address part of a server identity has name resolution applied to it.
 Thus it would be possible to set the roster of a skipchain to include a server
-identity like "tcp://conode-master.example.com:6979" and then change the
-definition of conode-master.example.com in DNS to change the IP address
-of the master.
+identity like "tcp://conode-main.example.com:6979" and then change the
+definition of conode-main.example.com in DNS to change the IP address
+of the main.
 
 ## Verifying your server
 
