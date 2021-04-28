@@ -24,7 +24,8 @@ const (
 	defaultPageSize = 200
 	defaultNumPages = 40
 
-	maxRetry = 5
+	maxRetry    = 5
+	retryFactor = 3
 )
 
 // Follow starts following a node, which means it will listen to every new
@@ -116,7 +117,7 @@ func subscribe(req *Follow) (*wire, error) {
 
 		log.Warnf("failed to connect, retrying in %d", retryWait)
 		time.Sleep(retryWait)
-		retryWait *= 3
+		retryWait *= retryFactor
 	}
 
 	if err != nil {
@@ -210,7 +211,7 @@ func (s *Service) CatchUP(req *CatchUpMsg) (chan *CatchUpResponse, chan bool, er
 		return nil, nil, xerrors.Errorf("failed to get ws addr: %v", err)
 	}
 
-	outChan := make(catchUpOut)
+	outChan := make(catchUpOut, 1)
 	stopChan := make(chan bool)
 
 	s.doCatchUP(outChan, stopChan, req, wsAddr)
@@ -353,10 +354,8 @@ func (o catchUpOut) statusf(blockIndex int, blockHash []byte) {
 // nothing. That could be the case when the client just wants to stop listening.
 func (o catchUpOut) done() {
 	select {
-	case o <- &CatchUpResponse{
-		Done: true,
-	}:
-	case <-time.After(time.Second * 10):
+	case o <- &CatchUpResponse{Done: true}:
+	default:
 	}
 }
 
