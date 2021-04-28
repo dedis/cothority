@@ -37,6 +37,11 @@ type Service struct {
 	following  bool
 	stopFollow chan struct{}
 
+	// normalUnfollow is set when the Unfollow method is called so we can check,
+	// when the websocket connection closes, if it's normal or not.
+	normalUnfollow chan struct{}
+	followReq      *Follow
+
 	storage storage.Storage
 
 	// the proxy should only use one skipchain. We keep track of it there.

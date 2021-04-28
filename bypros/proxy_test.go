@@ -246,12 +246,17 @@ func TestProxyCatchUp_Wrong_Skipchain(t *testing.T) {
 		storage: storage,
 	}
 
-	_, stop, err := s.CatchUP(&CatchUpMsg{
+	out, stop, err := s.CatchUP(&CatchUpMsg{
 		ScID:        bct.Genesis.SkipChainID(),
 		Target:      bct.Roster.Get(0),
 		FromBlock:   bct.Genesis.SkipChainID(),
 		UpdateEvery: 9,
 	})
+
+	go func() {
+		// listen to the stop message, so it doesn't block
+		<-out
+	}()
 
 	close(stop)
 	require.NoError(t, err)
