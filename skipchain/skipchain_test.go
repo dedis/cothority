@@ -811,13 +811,13 @@ func TestService_AddFollow(t *testing.T) {
 	sig, err = schnorr.Sign(cothority.Suite, priv0, ssb.NewBlock.CalculateHash())
 	require.NoError(t, err)
 	ssb.Signature = &sig
-	master0, err := service.StoreSkipBlock(ssb)
+	main0, err := service.StoreSkipBlock(ssb)
 	require.NoError(t, err)
 
 	// Not fully authenticated roster
 	log.Lvl2("2nd roster is not registered")
 	services[1].Storage.FollowIDs = []SkipBlockID{[]byte{0}}
-	ssb.TargetSkipChainID = master0.Latest.Hash
+	ssb.TargetSkipChainID = main0.Latest.Hash
 	sb = sb.Copy()
 	ssb.NewBlock = sb
 	sb.Roster = onet.NewRoster([]*network.ServerIdentity{ro.List[0], ro.List[1]}) // two in roster
@@ -832,20 +832,20 @@ func TestService_AddFollow(t *testing.T) {
 	// make other services follow skipchain
 	log.Lvl2("correct 2 node signing")
 	services[1].Storage.Follow = []FollowChainType{{
-		Block:    master0.Latest,
+		Block:    main0.Latest,
 		NewChain: NewChainAnyNode,
 		closing:  make(chan bool),
 	}}
 	sig, err = schnorr.Sign(cothority.Suite, priv0, ssb.NewBlock.CalculateHash())
 	require.NoError(t, err)
 	ssb.Signature = &sig
-	master1, err := service.StoreSkipBlock(ssb)
+	main1, err := service.StoreSkipBlock(ssb)
 	require.NoError(t, err)
 
 	// update skipblock and follow the skipblock
 	log.Lvl2("3 node signing with block update")
 	services[2].Storage.Follow = []FollowChainType{{
-		Block:    master0.Latest,
+		Block:    main0.Latest,
 		NewChain: NewChainAnyNode,
 		closing:  make(chan bool),
 	}}
@@ -853,7 +853,7 @@ func TestService_AddFollow(t *testing.T) {
 	sb.Roster = onet.NewRoster([]*network.ServerIdentity{ro.List[1], ro.List[0], ro.List[2]})
 	sb.Hash = sb.CalculateHash()
 	ssb.NewBlock = sb
-	ssb.TargetSkipChainID = master1.Latest.Hash
+	ssb.TargetSkipChainID = main1.Latest.Hash
 	sig, err = schnorr.Sign(cothority.Suite, priv1, ssb.NewBlock.CalculateHash())
 	require.NoError(t, err)
 	ssb.Signature = &sig
@@ -862,9 +862,9 @@ func TestService_AddFollow(t *testing.T) {
 	for _, sb := range sbs {
 		services[1].db.Store(sb)
 	}
-	master2, err := services[1].StoreSkipBlock(ssb)
+	main2, err := services[1].StoreSkipBlock(ssb)
 	require.NoError(t, err)
-	require.True(t, services[1].db.GetByID(master1.Latest.Hash).ForwardLink[0].To.Equal(master2.Latest.Hash))
+	require.True(t, services[1].db.GetByID(main1.Latest.Hash).ForwardLink[0].To.Equal(main2.Latest.Hash))
 }
 
 func TestService_CreateLinkPrivate(t *testing.T) {

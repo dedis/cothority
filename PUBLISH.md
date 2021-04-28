@@ -24,7 +24,7 @@ Tag the release using
 git tag -s vX.Y.Z -m "Cothority Release vX.Y.Z"
 ```
 
-and push it to master with `git push origin vX.Y.Z`. A tag push triggers
+and push it to `main` with `git push origin vX.Y.Z`. A tag push triggers
 the `release` action workflow which releases new binaries in
 `https://github.com/dedis/cothority/releases/tag/vX.Y.Z`. Please make sure to
 add the release description by editing that page.
@@ -61,7 +61,7 @@ git push --tags origin
 
 To publish a new release of `@dedis/cothority`:
 1. update the cothority-version and (if needed) the kyber dependency version in
-   `cothority/package.json`, commit and push to master
+   `cothority/package.json`, commit and push to `main`
 1. publish the new cothority-npm using `cothority/publish.sh`
 1. create a signed and annotated tag on the latest commit (adjust with the
    updated version):

@@ -1,7 +1,7 @@
 Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
 [Cothority](../README.md) ::
 [Building Blocks](../doc/BuildingBlocks.md) ::
-[BEvm](https://github.com/dedis/cothority/blob/master/bevm/README.md) ::
+[BEvm](https://github.com/dedis/cothority/blob/main/bevm/README.md) ::
 bevmclient
 
 # bevmclient - CLI tool to deploy and interact with BEvm contracts
@@ -9,7 +9,7 @@ bevmclient
 For the details on all the options and arguments, invoke the tool using the `--help` option.
 
 ## Creating a BEvm account
-Assuming ByzCoin config and key files in the current directory (see [bcadmin](https://github.com/dedis/cothority/blob/master/byzcoin/bcadmin/README.md) for details):
+Assuming ByzCoin config and key files in the current directory (see [bcadmin](https://github.com/dedis/cothority/blob/main/byzcoin/bcadmin/README.md) for details):
 ```bash
 bevmclient createAccount --accountName <MyAccount>
 ```

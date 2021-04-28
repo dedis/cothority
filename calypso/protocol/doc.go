@@ -2,5 +2,5 @@
 // the onchain-secrets (ocs) protocol.
 //
 // Please see the README for more details -
-// https://github.com/dedis/cothority/blob/master/calypso/protocol/README.md.
+// https://github.com/dedis/cothority/blob/main/calypso/protocol/README.md.
 package protocol

@@ -11,7 +11,7 @@
 // protocols who make conodes work together.
 //
 // For further documentation, please go to
-// https://github.com/dedis/cothority/blob/master/README.md.
+// https://github.com/dedis/cothority/blob/main/README.md.
 //
 // Some examples of what you can do with a cothority:
 // (1) https://pulsar.dedis.ch,
