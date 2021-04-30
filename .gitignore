@@ -24,3 +24,4 @@ external/java/.project
 /Coding
 
 bypros/postgres
+bypros/storage/sqlstore/postgres

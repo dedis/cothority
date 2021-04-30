@@ -23,6 +23,9 @@ const (
 
 	defaultPageSize = 200
 	defaultNumPages = 40
+
+	maxRetry    = 5
+	retryFactor = 3
 )
 
 // Follow starts following a node, which means it will listen to every new
@@ -40,15 +43,22 @@ func (s *Service) Follow(req *Follow) (*EmptyReply, error) {
 	}
 
 	if !s.scID.Equal(req.ScID) {
-		return nil, xerrors.Errorf("wrong skipchain ID: expected '%x', got '%x'", s.scID, req.ScID)
+		s.follow <- struct{}{}
+		return nil, xerrors.Errorf("wrong skipchain ID: expected '%x', got '%x'",
+			s.scID, req.ScID)
 	}
 
 	s.following = true
 	s.stopFollow = make(chan struct{}, 1)
+	s.normalUnfollow = make(chan struct{}, 1)
+	s.followReq = req
 
 	wire, err := subscribe(req)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to subscribe: %v", err)
+		s.follow <- struct{}{}
+		s.following = false
+
+		return nil, xerrors.Errorf("failed to start following: %v", err)
 	}
 
 	waitDone := sync.WaitGroup{}
@@ -95,9 +105,23 @@ func subscribe(req *Follow) (*wire, error) {
 		ID: req.ScID,
 	}
 
-	conn, err := client.Stream(req.Target, &streamReq)
+	var conn onet.StreamingConn
+	var err error
+
+	retryWait := time.Second * 1 // 1 / 3 / 9 / 27 / 81
+	for retry := 0; retry < maxRetry; retry++ {
+		conn, err = client.Stream(req.Target, &streamReq)
+		if err == nil {
+			break
+		}
+
+		log.Warnf("failed to connect, retrying in %d", retryWait)
+		time.Sleep(retryWait)
+		retryWait *= retryFactor
+	}
+
 	if err != nil {
-		return nil, xerrors.Errorf("failed to stream request: %v", err)
+		return nil, xerrors.Errorf("failed to create conn: %v", err)
 	}
 
 	return &wire{
@@ -127,21 +151,28 @@ func (s *Service) listenBlocks(wire *wire) {
 	streamResp := byzcoin.StreamingResponse{}
 
 	for {
-		err := wire.conn.ReadMessageWithOpts(&streamResp, onet.StreamingReadOpts{
+		readOpt := onet.StreamingReadOpts{
 			Deadline: time.Time{}, // a zero time will make it block
-		})
+		}
+
+		err := wire.conn.ReadMessageWithOpts(&streamResp, readOpt)
 		if err != nil {
-			err2 := xerrors.Unwrap(err)
-			_, ok := err2.(*websocket.CloseError)
-			if !ok {
-				// that can happen when we close the connection
-				log.Warnf("failed to read request: %v", err)
+			log.Lvl1("stops listening on blocks")
+			s.notifyStop()
+
+			select {
+			case <-s.normalUnfollow:
+				log.Lvl1("normal close")
+			default:
+				log.Warn("connection dropped, retying")
+
+				_, err = s.Follow(s.followReq)
+				if err != nil {
+					log.Errorf("failed to Follow again: %v", err)
+				}
 			}
 
-			log.Lvl1("stops listening on blocks")
-
-			s.notifyStop()
-			return
+			break
 		}
 
 		s.followCallback(streamResp, nil)
@@ -180,7 +211,7 @@ func (s *Service) CatchUP(req *CatchUpMsg) (chan *CatchUpResponse, chan bool, er
 		return nil, nil, xerrors.Errorf("failed to get ws addr: %v", err)
 	}
 
-	outChan := make(catchUpOut)
+	outChan := make(catchUpOut, 1)
 	stopChan := make(chan bool)
 
 	s.doCatchUP(outChan, stopChan, req, wsAddr)
@@ -282,6 +313,7 @@ func (s *Service) Unfollow(req *Unfollow) (*EmptyReply, error) {
 		return nil, xerrors.Errorf("not following")
 	}
 
+	s.normalUnfollow <- struct{}{}
 	s.notifyStop()
 
 	return &EmptyReply{}, nil
@@ -322,9 +354,7 @@ func (o catchUpOut) statusf(blockIndex int, blockHash []byte) {
 // nothing. That could be the case when the client just wants to stop listening.
 func (o catchUpOut) done() {
 	select {
-	case o <- &CatchUpResponse{
-		Done: true,
-	}:
+	case o <- &CatchUpResponse{Done: true}:
 	default:
 	}
 }
