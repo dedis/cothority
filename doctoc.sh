@@ -81,7 +81,7 @@ toc() {
     local level
     local title
     local anchor
-    local output
+    local output=""
 
     while IFS='' read -r line || [[ -n "$line" ]]; do
         level="$(echo "$line" | $SED -E 's/^(#+).*/\1/; s/#/  /g; s/^  //')"
