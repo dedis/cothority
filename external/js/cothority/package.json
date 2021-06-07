@@ -58,7 +58,7 @@
     "tslib": "^1.10.0",
     "util": "^0.11.1",
     "varint": "^6.0.0",
-    "ws": "^6.1.2"
+    "ws": "^7.4.6"
   },
   "devDependencies": {
     "@babel/core": "^7.2.2",
@@ -73,7 +73,7 @@
     "@types/node": "^12.7.12",
     "@types/shuffle-array": "0.0.28",
     "@types/sprintf-js": "^1.1.1",
-    "@types/ws": "^6.0.1",
+    "@types/ws": "^7.4.4",
     "babel-loader": "^8.0.5",
     "bn.js": "^5.1.2",
     "coveralls": "^3.0.2",
