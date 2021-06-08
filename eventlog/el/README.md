@@ -1,7 +1,7 @@
 Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
-[Cothority](https://github.com/dedis/cothority/tree/master/README.md) ::
-[Applications](https://github.com/dedis/cothority/blob/master/doc/Applications.md) ::
-[EventLog](https://github.com/dedis/cothority/blob/master/eventlog/README.md) ::
+[Cothority](https://github.com/dedis/cothority/tree/main/README.md) ::
+[Applications](https://github.com/dedis/cothority/blob/main/doc/Applications.md) ::
+[EventLog](https://github.com/dedis/cothority/blob/main/eventlog/README.md) ::
 el
 
 # el - the CLI to EventLogs

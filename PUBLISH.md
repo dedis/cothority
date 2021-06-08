@@ -50,7 +50,7 @@ since cothority depends on kyber, kyber has to be published first if they are
 both to be updated.
 
 To publish a new release of `@dedis/kyber`:
-1. update the kyber-version in `kyber/package.json`, commit and push to master
+1. update the kyber-version in `kyber/package.json`, commit and push to `main`
 1. publish the new kyber-npm using `kyber/publish.sh`
 1. create a signed and annotated tag on the latest commit (adjust with the
    updated version):
