@@ -12,7 +12,7 @@ jobs:
   javascript:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@main
         with:
           fetch-depth: 1
       - uses: actions/setup-node@v1
@@ -42,7 +42,7 @@ jobs:
         golang-version: [1.14, 1.15] # Cannot use env. here :(
 
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@main
         with:
           fetch-depth: 1
       - uses: actions/setup-go@v2
@@ -68,7 +68,7 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@main
         with:
           fetch-depth: 1
       - uses: actions/setup-python@v2
@@ -98,7 +98,7 @@ jobs:
     needs:
       - lint-build
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@main
         with:
           fetch-depth: 1
       - uses: actions/setup-go@v2
@@ -113,7 +113,7 @@ jobs:
     needs:
       - lint-build
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@main
         with:
           fetch-depth: 1
       - uses: actions/setup-go@v2
@@ -131,7 +131,7 @@ jobs:
     needs:
       - lint-build
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@main
         with:
           fetch-depth: 1
       - uses: actions/setup-node@v1
@@ -149,7 +149,7 @@ jobs:
     needs:
       - lint-build
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@main
         with:
           fetch-depth: 1
       - uses: actions/setup-node@v1
