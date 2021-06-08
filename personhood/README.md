@@ -1,5 +1,5 @@
 Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
-[Cothority](https://github.com/dedis/cothority/tree/master/README.md) ::
+[Cothority](https://github.com/dedis/cothority/tree/main/README.md) ::
 Personhood.Online
 
 # Personhood.Online

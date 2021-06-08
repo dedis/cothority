@@ -1,6 +1,6 @@
 Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
-[Cothority](https://github.com/dedis/cothority/tree/master/README.md) ::
-[Personhood.Online](https://github.com/dedis/cothority/tree/master/personhood/README.md) ::
+[Cothority](https://github.com/dedis/cothority/tree/main/README.md) ::
+[Personhood.Online](https://github.com/dedis/cothority/tree/main/personhood/README.md) ::
 User
 
 # User

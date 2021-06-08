@@ -19,7 +19,7 @@ OK to move things around between WIP and the following pipeline
 ### Branches
 
 All work has to be done in branches. Per default, branches go off from
-`master`, which should always be in a functional state.
+`main`, which should always be in a functional state.
 
 The branch-name should be one to three words, concatenated using underscores,
 followed by the number of the issue it solves.
@@ -55,9 +55,9 @@ Now the assignee1 has to merge the PR2 into his PR1, but only somebody else
 The general rule is that for each commit, all tests should pass. This is not
   a hard rule, but it should be used whenever possible.
 
-### Merge to master
+### Merge to main
 
-Before merging into master, all tests MUST pass.
+Before merging into `main`, all tests MUST pass.
 Then you have to pass code-review by one or two other developers, which will
 comment your code and ask for changes. Only once at least one other
 developer is happy with your branch can he merge it.
