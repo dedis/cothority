@@ -79,6 +79,9 @@ func dbCatchup(c *cli.Context) error {
 		if err != nil {
 			return xerrors.Errorf("couldn't get blocks from network: %+v", err)
 		}
+		if sb == nil {
+			break
+		}
 		if len(sb.ForwardLink) == 0 {
 			if askAllNodes {
 				// If no further blocks exist,
@@ -103,6 +106,7 @@ func dbCatchup(c *cli.Context) error {
 		latestID = sb.ForwardLink[0].To
 	}
 
+	log.Info("Downloaded all available blocks from the chain")
 	return nil
 }
 
@@ -878,6 +882,9 @@ func (fb *fetchBlocks) gbMulti(startID skipchain.SkipBlockID) (
 		}
 
 		if !ok {
+			if fb.index == len(fb.roster.List)-1 {
+				return nil, nil
+			}
 			fb.nextNode()
 			continue
 		}
