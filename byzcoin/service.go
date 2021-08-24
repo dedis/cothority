@@ -1258,7 +1258,7 @@ func (s *Service) createUpgradeVersionBlock(scID skipchain.SkipBlockID, version 
 // and recreating it on the remote side.
 // sb is a block in the byzcoin instance that we want
 // to download.
-func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
+func (s *Service) downloadDB(sb *skipchain.SkipBlock, node int) error {
 	log.Lvlf2("%s: downloading DB", s.ServerIdentity())
 	idStr := fmt.Sprintf("%x", sb.SkipChainID())
 
@@ -1284,6 +1284,9 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 		// Then start downloading the stateTrie over the network.
 		cl := NewClient(sb.SkipChainID(), *sb.Roster)
 		cl.DontContact(s.ServerIdentity())
+		if err := cl.UseNode(node); err != nil {
+			return xerrors.Errorf("While setting node: %v", err)
+		}
 		var db *bbolt.DB
 		var bucketName []byte
 		var nonce uint64
@@ -1395,37 +1398,53 @@ func (s *Service) catchupAll() error {
 
 		log.Lvlf2("Our latest block: %d / %x", sb.Index, sb.Hash)
 
-		cl := skipchain.NewClient()
-		// Get the latest block known by the Cothority.
-		var reply *skipchain.GetUpdateChainReply
-		for i, node := range sb.Roster.List {
-			cl.UseNode(i)
-			replyTmp, err := cl.GetUpdateChain(sb.Roster, sb.Hash)
-			if err != nil {
-				log.Warn("couldn't get update from", node)
-				continue
-			}
-			if reply == nil || len(replyTmp.Update) > len(reply.Update) {
+		if err := s.catchupID(scID, sb.Roster); err != nil {
+			return xerrors.Errorf("couldn't catchup: %v", err)
+		}
+	}
+	return nil
+}
+
+// catchupID forces the download of the given ID and tries its best to use
+// the given roster to download all necessary info.
+func (s *Service) catchupID(scID skipchain.SkipBlockID, roster *onet.Roster) error {
+	cl := skipchain.NewClient()
+	// Get the latest block known by the Cothority.
+	var reply *skipchain.GetUpdateChainReply
+	for i, node := range roster.List {
+		log.Lvlf2("Asking node %s for latest block", node)
+		cl.UseNode(i)
+		replyTmp, err := cl.GetUpdateChain(roster, scID)
+		if err != nil {
+			log.Warn("couldn't get update from", node)
+			continue
+		}
+		if reply == nil {
+			reply = replyTmp
+		} else {
+			latestTmp := replyTmp.Update[len(replyTmp.Update)-1]
+			latest := reply.Update[len(reply.Update)-1]
+			if latestTmp.Index > latest.Index {
 				reply = replyTmp
 			}
 		}
-
-		if reply == nil {
-			// Might be that the other nodes are not yet up,
-			// so just continue with the other chains.
-			// Call to s.catchup will probably also fail, so skip it.
-			log.Error("couldn't get a new latest block")
-			continue
-		}
-
-		if len(reply.Update) == 0 {
-			return xerrors.New("no block found in chain update")
-		}
-
-		sb = reply.Update[len(reply.Update)-1]
-		log.Lvl2("Catching up with latest block:", sb.Index)
-		s.catchUp(sb)
 	}
+
+	if reply == nil {
+		// Might be that the other nodes are not yet up,
+		// so just continue with the other chains.
+		// Call to s.catchup will probably also fail, so skip it.
+		log.Error("couldn't get a new latest block")
+		return nil
+	}
+
+	if len(reply.Update) == 0 {
+		return xerrors.New("no block found in chain update")
+	}
+
+	sb := reply.Update[len(reply.Update)-1]
+	log.Lvl2("Catching up with latest block:", sb.Index)
+	s.catchUp(sb)
 	return nil
 }
 
@@ -1498,13 +1517,13 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 
 	// Load the trie.
 	download := false
-	st, err := s.getStateTrie(sb.SkipChainID())
 	cl := skipchain.NewClient()
 	cl.DontContact(s.ServerIdentity())
-	if err != nil {
+	st, err := s.getStateTrie(sb.SkipChainID())
+	if err != nil || st == nil {
 		if sb.Index < catchupDownloadAll {
 			// Asked to catch up on an unknown chain, but don't want to download, instead only replay
-			// the blocks. This is mostly useful for testing, in a real deployement the catchupDownloadAll
+			// the blocks. This is mostly useful for testing, in a real deployment the catchupDownloadAll
 			// will be smaller than any chain that is online for more than a day.
 			log.Warnf("%s: problem with trie, "+
 				"will create a new one: %+v", s.ServerIdentity(), err)
@@ -1528,7 +1547,7 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 			// function because we load the trie again in getStateTrie
 			// right afterwards.
 			st, err = s.createStateTrie(sb.SkipChainID(), nonce)
-			if err != nil {
+			if err != nil || st == nil {
 				log.Errorf("could not create trie: %+v", err)
 				return
 			}
@@ -1541,10 +1560,14 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 
 	// Check if we are updating the right index.
 	if download {
-		log.Lvl2(s.ServerIdentity(), "Downloading whole DB for catching up")
-		err := s.downloadDB(sb)
-		if err != nil {
-			log.Error("Error while downloading trie:", err)
+		for i := range sb.Roster.List {
+			log.Lvl2(s.ServerIdentity(), "Downloading whole DB for catching up")
+			err := s.downloadDB(sb, i)
+			if err != nil {
+				log.Error("Error while downloading trie:", err)
+			} else {
+				return
+			}
 		}
 
 		// Note: in that case we don't get the previous blocks and therefore we can't
@@ -3125,13 +3148,6 @@ func newService(c *onet.Context) (onet.Service, error) {
 	default:
 		return nil, xerrors.Errorf("unknown db version number %v", ver)
 	}
-
-	go func() {
-		// initialize the stats of the storage
-		if err := s.stateChangeStorage.calculateSize(); err != nil {
-			log.Errorf("couldn't calculate size: %v", err)
-		}
-	}()
 
 	if _, err := s.startAllChains(); err != nil {
 		return nil, xerrors.Errorf("starting chains: %v", err)
