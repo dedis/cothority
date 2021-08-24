@@ -2132,7 +2132,7 @@ func TestService_DownloadState(t *testing.T) {
 		servers, _, _ := b.Local.MakeSRS(cothority.Suite, 1, ByzCoinID)
 		services := b.Local.GetServices(servers, ByzCoinID)
 		service := services[0].(*Service)
-		err := service.downloadDB(b.Genesis)
+		err := service.downloadDB(b.Genesis, 0)
 		require.NoError(t, err)
 		st, err := service.getStateTrie(b.Genesis.Hash)
 		require.NoError(t, err)
@@ -2630,6 +2630,30 @@ func TestService_GetUpdates(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 2, len(gur.Proofs))
 	require.False(t, gur.Proofs[1].Match(invID[:]))
+}
+
+// Tests if it can add a byzcoin-instance to a given node.
+func TestService_catchupID(t *testing.T) {
+	t.Skip("This is a manual test for the DEDIS chain")
+
+	b := newBCTRun(t, nil)
+	defer b.CloseAll()
+
+	dedisChain, err := hex.DecodeString("9cc36071ccb902a1de7e0d21a2c176d73894b1cf88ae4cc2ba4c95cd76f474f3")
+	require.NoError(t, err)
+	dedisRoster := onet.NewRoster([]*network.ServerIdentity{
+		{
+			URL:    "https://conode.c4dt.org",
+			Public: cothority.Suite.Point(),
+		},
+	})
+	cl := skipchain.NewClient()
+	gcr, err := cl.GetUpdateChain(dedisRoster, dedisChain)
+	require.NoError(t, err)
+	dedisRoster = gcr.Update[len(gcr.Update)-1].Roster
+
+	err = b.Services[0].catchupID(dedisChain, dedisRoster)
+	require.NoError(t, err)
 }
 
 func createBadConfigTx(b *BCTest, intervalBad,

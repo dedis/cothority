@@ -409,7 +409,8 @@ func (p *BlsCosi) collectSignatures() (ResponseMap, error) {
 	}
 
 	if p.checkFailureThreshold(numFailure) {
-		return nil, fmt.Errorf("too many refusals (got %d), the threshold of %d cannot be achieved",
+		return nil, fmt.Errorf("too many signature-refusals (got %d), "+
+			"the threshold of %d cannot be achieved",
 			numFailure, p.Threshold)
 	}
 

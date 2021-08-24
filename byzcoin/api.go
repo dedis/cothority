@@ -694,9 +694,12 @@ func (c *Client) DownloadState(byzcoinID skipchain.SkipBlockID, nonce uint64, le
 		var po onet.ParallelOptions
 		if c.options != nil {
 			po = *c.options
+		} else {
+			po.Parallel = 1
+			po.StartNode = indexStart
+			po.DontShuffle = true
+			po.AskNodes = 1
 		}
-		po.Parallel = 1
-		po.StartNode = indexStart
 		si, err = c.SendProtobufParallel(c.Roster.List, msg, reply, &po)
 		err = cothority.ErrorOrNil(err, "request failed")
 		c.noncesSI[reply.Nonce] = si
