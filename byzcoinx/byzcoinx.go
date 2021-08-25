@@ -216,7 +216,7 @@ func NewByzCoinX(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiProtoNam
 		verifier:            verifier,
 		// We set nSubtrees to the cube root of n to evenly distribute the load,
 		// i.e. depth (=3) = log_f n, where f is the fan-out (branching factor).
-		nSubtrees: int(math.Pow(float64(len(n.List())), 1.0/3.0)),
+		nSubtrees: int(math.Pow(float64(len(n.List())), 1.0/3.0) + 0.5),
 	}, nil
 }
 

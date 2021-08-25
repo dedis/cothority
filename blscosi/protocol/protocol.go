@@ -32,7 +32,7 @@ func init() {
 }
 
 const defaultTimeout = 10 * time.Second
-const defaultSubleaderFailures = 2
+const defaultSubleaderFailures = 3
 
 // VerificationFn is called on every node. Where msg is the message that is
 // co-signed and the data is additional data for verification.
