@@ -13,20 +13,6 @@
       Suite = "bn256.adapter"
 
 [[servers]]
-  Address = "tls://dedis.nella.org:7770"
-  Suite = "Ed25519"
-  Public = "ad91a87dd89d31e4fc77ee04f1fc684bb6697bcef96720b84422437ff00b79e3"
-  Description = "dedis.nella.org"
-  URL = "https://dedis.nella.org:7771"
-  [servers.Services]
-    [servers.Services.ByzCoin]
-      Public = "7a989c19ef64ac45d4962fa0e60184c0adaf90082f5ea572de2d241d11ac8e6a53f968928d80a910ed7d883c05d74cf3e3c2c9096dd9fb5b64a03f9e552700388effcd3106e58f4bb99c384afb4b6b2530bfee6fdfb6b4f41a383b2ad31bf03c18d3f43a4a8bacbe5da16c3851c3c8be3607af1bb19b085861d71cd92c8b8406"
-      Suite = "bn256.adapter"
-    [servers.Services.Skipchain]
-      Public = "78dd1cfd6e70ad9cf5afb8263811fabe95aedee835567cc5ca7773a6787a03736ee24accb8e00370768aab14dab949584054e255c626d0141182454f8c77794a4e8c69a4dc6082f30f1cf33de45daea63fc52c4a91ed79ca88e4f6d363a46d87017b038da5ca4656f610d77fd91e1aae320d7d399ca7fdf41f5348b63712310f"
-      Suite = "bn256.adapter"
-
-[[servers]]
   Address = "tls://fairywren.ch:7770"
   Suite = "Ed25519"
   Public = "0bcdaebde16f50fb65b717a0501e7ede020045286d6ece10fdea1bdd8f37af39"
@@ -94,4 +80,18 @@
       Suite = "bn256.adapter"
     [servers.Services.Skipchain]
       Public = "2baeb3ff4824177e50f203337e6ef32907c0e61b3a6357351cc0a64ad1b38129891455bcdaeff16b10cf1179605b4cbc356adc05164a7ce9511edfc8b8b0ea5787098900ccd14f119f574da1a0f5c639706c3c780e9d985d4893088c33df1eb15a668207b2e6195cd26be21516fd43474a5e0dd087574e24bcbc1c8f4ee98f4b"
+      Suite = "bn256.adapter"
+
+[[servers]]
+  Address = "tls://conode.gnarula.com:7770"
+  Suite = "Ed25519"
+  Public = "de4945452449c9a740b0c665e83ee0dd5c52d3e8cda56272d4984d3fb58ee34c"
+  Description = "gnarula's conode"
+  URL = "https://conode.gnarula.com"
+  [servers.Services]
+    [servers.Services.ByzCoin]
+      Public = "7bdae8fb51544aa5bfbecc74146c0e2df7edd68c724e59a0922e5f6fb735bef10cfc070f7e29ac8fa92594a5f71eaa4047ab30710e93df1a6b6095a99c6237681f8ef292387ea80528f25906b3f4951995c60eda4f7d99e520d07216b949e9b54d3ca223a78829867958110690a60ec1607d05971551f1505c3258760d6fa22a"
+      Suite = "bn256.adapter"
+    [servers.Services.Skipchain]
+      Public = "3bc985c3073f51219e435fa254c84ae3301360905c5acec4996a677056f0418c4713148d29a13c3315d2bd4f81540a759da5c28603bac0d626f93c8d867fc369391cb40d5a303fd550d64d382da4cb14ed72f2b55990cb59a80f16f83394740b29cd38f795b48213bf35d95e4f5aed4c5efef42952f712d90c1722e5eb2ddf9e"
       Suite = "bn256.adapter"
