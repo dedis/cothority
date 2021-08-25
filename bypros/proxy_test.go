@@ -269,6 +269,7 @@ func TestProxyCatchUp_Wrong_Skipchain(t *testing.T) {
 }
 
 func TestProxyCatchUp_Multiple_Blocks(t *testing.T) {
+	t.Skip("https://github.com/dedis/cothority/issues/2465")
 
 	bct := byzcoin.NewBCTestDefault(t)
 	defer bct.CloseAll()
