@@ -199,8 +199,8 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	bftCosiProto.Threshold = nbrHosts - nbrFault
 	log.Lvl3("Added counter", counters.size()-1, refuseIndex)
 
-	require.Equal(t, bftCosiProto.nSubtrees, int(math.Pow(float64(nbrHosts),
-		1.0/3.0)+0.5))
+	require.True(t, int(math.Pow(float64(bftCosiProto.nSubtrees),
+		3.0)) <= nbrHosts)
 
 	// kill the leafs first
 	nbrFault = min(nbrFault, len(servers))

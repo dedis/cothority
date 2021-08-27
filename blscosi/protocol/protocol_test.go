@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"math"
 	"testing"
 	"time"
 
@@ -186,6 +187,15 @@ func TestProtocol_FailingLeaves_25_9(t *testing.T) {
 
 	err := runProtocolFailingNodes(25, 3, 2, 23)
 	require.NoError(t, err)
+}
+
+func TestDefaultSubLeaders(t *testing.T) {
+	require.Equal(t, DefaultSubLeaders(1), 1)
+	for subleaders := 2; subleaders < 58; subleaders++ {
+		nodes := int(math.Pow(float64(subleaders), 3.0))
+		require.Equal(t, DefaultSubLeaders(nodes-1), subleaders-1)
+		require.Equal(t, DefaultSubLeaders(nodes), subleaders)
+	}
 }
 
 func runProtocolFailingNodes(nbrNodes, nbrTrees, nbrFailure, threshold int) error {

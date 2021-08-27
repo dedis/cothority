@@ -8,7 +8,6 @@ package byzcoinx
 import (
 	"errors"
 	"fmt"
-	"math"
 	"time"
 
 	"go.dedis.ch/cothority/v3/blscosi/bdnproto"
@@ -133,11 +132,18 @@ func (bft *ByzCoinX) initCosiProtocol(phase phase) (*protocol.BlsCosi, error) {
 	// For each of the prepare and commit phase we get half of the time.
 	cosiProto.Timeout = bft.Timeout / 2
 
-	if bft.SubleaderFailures > 0 {
-		// Only update the parameter if it is defined, else keep the default
-		// value.
-		cosiProto.SubleaderFailures = bft.SubleaderFailures
+	if bft.SubleaderFailures == 0 && bft.Tree().Size() > 1 {
+		// There can be as many failures as the biggest subtree has leafs.
+		// The number of leafs is the following:
+		//   ceil( ( nodes - root - subleaders ) / subleaders )
+		// which equals to
+		//   ( nodes - root - subleaders + subleaders - 1 ) / subleaders
+		// which equals to
+		//   ( nodes - root - 1 )
+		bft.SubleaderFailures = (bft.Tree().Size() - 2) /
+			bft.nSubtrees
 	}
+	cosiProto.SubleaderFailures = bft.SubleaderFailures
 
 	return cosiProto, cosiProto.SetNbrSubTree(bft.nSubtrees)
 }
@@ -214,9 +220,7 @@ func NewByzCoinX(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiProtoNam
 		publics:             n.Publics(),
 		suite:               suite,
 		verifier:            verifier,
-		// We set nSubtrees to the cube root of n to evenly distribute the load,
-		// i.e. depth (=3) = log_f n, where f is the fan-out (branching factor).
-		nSubtrees: int(math.Pow(float64(len(n.List())), 1.0/3.0) + 0.5),
+		nSubtrees:           protocol.DefaultSubLeaders(len(n.List())),
 	}, nil
 }
 
