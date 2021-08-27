@@ -1520,7 +1520,7 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 	cl := skipchain.NewClient()
 	cl.DontContact(s.ServerIdentity())
 	st, err := s.getStateTrie(sb.SkipChainID())
-	if err != nil || st == nil {
+	if err != nil {
 		if sb.Index < catchupDownloadAll {
 			// Asked to catch up on an unknown chain, but don't want to download, instead only replay
 			// the blocks. This is mostly useful for testing, in a real deployment the catchupDownloadAll
@@ -1547,7 +1547,7 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 			// function because we load the trie again in getStateTrie
 			// right afterwards.
 			st, err = s.createStateTrie(sb.SkipChainID(), nonce)
-			if err != nil || st == nil {
+			if err != nil {
 				log.Errorf("could not create trie: %+v", err)
 				return
 			}
