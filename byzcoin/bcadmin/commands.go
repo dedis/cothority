@@ -575,9 +575,10 @@ var cmds = cli.Commands{
 				Action: darcRule,
 				Flags: []cli.Flag{
 					cli.StringFlag{
-						Name:   "bc",
-						EnvVar: "BC",
-						Usage:  "the ByzCoin config to use (required)",
+						Name:     "bc",
+						EnvVar:   "BC",
+						Usage:    "the ByzCoin config to use (required)",
+						Required: true,
 					},
 					cli.StringFlag{
 						Name:  "darc",

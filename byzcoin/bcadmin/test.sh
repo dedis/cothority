@@ -574,8 +574,6 @@ testUser(){
   identity=$( runBA0 info --bc $bc | grep Identity | sed -e "s/.* //")
   bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
   keyPub=$( echo $key | sed -e "s/.*:\(.*\).cfg/\1/" )
-  testOK runBA darc rule --bc $bc --rule "spawn:credential" \
-    --identity $identity
 
   testFail runBA user new
   testFail runBA user new $bc

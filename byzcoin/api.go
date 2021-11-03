@@ -211,6 +211,27 @@ func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxRe
 	return reply, nil
 }
 
+// GetInstance returns the buffer of an instance. Internally it calls
+// GetProofFromlatest, and verifies that the proof actually exists and that
+// the contract-type is correct.
+func (c *Client) GetInstance(iid InstanceID, contractID string) ([]byte, error) {
+	if err := c.WaitPropagation(-1); err != nil {
+		return nil, xerrors.Errorf("wait propagation: %v", err)
+	}
+	proof, err := c.GetProofFromLatest(iid[:])
+	if err != nil {
+		return nil, xerrors.Errorf("getting proof: %v", err)
+	}
+	buf, cid, _, err := proof.Proof.Get(iid[:])
+	if err != nil {
+		return nil, xerrors.Errorf("getting buffer from proof: %v", err)
+	}
+	if cid != contractID {
+		return nil, xerrors.Errorf("contractID mismatch: %v != %v", cid, contractID)
+	}
+	return buf, nil
+}
+
 // GetProof returns a proof for the key stored in the skipchain starting from
 // the genesis block. The proof can prove the existence or the absence of the
 // key. Note that the integrity of the proof is verified.

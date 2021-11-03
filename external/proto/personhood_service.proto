@@ -203,3 +203,51 @@ message SetAdminDarcIDs {
 // SetAdminDarcIDsReply indicates a correct storage of the AdminDarcIDs.
 message SetAdminDarcIDsReply {
 }
+
+// EmailSetup to create a new setup.
+message EmailSetup {
+  // ByzCoinID where the email service is running.
+  required bytes byzcoinid = 1;
+  // DeviceURL, as created from the dynacred-frontend
+  required string deviceurl = 2;
+  // EmailDarcID is the darc where new users will be added to
+  required bytes emaildarcid = 3;
+  // SMTPHost: "[tls://]host:port" - should support emails with a
+  // sender "from".
+  required string smtphost = 4;
+  // SMTPFrom that will be used for the SMTP host
+  required string smtpfrom = 5;
+  // SMTPReplyTo is the email address that will be used as reply-to
+  required string smtpreplyto = 6;
+  // BaseURL is prepended to the recovery string and should point to the
+  // publicly available frontend.
+  required string baseurl = 7;
+  // Signature is on the sha256 of the above fields
+  required bytes signature = 8;
+}
+
+// EmailSetupReply when everything went well.
+message EmailSetupReply {
+}
+
+// EmailSignup creates a new user if EmailSetup is configured
+message EmailSignup {
+  required string email = 1;
+  // Alias can be empty
+  required string alias = 2;
+}
+
+// EmailSignupReply returns the type of action done
+message EmailSignupReply {
+  required sint32 status = 1;
+}
+
+// EmailRecover requests a recovery of a given account
+message EmailRecover {
+  required string email = 1;
+}
+
+// EmailRecoverReply returns the type of action done.
+message EmailRecoverReply {
+  required sint32 status = 1;
+}

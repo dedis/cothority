@@ -3,10 +3,10 @@
 
 *.proto    -diff merge=theirs
 *.proto    linguist-generated=true
-external/java/src/main/java/ch/epfl/dedis/proto/*.java     -diff merge=theirs
-external/java/src/main/java/ch/epfl/dedis/proto/*.java     linguist-generated=true
-external/js/cothority/lib/protobuf/models.json 	-diff merge=theirs
-external/js/cothority/lib/protobuf/models.json  linguist-generated=true
+external/java/src/main/java/ch/epfl/dedis/lib/proto/*.java     -diff merge=theirs
+external/java/src/main/java/ch/epfl/dedis/lib/proto/*.java     linguist-generated=true
+external/js/cothority/src/protobuf/models.json 	-diff merge=theirs
+external/js/cothority/src/protobuf/models.json  linguist-generated=true
 external/js/cothority/package-lock.json  linguist-generated=true
 external/js/cothority/package-lock.json 	-diff merge=theirs
 external/js/kyber/package-lock.json  linguist-generated=true

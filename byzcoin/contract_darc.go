@@ -2,6 +2,7 @@ package byzcoin
 
 import (
 	"bytes"
+	"go.dedis.ch/cothority/v3/darc/expression"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/darc"
@@ -30,6 +31,11 @@ var _ Contract = (*contractSecureDarc)(nil)
 
 const cmdDarcEvolveUnrestriction = "evolve_unrestricted"
 const cmdDarcEvolve = "evolve"
+
+// ContractDarcInvokeEvolve is the darc-rule to be used to allow evolving of
+// a darc-contract.
+const ContractDarcInvokeEvolve = "invoke:" + ContractDarcID +
+	"." + cmdDarcEvolve
 
 func contractSecureDarcFromBytes(in []byte) (Contract, error) {
 	d, err := darc.NewFromProtobuf(in)
@@ -188,6 +194,22 @@ func isChangingEvolveUnrestricted(oldD *darc.Darc, newD *darc.Darc) bool {
 	return true
 }
 
+// ContractDarcNew creates a new darc with the correct sign and evolve rules.
+func ContractDarcNew(sign, evolve darc.Identity, desc string) (*darc.Darc,
+	error) {
+	rules := darc.NewRules()
+	if err := rules.AddRule("_sign", expression.Expr(sign.
+		String())); err != nil {
+		return nil, xerrors.Errorf("couldn't add sign rule: %v", err)
+	}
+	if err := rules.AddRule(ContractDarcInvokeEvolve,
+		expression.Expr(evolve.String())); err != nil {
+		return nil, xerrors.Errorf("couldn't add evolve rule: %v", err)
+	}
+	d := darc.NewDarc(rules, []byte(desc))
+	return d, nil
+}
+
 // ContractDarcSpawnInstructions creates one or more Instructions for
 // spawning a darc.
 func ContractDarcSpawnInstructions(spawnerID darc.ID,
@@ -209,4 +231,26 @@ func ContractDarcSpawnInstructions(spawnerID darc.ID,
 		})
 	}
 	return
+}
+
+// ContractDarcEvolveInstruction creates the corresponding instruction to
+// evolve a darc. The caller needs to sign the transaction and send it to
+// byzcoin.
+func ContractDarcEvolveInstruction(newDarc darc.Darc) (inst Instruction,
+	err error) {
+	darcBuf, err := newDarc.ToProto()
+	if err != nil {
+		return inst, xerrors.Errorf("couldn't create protobuf: %v", err)
+	}
+	return Instruction{
+		InstanceID: NewInstanceID(newDarc.GetBaseID()),
+		Invoke: &Invoke{
+			ContractID: ContractDarcID,
+			Command:    cmdDarcEvolve,
+			Args: []Argument{{
+				Name:  "darc",
+				Value: darcBuf,
+			}},
+		},
+	}, nil
 }

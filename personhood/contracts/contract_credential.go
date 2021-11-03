@@ -76,10 +76,7 @@ func (c *ContractCredential) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.I
 	// Spawn creates a new credential as a separate instance.
 	ca := inst.DeriveID("")
 	if credID := inst.Spawn.Args.Search("credentialID"); credID != nil {
-		h := sha256.New()
-		h.Write([]byte(ContractCredentialID))
-		h.Write(credID)
-		ca = byzcoin.NewInstanceID(h.Sum(nil))
+		ca = CredentialIID(credID)
 	}
 	log.Lvlf3("Spawning Credential to %x", ca.Slice())
 
@@ -167,7 +164,9 @@ func (c *ContractCredential) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.
 							trusteesDarc = append(trusteesDarc, trusteeDarc)
 						}
 					default:
-						return nil, nil, errors.New("unknown recover attribute: " + att.Name)
+						return nil, nil,
+							errors.New("unknown recover attribute: " + string(att.
+								Name))
 					}
 				}
 				break
@@ -269,6 +268,15 @@ func NewInstructionCredentialSpawn(dst byzcoin.InstanceID, did darc.ID,
 		},
 	}
 	return
+}
+
+// CredentialIID returns the InstanceID of the credential, given the
+// public key of the ephemeral key that created the instance.
+func CredentialIID(id []byte) byzcoin.InstanceID {
+	h := sha256.New()
+	h.Write([]byte(ContractCredentialID))
+	h.Write(id)
+	return byzcoin.NewInstanceID(h.Sum(nil))
 }
 
 func getDarc(rst byzcoin.ReadOnlyStateTrie, darcID darc.ID) (*darc.Darc, error) {

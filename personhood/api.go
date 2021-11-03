@@ -5,6 +5,7 @@ package personhood
 
 import (
 	"fmt"
+	"golang.org/x/xerrors"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/darc"
@@ -91,4 +92,41 @@ func (c *Client) SetAdminDarcIDs(si *network.ServerIdentity, adminDarcIDs []darc
 			si.Address, err))
 	}
 	return
+}
+
+// EmailSetup sends the email setup request to the server.
+// The ServerIdentity needs to contain a valid private key corresponding to
+// the public key of the node.
+func (c *Client) EmailSetup(si *network.ServerIdentity,
+	es *EmailSetup) error {
+	if err := es.Sign(si.GetPrivate()); err != nil {
+		return xerrors.Errorf("couldn't sign request: %v", err)
+	}
+
+	err := c.SendProtobuf(si, es, nil)
+	if err != nil {
+		return xerrors.Errorf("couldn't send request: %v", err)
+	}
+	return nil
+}
+
+// EmailSignup asks for a new email address to be signed up.
+// The signup-link is sent to the address given.
+func (c *Client) EmailSignup(si *network.ServerIdentity,
+	alias, email string) (EmailSignupReply, error) {
+	var reply EmailSignupReply
+	err := c.SendProtobuf(si, &EmailSignup{
+		Alias: alias,
+		Email: email,
+	}, &reply)
+	return reply, err
+}
+
+// EmailRecover asks for a recovery of an existing account.
+// Recovering an account that doesn't exist yet returns an error.
+func (c *Client) EmailRecover(si *network.ServerIdentity,
+	email string) (EmailRecoverReply, error) {
+	var reply EmailRecoverReply
+	err := c.SendProtobuf(si, &EmailRecover{Email: email}, &reply)
+	return reply, err
 }

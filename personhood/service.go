@@ -9,6 +9,9 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"errors"
+	"go.dedis.ch/cothority/v3/personhood/user"
+	"go.dedis.ch/protobuf"
+	"net/mail"
 	"sort"
 	"time"
 
@@ -78,6 +81,10 @@ func (s *Service) Capabilities(rq *Capabilities) (*CapabilitiesResponse, error) 
 			},
 			{
 				Endpoint: "partylist",
+				Version:  [3]byte{0, 1, 0},
+			},
+			{
+				Endpoint: "email",
 				Version:  [3]byte{0, 1, 0},
 			},
 		},
@@ -444,6 +451,253 @@ func (s *Service) SetAdminDarcIDs(rq *SetAdminDarcIDs) (*SetAdminDarcIDsReply,
 	return &SetAdminDarcIDsReply{}, s.save()
 }
 
+// EmailSetup uses the given DeviceURL to create a new device and stores the
+// configuration, if successful.
+func (s *Service) EmailSetup(rq *EmailSetup) (*EmailSetupReply, error) {
+	if err := rq.Verify(s.ServerIdentity().Public); err != nil {
+		return nil, xerrors.Errorf("signature verification failed: %v", err)
+	}
+
+	cl, err := s.getClient(rq.ByzCoinID)
+	if err != nil {
+		return nil, xerrors.Errorf("couldn't get client: %v", err)
+	}
+	u, err := user.NewFromURL(cl, rq.DeviceURL)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to create user: %v", err)
+	}
+
+	// For the phapp tests, it is difficult to create the correct DARC.
+	// So create one here if the EmailDarcID is all zero.
+	if rq.EmailDarcID.Equal(byzcoin.NewInstanceID([]byte{})) {
+		log.Warn("Creating DARC for phapp test")
+		id := u.Signer.Identity()
+		d, err := byzcoin.ContractDarcNew(id, id, "EmailDarc")
+		if err != nil {
+			return nil, xerrors.Errorf("couldn't create darc: %v", err)
+		}
+		as := u.GetActiveSpawner()
+		if err := as.SpawnDarc(*d); err != nil {
+			return nil, xerrors.Errorf("couldn't spawn darc: %v", err)
+		}
+		if err := as.SendTransaction(); err != nil {
+			return nil, xerrors.Errorf("couldn't send transaction: %v", err)
+		}
+		rq.EmailDarcID = byzcoin.NewInstanceID(d.GetBaseID())
+	}
+	s.storage.EmailConfig = &emailConfig{
+		ByzCoinID:   rq.ByzCoinID,
+		BaseURL:     rq.BaseURL,
+		UserID:      u.CredIID,
+		UserSigner:  u.Signer,
+		EmailDarcID: rq.EmailDarcID,
+		SMTPConfig:  rq.SMTPHost,
+		SMTPFrom:    rq.SMTPFrom,
+		SMTPReplyTo: rq.SMTPReplyTo,
+		// This limits to 100 emails per day.
+		EmailsLimit: 100,
+	}
+
+	return &EmailSetupReply{}, s.save()
+}
+
+func (s *Service) getClient(bcID skipchain.SkipBlockID) (*byzcoin.Client,
+	error) {
+	sc := s.Service(skipchain.ServiceName).(*skipchain.Service)
+	repl, err := sc.GetUpdateChain(&skipchain.GetUpdateChain{LatestID: bcID})
+	if err != nil {
+		return nil, xerrors.Errorf("failed to get update chain: %v", err)
+	}
+	latest := repl.Update[len(repl.Update)-1]
+
+	return byzcoin.NewClient(bcID, *latest.Roster), nil
+}
+
+// EmailSignup can be used to create a new user
+func (s *Service) EmailSignup(rq *EmailSignup) (*EmailSignupReply, error) {
+	if _, err := mail.ParseAddress(rq.Email); err != nil {
+		return nil, xerrors.Errorf("invalid email address: %v", err)
+	}
+	if s.storage.EmailConfig == nil {
+		return nil, xerrors.New("email setup not done")
+	}
+	cl, err := s.getClient(s.storage.EmailConfig.ByzCoinID)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to get client: %v", err)
+	}
+	u, err := s.getUser(cl)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to get user: %v", err)
+	}
+	contacts := u.GetCredentialsCopy().GetPublic(contracts.APContacts)
+	for contact := 0; contact < len(contacts); contact += 32 {
+		contactID := contacts[contact : contact+32]
+		credentialBuf, err := cl.GetInstance(byzcoin.NewInstanceID(contactID),
+			contracts.ContractCredentialID)
+		if err != nil {
+			log.Warn("Got invalid contact in contacts of base user")
+			continue
+		}
+		var credential contracts.CredentialStruct
+		if err := protobuf.Decode(credentialBuf, &credential); err != nil {
+			log.Warn("Got an invalid credential in contacts of base user")
+			continue
+		}
+		if bytes.Compare(credential.GetPublic(contracts.APEmail),
+			[]byte(rq.Email)) == 0 {
+			return &EmailSignupReply{
+				Status: ESEExists,
+			}, nil
+		}
+	}
+
+	newUser, err := u.CreateNewUser(rq.Alias, rq.Email)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to create new user: %v", err)
+	}
+	newUserURL, err := newUser.CreateLink(s.storage.EmailConfig.BaseURL)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to create link: %v", err)
+	}
+
+	if s.storage.EmailConfig.tooManyEmails(time.Now().Unix() / 3600) {
+		return &EmailSignupReply{
+			Status: ESETooManyRequests,
+		}, nil
+	}
+	err = s.storage.EmailConfig.SendMail(
+		rq.Email, "DEDIS/EPFL byzcoin setup",
+		"This email is to inform you that you have been signed up for\r\n"+
+			"the DEDIS/Byzcoin blockchain.\r\n\n"+
+			"Please click on the following link to set up your account:\r\n\r\n"+
+			newUserURL+"\r\n\r\n"+
+			"For more information, visit\r\n\r\n"+
+			"https://www.c4dt.org/article/partner-login",
+	)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to send mail: %v", err)
+	}
+
+	emailDarcBuf, err := cl.GetInstance(s.storage.EmailConfig.EmailDarcID,
+		byzcoin.ContractDarcID)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to get EmailDarc from proof: %v",
+			err)
+	}
+
+	var emailDarc darc.Darc
+	if protobuf.Decode(emailDarcBuf, &emailDarc) != nil {
+		return nil, xerrors.Errorf("failed to decode darc: %v", err)
+	}
+	emailDarcNew := emailDarc.Copy()
+	if err := emailDarcNew.EvolveFrom(&emailDarc); err != nil {
+		return nil, xerrors.Errorf("failed to evolve darc: %v", err)
+	}
+	newUserIdentity := darc.NewIdentityDarc(newUser.SignerDarc.GetBaseID())
+	signRule := emailDarcNew.Rules.GetSignExpr().AddOrElement(newUserIdentity.String())
+	if err := emailDarcNew.Rules.UpdateSign(signRule); err != nil {
+		return nil, xerrors.Errorf("failed to update sign rule: %v", err)
+	}
+	emailDarcNewBuf, err := emailDarcNew.ToProto()
+	if err != nil {
+		return nil, xerrors.Errorf("failed to encode darc: %v", err)
+	}
+
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(emailDarcNew.GetBaseID()),
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDarcID,
+			Command:    "evolve",
+			Args: byzcoin.Arguments{
+				{Name: "darc", Value: emailDarcNewBuf},
+			},
+		},
+	})
+	if err != nil {
+		return nil, xerrors.Errorf("failed to create transaction: %v", err)
+	}
+	if err := cl.SignTransaction(ctx, s.storage.EmailConfig.UserSigner); err != nil {
+		return nil, xerrors.Errorf("failed to sign transaction: %v", err)
+	}
+	_, err = cl.AddTransactionAndWait(ctx, 10)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to add transaction: %v", err)
+	}
+
+	return &EmailSignupReply{
+		Status: ESECreated,
+	}, nil
+}
+
+func (s *Service) getUser(cl *byzcoin.Client) (*user.User, error) {
+	u, err := user.New(cl, s.storage.EmailConfig.UserID)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to get user: %v", err)
+	}
+	u.Signer = s.storage.EmailConfig.UserSigner
+	return &u, nil
+}
+
+// EmailRecover can be used to recover an existing user by adding a new device.
+func (s *Service) EmailRecover(rq *EmailRecover) (*EmailRecoverReply, error) {
+	if _, err := mail.ParseAddress(rq.Email); err != nil {
+		return nil, xerrors.Errorf("invalid email address: %v", err)
+	}
+
+	if s.storage.EmailConfig == nil {
+		return nil, xerrors.New("email setup not done")
+	}
+	cl, err := s.getClient(s.storage.EmailConfig.ByzCoinID)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to get client: %v", err)
+	}
+	u, err := s.getUser(cl)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to get user: %v", err)
+	}
+
+	contacts := u.GetCredentialsCopy().GetPublic(contracts.APContacts)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to get devices: %v", err)
+	}
+	for i := 0; i < len(contacts); i += len(byzcoin.InstanceID{}) {
+		contact, err := user.New(cl, byzcoin.NewInstanceID(contacts[i:i+32]))
+		if err != nil {
+			log.Warn("Couldn't get user - searching other users")
+			continue
+		}
+		email := string(contact.GetCredentialsCopy().GetPublic(contracts.APEmail))
+		if email == rq.Email {
+			recovery, err := u.Recover(contact.CredIID,
+				s.storage.EmailConfig.BaseURL)
+			if err != nil {
+				return nil, xerrors.Errorf("failed to recover user: %v", err)
+			}
+			if s.storage.EmailConfig.tooManyEmails(time.Now().Unix() / 3600) {
+				return &EmailRecoverReply{
+					Status: ERETooManyRequests,
+				}, nil
+			}
+			err = s.storage.EmailConfig.SendMail(
+				rq.Email, "DEDIS/EPFL byzcoin recovery",
+				"This email is to recover your byzcoin account from\r\n"+
+					"the DEDIS/Byzcoin blockchain.\r\n\n"+
+					"Please click on the following link to recover your"+
+					" account:\r\n\r\n"+
+					recovery+"\r\n\r\n"+
+					"For more information, visit\r\n\r\n"+
+					"https://www.c4dt.org/article/partner-login",
+			)
+			if err != nil {
+				return nil, xerrors.Errorf("failed to send mail: %v", err)
+			}
+			return &EmailRecoverReply{Status: ERERecovered}, nil
+		}
+	}
+
+	return &EmailRecoverReply{Status: EREUnknown}, errors.New("user not found")
+}
+
 func (s *Service) byzcoinService() *byzcoin.Service {
 	return s.Service(byzcoin.ServiceName).(*byzcoin.Service)
 }
@@ -472,7 +726,8 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 	if err := s.RegisterHandlers(s.Capabilities, s.Meetup, s.Poll,
 		s.RoPaSciList, s.PartyList, s.Challenge, s.GetAdminDarcIDs,
-		s.SetAdminDarcIDs); err != nil {
+		s.SetAdminDarcIDs,
+		s.EmailSetup, s.EmailSignup, s.EmailRecover); err != nil {
 		return nil, errors.New("couldn't register messages")
 	}
 

@@ -21,6 +21,7 @@ main(){
     run testSetAdminDarcIDs
     run testSpawner
     run testWipe
+    run testEmail
     # TODO: fix the credential instance ID mess
     # run testRegister
     stopTest
@@ -39,6 +40,20 @@ testSetAdminDarcIDs(){
   testNGrep 1234 runPH adminDarcIDs get co2/public.toml
   testOK runPH adminDarcIDs set co1/private.toml
   testNGrep 1234 runPH adminDarcIDs get co1/public.toml
+}
+
+testEmail(){
+  rm -f config/*
+  runCoBG 1 2 3
+  testOK runBA create public.toml --interval .5s
+  baseURL="https://localhost"
+  testGrep login.c4dt.org runBA user new config/bc*cfg config/key*cfg newuser
+  userDevice="$EGREP"
+  bcID=$(ls config/bc*cfg | sed -e "s/.*bc-\(.*\).cfg/\1/")
+  echo "User device is: $userDevice"
+  testOK runPH email setup -bcID $bcID -private co1/private.toml \
+    -user_device "$userDevice" -baseURL "$baseURL" \
+    -smtp_host dummy:25 -smtp_from root@localhost -smtp_reply_to root@localhost
 }
 
 testSpawner(){
