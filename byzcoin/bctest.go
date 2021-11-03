@@ -1,11 +1,13 @@
 package byzcoin
 
 import (
+	"encoding/binary"
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/kyber/v3/suites"
+	"go.dedis.ch/kyber/v3/util/random"
 	"go.dedis.ch/onet/v3"
 	"testing"
 	"time"
@@ -144,10 +146,7 @@ func (b *BCTest) SendInst(args *TxArgs,
 		b.SignerCounter++
 	}
 	ctx := NewClientTransaction(CurrentVersion, inst...)
-	h := ctx.Instructions.Hash()
-	for i := range ctx.Instructions {
-		require.NoError(b.T, ctx.Instructions[i].SignWith(h, b.Signer))
-	}
+	require.NoError(b.T, b.Client.SignTransaction(ctx, b.Signer))
 
 	return ctx, b.SendTx(args, ctx)
 }
@@ -189,6 +188,58 @@ func (b *BCTest) SpawnDummy(args *TxArgs) (ClientTransaction, AddTxResponse) {
 		Spawn: &Spawn{
 			ContractID: DummyContractName,
 			Args:       Arguments{{Name: "data", Value: []byte("anyvalue")}},
+		},
+	})
+}
+
+// CreateCoin returns a coin with the given value stored inside.
+func (b *BCTest) CreateCoin(args *TxArgs, value uint64) InstanceID {
+	coinInstr := Instruction{
+		InstanceID: NewInstanceID(b.GenesisDarc.GetBaseID()),
+		Spawn: &Spawn{
+			ContractID: "coin",
+			Args: Arguments{
+				{Name: "coinID", Value: random.Bits(256, true, random.New())},
+				{Name: "darcID", Value: b.GenesisDarc.GetBaseID()},
+			},
+		},
+	}
+	coinID, err := coinInstr.DeriveIDArg("", "coinID")
+	require.NoError(b.T, err)
+
+	coinMint := make([]byte, 8)
+	binary.LittleEndian.PutUint64(coinMint, value)
+	coinMintInstr := Instruction{
+		InstanceID: coinID,
+		Invoke: &Invoke{
+			ContractID: "coin",
+			Command:    "mint",
+			Args: Arguments{
+				{Name: "coins", Value: coinMint},
+			},
+		},
+	}
+
+	b.SendInst(args, coinInstr, coinMintInstr)
+
+	return coinID
+}
+
+// TransferCoin takes from the given coinID to send to the other coinID.
+// 'invoke:coin.transfer' must be part of the genesis-darc-actions.
+func (b *BCTest) TransferCoin(args *TxArgs, coinSrc, coinDst InstanceID,
+	value uint64) {
+	valueBuf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(valueBuf, value)
+	b.SendInst(args, Instruction{
+		InstanceID: coinSrc,
+		Invoke: &Invoke{
+			ContractID: "coin",
+			Command:    "transfer",
+			Args: Arguments{
+				{Name: "coins", Value: valueBuf},
+				{Name: "destination", Value: coinDst[:]},
+			},
 		},
 	})
 }

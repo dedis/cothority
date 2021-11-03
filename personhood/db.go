@@ -80,6 +80,7 @@ type storage2 struct {
 	Polls        map[string]*storagePolls
 	Challenge    map[string]*ChallengeCandidate
 	AdminDarcIDs []darc.ID
+	EmailConfig  *emailConfig
 
 	sync.Mutex
 }

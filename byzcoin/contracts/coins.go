@@ -3,9 +3,9 @@ package contracts
 import (
 	"crypto/sha256"
 	"encoding/binary"
-
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/kyber/v3/util/random"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
 	"golang.org/x/xerrors"
@@ -66,10 +66,7 @@ func (c *contractCoin) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 		coinID = inst.Spawn.Args.Search("coinID")
 	}
 	if coinID != nil {
-		h := sha256.New()
-		h.Write([]byte(ContractCoinID))
-		h.Write(coinID)
-		ca = byzcoin.NewInstanceID(h.Sum(nil))
+		ca = ContractCoinDeriveID(coinID)
 	}
 	if did := inst.Spawn.Args.Search("darcID"); did != nil {
 		darcID = darc.ID(did)
@@ -228,4 +225,72 @@ func iid(in string) byzcoin.InstanceID {
 	h := sha256.New()
 	h.Write([]byte(in))
 	return byzcoin.NewInstanceID(h.Sum(nil))
+}
+
+// ContractCoinDeriveID derives a coin contract ID from a coinID argument.
+func ContractCoinDeriveID(coinID []byte) byzcoin.InstanceID {
+	h := sha256.New()
+	h.Write([]byte(ContractCoinID))
+	h.Write(coinID)
+	return byzcoin.NewInstanceID(h.Sum(nil))
+}
+
+// ContractCoinSpawn returns the instruction necessary to spawn a coin,
+// as well as the coinID.
+// If the coinType is nil, the standard coinType will be used.
+func ContractCoinSpawn(spawnerDarcID darc.ID,
+	coinType *byzcoin.InstanceID) (byzcoin.Instruction,
+	byzcoin.InstanceID) {
+	coinID := random.Bits(256, true, random.New())
+	instr := byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(spawnerDarcID),
+		Spawn: &byzcoin.Spawn{
+			ContractID: ContractCoinID,
+			Args: byzcoin.Arguments{
+				{Name: "coinID", Value: coinID},
+				{Name: "darcID", Value: spawnerDarcID},
+			},
+		},
+	}
+	if coinType != nil {
+		instr.Spawn.Args = append(instr.Spawn.Args, byzcoin.Argument{
+			Name: "type", Value: coinType[:]})
+	}
+	return instr, ContractCoinDeriveID(coinID)
+}
+
+// ContractCoinMint returns the instruction necessary to mint coins.
+// It supposes that the darc of the coin actually has a 'mint' rule.
+func ContractCoinMint(coinID byzcoin.InstanceID, value uint64) byzcoin.Instruction {
+	valueBuf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(valueBuf, value)
+	return byzcoin.Instruction{
+		InstanceID: coinID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: ContractCoinID,
+			Command:    "mint",
+			Args: byzcoin.Arguments{
+				{Name: "coins", Value: valueBuf},
+			},
+		},
+	}
+}
+
+// ContractCoinTransfer returns the instruction necessary to transfer "value"
+// coins from coinSrc to coinDst.
+func ContractCoinTransfer(coinSrc, coinDst byzcoin.InstanceID,
+	value uint64) byzcoin.Instruction {
+	valueBuf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(valueBuf, value)
+	return byzcoin.Instruction{
+		InstanceID: coinSrc,
+		Invoke: &byzcoin.Invoke{
+			ContractID: ContractCoinID,
+			Command:    "transfer",
+			Args: byzcoin.Arguments{
+				{Name: "coins", Value: valueBuf},
+				{Name: "destination", Value: coinDst[:]},
+			},
+		},
+	}
 }

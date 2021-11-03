@@ -138,7 +138,7 @@ func NewDarc(rules Rules, desc []byte) *Darc {
 }
 
 // Copy all the fields of a Darc except the signature
-func (d *Darc) Copy() *Darc {
+func (d Darc) Copy() *Darc {
 	dCopy := &Darc{
 		Version:     d.Version,
 		Description: copyBytes(d.Description),
@@ -1377,6 +1377,22 @@ func (r Request) MsgToDarc(darcBuf []byte) (*Darc, error) {
 // String returns a formatted string of the rule
 func (r Rule) String() string {
 	return fmt.Sprintf("%s:%s", r.Action, r.Expr)
+}
+
+// AddOrOperation adds the given identity with an OR to the existing rule.
+func (r Rule) AddOrOperation(id Identity) Rule {
+	return Rule{
+		Action: r.Action,
+		Expr:   r.Expr.AddOrElement(id.String()),
+	}
+}
+
+// AddAndOperation adds the given identity with an AND to the existing rule.
+func (r Rule) AddAndOperation(id Identity) Rule {
+	return Rule{
+		Action: r.Action,
+		Expr:   r.Expr.AddAndElement(id.String()),
+	}
 }
 
 // NewRequest initialises a request, the caller must provide all the fields of

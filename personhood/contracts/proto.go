@@ -10,6 +10,8 @@ import (
 // type :skipchain.SkipBlockID:bytes
 // type :byzcoin.InstanceID:bytes
 // type :darc.ID:bytes
+// type :CredentialEntry:string
+// type :AttributeString:string
 // package personhood;
 //
 // import "byzcoin.proto";
@@ -44,13 +46,13 @@ type CredentialStruct struct {
 
 // Credential represents one identity of the user.
 type Credential struct {
-	Name       string
+	Name       CredentialEntry
 	Attributes []Attribute
 }
 
 // Attribute stores one specific attribute of a credential.
 type Attribute struct {
-	Name  string
+	Name  AttributeString
 	Value []byte
 }
 

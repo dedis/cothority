@@ -15,9 +15,9 @@ do-js: check_protoc
 
 
 check_protoc:
-	which protoc || (echo "Install protoc version 3.13.0. On Mac, run \"brew install protobuf@3.13\"" && exit 1)
+	@which protoc || (echo "Install protoc version 3.17.3. On Mac, run \"brew install protobuf@3.17.3\"" && exit 1)
 	@pv=`protoc --version`; \
-	if [ "$$pv" != "libprotoc 3.13.0" ]; then \
+	if [ "$$pv" != "libprotoc 3.17.3" ]; then \
 		echo "Protoc version $$pv is not supported."; \
 		exit 1; \
 	fi

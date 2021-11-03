@@ -15,6 +15,8 @@ import (
 // type :darc.ID:bytes
 // type :contracts.RoPaSci:personhood.RoPaSci
 // type :contracts.CredentialStruct:personhood.CredentialStruct
+// type :EmailSignupEnum:int32
+// type :EmailRecoverEnum:int32
 // package personhood_service;
 //
 // import "onet.proto";
@@ -218,4 +220,52 @@ type SetAdminDarcIDs struct {
 
 // SetAdminDarcIDsReply indicates a correct storage of the AdminDarcIDs.
 type SetAdminDarcIDsReply struct {
+}
+
+// EmailSetup to create a new setup.
+type EmailSetup struct {
+	// ByzCoinID where the email service is running.
+	ByzCoinID skipchain.SkipBlockID
+	// DeviceURL, as created from the dynacred-frontend
+	DeviceURL string
+	// EmailDarcID is the darc where new users will be added to
+	EmailDarcID byzcoin.InstanceID
+	// SMTPHost: "[tls://]host:port" - should support emails with a
+	// sender "from".
+	SMTPHost string
+	// SMTPFrom that will be used for the SMTP host
+	SMTPFrom string
+	// SMTPReplyTo is the email address that will be used as reply-to
+	SMTPReplyTo string
+	// BaseURL is prepended to the recovery string and should point to the
+	// publicly available frontend.
+	BaseURL string
+	// Signature is on the sha256 of the above fields
+	Signature []byte
+}
+
+// EmailSetupReply when everything went well.
+type EmailSetupReply struct {
+}
+
+// EmailSignup creates a new user if EmailSetup is configured
+type EmailSignup struct {
+	Email string
+	// Alias can be empty
+	Alias string
+}
+
+// EmailSignupReply returns the type of action done
+type EmailSignupReply struct {
+	Status EmailSignupEnum
+}
+
+// EmailRecover requests a recovery of a given account
+type EmailRecover struct {
+	Email string
+}
+
+// EmailRecoverReply returns the type of action done.
+type EmailRecoverReply struct {
+	Status EmailRecoverEnum
 }

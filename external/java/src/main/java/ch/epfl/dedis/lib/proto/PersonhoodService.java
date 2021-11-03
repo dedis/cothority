@@ -22120,6 +22120,5054 @@ public final class PersonhoodService {
 
   }
 
+  public interface EmailSetupOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:personhood_service.EmailSetup)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * ByzCoinID where the email service is running.
+     * </pre>
+     *
+     * <code>required bytes byzcoinid = 1;</code>
+     * @return Whether the byzcoinid field is set.
+     */
+    boolean hasByzcoinid();
+    /**
+     * <pre>
+     * ByzCoinID where the email service is running.
+     * </pre>
+     *
+     * <code>required bytes byzcoinid = 1;</code>
+     * @return The byzcoinid.
+     */
+    com.google.protobuf.ByteString getByzcoinid();
+
+    /**
+     * <pre>
+     * DeviceURL, as created from the dynacred-frontend
+     * </pre>
+     *
+     * <code>required string deviceurl = 2;</code>
+     * @return Whether the deviceurl field is set.
+     */
+    boolean hasDeviceurl();
+    /**
+     * <pre>
+     * DeviceURL, as created from the dynacred-frontend
+     * </pre>
+     *
+     * <code>required string deviceurl = 2;</code>
+     * @return The deviceurl.
+     */
+    java.lang.String getDeviceurl();
+    /**
+     * <pre>
+     * DeviceURL, as created from the dynacred-frontend
+     * </pre>
+     *
+     * <code>required string deviceurl = 2;</code>
+     * @return The bytes for deviceurl.
+     */
+    com.google.protobuf.ByteString
+        getDeviceurlBytes();
+
+    /**
+     * <pre>
+     * EmailDarcID is the darc where new users will be added to
+     * </pre>
+     *
+     * <code>required bytes emaildarcid = 3;</code>
+     * @return Whether the emaildarcid field is set.
+     */
+    boolean hasEmaildarcid();
+    /**
+     * <pre>
+     * EmailDarcID is the darc where new users will be added to
+     * </pre>
+     *
+     * <code>required bytes emaildarcid = 3;</code>
+     * @return The emaildarcid.
+     */
+    com.google.protobuf.ByteString getEmaildarcid();
+
+    /**
+     * <pre>
+     * SMTPHost: "[tls://]host:port" - should support emails with a
+     * sender "from".
+     * </pre>
+     *
+     * <code>required string smtphost = 4;</code>
+     * @return Whether the smtphost field is set.
+     */
+    boolean hasSmtphost();
+    /**
+     * <pre>
+     * SMTPHost: "[tls://]host:port" - should support emails with a
+     * sender "from".
+     * </pre>
+     *
+     * <code>required string smtphost = 4;</code>
+     * @return The smtphost.
+     */
+    java.lang.String getSmtphost();
+    /**
+     * <pre>
+     * SMTPHost: "[tls://]host:port" - should support emails with a
+     * sender "from".
+     * </pre>
+     *
+     * <code>required string smtphost = 4;</code>
+     * @return The bytes for smtphost.
+     */
+    com.google.protobuf.ByteString
+        getSmtphostBytes();
+
+    /**
+     * <pre>
+     * SMTPFrom that will be used for the SMTP host
+     * </pre>
+     *
+     * <code>required string smtpfrom = 5;</code>
+     * @return Whether the smtpfrom field is set.
+     */
+    boolean hasSmtpfrom();
+    /**
+     * <pre>
+     * SMTPFrom that will be used for the SMTP host
+     * </pre>
+     *
+     * <code>required string smtpfrom = 5;</code>
+     * @return The smtpfrom.
+     */
+    java.lang.String getSmtpfrom();
+    /**
+     * <pre>
+     * SMTPFrom that will be used for the SMTP host
+     * </pre>
+     *
+     * <code>required string smtpfrom = 5;</code>
+     * @return The bytes for smtpfrom.
+     */
+    com.google.protobuf.ByteString
+        getSmtpfromBytes();
+
+    /**
+     * <pre>
+     * SMTPReplyTo is the email address that will be used as reply-to
+     * </pre>
+     *
+     * <code>required string smtpreplyto = 6;</code>
+     * @return Whether the smtpreplyto field is set.
+     */
+    boolean hasSmtpreplyto();
+    /**
+     * <pre>
+     * SMTPReplyTo is the email address that will be used as reply-to
+     * </pre>
+     *
+     * <code>required string smtpreplyto = 6;</code>
+     * @return The smtpreplyto.
+     */
+    java.lang.String getSmtpreplyto();
+    /**
+     * <pre>
+     * SMTPReplyTo is the email address that will be used as reply-to
+     * </pre>
+     *
+     * <code>required string smtpreplyto = 6;</code>
+     * @return The bytes for smtpreplyto.
+     */
+    com.google.protobuf.ByteString
+        getSmtpreplytoBytes();
+
+    /**
+     * <pre>
+     * BaseURL is prepended to the recovery string and should point to the
+     * publicly available frontend.
+     * </pre>
+     *
+     * <code>required string baseurl = 7;</code>
+     * @return Whether the baseurl field is set.
+     */
+    boolean hasBaseurl();
+    /**
+     * <pre>
+     * BaseURL is prepended to the recovery string and should point to the
+     * publicly available frontend.
+     * </pre>
+     *
+     * <code>required string baseurl = 7;</code>
+     * @return The baseurl.
+     */
+    java.lang.String getBaseurl();
+    /**
+     * <pre>
+     * BaseURL is prepended to the recovery string and should point to the
+     * publicly available frontend.
+     * </pre>
+     *
+     * <code>required string baseurl = 7;</code>
+     * @return The bytes for baseurl.
+     */
+    com.google.protobuf.ByteString
+        getBaseurlBytes();
+
+    /**
+     * <pre>
+     * Signature is on the sha256 of the above fields
+     * </pre>
+     *
+     * <code>required bytes signature = 8;</code>
+     * @return Whether the signature field is set.
+     */
+    boolean hasSignature();
+    /**
+     * <pre>
+     * Signature is on the sha256 of the above fields
+     * </pre>
+     *
+     * <code>required bytes signature = 8;</code>
+     * @return The signature.
+     */
+    com.google.protobuf.ByteString getSignature();
+  }
+  /**
+   * <pre>
+   * EmailSetup to create a new setup.
+   * </pre>
+   *
+   * Protobuf type {@code personhood_service.EmailSetup}
+   */
+  public static final class EmailSetup extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:personhood_service.EmailSetup)
+      EmailSetupOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use EmailSetup.newBuilder() to construct.
+    private EmailSetup(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private EmailSetup() {
+      byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+      deviceurl_ = "";
+      emaildarcid_ = com.google.protobuf.ByteString.EMPTY;
+      smtphost_ = "";
+      smtpfrom_ = "";
+      smtpreplyto_ = "";
+      baseurl_ = "";
+      signature_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new EmailSetup();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private EmailSetup(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              byzcoinid_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000002;
+              deviceurl_ = bs;
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              emaildarcid_ = input.readBytes();
+              break;
+            }
+            case 34: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000008;
+              smtphost_ = bs;
+              break;
+            }
+            case 42: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000010;
+              smtpfrom_ = bs;
+              break;
+            }
+            case 50: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000020;
+              smtpreplyto_ = bs;
+              break;
+            }
+            case 58: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000040;
+              baseurl_ = bs;
+              break;
+            }
+            case 66: {
+              bitField0_ |= 0x00000080;
+              signature_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailSetup_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailSetup_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup.class, ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int BYZCOINID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString byzcoinid_;
+    /**
+     * <pre>
+     * ByzCoinID where the email service is running.
+     * </pre>
+     *
+     * <code>required bytes byzcoinid = 1;</code>
+     * @return Whether the byzcoinid field is set.
+     */
+    @java.lang.Override
+    public boolean hasByzcoinid() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <pre>
+     * ByzCoinID where the email service is running.
+     * </pre>
+     *
+     * <code>required bytes byzcoinid = 1;</code>
+     * @return The byzcoinid.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString getByzcoinid() {
+      return byzcoinid_;
+    }
+
+    public static final int DEVICEURL_FIELD_NUMBER = 2;
+    private volatile java.lang.Object deviceurl_;
+    /**
+     * <pre>
+     * DeviceURL, as created from the dynacred-frontend
+     * </pre>
+     *
+     * <code>required string deviceurl = 2;</code>
+     * @return Whether the deviceurl field is set.
+     */
+    @java.lang.Override
+    public boolean hasDeviceurl() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     * <pre>
+     * DeviceURL, as created from the dynacred-frontend
+     * </pre>
+     *
+     * <code>required string deviceurl = 2;</code>
+     * @return The deviceurl.
+     */
+    @java.lang.Override
+    public java.lang.String getDeviceurl() {
+      java.lang.Object ref = deviceurl_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          deviceurl_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * DeviceURL, as created from the dynacred-frontend
+     * </pre>
+     *
+     * <code>required string deviceurl = 2;</code>
+     * @return The bytes for deviceurl.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getDeviceurlBytes() {
+      java.lang.Object ref = deviceurl_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        deviceurl_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int EMAILDARCID_FIELD_NUMBER = 3;
+    private com.google.protobuf.ByteString emaildarcid_;
+    /**
+     * <pre>
+     * EmailDarcID is the darc where new users will be added to
+     * </pre>
+     *
+     * <code>required bytes emaildarcid = 3;</code>
+     * @return Whether the emaildarcid field is set.
+     */
+    @java.lang.Override
+    public boolean hasEmaildarcid() {
+      return ((bitField0_ & 0x00000004) != 0);
+    }
+    /**
+     * <pre>
+     * EmailDarcID is the darc where new users will be added to
+     * </pre>
+     *
+     * <code>required bytes emaildarcid = 3;</code>
+     * @return The emaildarcid.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString getEmaildarcid() {
+      return emaildarcid_;
+    }
+
+    public static final int SMTPHOST_FIELD_NUMBER = 4;
+    private volatile java.lang.Object smtphost_;
+    /**
+     * <pre>
+     * SMTPHost: "[tls://]host:port" - should support emails with a
+     * sender "from".
+     * </pre>
+     *
+     * <code>required string smtphost = 4;</code>
+     * @return Whether the smtphost field is set.
+     */
+    @java.lang.Override
+    public boolean hasSmtphost() {
+      return ((bitField0_ & 0x00000008) != 0);
+    }
+    /**
+     * <pre>
+     * SMTPHost: "[tls://]host:port" - should support emails with a
+     * sender "from".
+     * </pre>
+     *
+     * <code>required string smtphost = 4;</code>
+     * @return The smtphost.
+     */
+    @java.lang.Override
+    public java.lang.String getSmtphost() {
+      java.lang.Object ref = smtphost_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          smtphost_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * SMTPHost: "[tls://]host:port" - should support emails with a
+     * sender "from".
+     * </pre>
+     *
+     * <code>required string smtphost = 4;</code>
+     * @return The bytes for smtphost.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getSmtphostBytes() {
+      java.lang.Object ref = smtphost_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        smtphost_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int SMTPFROM_FIELD_NUMBER = 5;
+    private volatile java.lang.Object smtpfrom_;
+    /**
+     * <pre>
+     * SMTPFrom that will be used for the SMTP host
+     * </pre>
+     *
+     * <code>required string smtpfrom = 5;</code>
+     * @return Whether the smtpfrom field is set.
+     */
+    @java.lang.Override
+    public boolean hasSmtpfrom() {
+      return ((bitField0_ & 0x00000010) != 0);
+    }
+    /**
+     * <pre>
+     * SMTPFrom that will be used for the SMTP host
+     * </pre>
+     *
+     * <code>required string smtpfrom = 5;</code>
+     * @return The smtpfrom.
+     */
+    @java.lang.Override
+    public java.lang.String getSmtpfrom() {
+      java.lang.Object ref = smtpfrom_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          smtpfrom_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * SMTPFrom that will be used for the SMTP host
+     * </pre>
+     *
+     * <code>required string smtpfrom = 5;</code>
+     * @return The bytes for smtpfrom.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getSmtpfromBytes() {
+      java.lang.Object ref = smtpfrom_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        smtpfrom_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int SMTPREPLYTO_FIELD_NUMBER = 6;
+    private volatile java.lang.Object smtpreplyto_;
+    /**
+     * <pre>
+     * SMTPReplyTo is the email address that will be used as reply-to
+     * </pre>
+     *
+     * <code>required string smtpreplyto = 6;</code>
+     * @return Whether the smtpreplyto field is set.
+     */
+    @java.lang.Override
+    public boolean hasSmtpreplyto() {
+      return ((bitField0_ & 0x00000020) != 0);
+    }
+    /**
+     * <pre>
+     * SMTPReplyTo is the email address that will be used as reply-to
+     * </pre>
+     *
+     * <code>required string smtpreplyto = 6;</code>
+     * @return The smtpreplyto.
+     */
+    @java.lang.Override
+    public java.lang.String getSmtpreplyto() {
+      java.lang.Object ref = smtpreplyto_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          smtpreplyto_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * SMTPReplyTo is the email address that will be used as reply-to
+     * </pre>
+     *
+     * <code>required string smtpreplyto = 6;</code>
+     * @return The bytes for smtpreplyto.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getSmtpreplytoBytes() {
+      java.lang.Object ref = smtpreplyto_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        smtpreplyto_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int BASEURL_FIELD_NUMBER = 7;
+    private volatile java.lang.Object baseurl_;
+    /**
+     * <pre>
+     * BaseURL is prepended to the recovery string and should point to the
+     * publicly available frontend.
+     * </pre>
+     *
+     * <code>required string baseurl = 7;</code>
+     * @return Whether the baseurl field is set.
+     */
+    @java.lang.Override
+    public boolean hasBaseurl() {
+      return ((bitField0_ & 0x00000040) != 0);
+    }
+    /**
+     * <pre>
+     * BaseURL is prepended to the recovery string and should point to the
+     * publicly available frontend.
+     * </pre>
+     *
+     * <code>required string baseurl = 7;</code>
+     * @return The baseurl.
+     */
+    @java.lang.Override
+    public java.lang.String getBaseurl() {
+      java.lang.Object ref = baseurl_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          baseurl_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * BaseURL is prepended to the recovery string and should point to the
+     * publicly available frontend.
+     * </pre>
+     *
+     * <code>required string baseurl = 7;</code>
+     * @return The bytes for baseurl.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getBaseurlBytes() {
+      java.lang.Object ref = baseurl_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        baseurl_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int SIGNATURE_FIELD_NUMBER = 8;
+    private com.google.protobuf.ByteString signature_;
+    /**
+     * <pre>
+     * Signature is on the sha256 of the above fields
+     * </pre>
+     *
+     * <code>required bytes signature = 8;</code>
+     * @return Whether the signature field is set.
+     */
+    @java.lang.Override
+    public boolean hasSignature() {
+      return ((bitField0_ & 0x00000080) != 0);
+    }
+    /**
+     * <pre>
+     * Signature is on the sha256 of the above fields
+     * </pre>
+     *
+     * <code>required bytes signature = 8;</code>
+     * @return The signature.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString getSignature() {
+      return signature_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasByzcoinid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasDeviceurl()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasEmaildarcid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasSmtphost()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasSmtpfrom()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasSmtpreplyto()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasBaseurl()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasSignature()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        output.writeBytes(1, byzcoinid_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, deviceurl_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        output.writeBytes(3, emaildarcid_);
+      }
+      if (((bitField0_ & 0x00000008) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 4, smtphost_);
+      }
+      if (((bitField0_ & 0x00000010) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, smtpfrom_);
+      }
+      if (((bitField0_ & 0x00000020) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, smtpreplyto_);
+      }
+      if (((bitField0_ & 0x00000040) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 7, baseurl_);
+      }
+      if (((bitField0_ & 0x00000080) != 0)) {
+        output.writeBytes(8, signature_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, byzcoinid_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, deviceurl_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, emaildarcid_);
+      }
+      if (((bitField0_ & 0x00000008) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, smtphost_);
+      }
+      if (((bitField0_ & 0x00000010) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, smtpfrom_);
+      }
+      if (((bitField0_ & 0x00000020) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, smtpreplyto_);
+      }
+      if (((bitField0_ & 0x00000040) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, baseurl_);
+      }
+      if (((bitField0_ & 0x00000080) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(8, signature_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup other = (ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup) obj;
+
+      if (hasByzcoinid() != other.hasByzcoinid()) return false;
+      if (hasByzcoinid()) {
+        if (!getByzcoinid()
+            .equals(other.getByzcoinid())) return false;
+      }
+      if (hasDeviceurl() != other.hasDeviceurl()) return false;
+      if (hasDeviceurl()) {
+        if (!getDeviceurl()
+            .equals(other.getDeviceurl())) return false;
+      }
+      if (hasEmaildarcid() != other.hasEmaildarcid()) return false;
+      if (hasEmaildarcid()) {
+        if (!getEmaildarcid()
+            .equals(other.getEmaildarcid())) return false;
+      }
+      if (hasSmtphost() != other.hasSmtphost()) return false;
+      if (hasSmtphost()) {
+        if (!getSmtphost()
+            .equals(other.getSmtphost())) return false;
+      }
+      if (hasSmtpfrom() != other.hasSmtpfrom()) return false;
+      if (hasSmtpfrom()) {
+        if (!getSmtpfrom()
+            .equals(other.getSmtpfrom())) return false;
+      }
+      if (hasSmtpreplyto() != other.hasSmtpreplyto()) return false;
+      if (hasSmtpreplyto()) {
+        if (!getSmtpreplyto()
+            .equals(other.getSmtpreplyto())) return false;
+      }
+      if (hasBaseurl() != other.hasBaseurl()) return false;
+      if (hasBaseurl()) {
+        if (!getBaseurl()
+            .equals(other.getBaseurl())) return false;
+      }
+      if (hasSignature() != other.hasSignature()) return false;
+      if (hasSignature()) {
+        if (!getSignature()
+            .equals(other.getSignature())) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasByzcoinid()) {
+        hash = (37 * hash) + BYZCOINID_FIELD_NUMBER;
+        hash = (53 * hash) + getByzcoinid().hashCode();
+      }
+      if (hasDeviceurl()) {
+        hash = (37 * hash) + DEVICEURL_FIELD_NUMBER;
+        hash = (53 * hash) + getDeviceurl().hashCode();
+      }
+      if (hasEmaildarcid()) {
+        hash = (37 * hash) + EMAILDARCID_FIELD_NUMBER;
+        hash = (53 * hash) + getEmaildarcid().hashCode();
+      }
+      if (hasSmtphost()) {
+        hash = (37 * hash) + SMTPHOST_FIELD_NUMBER;
+        hash = (53 * hash) + getSmtphost().hashCode();
+      }
+      if (hasSmtpfrom()) {
+        hash = (37 * hash) + SMTPFROM_FIELD_NUMBER;
+        hash = (53 * hash) + getSmtpfrom().hashCode();
+      }
+      if (hasSmtpreplyto()) {
+        hash = (37 * hash) + SMTPREPLYTO_FIELD_NUMBER;
+        hash = (53 * hash) + getSmtpreplyto().hashCode();
+      }
+      if (hasBaseurl()) {
+        hash = (37 * hash) + BASEURL_FIELD_NUMBER;
+        hash = (53 * hash) + getBaseurl().hashCode();
+      }
+      if (hasSignature()) {
+        hash = (37 * hash) + SIGNATURE_FIELD_NUMBER;
+        hash = (53 * hash) + getSignature().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * EmailSetup to create a new setup.
+     * </pre>
+     *
+     * Protobuf type {@code personhood_service.EmailSetup}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:personhood_service.EmailSetup)
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailSetup_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailSetup_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup.class, ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        deviceurl_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        emaildarcid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        smtphost_ = "";
+        bitField0_ = (bitField0_ & ~0x00000008);
+        smtpfrom_ = "";
+        bitField0_ = (bitField0_ & ~0x00000010);
+        smtpreplyto_ = "";
+        bitField0_ = (bitField0_ & ~0x00000020);
+        baseurl_ = "";
+        bitField0_ = (bitField0_ & ~0x00000040);
+        signature_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000080);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailSetup_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup build() {
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup buildPartial() {
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup result = new ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.byzcoinid_ = byzcoinid_;
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.deviceurl_ = deviceurl_;
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.emaildarcid_ = emaildarcid_;
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.smtphost_ = smtphost_;
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.smtpfrom_ = smtpfrom_;
+        if (((from_bitField0_ & 0x00000020) != 0)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.smtpreplyto_ = smtpreplyto_;
+        if (((from_bitField0_ & 0x00000040) != 0)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.baseurl_ = baseurl_;
+        if (((from_bitField0_ & 0x00000080) != 0)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.signature_ = signature_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup other) {
+        if (other == ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup.getDefaultInstance()) return this;
+        if (other.hasByzcoinid()) {
+          setByzcoinid(other.getByzcoinid());
+        }
+        if (other.hasDeviceurl()) {
+          bitField0_ |= 0x00000002;
+          deviceurl_ = other.deviceurl_;
+          onChanged();
+        }
+        if (other.hasEmaildarcid()) {
+          setEmaildarcid(other.getEmaildarcid());
+        }
+        if (other.hasSmtphost()) {
+          bitField0_ |= 0x00000008;
+          smtphost_ = other.smtphost_;
+          onChanged();
+        }
+        if (other.hasSmtpfrom()) {
+          bitField0_ |= 0x00000010;
+          smtpfrom_ = other.smtpfrom_;
+          onChanged();
+        }
+        if (other.hasSmtpreplyto()) {
+          bitField0_ |= 0x00000020;
+          smtpreplyto_ = other.smtpreplyto_;
+          onChanged();
+        }
+        if (other.hasBaseurl()) {
+          bitField0_ |= 0x00000040;
+          baseurl_ = other.baseurl_;
+          onChanged();
+        }
+        if (other.hasSignature()) {
+          setSignature(other.getSignature());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasByzcoinid()) {
+          return false;
+        }
+        if (!hasDeviceurl()) {
+          return false;
+        }
+        if (!hasEmaildarcid()) {
+          return false;
+        }
+        if (!hasSmtphost()) {
+          return false;
+        }
+        if (!hasSmtpfrom()) {
+          return false;
+        }
+        if (!hasSmtpreplyto()) {
+          return false;
+        }
+        if (!hasBaseurl()) {
+          return false;
+        }
+        if (!hasSignature()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * ByzCoinID where the email service is running.
+       * </pre>
+       *
+       * <code>required bytes byzcoinid = 1;</code>
+       * @return Whether the byzcoinid field is set.
+       */
+      @java.lang.Override
+      public boolean hasByzcoinid() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <pre>
+       * ByzCoinID where the email service is running.
+       * </pre>
+       *
+       * <code>required bytes byzcoinid = 1;</code>
+       * @return The byzcoinid.
+       */
+      @java.lang.Override
+      public com.google.protobuf.ByteString getByzcoinid() {
+        return byzcoinid_;
+      }
+      /**
+       * <pre>
+       * ByzCoinID where the email service is running.
+       * </pre>
+       *
+       * <code>required bytes byzcoinid = 1;</code>
+       * @param value The byzcoinid to set.
+       * @return This builder for chaining.
+       */
+      public Builder setByzcoinid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        byzcoinid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * ByzCoinID where the email service is running.
+       * </pre>
+       *
+       * <code>required bytes byzcoinid = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearByzcoinid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        byzcoinid_ = getDefaultInstance().getByzcoinid();
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object deviceurl_ = "";
+      /**
+       * <pre>
+       * DeviceURL, as created from the dynacred-frontend
+       * </pre>
+       *
+       * <code>required string deviceurl = 2;</code>
+       * @return Whether the deviceurl field is set.
+       */
+      public boolean hasDeviceurl() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       * <pre>
+       * DeviceURL, as created from the dynacred-frontend
+       * </pre>
+       *
+       * <code>required string deviceurl = 2;</code>
+       * @return The deviceurl.
+       */
+      public java.lang.String getDeviceurl() {
+        java.lang.Object ref = deviceurl_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            deviceurl_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * DeviceURL, as created from the dynacred-frontend
+       * </pre>
+       *
+       * <code>required string deviceurl = 2;</code>
+       * @return The bytes for deviceurl.
+       */
+      public com.google.protobuf.ByteString
+          getDeviceurlBytes() {
+        java.lang.Object ref = deviceurl_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          deviceurl_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * DeviceURL, as created from the dynacred-frontend
+       * </pre>
+       *
+       * <code>required string deviceurl = 2;</code>
+       * @param value The deviceurl to set.
+       * @return This builder for chaining.
+       */
+      public Builder setDeviceurl(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        deviceurl_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * DeviceURL, as created from the dynacred-frontend
+       * </pre>
+       *
+       * <code>required string deviceurl = 2;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearDeviceurl() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        deviceurl_ = getDefaultInstance().getDeviceurl();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * DeviceURL, as created from the dynacred-frontend
+       * </pre>
+       *
+       * <code>required string deviceurl = 2;</code>
+       * @param value The bytes for deviceurl to set.
+       * @return This builder for chaining.
+       */
+      public Builder setDeviceurlBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        deviceurl_ = value;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString emaildarcid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * EmailDarcID is the darc where new users will be added to
+       * </pre>
+       *
+       * <code>required bytes emaildarcid = 3;</code>
+       * @return Whether the emaildarcid field is set.
+       */
+      @java.lang.Override
+      public boolean hasEmaildarcid() {
+        return ((bitField0_ & 0x00000004) != 0);
+      }
+      /**
+       * <pre>
+       * EmailDarcID is the darc where new users will be added to
+       * </pre>
+       *
+       * <code>required bytes emaildarcid = 3;</code>
+       * @return The emaildarcid.
+       */
+      @java.lang.Override
+      public com.google.protobuf.ByteString getEmaildarcid() {
+        return emaildarcid_;
+      }
+      /**
+       * <pre>
+       * EmailDarcID is the darc where new users will be added to
+       * </pre>
+       *
+       * <code>required bytes emaildarcid = 3;</code>
+       * @param value The emaildarcid to set.
+       * @return This builder for chaining.
+       */
+      public Builder setEmaildarcid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        emaildarcid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * EmailDarcID is the darc where new users will be added to
+       * </pre>
+       *
+       * <code>required bytes emaildarcid = 3;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearEmaildarcid() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        emaildarcid_ = getDefaultInstance().getEmaildarcid();
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object smtphost_ = "";
+      /**
+       * <pre>
+       * SMTPHost: "[tls://]host:port" - should support emails with a
+       * sender "from".
+       * </pre>
+       *
+       * <code>required string smtphost = 4;</code>
+       * @return Whether the smtphost field is set.
+       */
+      public boolean hasSmtphost() {
+        return ((bitField0_ & 0x00000008) != 0);
+      }
+      /**
+       * <pre>
+       * SMTPHost: "[tls://]host:port" - should support emails with a
+       * sender "from".
+       * </pre>
+       *
+       * <code>required string smtphost = 4;</code>
+       * @return The smtphost.
+       */
+      public java.lang.String getSmtphost() {
+        java.lang.Object ref = smtphost_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            smtphost_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * SMTPHost: "[tls://]host:port" - should support emails with a
+       * sender "from".
+       * </pre>
+       *
+       * <code>required string smtphost = 4;</code>
+       * @return The bytes for smtphost.
+       */
+      public com.google.protobuf.ByteString
+          getSmtphostBytes() {
+        java.lang.Object ref = smtphost_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          smtphost_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * SMTPHost: "[tls://]host:port" - should support emails with a
+       * sender "from".
+       * </pre>
+       *
+       * <code>required string smtphost = 4;</code>
+       * @param value The smtphost to set.
+       * @return This builder for chaining.
+       */
+      public Builder setSmtphost(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        smtphost_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * SMTPHost: "[tls://]host:port" - should support emails with a
+       * sender "from".
+       * </pre>
+       *
+       * <code>required string smtphost = 4;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearSmtphost() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        smtphost_ = getDefaultInstance().getSmtphost();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * SMTPHost: "[tls://]host:port" - should support emails with a
+       * sender "from".
+       * </pre>
+       *
+       * <code>required string smtphost = 4;</code>
+       * @param value The bytes for smtphost to set.
+       * @return This builder for chaining.
+       */
+      public Builder setSmtphostBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        smtphost_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object smtpfrom_ = "";
+      /**
+       * <pre>
+       * SMTPFrom that will be used for the SMTP host
+       * </pre>
+       *
+       * <code>required string smtpfrom = 5;</code>
+       * @return Whether the smtpfrom field is set.
+       */
+      public boolean hasSmtpfrom() {
+        return ((bitField0_ & 0x00000010) != 0);
+      }
+      /**
+       * <pre>
+       * SMTPFrom that will be used for the SMTP host
+       * </pre>
+       *
+       * <code>required string smtpfrom = 5;</code>
+       * @return The smtpfrom.
+       */
+      public java.lang.String getSmtpfrom() {
+        java.lang.Object ref = smtpfrom_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            smtpfrom_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * SMTPFrom that will be used for the SMTP host
+       * </pre>
+       *
+       * <code>required string smtpfrom = 5;</code>
+       * @return The bytes for smtpfrom.
+       */
+      public com.google.protobuf.ByteString
+          getSmtpfromBytes() {
+        java.lang.Object ref = smtpfrom_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          smtpfrom_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * SMTPFrom that will be used for the SMTP host
+       * </pre>
+       *
+       * <code>required string smtpfrom = 5;</code>
+       * @param value The smtpfrom to set.
+       * @return This builder for chaining.
+       */
+      public Builder setSmtpfrom(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        smtpfrom_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * SMTPFrom that will be used for the SMTP host
+       * </pre>
+       *
+       * <code>required string smtpfrom = 5;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearSmtpfrom() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        smtpfrom_ = getDefaultInstance().getSmtpfrom();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * SMTPFrom that will be used for the SMTP host
+       * </pre>
+       *
+       * <code>required string smtpfrom = 5;</code>
+       * @param value The bytes for smtpfrom to set.
+       * @return This builder for chaining.
+       */
+      public Builder setSmtpfromBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        smtpfrom_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object smtpreplyto_ = "";
+      /**
+       * <pre>
+       * SMTPReplyTo is the email address that will be used as reply-to
+       * </pre>
+       *
+       * <code>required string smtpreplyto = 6;</code>
+       * @return Whether the smtpreplyto field is set.
+       */
+      public boolean hasSmtpreplyto() {
+        return ((bitField0_ & 0x00000020) != 0);
+      }
+      /**
+       * <pre>
+       * SMTPReplyTo is the email address that will be used as reply-to
+       * </pre>
+       *
+       * <code>required string smtpreplyto = 6;</code>
+       * @return The smtpreplyto.
+       */
+      public java.lang.String getSmtpreplyto() {
+        java.lang.Object ref = smtpreplyto_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            smtpreplyto_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * SMTPReplyTo is the email address that will be used as reply-to
+       * </pre>
+       *
+       * <code>required string smtpreplyto = 6;</code>
+       * @return The bytes for smtpreplyto.
+       */
+      public com.google.protobuf.ByteString
+          getSmtpreplytoBytes() {
+        java.lang.Object ref = smtpreplyto_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          smtpreplyto_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * SMTPReplyTo is the email address that will be used as reply-to
+       * </pre>
+       *
+       * <code>required string smtpreplyto = 6;</code>
+       * @param value The smtpreplyto to set.
+       * @return This builder for chaining.
+       */
+      public Builder setSmtpreplyto(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        smtpreplyto_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * SMTPReplyTo is the email address that will be used as reply-to
+       * </pre>
+       *
+       * <code>required string smtpreplyto = 6;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearSmtpreplyto() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        smtpreplyto_ = getDefaultInstance().getSmtpreplyto();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * SMTPReplyTo is the email address that will be used as reply-to
+       * </pre>
+       *
+       * <code>required string smtpreplyto = 6;</code>
+       * @param value The bytes for smtpreplyto to set.
+       * @return This builder for chaining.
+       */
+      public Builder setSmtpreplytoBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        smtpreplyto_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object baseurl_ = "";
+      /**
+       * <pre>
+       * BaseURL is prepended to the recovery string and should point to the
+       * publicly available frontend.
+       * </pre>
+       *
+       * <code>required string baseurl = 7;</code>
+       * @return Whether the baseurl field is set.
+       */
+      public boolean hasBaseurl() {
+        return ((bitField0_ & 0x00000040) != 0);
+      }
+      /**
+       * <pre>
+       * BaseURL is prepended to the recovery string and should point to the
+       * publicly available frontend.
+       * </pre>
+       *
+       * <code>required string baseurl = 7;</code>
+       * @return The baseurl.
+       */
+      public java.lang.String getBaseurl() {
+        java.lang.Object ref = baseurl_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            baseurl_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * BaseURL is prepended to the recovery string and should point to the
+       * publicly available frontend.
+       * </pre>
+       *
+       * <code>required string baseurl = 7;</code>
+       * @return The bytes for baseurl.
+       */
+      public com.google.protobuf.ByteString
+          getBaseurlBytes() {
+        java.lang.Object ref = baseurl_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          baseurl_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * BaseURL is prepended to the recovery string and should point to the
+       * publicly available frontend.
+       * </pre>
+       *
+       * <code>required string baseurl = 7;</code>
+       * @param value The baseurl to set.
+       * @return This builder for chaining.
+       */
+      public Builder setBaseurl(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000040;
+        baseurl_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * BaseURL is prepended to the recovery string and should point to the
+       * publicly available frontend.
+       * </pre>
+       *
+       * <code>required string baseurl = 7;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearBaseurl() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        baseurl_ = getDefaultInstance().getBaseurl();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * BaseURL is prepended to the recovery string and should point to the
+       * publicly available frontend.
+       * </pre>
+       *
+       * <code>required string baseurl = 7;</code>
+       * @param value The bytes for baseurl to set.
+       * @return This builder for chaining.
+       */
+      public Builder setBaseurlBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000040;
+        baseurl_ = value;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString signature_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * Signature is on the sha256 of the above fields
+       * </pre>
+       *
+       * <code>required bytes signature = 8;</code>
+       * @return Whether the signature field is set.
+       */
+      @java.lang.Override
+      public boolean hasSignature() {
+        return ((bitField0_ & 0x00000080) != 0);
+      }
+      /**
+       * <pre>
+       * Signature is on the sha256 of the above fields
+       * </pre>
+       *
+       * <code>required bytes signature = 8;</code>
+       * @return The signature.
+       */
+      @java.lang.Override
+      public com.google.protobuf.ByteString getSignature() {
+        return signature_;
+      }
+      /**
+       * <pre>
+       * Signature is on the sha256 of the above fields
+       * </pre>
+       *
+       * <code>required bytes signature = 8;</code>
+       * @param value The signature to set.
+       * @return This builder for chaining.
+       */
+      public Builder setSignature(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000080;
+        signature_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Signature is on the sha256 of the above fields
+       * </pre>
+       *
+       * <code>required bytes signature = 8;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearSignature() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        signature_ = getDefaultInstance().getSignature();
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:personhood_service.EmailSetup)
+    }
+
+    // @@protoc_insertion_point(class_scope:personhood_service.EmailSetup)
+    private static final ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup();
+    }
+
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<EmailSetup>
+        PARSER = new com.google.protobuf.AbstractParser<EmailSetup>() {
+      @java.lang.Override
+      public EmailSetup parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new EmailSetup(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<EmailSetup> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<EmailSetup> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetup getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface EmailSetupReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:personhood_service.EmailSetupReply)
+      com.google.protobuf.MessageOrBuilder {
+  }
+  /**
+   * <pre>
+   * EmailSetupReply when everything went well.
+   * </pre>
+   *
+   * Protobuf type {@code personhood_service.EmailSetupReply}
+   */
+  public static final class EmailSetupReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:personhood_service.EmailSetupReply)
+      EmailSetupReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use EmailSetupReply.newBuilder() to construct.
+    private EmailSetupReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private EmailSetupReply() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new EmailSetupReply();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private EmailSetupReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailSetupReply_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailSetupReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply.class, ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply.Builder.class);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply other = (ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply) obj;
+
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * EmailSetupReply when everything went well.
+     * </pre>
+     *
+     * Protobuf type {@code personhood_service.EmailSetupReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:personhood_service.EmailSetupReply)
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailSetupReply_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailSetupReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply.class, ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailSetupReply_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply build() {
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply buildPartial() {
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply result = new ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply(this);
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply other) {
+        if (other == ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply.getDefaultInstance()) return this;
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:personhood_service.EmailSetupReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:personhood_service.EmailSetupReply)
+    private static final ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply();
+    }
+
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<EmailSetupReply>
+        PARSER = new com.google.protobuf.AbstractParser<EmailSetupReply>() {
+      @java.lang.Override
+      public EmailSetupReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new EmailSetupReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<EmailSetupReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<EmailSetupReply> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.PersonhoodService.EmailSetupReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface EmailSignupOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:personhood_service.EmailSignup)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required string email = 1;</code>
+     * @return Whether the email field is set.
+     */
+    boolean hasEmail();
+    /**
+     * <code>required string email = 1;</code>
+     * @return The email.
+     */
+    java.lang.String getEmail();
+    /**
+     * <code>required string email = 1;</code>
+     * @return The bytes for email.
+     */
+    com.google.protobuf.ByteString
+        getEmailBytes();
+
+    /**
+     * <pre>
+     * Alias can be empty
+     * </pre>
+     *
+     * <code>required string alias = 2;</code>
+     * @return Whether the alias field is set.
+     */
+    boolean hasAlias();
+    /**
+     * <pre>
+     * Alias can be empty
+     * </pre>
+     *
+     * <code>required string alias = 2;</code>
+     * @return The alias.
+     */
+    java.lang.String getAlias();
+    /**
+     * <pre>
+     * Alias can be empty
+     * </pre>
+     *
+     * <code>required string alias = 2;</code>
+     * @return The bytes for alias.
+     */
+    com.google.protobuf.ByteString
+        getAliasBytes();
+  }
+  /**
+   * <pre>
+   * EmailSignup creates a new user if EmailSetup is configured
+   * </pre>
+   *
+   * Protobuf type {@code personhood_service.EmailSignup}
+   */
+  public static final class EmailSignup extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:personhood_service.EmailSignup)
+      EmailSignupOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use EmailSignup.newBuilder() to construct.
+    private EmailSignup(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private EmailSignup() {
+      email_ = "";
+      alias_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new EmailSignup();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private EmailSignup(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000001;
+              email_ = bs;
+              break;
+            }
+            case 18: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000002;
+              alias_ = bs;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailSignup_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailSignup_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup.class, ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int EMAIL_FIELD_NUMBER = 1;
+    private volatile java.lang.Object email_;
+    /**
+     * <code>required string email = 1;</code>
+     * @return Whether the email field is set.
+     */
+    @java.lang.Override
+    public boolean hasEmail() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>required string email = 1;</code>
+     * @return The email.
+     */
+    @java.lang.Override
+    public java.lang.String getEmail() {
+      java.lang.Object ref = email_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          email_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string email = 1;</code>
+     * @return The bytes for email.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getEmailBytes() {
+      java.lang.Object ref = email_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        email_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int ALIAS_FIELD_NUMBER = 2;
+    private volatile java.lang.Object alias_;
+    /**
+     * <pre>
+     * Alias can be empty
+     * </pre>
+     *
+     * <code>required string alias = 2;</code>
+     * @return Whether the alias field is set.
+     */
+    @java.lang.Override
+    public boolean hasAlias() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     * <pre>
+     * Alias can be empty
+     * </pre>
+     *
+     * <code>required string alias = 2;</code>
+     * @return The alias.
+     */
+    @java.lang.Override
+    public java.lang.String getAlias() {
+      java.lang.Object ref = alias_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          alias_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Alias can be empty
+     * </pre>
+     *
+     * <code>required string alias = 2;</code>
+     * @return The bytes for alias.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getAliasBytes() {
+      java.lang.Object ref = alias_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        alias_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasEmail()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasAlias()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, email_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, alias_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, email_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, alias_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup other = (ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup) obj;
+
+      if (hasEmail() != other.hasEmail()) return false;
+      if (hasEmail()) {
+        if (!getEmail()
+            .equals(other.getEmail())) return false;
+      }
+      if (hasAlias() != other.hasAlias()) return false;
+      if (hasAlias()) {
+        if (!getAlias()
+            .equals(other.getAlias())) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasEmail()) {
+        hash = (37 * hash) + EMAIL_FIELD_NUMBER;
+        hash = (53 * hash) + getEmail().hashCode();
+      }
+      if (hasAlias()) {
+        hash = (37 * hash) + ALIAS_FIELD_NUMBER;
+        hash = (53 * hash) + getAlias().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * EmailSignup creates a new user if EmailSetup is configured
+     * </pre>
+     *
+     * Protobuf type {@code personhood_service.EmailSignup}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:personhood_service.EmailSignup)
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailSignup_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailSignup_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup.class, ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        email_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        alias_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailSignup_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup build() {
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup buildPartial() {
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup result = new ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.email_ = email_;
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.alias_ = alias_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup other) {
+        if (other == ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup.getDefaultInstance()) return this;
+        if (other.hasEmail()) {
+          bitField0_ |= 0x00000001;
+          email_ = other.email_;
+          onChanged();
+        }
+        if (other.hasAlias()) {
+          bitField0_ |= 0x00000002;
+          alias_ = other.alias_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasEmail()) {
+          return false;
+        }
+        if (!hasAlias()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.lang.Object email_ = "";
+      /**
+       * <code>required string email = 1;</code>
+       * @return Whether the email field is set.
+       */
+      public boolean hasEmail() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>required string email = 1;</code>
+       * @return The email.
+       */
+      public java.lang.String getEmail() {
+        java.lang.Object ref = email_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            email_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string email = 1;</code>
+       * @return The bytes for email.
+       */
+      public com.google.protobuf.ByteString
+          getEmailBytes() {
+        java.lang.Object ref = email_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          email_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string email = 1;</code>
+       * @param value The email to set.
+       * @return This builder for chaining.
+       */
+      public Builder setEmail(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        email_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string email = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearEmail() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        email_ = getDefaultInstance().getEmail();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string email = 1;</code>
+       * @param value The bytes for email to set.
+       * @return This builder for chaining.
+       */
+      public Builder setEmailBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        email_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object alias_ = "";
+      /**
+       * <pre>
+       * Alias can be empty
+       * </pre>
+       *
+       * <code>required string alias = 2;</code>
+       * @return Whether the alias field is set.
+       */
+      public boolean hasAlias() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       * <pre>
+       * Alias can be empty
+       * </pre>
+       *
+       * <code>required string alias = 2;</code>
+       * @return The alias.
+       */
+      public java.lang.String getAlias() {
+        java.lang.Object ref = alias_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            alias_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Alias can be empty
+       * </pre>
+       *
+       * <code>required string alias = 2;</code>
+       * @return The bytes for alias.
+       */
+      public com.google.protobuf.ByteString
+          getAliasBytes() {
+        java.lang.Object ref = alias_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          alias_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Alias can be empty
+       * </pre>
+       *
+       * <code>required string alias = 2;</code>
+       * @param value The alias to set.
+       * @return This builder for chaining.
+       */
+      public Builder setAlias(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        alias_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Alias can be empty
+       * </pre>
+       *
+       * <code>required string alias = 2;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearAlias() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        alias_ = getDefaultInstance().getAlias();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Alias can be empty
+       * </pre>
+       *
+       * <code>required string alias = 2;</code>
+       * @param value The bytes for alias to set.
+       * @return This builder for chaining.
+       */
+      public Builder setAliasBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        alias_ = value;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:personhood_service.EmailSignup)
+    }
+
+    // @@protoc_insertion_point(class_scope:personhood_service.EmailSignup)
+    private static final ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup();
+    }
+
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<EmailSignup>
+        PARSER = new com.google.protobuf.AbstractParser<EmailSignup>() {
+      @java.lang.Override
+      public EmailSignup parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new EmailSignup(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<EmailSignup> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<EmailSignup> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignup getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface EmailSignupReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:personhood_service.EmailSignupReply)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required sint32 status = 1;</code>
+     * @return Whether the status field is set.
+     */
+    boolean hasStatus();
+    /**
+     * <code>required sint32 status = 1;</code>
+     * @return The status.
+     */
+    int getStatus();
+  }
+  /**
+   * <pre>
+   * EmailSignupReply returns the type of action done
+   * </pre>
+   *
+   * Protobuf type {@code personhood_service.EmailSignupReply}
+   */
+  public static final class EmailSignupReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:personhood_service.EmailSignupReply)
+      EmailSignupReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use EmailSignupReply.newBuilder() to construct.
+    private EmailSignupReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private EmailSignupReply() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new EmailSignupReply();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private EmailSignupReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 8: {
+              bitField0_ |= 0x00000001;
+              status_ = input.readSInt32();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailSignupReply_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailSignupReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply.class, ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int STATUS_FIELD_NUMBER = 1;
+    private int status_;
+    /**
+     * <code>required sint32 status = 1;</code>
+     * @return Whether the status field is set.
+     */
+    @java.lang.Override
+    public boolean hasStatus() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>required sint32 status = 1;</code>
+     * @return The status.
+     */
+    @java.lang.Override
+    public int getStatus() {
+      return status_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasStatus()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        output.writeSInt32(1, status_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt32Size(1, status_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply other = (ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply) obj;
+
+      if (hasStatus() != other.hasStatus()) return false;
+      if (hasStatus()) {
+        if (getStatus()
+            != other.getStatus()) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasStatus()) {
+        hash = (37 * hash) + STATUS_FIELD_NUMBER;
+        hash = (53 * hash) + getStatus();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * EmailSignupReply returns the type of action done
+     * </pre>
+     *
+     * Protobuf type {@code personhood_service.EmailSignupReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:personhood_service.EmailSignupReply)
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailSignupReply_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailSignupReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply.class, ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        status_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailSignupReply_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply build() {
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply buildPartial() {
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply result = new ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.status_ = status_;
+          to_bitField0_ |= 0x00000001;
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply other) {
+        if (other == ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply.getDefaultInstance()) return this;
+        if (other.hasStatus()) {
+          setStatus(other.getStatus());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasStatus()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private int status_ ;
+      /**
+       * <code>required sint32 status = 1;</code>
+       * @return Whether the status field is set.
+       */
+      @java.lang.Override
+      public boolean hasStatus() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>required sint32 status = 1;</code>
+       * @return The status.
+       */
+      @java.lang.Override
+      public int getStatus() {
+        return status_;
+      }
+      /**
+       * <code>required sint32 status = 1;</code>
+       * @param value The status to set.
+       * @return This builder for chaining.
+       */
+      public Builder setStatus(int value) {
+        bitField0_ |= 0x00000001;
+        status_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required sint32 status = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearStatus() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        status_ = 0;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:personhood_service.EmailSignupReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:personhood_service.EmailSignupReply)
+    private static final ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply();
+    }
+
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<EmailSignupReply>
+        PARSER = new com.google.protobuf.AbstractParser<EmailSignupReply>() {
+      @java.lang.Override
+      public EmailSignupReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new EmailSignupReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<EmailSignupReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<EmailSignupReply> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.PersonhoodService.EmailSignupReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface EmailRecoverOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:personhood_service.EmailRecover)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required string email = 1;</code>
+     * @return Whether the email field is set.
+     */
+    boolean hasEmail();
+    /**
+     * <code>required string email = 1;</code>
+     * @return The email.
+     */
+    java.lang.String getEmail();
+    /**
+     * <code>required string email = 1;</code>
+     * @return The bytes for email.
+     */
+    com.google.protobuf.ByteString
+        getEmailBytes();
+  }
+  /**
+   * <pre>
+   * EmailRecover requests a recovery of a given account
+   * </pre>
+   *
+   * Protobuf type {@code personhood_service.EmailRecover}
+   */
+  public static final class EmailRecover extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:personhood_service.EmailRecover)
+      EmailRecoverOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use EmailRecover.newBuilder() to construct.
+    private EmailRecover(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private EmailRecover() {
+      email_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new EmailRecover();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private EmailRecover(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000001;
+              email_ = bs;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailRecover_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailRecover_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover.class, ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int EMAIL_FIELD_NUMBER = 1;
+    private volatile java.lang.Object email_;
+    /**
+     * <code>required string email = 1;</code>
+     * @return Whether the email field is set.
+     */
+    @java.lang.Override
+    public boolean hasEmail() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>required string email = 1;</code>
+     * @return The email.
+     */
+    @java.lang.Override
+    public java.lang.String getEmail() {
+      java.lang.Object ref = email_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          email_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string email = 1;</code>
+     * @return The bytes for email.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getEmailBytes() {
+      java.lang.Object ref = email_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        email_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasEmail()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, email_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, email_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover other = (ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover) obj;
+
+      if (hasEmail() != other.hasEmail()) return false;
+      if (hasEmail()) {
+        if (!getEmail()
+            .equals(other.getEmail())) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasEmail()) {
+        hash = (37 * hash) + EMAIL_FIELD_NUMBER;
+        hash = (53 * hash) + getEmail().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * EmailRecover requests a recovery of a given account
+     * </pre>
+     *
+     * Protobuf type {@code personhood_service.EmailRecover}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:personhood_service.EmailRecover)
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailRecover_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailRecover_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover.class, ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        email_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailRecover_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover build() {
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover buildPartial() {
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover result = new ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.email_ = email_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover other) {
+        if (other == ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover.getDefaultInstance()) return this;
+        if (other.hasEmail()) {
+          bitField0_ |= 0x00000001;
+          email_ = other.email_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasEmail()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.lang.Object email_ = "";
+      /**
+       * <code>required string email = 1;</code>
+       * @return Whether the email field is set.
+       */
+      public boolean hasEmail() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>required string email = 1;</code>
+       * @return The email.
+       */
+      public java.lang.String getEmail() {
+        java.lang.Object ref = email_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            email_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string email = 1;</code>
+       * @return The bytes for email.
+       */
+      public com.google.protobuf.ByteString
+          getEmailBytes() {
+        java.lang.Object ref = email_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          email_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string email = 1;</code>
+       * @param value The email to set.
+       * @return This builder for chaining.
+       */
+      public Builder setEmail(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        email_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string email = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearEmail() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        email_ = getDefaultInstance().getEmail();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string email = 1;</code>
+       * @param value The bytes for email to set.
+       * @return This builder for chaining.
+       */
+      public Builder setEmailBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        email_ = value;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:personhood_service.EmailRecover)
+    }
+
+    // @@protoc_insertion_point(class_scope:personhood_service.EmailRecover)
+    private static final ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover();
+    }
+
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<EmailRecover>
+        PARSER = new com.google.protobuf.AbstractParser<EmailRecover>() {
+      @java.lang.Override
+      public EmailRecover parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new EmailRecover(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<EmailRecover> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<EmailRecover> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecover getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface EmailRecoverReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:personhood_service.EmailRecoverReply)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required sint32 status = 1;</code>
+     * @return Whether the status field is set.
+     */
+    boolean hasStatus();
+    /**
+     * <code>required sint32 status = 1;</code>
+     * @return The status.
+     */
+    int getStatus();
+  }
+  /**
+   * <pre>
+   * EmailRecoverReply returns the type of action done.
+   * </pre>
+   *
+   * Protobuf type {@code personhood_service.EmailRecoverReply}
+   */
+  public static final class EmailRecoverReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:personhood_service.EmailRecoverReply)
+      EmailRecoverReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use EmailRecoverReply.newBuilder() to construct.
+    private EmailRecoverReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private EmailRecoverReply() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new EmailRecoverReply();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private EmailRecoverReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 8: {
+              bitField0_ |= 0x00000001;
+              status_ = input.readSInt32();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailRecoverReply_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailRecoverReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply.class, ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int STATUS_FIELD_NUMBER = 1;
+    private int status_;
+    /**
+     * <code>required sint32 status = 1;</code>
+     * @return Whether the status field is set.
+     */
+    @java.lang.Override
+    public boolean hasStatus() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>required sint32 status = 1;</code>
+     * @return The status.
+     */
+    @java.lang.Override
+    public int getStatus() {
+      return status_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasStatus()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        output.writeSInt32(1, status_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt32Size(1, status_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply other = (ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply) obj;
+
+      if (hasStatus() != other.hasStatus()) return false;
+      if (hasStatus()) {
+        if (getStatus()
+            != other.getStatus()) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasStatus()) {
+        hash = (37 * hash) + STATUS_FIELD_NUMBER;
+        hash = (53 * hash) + getStatus();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * EmailRecoverReply returns the type of action done.
+     * </pre>
+     *
+     * Protobuf type {@code personhood_service.EmailRecoverReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:personhood_service.EmailRecoverReply)
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailRecoverReply_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailRecoverReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply.class, ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        status_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.internal_static_personhood_service_EmailRecoverReply_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply build() {
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply buildPartial() {
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply result = new ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.status_ = status_;
+          to_bitField0_ |= 0x00000001;
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply other) {
+        if (other == ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply.getDefaultInstance()) return this;
+        if (other.hasStatus()) {
+          setStatus(other.getStatus());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasStatus()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private int status_ ;
+      /**
+       * <code>required sint32 status = 1;</code>
+       * @return Whether the status field is set.
+       */
+      @java.lang.Override
+      public boolean hasStatus() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>required sint32 status = 1;</code>
+       * @return The status.
+       */
+      @java.lang.Override
+      public int getStatus() {
+        return status_;
+      }
+      /**
+       * <code>required sint32 status = 1;</code>
+       * @param value The status to set.
+       * @return This builder for chaining.
+       */
+      public Builder setStatus(int value) {
+        bitField0_ |= 0x00000001;
+        status_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required sint32 status = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearStatus() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        status_ = 0;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:personhood_service.EmailRecoverReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:personhood_service.EmailRecoverReply)
+    private static final ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply();
+    }
+
+    public static ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<EmailRecoverReply>
+        PARSER = new com.google.protobuf.AbstractParser<EmailRecoverReply>() {
+      @java.lang.Override
+      public EmailRecoverReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new EmailRecoverReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<EmailRecoverReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<EmailRecoverReply> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.PersonhoodService.EmailRecoverReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_service_PartyList_descriptor;
   private static final
@@ -22255,6 +27303,36 @@ public final class PersonhoodService {
   private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_service_SetAdminDarcIDsReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_personhood_service_EmailSetup_descriptor;
+  private static final
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_personhood_service_EmailSetup_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_personhood_service_EmailSetupReply_descriptor;
+  private static final
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_personhood_service_EmailSetupReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_personhood_service_EmailSignup_descriptor;
+  private static final
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_personhood_service_EmailSignup_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_personhood_service_EmailSignupReply_descriptor;
+  private static final
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_personhood_service_EmailSignupReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_personhood_service_EmailRecover_descriptor;
+  private static final
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_personhood_service_EmailRecover_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_personhood_service_EmailRecoverReply_descriptor;
+  private static final
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_personhood_service_EmailRecoverReply_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -22316,8 +27394,17 @@ public final class PersonhoodService {
       "\021\n\017GetAdminDarcIDs\",\n\024GetAdminDarcIDsRep" +
       "ly\022\024\n\014admindarcids\030\001 \003(\014\"=\n\017SetAdminDarc" +
       "IDs\022\027\n\017newadmindarcids\030\001 \003(\014\022\021\n\tsignatur" +
-      "e\030\002 \002(\014\"\026\n\024SetAdminDarcIDsReplyB,\n\027ch.ep" +
-      "fl.dedis.lib.protoB\021PersonhoodService"
+      "e\030\002 \002(\014\"\026\n\024SetAdminDarcIDsReply\"\244\001\n\nEmai" +
+      "lSetup\022\021\n\tbyzcoinid\030\001 \002(\014\022\021\n\tdeviceurl\030\002" +
+      " \002(\t\022\023\n\013emaildarcid\030\003 \002(\014\022\020\n\010smtphost\030\004 " +
+      "\002(\t\022\020\n\010smtpfrom\030\005 \002(\t\022\023\n\013smtpreplyto\030\006 \002" +
+      "(\t\022\017\n\007baseurl\030\007 \002(\t\022\021\n\tsignature\030\010 \002(\014\"\021" +
+      "\n\017EmailSetupReply\"+\n\013EmailSignup\022\r\n\005emai" +
+      "l\030\001 \002(\t\022\r\n\005alias\030\002 \002(\t\"\"\n\020EmailSignupRep" +
+      "ly\022\016\n\006status\030\001 \002(\021\"\035\n\014EmailRecover\022\r\n\005em" +
+      "ail\030\001 \002(\t\"#\n\021EmailRecoverReply\022\016\n\006status" +
+      "\030\001 \002(\021B,\n\027ch.epfl.dedis.lib.protoB\021Perso" +
+      "nhoodService"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -22488,6 +27575,42 @@ public final class PersonhoodService {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_service_SetAdminDarcIDsReply_descriptor,
         new java.lang.String[] { });
+    internal_static_personhood_service_EmailSetup_descriptor =
+      getDescriptor().getMessageTypes().get(27);
+    internal_static_personhood_service_EmailSetup_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_personhood_service_EmailSetup_descriptor,
+        new java.lang.String[] { "Byzcoinid", "Deviceurl", "Emaildarcid", "Smtphost", "Smtpfrom", "Smtpreplyto", "Baseurl", "Signature", });
+    internal_static_personhood_service_EmailSetupReply_descriptor =
+      getDescriptor().getMessageTypes().get(28);
+    internal_static_personhood_service_EmailSetupReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_personhood_service_EmailSetupReply_descriptor,
+        new java.lang.String[] { });
+    internal_static_personhood_service_EmailSignup_descriptor =
+      getDescriptor().getMessageTypes().get(29);
+    internal_static_personhood_service_EmailSignup_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_personhood_service_EmailSignup_descriptor,
+        new java.lang.String[] { "Email", "Alias", });
+    internal_static_personhood_service_EmailSignupReply_descriptor =
+      getDescriptor().getMessageTypes().get(30);
+    internal_static_personhood_service_EmailSignupReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_personhood_service_EmailSignupReply_descriptor,
+        new java.lang.String[] { "Status", });
+    internal_static_personhood_service_EmailRecover_descriptor =
+      getDescriptor().getMessageTypes().get(31);
+    internal_static_personhood_service_EmailRecover_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_personhood_service_EmailRecover_descriptor,
+        new java.lang.String[] { "Email", });
+    internal_static_personhood_service_EmailRecoverReply_descriptor =
+      getDescriptor().getMessageTypes().get(32);
+    internal_static_personhood_service_EmailRecoverReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_personhood_service_EmailRecoverReply_descriptor,
+        new java.lang.String[] { "Status", });
     ch.epfl.dedis.lib.proto.OnetProto.getDescriptor();
     ch.epfl.dedis.lib.proto.DarcProto.getDescriptor();
     ch.epfl.dedis.lib.proto.Personhood.getDescriptor();

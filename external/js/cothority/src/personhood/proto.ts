@@ -168,8 +168,61 @@ export class LRSTag extends Message<LRSTag> {
     }
 }
 
+export class EmailSignup extends Message<EmailSignup> {
+    static register() {
+        registerMessage("personhood_service.EmailSignup", EmailSignup);
+    }
+
+    readonly email: string;
+    readonly alias: string;
+
+    constructor(props?: Properties<EmailSignup>) {
+        super(props);
+    }
+}
+
+export class EmailSignupReply extends Message<EmailSignupReply> {
+    static register() {
+        registerMessage("personhood_service.EmailSignupReply", EmailSignupReply);
+    }
+
+    readonly status: number;
+
+    constructor(props?: Properties<EmailSignupReply>) {
+        super(props);
+    }
+}
+
+export class EmailRecover extends Message<EmailRecover> {
+    static register() {
+        registerMessage("personhood_service.EmailRecover", EmailRecover);
+    }
+
+    readonly email: string;
+
+    constructor(props?: Properties<EmailRecover>) {
+        super(props);
+    }
+}
+
+export class EmailRecoverReply extends Message<EmailRecoverReply> {
+    static register() {
+        registerMessage("personhood_service.EmailRecoverReply", EmailRecoverReply);
+    }
+
+    readonly status: number;
+
+    constructor(props?: Properties<EmailRecoverReply>) {
+        super(props);
+    }
+}
+
 PopPartyStruct.register();
 FinalStatement.register();
 PopDesc.register();
 Attendees.register();
 LRSTag.register();
+EmailSignup.register();
+EmailSignupReply.register();
+EmailRecover.register();
+EmailRecoverReply.register();

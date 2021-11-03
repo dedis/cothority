@@ -5,6 +5,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"go.dedis.ch/cothority/v3/personhood/user"
+	"net"
+	"net/mail"
+	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -121,6 +125,103 @@ var cmds = cli.Commands{
 		Aliases:   []string{"s"},
 		ArgsUsage: "bc-xxx.cfg credentialIID",
 		Action:    show,
+	},
+	{
+		Name:      "user",
+		Usage:     "create a new user",
+		ArgsUsage: "bc-xxx.cfg key-xxx.cfg baseURL alias",
+		Action:    createUser,
+	},
+	{
+		Name:  "email",
+		Usage: "use the email service",
+		Subcommands: cli.Commands{
+			{
+				Name:   "signup",
+				Usage:  "signup a new user to the email service",
+				Action: emailSignup,
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "addr",
+						Usage: "the address of the remote node",
+					},
+					cli.StringFlag{
+						Name:  "alias",
+						Usage: "alias of the new user",
+					},
+					cli.StringFlag{
+						Name:  "email",
+						Usage: "email address of the new user",
+					},
+				},
+			},
+			{
+				Name:   "recover",
+				Usage:  "recover an existing user",
+				Action: emailRecovery,
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "addr",
+						Usage: "the address of the remote node",
+					},
+					cli.StringFlag{
+						Name:  "email",
+						Usage: "email address of the user to be recovered",
+					},
+				},
+			},
+			{
+				Name:  "setup",
+				Usage: "setup the email service",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:     "bcID",
+						Usage:    "ByzCoin ID",
+						Required: true,
+					},
+					cli.StringFlag{
+						Name:     "private",
+						Usage:    "private.toml of node to communicate",
+						Required: true,
+					},
+					cli.StringFlag{
+						Name: "user_device",
+						Usage: "signup string for the user that can spawn" +
+							" other users",
+						Required: true,
+					},
+					cli.StringFlag{
+						Name: "baseURL",
+						Usage: "url to be used when creating signup or" +
+							" recovery URLs",
+						Required: false,
+					},
+					cli.StringFlag{
+						Name: "darcID",
+						Usage: "the instance-ID of the DARC where new users" +
+							" will be added to",
+						Required: false,
+					},
+					cli.StringFlag{
+						Name:     "smtp_host",
+						Usage:    "Host:port where the SMTP server can be reached",
+						Required: true,
+					},
+					cli.StringFlag{
+						Name: "smtp_from",
+						Usage: "email address in the FROM field that allows" +
+							" to send emails without password",
+						Required: true,
+					},
+					cli.StringFlag{
+						Name:     "smtp_reply_to",
+						Usage:    "email address for the REPLY_TO field",
+						Required: true,
+					},
+				},
+				Action: emailSetup,
+			},
+		},
 	},
 }
 
@@ -590,6 +691,182 @@ func adminDarcIDsSet(c *cli.Context) error {
 	}
 	log.Info("Successfully set admin darc IDs")
 
+	return nil
+}
+
+func emailSetup(c *cli.Context) error {
+	si, es, err := emailGetRequest(c)
+	if err != nil {
+		return xerrors.Errorf("while parsing arguments: %v", err)
+	}
+	log.Info("Sending to host", si.Address)
+	if err := personhood.NewClient().EmailSetup(si, es); err != nil {
+		return xerrors.Errorf("couldn't send to node: %v", err)
+	}
+	log.Info("Successfully set up host")
+	return nil
+}
+
+func emailSignup(c *cli.Context) error {
+	si, alias, email, err := emailGetAddrEmail(c)
+	if err != nil {
+		return xerrors.Errorf("while parsing arguments: %v", err)
+	}
+
+	log.Infof("Asking %s to sign up new user %s", si.Address, email)
+
+	reply, err := personhood.NewClient().EmailSignup(si, alias,
+		email)
+	if err != nil {
+		return xerrors.Errorf("signup of new account failed: %v", err)
+	}
+
+	log.Info("Account created successfully. The email has been sent to", email)
+	log.Lvl1("Reply is:", reply)
+	return nil
+}
+
+func emailRecovery(c *cli.Context) error {
+	si, _, email, err := emailGetAddrEmail(c)
+	if err != nil {
+		return xerrors.Errorf("while parsing arguments: %v", err)
+	}
+
+	log.Infof("Asking %s to recover existing user %s", si.Address, email)
+
+	reply, err := personhood.NewClient().EmailRecover(si, email)
+	if err != nil {
+		return xerrors.Errorf("recovery of account failed: %v", err)
+	}
+
+	log.Info("Account recovered successfully. The email has been sent to",
+		email)
+	log.Lvl1("Reply is:", reply)
+	return nil
+}
+
+func emailGetAddrEmail(c *cli.Context) (*network.ServerIdentity, string,
+	string, error) {
+	if c.NArg() != 3 {
+		return nil, "", "", xerrors.Errorf("Please give the following arguments:" +
+			"host:port alias email-address")
+	}
+	hp := c.String("node")
+	if _, err := url.Parse(hp); err != nil {
+		return nil, "", "", xerrors.Errorf("couldn't parse node address: %v", err)
+	}
+	si := &network.ServerIdentity{
+		Address: network.Address(hp),
+	}
+	email := c.String("email")
+	if _, err := mail.ParseAddress(email); err != nil {
+		return nil, "", "", xerrors.Errorf("couldn't parse email address: %v", err)
+	}
+
+	return si, c.String("alias"), email, nil
+}
+
+func emailGetRequest(c *cli.Context) (si *network.ServerIdentity,
+	es *personhood.EmailSetup,
+	err error) {
+	es = &personhood.EmailSetup{}
+
+	bcIDStr := c.String("bcID")
+	es.ByzCoinID, err = hex.DecodeString(bcIDStr)
+	if err != nil || len(es.ByzCoinID) != 32 {
+		return nil, nil, xerrors.New("ByzCoinID needs to be an InstanceID of length 32" +
+			" bytes, encoded in hexadecimal")
+	}
+	privateToml := c.String("private")
+	if _, err := os.Stat(privateToml); os.IsNotExist(err) {
+		return nil, nil, xerrors.New("private.toml file doesn't exist")
+	}
+	ccfg, err := app.LoadCothority(privateToml)
+	if err != nil {
+		return nil, nil, xerrors.Errorf("couldn't load private.toml: %v", err)
+	}
+	si, err = ccfg.GetServerIdentity()
+	if err != nil {
+		return nil, nil, xerrors.Errorf("while getting server identity: %v", err)
+	}
+	es.DeviceURL = c.String("user_device")
+	// Start with baseURL as derived from the deviceURL
+	baseURL, err := url.Parse(es.DeviceURL)
+	if err != nil {
+		return nil, nil, xerrors.Errorf(
+			"user_device needs to be a valid URL: %s", es.DeviceURL)
+	}
+	if es.BaseURL = c.String("baseURL"); es.BaseURL != "" {
+		baseURL, err = url.Parse(es.BaseURL)
+		if err != nil {
+			return nil, nil, xerrors.New("baseURL needs to be a valid URL")
+		}
+	}
+	es.BaseURL = fmt.Sprintf("%s://%s", baseURL.Scheme, baseURL.Host)
+	if baseURL.Path != "" {
+		es.BaseURL = es.BaseURL + baseURL.Path
+	}
+	log.Printf("")
+	log.Print("BaseURL is:", es.BaseURL)
+
+	darcIDStr := c.String("darcID")
+	edID, err := hex.DecodeString(darcIDStr)
+	if err != nil || len(edID) != 32 {
+		log.Warn("Didn't get darcID - will create a new darc on the user")
+		es.EmailDarcID = byzcoin.NewInstanceID([]byte{})
+	} else {
+		es.EmailDarcID = byzcoin.NewInstanceID(edID)
+	}
+	es.SMTPHost = c.String("smtp_host")
+	if _, _, err := net.SplitHostPort(es.SMTPHost); err != nil {
+		return nil, nil, xerrors.New("smtp_host needs to be a valid host:port")
+	}
+	es.SMTPFrom = c.String("smtp_from")
+	if _, err := mail.ParseAddress(es.SMTPFrom); err != nil {
+		return nil, nil, xerrors.New("smtp_from needs to be a valid email address")
+	}
+	es.SMTPReplyTo = c.String("smtp_reply_to")
+	if _, err := mail.ParseAddress(es.SMTPReplyTo); err != nil {
+		return nil, nil, xerrors.New("smtp_from needs to be a valid email address")
+	}
+
+	return
+}
+
+func createUser(c *cli.Context) error {
+	if c.NArg() != 4 {
+		return errors.New("please give the following arguments: " +
+			"bc-xxx.cfg key-xxx.cfg baseURL alias")
+	}
+
+	cfg, cl, err := lib.LoadConfig(c.Args().First())
+	if err != nil {
+		return err
+	}
+	signer, err := lib.LoadSigner(c.Args().Get(1))
+	if err != nil {
+		return err
+	}
+	err = verifyAdminDarc(cl, cfg, *signer)
+	if err != nil {
+		return err
+	}
+	baseURL := c.Args().Get(2)
+	alias := c.Args().Get(3)
+
+	log.Info("Creating new user from darc...")
+
+	newUser, err := user.NewFromByzcoin(cl, cfg.AdminDarc.GetBaseID(),
+		*signer, alias)
+	if err != nil {
+		return xerrors.Errorf("couldn't create user: %v", err)
+	}
+	userURL, err := newUser.CreateLink(baseURL)
+	if err != nil {
+		return xerrors.Errorf("couldn't create user link: %v", err)
+	}
+
+	log.Info("Created new user - signup-URL is:", userURL)
 	return nil
 }
 

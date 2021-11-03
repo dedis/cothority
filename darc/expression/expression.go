@@ -49,7 +49,7 @@ var (
 // parsing/evaluating an expression.
 type ValueCheckFn func(string) bool
 
-// Expr represents the unprocess expression of our DSL.
+// Expr represents the unprocessed expression of our DSL.
 type Expr []byte
 
 // InitParser creates the root parser
@@ -137,6 +137,17 @@ func InitAndExpr(ids ...string) Expr {
 // IDs.
 func InitOrExpr(ids ...string) Expr {
 	return Expr(strings.Join(ids, " | "))
+}
+
+// AddOrElement adds a single identity and ORs it with the previous expression.
+func (e Expr) AddOrElement(id string) Expr {
+	return Expr(fmt.Sprintf("%s | %s", e, id))
+}
+
+// AddAndElement adds a single identity and ANDs it with the previous
+// expression.
+func (e Expr) AddAndElement(id string) Expr {
+	return Expr(fmt.Sprintf("%s & %s", e, id))
 }
 
 // Accepts tokens of the form "identity_type:HEX"
