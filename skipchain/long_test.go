@@ -1,3 +1,4 @@
+//go:build long_test
 // +build long_test
 
 package skipchain
