@@ -1,3 +1,4 @@
+//go:build !vartime
 // +build !vartime
 
 package cothority
