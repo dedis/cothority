@@ -543,8 +543,8 @@ func (s *Service) EmailSignup(rq *EmailSignup) (*EmailSignupReply, error) {
 			log.Warn("Got an invalid credential in contacts of base user")
 			continue
 		}
-		if bytes.Compare(credential.GetPublic(contracts.APEmail),
-			[]byte(rq.Email)) == 0 {
+		if bytes.Equal(credential.GetPublic(contracts.APEmail),
+			[]byte(rq.Email)) {
 			return &EmailSignupReply{
 				Status: ESEExists,
 			}, nil

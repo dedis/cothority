@@ -9,7 +9,6 @@ import (
 	"go.dedis.ch/kyber/v3/util/random"
 	"go.dedis.ch/protobuf"
 	"golang.org/x/xerrors"
-	"time"
 )
 
 // Builder allows to create a new user either directly from a DARC with
@@ -84,7 +83,9 @@ func (ub *Builder) CreateFromSpawner(spawner ActiveSpawner) (*User, error) {
 		return nil, xerrors.Errorf("couldn't send transaction: %v", err)
 	}
 
-	time.Sleep(time.Second)
+	if err := spawner.cl.WaitPropagation(-1); err != nil {
+		return nil, xerrors.Errorf("couldn't wait for propagation: %v", err)
+	}
 
 	u, err := New(spawner.cl, ub.UserID)
 	if err != nil {

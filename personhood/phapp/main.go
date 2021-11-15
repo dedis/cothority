@@ -721,8 +721,14 @@ func emailSignup(c *cli.Context) error {
 		return xerrors.Errorf("signup of new account failed: %v", err)
 	}
 
-	log.Info("Account created successfully. The email has been sent to", email)
-	log.Lvl1("Reply is:", reply)
+	switch reply.Status {
+	case personhood.ESECreated:
+		log.Info("Account created successfully. The email has been sent to", email)
+	case personhood.ESEExists:
+		return xerrors.New("This email address already exists")
+	case personhood.ESETooManyRequests:
+		return xerrors.New("Exceeded quota of today's emails")
+	}
 	return nil
 }
 
@@ -739,9 +745,15 @@ func emailRecovery(c *cli.Context) error {
 		return xerrors.Errorf("recovery of account failed: %v", err)
 	}
 
-	log.Info("Account recovered successfully. The email has been sent to",
-		email)
-	log.Lvl1("Reply is:", reply)
+	switch reply.Status {
+	case personhood.ERERecovered:
+		log.Info("Account recovered successfully. The email has been sent to",
+			email)
+	case personhood.EREUnknown:
+		return xerrors.New("This email address does not already exist")
+	case personhood.ERETooManyRequests:
+		return xerrors.New("Exceeded quota of today's emails")
+	}
 	return nil
 }
 
@@ -827,7 +839,7 @@ func emailGetRequest(c *cli.Context) (si *network.ServerIdentity,
 	}
 	es.SMTPReplyTo = c.String("smtp_reply_to")
 	if _, err := mail.ParseAddress(es.SMTPReplyTo); err != nil {
-		return nil, nil, xerrors.New("smtp_from needs to be a valid email address")
+		return nil, nil, xerrors.New("smtp_reply_to needs to be a valid email address")
 	}
 
 	return
