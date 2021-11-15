@@ -38,7 +38,7 @@ func (u *User) SwitchKey() error {
 	// Create a new darc that evolves from the found one,
 	// and put the new signer in all relevant rules.
 	if err := device.EvolveFrom(device.Copy()); err != nil {
-		return xerrors.Errorf("coldn't evolve: %v", err)
+		return xerrors.Errorf("couldn't evolve: %v", err)
 	}
 	newSigner := darc.NewSignerEd25519(nil, nil)
 	newExp := expression.Expr(newSigner.Identity().String())

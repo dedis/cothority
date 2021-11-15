@@ -320,7 +320,7 @@ func (u User) GetActiveSpawner() ActiveSpawner {
 func (u User) canRecover(otherUser User) bool {
 	recoveries := otherUser.credStruct.Get(contracts.CERecoveries)
 	for _, reco := range recoveries.Attributes {
-		if bytes.Compare(reco.Value, u.SignerDarc.GetBaseID()) == 0 {
+		if bytes.Equal(reco.Value, u.SignerDarc.GetBaseID()) {
 			return true
 		}
 	}
