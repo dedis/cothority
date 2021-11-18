@@ -22145,10 +22145,37 @@ public final class PersonhoodService {
 
     /**
      * <pre>
+     * Roster of the nodes where the byzcoin service is running.
+     * </pre>
+     *
+     * <code>required .onet.Roster roster = 2;</code>
+     * @return Whether the roster field is set.
+     */
+    boolean hasRoster();
+    /**
+     * <pre>
+     * Roster of the nodes where the byzcoin service is running.
+     * </pre>
+     *
+     * <code>required .onet.Roster roster = 2;</code>
+     * @return The roster.
+     */
+    ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster();
+    /**
+     * <pre>
+     * Roster of the nodes where the byzcoin service is running.
+     * </pre>
+     *
+     * <code>required .onet.Roster roster = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder getRosterOrBuilder();
+
+    /**
+     * <pre>
      * DeviceURL, as created from the dynacred-frontend
      * </pre>
      *
-     * <code>required string deviceurl = 2;</code>
+     * <code>required string deviceurl = 3;</code>
      * @return Whether the deviceurl field is set.
      */
     boolean hasDeviceurl();
@@ -22157,7 +22184,7 @@ public final class PersonhoodService {
      * DeviceURL, as created from the dynacred-frontend
      * </pre>
      *
-     * <code>required string deviceurl = 2;</code>
+     * <code>required string deviceurl = 3;</code>
      * @return The deviceurl.
      */
     java.lang.String getDeviceurl();
@@ -22166,7 +22193,7 @@ public final class PersonhoodService {
      * DeviceURL, as created from the dynacred-frontend
      * </pre>
      *
-     * <code>required string deviceurl = 2;</code>
+     * <code>required string deviceurl = 3;</code>
      * @return The bytes for deviceurl.
      */
     com.google.protobuf.ByteString
@@ -22177,7 +22204,7 @@ public final class PersonhoodService {
      * EmailDarcID is the darc where new users will be added to
      * </pre>
      *
-     * <code>required bytes emaildarcid = 3;</code>
+     * <code>required bytes emaildarcid = 4;</code>
      * @return Whether the emaildarcid field is set.
      */
     boolean hasEmaildarcid();
@@ -22186,7 +22213,7 @@ public final class PersonhoodService {
      * EmailDarcID is the darc where new users will be added to
      * </pre>
      *
-     * <code>required bytes emaildarcid = 3;</code>
+     * <code>required bytes emaildarcid = 4;</code>
      * @return The emaildarcid.
      */
     com.google.protobuf.ByteString getEmaildarcid();
@@ -22197,7 +22224,7 @@ public final class PersonhoodService {
      * sender "from".
      * </pre>
      *
-     * <code>required string smtphost = 4;</code>
+     * <code>required string smtphost = 5;</code>
      * @return Whether the smtphost field is set.
      */
     boolean hasSmtphost();
@@ -22207,7 +22234,7 @@ public final class PersonhoodService {
      * sender "from".
      * </pre>
      *
-     * <code>required string smtphost = 4;</code>
+     * <code>required string smtphost = 5;</code>
      * @return The smtphost.
      */
     java.lang.String getSmtphost();
@@ -22217,7 +22244,7 @@ public final class PersonhoodService {
      * sender "from".
      * </pre>
      *
-     * <code>required string smtphost = 4;</code>
+     * <code>required string smtphost = 5;</code>
      * @return The bytes for smtphost.
      */
     com.google.protobuf.ByteString
@@ -22228,7 +22255,7 @@ public final class PersonhoodService {
      * SMTPFrom that will be used for the SMTP host
      * </pre>
      *
-     * <code>required string smtpfrom = 5;</code>
+     * <code>required string smtpfrom = 6;</code>
      * @return Whether the smtpfrom field is set.
      */
     boolean hasSmtpfrom();
@@ -22237,7 +22264,7 @@ public final class PersonhoodService {
      * SMTPFrom that will be used for the SMTP host
      * </pre>
      *
-     * <code>required string smtpfrom = 5;</code>
+     * <code>required string smtpfrom = 6;</code>
      * @return The smtpfrom.
      */
     java.lang.String getSmtpfrom();
@@ -22246,7 +22273,7 @@ public final class PersonhoodService {
      * SMTPFrom that will be used for the SMTP host
      * </pre>
      *
-     * <code>required string smtpfrom = 5;</code>
+     * <code>required string smtpfrom = 6;</code>
      * @return The bytes for smtpfrom.
      */
     com.google.protobuf.ByteString
@@ -22257,7 +22284,7 @@ public final class PersonhoodService {
      * SMTPReplyTo is the email address that will be used as reply-to
      * </pre>
      *
-     * <code>required string smtpreplyto = 6;</code>
+     * <code>required string smtpreplyto = 7;</code>
      * @return Whether the smtpreplyto field is set.
      */
     boolean hasSmtpreplyto();
@@ -22266,7 +22293,7 @@ public final class PersonhoodService {
      * SMTPReplyTo is the email address that will be used as reply-to
      * </pre>
      *
-     * <code>required string smtpreplyto = 6;</code>
+     * <code>required string smtpreplyto = 7;</code>
      * @return The smtpreplyto.
      */
     java.lang.String getSmtpreplyto();
@@ -22275,7 +22302,7 @@ public final class PersonhoodService {
      * SMTPReplyTo is the email address that will be used as reply-to
      * </pre>
      *
-     * <code>required string smtpreplyto = 6;</code>
+     * <code>required string smtpreplyto = 7;</code>
      * @return The bytes for smtpreplyto.
      */
     com.google.protobuf.ByteString
@@ -22287,7 +22314,7 @@ public final class PersonhoodService {
      * publicly available frontend.
      * </pre>
      *
-     * <code>required string baseurl = 7;</code>
+     * <code>required string baseurl = 8;</code>
      * @return Whether the baseurl field is set.
      */
     boolean hasBaseurl();
@@ -22297,7 +22324,7 @@ public final class PersonhoodService {
      * publicly available frontend.
      * </pre>
      *
-     * <code>required string baseurl = 7;</code>
+     * <code>required string baseurl = 8;</code>
      * @return The baseurl.
      */
     java.lang.String getBaseurl();
@@ -22307,7 +22334,7 @@ public final class PersonhoodService {
      * publicly available frontend.
      * </pre>
      *
-     * <code>required string baseurl = 7;</code>
+     * <code>required string baseurl = 8;</code>
      * @return The bytes for baseurl.
      */
     com.google.protobuf.ByteString
@@ -22318,7 +22345,7 @@ public final class PersonhoodService {
      * Signature is on the sha256 of the above fields
      * </pre>
      *
-     * <code>required bytes signature = 8;</code>
+     * <code>required bytes signature = 9;</code>
      * @return Whether the signature field is set.
      */
     boolean hasSignature();
@@ -22327,7 +22354,7 @@ public final class PersonhoodService {
      * Signature is on the sha256 of the above fields
      * </pre>
      *
-     * <code>required bytes signature = 8;</code>
+     * <code>required bytes signature = 9;</code>
      * @return The signature.
      */
     com.google.protobuf.ByteString getSignature();
@@ -22396,42 +22423,55 @@ public final class PersonhoodService {
               break;
             }
             case 18: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+              ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) != 0)) {
+                subBuilder = roster_.toBuilder();
+              }
+              roster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(roster_);
+                roster_ = subBuilder.buildPartial();
+              }
               bitField0_ |= 0x00000002;
-              deviceurl_ = bs;
               break;
             }
             case 26: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000004;
-              emaildarcid_ = input.readBytes();
+              deviceurl_ = bs;
               break;
             }
             case 34: {
-              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000008;
-              smtphost_ = bs;
+              emaildarcid_ = input.readBytes();
               break;
             }
             case 42: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000010;
-              smtpfrom_ = bs;
+              smtphost_ = bs;
               break;
             }
             case 50: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000020;
-              smtpreplyto_ = bs;
+              smtpfrom_ = bs;
               break;
             }
             case 58: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000040;
-              baseurl_ = bs;
+              smtpreplyto_ = bs;
               break;
             }
             case 66: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000080;
+              baseurl_ = bs;
+              break;
+            }
+            case 74: {
+              bitField0_ |= 0x00000100;
               signature_ = input.readBytes();
               break;
             }
@@ -22495,26 +22535,64 @@ public final class PersonhoodService {
       return byzcoinid_;
     }
 
-    public static final int DEVICEURL_FIELD_NUMBER = 2;
+    public static final int ROSTER_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.lib.proto.OnetProto.Roster roster_;
+    /**
+     * <pre>
+     * Roster of the nodes where the byzcoin service is running.
+     * </pre>
+     *
+     * <code>required .onet.Roster roster = 2;</code>
+     * @return Whether the roster field is set.
+     */
+    @java.lang.Override
+    public boolean hasRoster() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     * <pre>
+     * Roster of the nodes where the byzcoin service is running.
+     * </pre>
+     *
+     * <code>required .onet.Roster roster = 2;</code>
+     * @return The roster.
+     */
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster() {
+      return roster_ == null ? ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
+    }
+    /**
+     * <pre>
+     * Roster of the nodes where the byzcoin service is running.
+     * </pre>
+     *
+     * <code>required .onet.Roster roster = 2;</code>
+     */
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder getRosterOrBuilder() {
+      return roster_ == null ? ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
+    }
+
+    public static final int DEVICEURL_FIELD_NUMBER = 3;
     private volatile java.lang.Object deviceurl_;
     /**
      * <pre>
      * DeviceURL, as created from the dynacred-frontend
      * </pre>
      *
-     * <code>required string deviceurl = 2;</code>
+     * <code>required string deviceurl = 3;</code>
      * @return Whether the deviceurl field is set.
      */
     @java.lang.Override
     public boolean hasDeviceurl() {
-      return ((bitField0_ & 0x00000002) != 0);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
      * DeviceURL, as created from the dynacred-frontend
      * </pre>
      *
-     * <code>required string deviceurl = 2;</code>
+     * <code>required string deviceurl = 3;</code>
      * @return The deviceurl.
      */
     @java.lang.Override
@@ -22537,7 +22615,7 @@ public final class PersonhoodService {
      * DeviceURL, as created from the dynacred-frontend
      * </pre>
      *
-     * <code>required string deviceurl = 2;</code>
+     * <code>required string deviceurl = 3;</code>
      * @return The bytes for deviceurl.
      */
     @java.lang.Override
@@ -22555,26 +22633,26 @@ public final class PersonhoodService {
       }
     }
 
-    public static final int EMAILDARCID_FIELD_NUMBER = 3;
+    public static final int EMAILDARCID_FIELD_NUMBER = 4;
     private com.google.protobuf.ByteString emaildarcid_;
     /**
      * <pre>
      * EmailDarcID is the darc where new users will be added to
      * </pre>
      *
-     * <code>required bytes emaildarcid = 3;</code>
+     * <code>required bytes emaildarcid = 4;</code>
      * @return Whether the emaildarcid field is set.
      */
     @java.lang.Override
     public boolean hasEmaildarcid() {
-      return ((bitField0_ & 0x00000004) != 0);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <pre>
      * EmailDarcID is the darc where new users will be added to
      * </pre>
      *
-     * <code>required bytes emaildarcid = 3;</code>
+     * <code>required bytes emaildarcid = 4;</code>
      * @return The emaildarcid.
      */
     @java.lang.Override
@@ -22582,7 +22660,7 @@ public final class PersonhoodService {
       return emaildarcid_;
     }
 
-    public static final int SMTPHOST_FIELD_NUMBER = 4;
+    public static final int SMTPHOST_FIELD_NUMBER = 5;
     private volatile java.lang.Object smtphost_;
     /**
      * <pre>
@@ -22590,12 +22668,12 @@ public final class PersonhoodService {
      * sender "from".
      * </pre>
      *
-     * <code>required string smtphost = 4;</code>
+     * <code>required string smtphost = 5;</code>
      * @return Whether the smtphost field is set.
      */
     @java.lang.Override
     public boolean hasSmtphost() {
-      return ((bitField0_ & 0x00000008) != 0);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <pre>
@@ -22603,7 +22681,7 @@ public final class PersonhoodService {
      * sender "from".
      * </pre>
      *
-     * <code>required string smtphost = 4;</code>
+     * <code>required string smtphost = 5;</code>
      * @return The smtphost.
      */
     @java.lang.Override
@@ -22627,7 +22705,7 @@ public final class PersonhoodService {
      * sender "from".
      * </pre>
      *
-     * <code>required string smtphost = 4;</code>
+     * <code>required string smtphost = 5;</code>
      * @return The bytes for smtphost.
      */
     @java.lang.Override
@@ -22645,26 +22723,26 @@ public final class PersonhoodService {
       }
     }
 
-    public static final int SMTPFROM_FIELD_NUMBER = 5;
+    public static final int SMTPFROM_FIELD_NUMBER = 6;
     private volatile java.lang.Object smtpfrom_;
     /**
      * <pre>
      * SMTPFrom that will be used for the SMTP host
      * </pre>
      *
-     * <code>required string smtpfrom = 5;</code>
+     * <code>required string smtpfrom = 6;</code>
      * @return Whether the smtpfrom field is set.
      */
     @java.lang.Override
     public boolean hasSmtpfrom() {
-      return ((bitField0_ & 0x00000010) != 0);
+      return ((bitField0_ & 0x00000020) != 0);
     }
     /**
      * <pre>
      * SMTPFrom that will be used for the SMTP host
      * </pre>
      *
-     * <code>required string smtpfrom = 5;</code>
+     * <code>required string smtpfrom = 6;</code>
      * @return The smtpfrom.
      */
     @java.lang.Override
@@ -22687,7 +22765,7 @@ public final class PersonhoodService {
      * SMTPFrom that will be used for the SMTP host
      * </pre>
      *
-     * <code>required string smtpfrom = 5;</code>
+     * <code>required string smtpfrom = 6;</code>
      * @return The bytes for smtpfrom.
      */
     @java.lang.Override
@@ -22705,26 +22783,26 @@ public final class PersonhoodService {
       }
     }
 
-    public static final int SMTPREPLYTO_FIELD_NUMBER = 6;
+    public static final int SMTPREPLYTO_FIELD_NUMBER = 7;
     private volatile java.lang.Object smtpreplyto_;
     /**
      * <pre>
      * SMTPReplyTo is the email address that will be used as reply-to
      * </pre>
      *
-     * <code>required string smtpreplyto = 6;</code>
+     * <code>required string smtpreplyto = 7;</code>
      * @return Whether the smtpreplyto field is set.
      */
     @java.lang.Override
     public boolean hasSmtpreplyto() {
-      return ((bitField0_ & 0x00000020) != 0);
+      return ((bitField0_ & 0x00000040) != 0);
     }
     /**
      * <pre>
      * SMTPReplyTo is the email address that will be used as reply-to
      * </pre>
      *
-     * <code>required string smtpreplyto = 6;</code>
+     * <code>required string smtpreplyto = 7;</code>
      * @return The smtpreplyto.
      */
     @java.lang.Override
@@ -22747,7 +22825,7 @@ public final class PersonhoodService {
      * SMTPReplyTo is the email address that will be used as reply-to
      * </pre>
      *
-     * <code>required string smtpreplyto = 6;</code>
+     * <code>required string smtpreplyto = 7;</code>
      * @return The bytes for smtpreplyto.
      */
     @java.lang.Override
@@ -22765,7 +22843,7 @@ public final class PersonhoodService {
       }
     }
 
-    public static final int BASEURL_FIELD_NUMBER = 7;
+    public static final int BASEURL_FIELD_NUMBER = 8;
     private volatile java.lang.Object baseurl_;
     /**
      * <pre>
@@ -22773,12 +22851,12 @@ public final class PersonhoodService {
      * publicly available frontend.
      * </pre>
      *
-     * <code>required string baseurl = 7;</code>
+     * <code>required string baseurl = 8;</code>
      * @return Whether the baseurl field is set.
      */
     @java.lang.Override
     public boolean hasBaseurl() {
-      return ((bitField0_ & 0x00000040) != 0);
+      return ((bitField0_ & 0x00000080) != 0);
     }
     /**
      * <pre>
@@ -22786,7 +22864,7 @@ public final class PersonhoodService {
      * publicly available frontend.
      * </pre>
      *
-     * <code>required string baseurl = 7;</code>
+     * <code>required string baseurl = 8;</code>
      * @return The baseurl.
      */
     @java.lang.Override
@@ -22810,7 +22888,7 @@ public final class PersonhoodService {
      * publicly available frontend.
      * </pre>
      *
-     * <code>required string baseurl = 7;</code>
+     * <code>required string baseurl = 8;</code>
      * @return The bytes for baseurl.
      */
     @java.lang.Override
@@ -22828,26 +22906,26 @@ public final class PersonhoodService {
       }
     }
 
-    public static final int SIGNATURE_FIELD_NUMBER = 8;
+    public static final int SIGNATURE_FIELD_NUMBER = 9;
     private com.google.protobuf.ByteString signature_;
     /**
      * <pre>
      * Signature is on the sha256 of the above fields
      * </pre>
      *
-     * <code>required bytes signature = 8;</code>
+     * <code>required bytes signature = 9;</code>
      * @return Whether the signature field is set.
      */
     @java.lang.Override
     public boolean hasSignature() {
-      return ((bitField0_ & 0x00000080) != 0);
+      return ((bitField0_ & 0x00000100) != 0);
     }
     /**
      * <pre>
      * Signature is on the sha256 of the above fields
      * </pre>
      *
-     * <code>required bytes signature = 8;</code>
+     * <code>required bytes signature = 9;</code>
      * @return The signature.
      */
     @java.lang.Override
@@ -22863,6 +22941,10 @@ public final class PersonhoodService {
       if (isInitialized == 0) return false;
 
       if (!hasByzcoinid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasRoster()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -22894,6 +22976,10 @@ public final class PersonhoodService {
         memoizedIsInitialized = 0;
         return false;
       }
+      if (!getRoster().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -22905,25 +22991,28 @@ public final class PersonhoodService {
         output.writeBytes(1, byzcoinid_);
       }
       if (((bitField0_ & 0x00000002) != 0)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, deviceurl_);
+        output.writeMessage(2, getRoster());
       }
       if (((bitField0_ & 0x00000004) != 0)) {
-        output.writeBytes(3, emaildarcid_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, deviceurl_);
       }
       if (((bitField0_ & 0x00000008) != 0)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 4, smtphost_);
+        output.writeBytes(4, emaildarcid_);
       }
       if (((bitField0_ & 0x00000010) != 0)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, smtpfrom_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, smtphost_);
       }
       if (((bitField0_ & 0x00000020) != 0)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, smtpreplyto_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, smtpfrom_);
       }
       if (((bitField0_ & 0x00000040) != 0)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 7, baseurl_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 7, smtpreplyto_);
       }
       if (((bitField0_ & 0x00000080) != 0)) {
-        output.writeBytes(8, signature_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 8, baseurl_);
+      }
+      if (((bitField0_ & 0x00000100) != 0)) {
+        output.writeBytes(9, signature_);
       }
       unknownFields.writeTo(output);
     }
@@ -22939,27 +23028,31 @@ public final class PersonhoodService {
           .computeBytesSize(1, byzcoinid_);
       }
       if (((bitField0_ & 0x00000002) != 0)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, deviceurl_);
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, getRoster());
       }
       if (((bitField0_ & 0x00000004) != 0)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(3, emaildarcid_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, deviceurl_);
       }
       if (((bitField0_ & 0x00000008) != 0)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, smtphost_);
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, emaildarcid_);
       }
       if (((bitField0_ & 0x00000010) != 0)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, smtpfrom_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, smtphost_);
       }
       if (((bitField0_ & 0x00000020) != 0)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, smtpreplyto_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, smtpfrom_);
       }
       if (((bitField0_ & 0x00000040) != 0)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, baseurl_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, smtpreplyto_);
       }
       if (((bitField0_ & 0x00000080) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(8, baseurl_);
+      }
+      if (((bitField0_ & 0x00000100) != 0)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(8, signature_);
+          .computeBytesSize(9, signature_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -22980,6 +23073,11 @@ public final class PersonhoodService {
       if (hasByzcoinid()) {
         if (!getByzcoinid()
             .equals(other.getByzcoinid())) return false;
+      }
+      if (hasRoster() != other.hasRoster()) return false;
+      if (hasRoster()) {
+        if (!getRoster()
+            .equals(other.getRoster())) return false;
       }
       if (hasDeviceurl() != other.hasDeviceurl()) return false;
       if (hasDeviceurl()) {
@@ -23030,6 +23128,10 @@ public final class PersonhoodService {
       if (hasByzcoinid()) {
         hash = (37 * hash) + BYZCOINID_FIELD_NUMBER;
         hash = (53 * hash) + getByzcoinid().hashCode();
+      }
+      if (hasRoster()) {
+        hash = (37 * hash) + ROSTER_FIELD_NUMBER;
+        hash = (53 * hash) + getRoster().hashCode();
       }
       if (hasDeviceurl()) {
         hash = (37 * hash) + DEVICEURL_FIELD_NUMBER;
@@ -23191,6 +23293,7 @@ public final class PersonhoodService {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
+          getRosterFieldBuilder();
         }
       }
       @java.lang.Override
@@ -23198,20 +23301,26 @@ public final class PersonhoodService {
         super.clear();
         byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
-        deviceurl_ = "";
+        if (rosterBuilder_ == null) {
+          roster_ = null;
+        } else {
+          rosterBuilder_.clear();
+        }
         bitField0_ = (bitField0_ & ~0x00000002);
-        emaildarcid_ = com.google.protobuf.ByteString.EMPTY;
+        deviceurl_ = "";
         bitField0_ = (bitField0_ & ~0x00000004);
-        smtphost_ = "";
+        emaildarcid_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000008);
-        smtpfrom_ = "";
+        smtphost_ = "";
         bitField0_ = (bitField0_ & ~0x00000010);
-        smtpreplyto_ = "";
+        smtpfrom_ = "";
         bitField0_ = (bitField0_ & ~0x00000020);
-        baseurl_ = "";
+        smtpreplyto_ = "";
         bitField0_ = (bitField0_ & ~0x00000040);
-        signature_ = com.google.protobuf.ByteString.EMPTY;
+        baseurl_ = "";
         bitField0_ = (bitField0_ & ~0x00000080);
+        signature_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000100);
         return this;
       }
 
@@ -23245,31 +23354,39 @@ public final class PersonhoodService {
         }
         result.byzcoinid_ = byzcoinid_;
         if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (rosterBuilder_ == null) {
+            result.roster_ = roster_;
+          } else {
+            result.roster_ = rosterBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
         }
-        result.deviceurl_ = deviceurl_;
         if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
-        result.emaildarcid_ = emaildarcid_;
+        result.deviceurl_ = deviceurl_;
         if (((from_bitField0_ & 0x00000008) != 0)) {
           to_bitField0_ |= 0x00000008;
         }
-        result.smtphost_ = smtphost_;
+        result.emaildarcid_ = emaildarcid_;
         if (((from_bitField0_ & 0x00000010) != 0)) {
           to_bitField0_ |= 0x00000010;
         }
-        result.smtpfrom_ = smtpfrom_;
+        result.smtphost_ = smtphost_;
         if (((from_bitField0_ & 0x00000020) != 0)) {
           to_bitField0_ |= 0x00000020;
         }
-        result.smtpreplyto_ = smtpreplyto_;
+        result.smtpfrom_ = smtpfrom_;
         if (((from_bitField0_ & 0x00000040) != 0)) {
           to_bitField0_ |= 0x00000040;
         }
-        result.baseurl_ = baseurl_;
+        result.smtpreplyto_ = smtpreplyto_;
         if (((from_bitField0_ & 0x00000080) != 0)) {
           to_bitField0_ |= 0x00000080;
+        }
+        result.baseurl_ = baseurl_;
+        if (((from_bitField0_ & 0x00000100) != 0)) {
+          to_bitField0_ |= 0x00000100;
         }
         result.signature_ = signature_;
         result.bitField0_ = to_bitField0_;
@@ -23324,8 +23441,11 @@ public final class PersonhoodService {
         if (other.hasByzcoinid()) {
           setByzcoinid(other.getByzcoinid());
         }
+        if (other.hasRoster()) {
+          mergeRoster(other.getRoster());
+        }
         if (other.hasDeviceurl()) {
-          bitField0_ |= 0x00000002;
+          bitField0_ |= 0x00000004;
           deviceurl_ = other.deviceurl_;
           onChanged();
         }
@@ -23333,22 +23453,22 @@ public final class PersonhoodService {
           setEmaildarcid(other.getEmaildarcid());
         }
         if (other.hasSmtphost()) {
-          bitField0_ |= 0x00000008;
+          bitField0_ |= 0x00000010;
           smtphost_ = other.smtphost_;
           onChanged();
         }
         if (other.hasSmtpfrom()) {
-          bitField0_ |= 0x00000010;
+          bitField0_ |= 0x00000020;
           smtpfrom_ = other.smtpfrom_;
           onChanged();
         }
         if (other.hasSmtpreplyto()) {
-          bitField0_ |= 0x00000020;
+          bitField0_ |= 0x00000040;
           smtpreplyto_ = other.smtpreplyto_;
           onChanged();
         }
         if (other.hasBaseurl()) {
-          bitField0_ |= 0x00000040;
+          bitField0_ |= 0x00000080;
           baseurl_ = other.baseurl_;
           onChanged();
         }
@@ -23363,6 +23483,9 @@ public final class PersonhoodService {
       @java.lang.Override
       public final boolean isInitialized() {
         if (!hasByzcoinid()) {
+          return false;
+        }
+        if (!hasRoster()) {
           return false;
         }
         if (!hasDeviceurl()) {
@@ -23384,6 +23507,9 @@ public final class PersonhoodService {
           return false;
         }
         if (!hasSignature()) {
+          return false;
+        }
+        if (!getRoster().isInitialized()) {
           return false;
         }
         return true;
@@ -23467,24 +23593,180 @@ public final class PersonhoodService {
         return this;
       }
 
+      private ch.epfl.dedis.lib.proto.OnetProto.Roster roster_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder> rosterBuilder_;
+      /**
+       * <pre>
+       * Roster of the nodes where the byzcoin service is running.
+       * </pre>
+       *
+       * <code>required .onet.Roster roster = 2;</code>
+       * @return Whether the roster field is set.
+       */
+      public boolean hasRoster() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       * <pre>
+       * Roster of the nodes where the byzcoin service is running.
+       * </pre>
+       *
+       * <code>required .onet.Roster roster = 2;</code>
+       * @return The roster.
+       */
+      public ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster() {
+        if (rosterBuilder_ == null) {
+          return roster_ == null ? ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
+        } else {
+          return rosterBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * Roster of the nodes where the byzcoin service is running.
+       * </pre>
+       *
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      public Builder setRoster(ch.epfl.dedis.lib.proto.OnetProto.Roster value) {
+        if (rosterBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          roster_ = value;
+          onChanged();
+        } else {
+          rosterBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <pre>
+       * Roster of the nodes where the byzcoin service is running.
+       * </pre>
+       *
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      public Builder setRoster(
+          ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder builderForValue) {
+        if (rosterBuilder_ == null) {
+          roster_ = builderForValue.build();
+          onChanged();
+        } else {
+          rosterBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <pre>
+       * Roster of the nodes where the byzcoin service is running.
+       * </pre>
+       *
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      public Builder mergeRoster(ch.epfl.dedis.lib.proto.OnetProto.Roster value) {
+        if (rosterBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) != 0) &&
+              roster_ != null &&
+              roster_ != ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance()) {
+            roster_ =
+              ch.epfl.dedis.lib.proto.OnetProto.Roster.newBuilder(roster_).mergeFrom(value).buildPartial();
+          } else {
+            roster_ = value;
+          }
+          onChanged();
+        } else {
+          rosterBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <pre>
+       * Roster of the nodes where the byzcoin service is running.
+       * </pre>
+       *
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      public Builder clearRoster() {
+        if (rosterBuilder_ == null) {
+          roster_ = null;
+          onChanged();
+        } else {
+          rosterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <pre>
+       * Roster of the nodes where the byzcoin service is running.
+       * </pre>
+       *
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder getRosterBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getRosterFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Roster of the nodes where the byzcoin service is running.
+       * </pre>
+       *
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder getRosterOrBuilder() {
+        if (rosterBuilder_ != null) {
+          return rosterBuilder_.getMessageOrBuilder();
+        } else {
+          return roster_ == null ?
+              ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
+        }
+      }
+      /**
+       * <pre>
+       * Roster of the nodes where the byzcoin service is running.
+       * </pre>
+       *
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder>
+          getRosterFieldBuilder() {
+        if (rosterBuilder_ == null) {
+          rosterBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder>(
+                  getRoster(),
+                  getParentForChildren(),
+                  isClean());
+          roster_ = null;
+        }
+        return rosterBuilder_;
+      }
+
       private java.lang.Object deviceurl_ = "";
       /**
        * <pre>
        * DeviceURL, as created from the dynacred-frontend
        * </pre>
        *
-       * <code>required string deviceurl = 2;</code>
+       * <code>required string deviceurl = 3;</code>
        * @return Whether the deviceurl field is set.
        */
       public boolean hasDeviceurl() {
-        return ((bitField0_ & 0x00000002) != 0);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
        * DeviceURL, as created from the dynacred-frontend
        * </pre>
        *
-       * <code>required string deviceurl = 2;</code>
+       * <code>required string deviceurl = 3;</code>
        * @return The deviceurl.
        */
       public java.lang.String getDeviceurl() {
@@ -23506,7 +23788,7 @@ public final class PersonhoodService {
        * DeviceURL, as created from the dynacred-frontend
        * </pre>
        *
-       * <code>required string deviceurl = 2;</code>
+       * <code>required string deviceurl = 3;</code>
        * @return The bytes for deviceurl.
        */
       public com.google.protobuf.ByteString
@@ -23527,7 +23809,7 @@ public final class PersonhoodService {
        * DeviceURL, as created from the dynacred-frontend
        * </pre>
        *
-       * <code>required string deviceurl = 2;</code>
+       * <code>required string deviceurl = 3;</code>
        * @param value The deviceurl to set.
        * @return This builder for chaining.
        */
@@ -23536,7 +23818,7 @@ public final class PersonhoodService {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000002;
+  bitField0_ |= 0x00000004;
         deviceurl_ = value;
         onChanged();
         return this;
@@ -23546,11 +23828,11 @@ public final class PersonhoodService {
        * DeviceURL, as created from the dynacred-frontend
        * </pre>
        *
-       * <code>required string deviceurl = 2;</code>
+       * <code>required string deviceurl = 3;</code>
        * @return This builder for chaining.
        */
       public Builder clearDeviceurl() {
-        bitField0_ = (bitField0_ & ~0x00000002);
+        bitField0_ = (bitField0_ & ~0x00000004);
         deviceurl_ = getDefaultInstance().getDeviceurl();
         onChanged();
         return this;
@@ -23560,7 +23842,7 @@ public final class PersonhoodService {
        * DeviceURL, as created from the dynacred-frontend
        * </pre>
        *
-       * <code>required string deviceurl = 2;</code>
+       * <code>required string deviceurl = 3;</code>
        * @param value The bytes for deviceurl to set.
        * @return This builder for chaining.
        */
@@ -23569,7 +23851,7 @@ public final class PersonhoodService {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000002;
+  bitField0_ |= 0x00000004;
         deviceurl_ = value;
         onChanged();
         return this;
@@ -23581,19 +23863,19 @@ public final class PersonhoodService {
        * EmailDarcID is the darc where new users will be added to
        * </pre>
        *
-       * <code>required bytes emaildarcid = 3;</code>
+       * <code>required bytes emaildarcid = 4;</code>
        * @return Whether the emaildarcid field is set.
        */
       @java.lang.Override
       public boolean hasEmaildarcid() {
-        return ((bitField0_ & 0x00000004) != 0);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <pre>
        * EmailDarcID is the darc where new users will be added to
        * </pre>
        *
-       * <code>required bytes emaildarcid = 3;</code>
+       * <code>required bytes emaildarcid = 4;</code>
        * @return The emaildarcid.
        */
       @java.lang.Override
@@ -23605,7 +23887,7 @@ public final class PersonhoodService {
        * EmailDarcID is the darc where new users will be added to
        * </pre>
        *
-       * <code>required bytes emaildarcid = 3;</code>
+       * <code>required bytes emaildarcid = 4;</code>
        * @param value The emaildarcid to set.
        * @return This builder for chaining.
        */
@@ -23613,7 +23895,7 @@ public final class PersonhoodService {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000004;
+  bitField0_ |= 0x00000008;
         emaildarcid_ = value;
         onChanged();
         return this;
@@ -23623,11 +23905,11 @@ public final class PersonhoodService {
        * EmailDarcID is the darc where new users will be added to
        * </pre>
        *
-       * <code>required bytes emaildarcid = 3;</code>
+       * <code>required bytes emaildarcid = 4;</code>
        * @return This builder for chaining.
        */
       public Builder clearEmaildarcid() {
-        bitField0_ = (bitField0_ & ~0x00000004);
+        bitField0_ = (bitField0_ & ~0x00000008);
         emaildarcid_ = getDefaultInstance().getEmaildarcid();
         onChanged();
         return this;
@@ -23640,11 +23922,11 @@ public final class PersonhoodService {
        * sender "from".
        * </pre>
        *
-       * <code>required string smtphost = 4;</code>
+       * <code>required string smtphost = 5;</code>
        * @return Whether the smtphost field is set.
        */
       public boolean hasSmtphost() {
-        return ((bitField0_ & 0x00000008) != 0);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <pre>
@@ -23652,7 +23934,7 @@ public final class PersonhoodService {
        * sender "from".
        * </pre>
        *
-       * <code>required string smtphost = 4;</code>
+       * <code>required string smtphost = 5;</code>
        * @return The smtphost.
        */
       public java.lang.String getSmtphost() {
@@ -23675,7 +23957,7 @@ public final class PersonhoodService {
        * sender "from".
        * </pre>
        *
-       * <code>required string smtphost = 4;</code>
+       * <code>required string smtphost = 5;</code>
        * @return The bytes for smtphost.
        */
       public com.google.protobuf.ByteString
@@ -23697,7 +23979,7 @@ public final class PersonhoodService {
        * sender "from".
        * </pre>
        *
-       * <code>required string smtphost = 4;</code>
+       * <code>required string smtphost = 5;</code>
        * @param value The smtphost to set.
        * @return This builder for chaining.
        */
@@ -23706,7 +23988,7 @@ public final class PersonhoodService {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000008;
+  bitField0_ |= 0x00000010;
         smtphost_ = value;
         onChanged();
         return this;
@@ -23717,11 +23999,11 @@ public final class PersonhoodService {
        * sender "from".
        * </pre>
        *
-       * <code>required string smtphost = 4;</code>
+       * <code>required string smtphost = 5;</code>
        * @return This builder for chaining.
        */
       public Builder clearSmtphost() {
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000010);
         smtphost_ = getDefaultInstance().getSmtphost();
         onChanged();
         return this;
@@ -23732,7 +24014,7 @@ public final class PersonhoodService {
        * sender "from".
        * </pre>
        *
-       * <code>required string smtphost = 4;</code>
+       * <code>required string smtphost = 5;</code>
        * @param value The bytes for smtphost to set.
        * @return This builder for chaining.
        */
@@ -23741,7 +24023,7 @@ public final class PersonhoodService {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000008;
+  bitField0_ |= 0x00000010;
         smtphost_ = value;
         onChanged();
         return this;
@@ -23753,18 +24035,18 @@ public final class PersonhoodService {
        * SMTPFrom that will be used for the SMTP host
        * </pre>
        *
-       * <code>required string smtpfrom = 5;</code>
+       * <code>required string smtpfrom = 6;</code>
        * @return Whether the smtpfrom field is set.
        */
       public boolean hasSmtpfrom() {
-        return ((bitField0_ & 0x00000010) != 0);
+        return ((bitField0_ & 0x00000020) != 0);
       }
       /**
        * <pre>
        * SMTPFrom that will be used for the SMTP host
        * </pre>
        *
-       * <code>required string smtpfrom = 5;</code>
+       * <code>required string smtpfrom = 6;</code>
        * @return The smtpfrom.
        */
       public java.lang.String getSmtpfrom() {
@@ -23786,7 +24068,7 @@ public final class PersonhoodService {
        * SMTPFrom that will be used for the SMTP host
        * </pre>
        *
-       * <code>required string smtpfrom = 5;</code>
+       * <code>required string smtpfrom = 6;</code>
        * @return The bytes for smtpfrom.
        */
       public com.google.protobuf.ByteString
@@ -23807,7 +24089,7 @@ public final class PersonhoodService {
        * SMTPFrom that will be used for the SMTP host
        * </pre>
        *
-       * <code>required string smtpfrom = 5;</code>
+       * <code>required string smtpfrom = 6;</code>
        * @param value The smtpfrom to set.
        * @return This builder for chaining.
        */
@@ -23816,7 +24098,7 @@ public final class PersonhoodService {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000010;
+  bitField0_ |= 0x00000020;
         smtpfrom_ = value;
         onChanged();
         return this;
@@ -23826,11 +24108,11 @@ public final class PersonhoodService {
        * SMTPFrom that will be used for the SMTP host
        * </pre>
        *
-       * <code>required string smtpfrom = 5;</code>
+       * <code>required string smtpfrom = 6;</code>
        * @return This builder for chaining.
        */
       public Builder clearSmtpfrom() {
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000020);
         smtpfrom_ = getDefaultInstance().getSmtpfrom();
         onChanged();
         return this;
@@ -23840,7 +24122,7 @@ public final class PersonhoodService {
        * SMTPFrom that will be used for the SMTP host
        * </pre>
        *
-       * <code>required string smtpfrom = 5;</code>
+       * <code>required string smtpfrom = 6;</code>
        * @param value The bytes for smtpfrom to set.
        * @return This builder for chaining.
        */
@@ -23849,7 +24131,7 @@ public final class PersonhoodService {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000010;
+  bitField0_ |= 0x00000020;
         smtpfrom_ = value;
         onChanged();
         return this;
@@ -23861,18 +24143,18 @@ public final class PersonhoodService {
        * SMTPReplyTo is the email address that will be used as reply-to
        * </pre>
        *
-       * <code>required string smtpreplyto = 6;</code>
+       * <code>required string smtpreplyto = 7;</code>
        * @return Whether the smtpreplyto field is set.
        */
       public boolean hasSmtpreplyto() {
-        return ((bitField0_ & 0x00000020) != 0);
+        return ((bitField0_ & 0x00000040) != 0);
       }
       /**
        * <pre>
        * SMTPReplyTo is the email address that will be used as reply-to
        * </pre>
        *
-       * <code>required string smtpreplyto = 6;</code>
+       * <code>required string smtpreplyto = 7;</code>
        * @return The smtpreplyto.
        */
       public java.lang.String getSmtpreplyto() {
@@ -23894,7 +24176,7 @@ public final class PersonhoodService {
        * SMTPReplyTo is the email address that will be used as reply-to
        * </pre>
        *
-       * <code>required string smtpreplyto = 6;</code>
+       * <code>required string smtpreplyto = 7;</code>
        * @return The bytes for smtpreplyto.
        */
       public com.google.protobuf.ByteString
@@ -23915,7 +24197,7 @@ public final class PersonhoodService {
        * SMTPReplyTo is the email address that will be used as reply-to
        * </pre>
        *
-       * <code>required string smtpreplyto = 6;</code>
+       * <code>required string smtpreplyto = 7;</code>
        * @param value The smtpreplyto to set.
        * @return This builder for chaining.
        */
@@ -23924,7 +24206,7 @@ public final class PersonhoodService {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000020;
+  bitField0_ |= 0x00000040;
         smtpreplyto_ = value;
         onChanged();
         return this;
@@ -23934,11 +24216,11 @@ public final class PersonhoodService {
        * SMTPReplyTo is the email address that will be used as reply-to
        * </pre>
        *
-       * <code>required string smtpreplyto = 6;</code>
+       * <code>required string smtpreplyto = 7;</code>
        * @return This builder for chaining.
        */
       public Builder clearSmtpreplyto() {
-        bitField0_ = (bitField0_ & ~0x00000020);
+        bitField0_ = (bitField0_ & ~0x00000040);
         smtpreplyto_ = getDefaultInstance().getSmtpreplyto();
         onChanged();
         return this;
@@ -23948,7 +24230,7 @@ public final class PersonhoodService {
        * SMTPReplyTo is the email address that will be used as reply-to
        * </pre>
        *
-       * <code>required string smtpreplyto = 6;</code>
+       * <code>required string smtpreplyto = 7;</code>
        * @param value The bytes for smtpreplyto to set.
        * @return This builder for chaining.
        */
@@ -23957,7 +24239,7 @@ public final class PersonhoodService {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000020;
+  bitField0_ |= 0x00000040;
         smtpreplyto_ = value;
         onChanged();
         return this;
@@ -23970,11 +24252,11 @@ public final class PersonhoodService {
        * publicly available frontend.
        * </pre>
        *
-       * <code>required string baseurl = 7;</code>
+       * <code>required string baseurl = 8;</code>
        * @return Whether the baseurl field is set.
        */
       public boolean hasBaseurl() {
-        return ((bitField0_ & 0x00000040) != 0);
+        return ((bitField0_ & 0x00000080) != 0);
       }
       /**
        * <pre>
@@ -23982,7 +24264,7 @@ public final class PersonhoodService {
        * publicly available frontend.
        * </pre>
        *
-       * <code>required string baseurl = 7;</code>
+       * <code>required string baseurl = 8;</code>
        * @return The baseurl.
        */
       public java.lang.String getBaseurl() {
@@ -24005,7 +24287,7 @@ public final class PersonhoodService {
        * publicly available frontend.
        * </pre>
        *
-       * <code>required string baseurl = 7;</code>
+       * <code>required string baseurl = 8;</code>
        * @return The bytes for baseurl.
        */
       public com.google.protobuf.ByteString
@@ -24027,7 +24309,7 @@ public final class PersonhoodService {
        * publicly available frontend.
        * </pre>
        *
-       * <code>required string baseurl = 7;</code>
+       * <code>required string baseurl = 8;</code>
        * @param value The baseurl to set.
        * @return This builder for chaining.
        */
@@ -24036,7 +24318,7 @@ public final class PersonhoodService {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000040;
+  bitField0_ |= 0x00000080;
         baseurl_ = value;
         onChanged();
         return this;
@@ -24047,11 +24329,11 @@ public final class PersonhoodService {
        * publicly available frontend.
        * </pre>
        *
-       * <code>required string baseurl = 7;</code>
+       * <code>required string baseurl = 8;</code>
        * @return This builder for chaining.
        */
       public Builder clearBaseurl() {
-        bitField0_ = (bitField0_ & ~0x00000040);
+        bitField0_ = (bitField0_ & ~0x00000080);
         baseurl_ = getDefaultInstance().getBaseurl();
         onChanged();
         return this;
@@ -24062,7 +24344,7 @@ public final class PersonhoodService {
        * publicly available frontend.
        * </pre>
        *
-       * <code>required string baseurl = 7;</code>
+       * <code>required string baseurl = 8;</code>
        * @param value The bytes for baseurl to set.
        * @return This builder for chaining.
        */
@@ -24071,7 +24353,7 @@ public final class PersonhoodService {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000040;
+  bitField0_ |= 0x00000080;
         baseurl_ = value;
         onChanged();
         return this;
@@ -24083,19 +24365,19 @@ public final class PersonhoodService {
        * Signature is on the sha256 of the above fields
        * </pre>
        *
-       * <code>required bytes signature = 8;</code>
+       * <code>required bytes signature = 9;</code>
        * @return Whether the signature field is set.
        */
       @java.lang.Override
       public boolean hasSignature() {
-        return ((bitField0_ & 0x00000080) != 0);
+        return ((bitField0_ & 0x00000100) != 0);
       }
       /**
        * <pre>
        * Signature is on the sha256 of the above fields
        * </pre>
        *
-       * <code>required bytes signature = 8;</code>
+       * <code>required bytes signature = 9;</code>
        * @return The signature.
        */
       @java.lang.Override
@@ -24107,7 +24389,7 @@ public final class PersonhoodService {
        * Signature is on the sha256 of the above fields
        * </pre>
        *
-       * <code>required bytes signature = 8;</code>
+       * <code>required bytes signature = 9;</code>
        * @param value The signature to set.
        * @return This builder for chaining.
        */
@@ -24115,7 +24397,7 @@ public final class PersonhoodService {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000080;
+  bitField0_ |= 0x00000100;
         signature_ = value;
         onChanged();
         return this;
@@ -24125,11 +24407,11 @@ public final class PersonhoodService {
        * Signature is on the sha256 of the above fields
        * </pre>
        *
-       * <code>required bytes signature = 8;</code>
+       * <code>required bytes signature = 9;</code>
        * @return This builder for chaining.
        */
       public Builder clearSignature() {
-        bitField0_ = (bitField0_ & ~0x00000080);
+        bitField0_ = (bitField0_ & ~0x00000100);
         signature_ = getDefaultInstance().getSignature();
         onChanged();
         return this;
@@ -27394,17 +27676,18 @@ public final class PersonhoodService {
       "\021\n\017GetAdminDarcIDs\",\n\024GetAdminDarcIDsRep" +
       "ly\022\024\n\014admindarcids\030\001 \003(\014\"=\n\017SetAdminDarc" +
       "IDs\022\027\n\017newadmindarcids\030\001 \003(\014\022\021\n\tsignatur" +
-      "e\030\002 \002(\014\"\026\n\024SetAdminDarcIDsReply\"\244\001\n\nEmai" +
-      "lSetup\022\021\n\tbyzcoinid\030\001 \002(\014\022\021\n\tdeviceurl\030\002" +
-      " \002(\t\022\023\n\013emaildarcid\030\003 \002(\014\022\020\n\010smtphost\030\004 " +
-      "\002(\t\022\020\n\010smtpfrom\030\005 \002(\t\022\023\n\013smtpreplyto\030\006 \002" +
-      "(\t\022\017\n\007baseurl\030\007 \002(\t\022\021\n\tsignature\030\010 \002(\014\"\021" +
-      "\n\017EmailSetupReply\"+\n\013EmailSignup\022\r\n\005emai" +
-      "l\030\001 \002(\t\022\r\n\005alias\030\002 \002(\t\"\"\n\020EmailSignupRep" +
-      "ly\022\016\n\006status\030\001 \002(\021\"\035\n\014EmailRecover\022\r\n\005em" +
-      "ail\030\001 \002(\t\"#\n\021EmailRecoverReply\022\016\n\006status" +
-      "\030\001 \002(\021B,\n\027ch.epfl.dedis.lib.protoB\021Perso" +
-      "nhoodService"
+      "e\030\002 \002(\014\"\026\n\024SetAdminDarcIDsReply\"\302\001\n\nEmai" +
+      "lSetup\022\021\n\tbyzcoinid\030\001 \002(\014\022\034\n\006roster\030\002 \002(" +
+      "\0132\014.onet.Roster\022\021\n\tdeviceurl\030\003 \002(\t\022\023\n\013em" +
+      "aildarcid\030\004 \002(\014\022\020\n\010smtphost\030\005 \002(\t\022\020\n\010smt" +
+      "pfrom\030\006 \002(\t\022\023\n\013smtpreplyto\030\007 \002(\t\022\017\n\007base" +
+      "url\030\010 \002(\t\022\021\n\tsignature\030\t \002(\014\"\021\n\017EmailSet" +
+      "upReply\"+\n\013EmailSignup\022\r\n\005email\030\001 \002(\t\022\r\n" +
+      "\005alias\030\002 \002(\t\"\"\n\020EmailSignupReply\022\016\n\006stat" +
+      "us\030\001 \002(\021\"\035\n\014EmailRecover\022\r\n\005email\030\001 \002(\t\"" +
+      "#\n\021EmailRecoverReply\022\016\n\006status\030\001 \002(\021B,\n\027" +
+      "ch.epfl.dedis.lib.protoB\021PersonhoodServi" +
+      "ce"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -27580,7 +27863,7 @@ public final class PersonhoodService {
     internal_static_personhood_service_EmailSetup_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_service_EmailSetup_descriptor,
-        new java.lang.String[] { "Byzcoinid", "Deviceurl", "Emaildarcid", "Smtphost", "Smtpfrom", "Smtpreplyto", "Baseurl", "Signature", });
+        new java.lang.String[] { "Byzcoinid", "Roster", "Deviceurl", "Emaildarcid", "Smtphost", "Smtpfrom", "Smtpreplyto", "Baseurl", "Signature", });
     internal_static_personhood_service_EmailSetupReply_descriptor =
       getDescriptor().getMessageTypes().get(28);
     internal_static_personhood_service_EmailSetupReply_fieldAccessorTable = new

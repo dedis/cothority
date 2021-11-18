@@ -10,6 +10,7 @@ import (
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
 	"golang.org/x/xerrors"
 	"io"
@@ -48,6 +49,7 @@ func (es EmailSetup) Hash() []byte {
 
 type emailConfig struct {
 	ByzCoinID   skipchain.SkipBlockID
+	Roster      onet.Roster
 	BaseURL     string
 	UserID      byzcoin.InstanceID
 	UserSigner  darc.Signer
@@ -142,4 +144,12 @@ func (ec *emailConfig) tooManyEmails(clockHours int64) bool {
 
 	ec.Emails++
 	return false
+}
+
+func (ec *emailConfig) getClient() *byzcoin.Client {
+	cl := byzcoin.NewClient(ec.ByzCoinID, ec.Roster)
+	cl.UpdateNodes()
+	ec.Roster = cl.Roster
+
+	return cl
 }

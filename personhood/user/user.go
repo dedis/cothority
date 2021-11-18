@@ -80,9 +80,6 @@ func New(cl *byzcoin.Client, credIID byzcoin.InstanceID) (u User, err error) {
 // out user structure.
 func NewFromByzcoin(cl *byzcoin.Client, spawnerDarcID darc.ID,
 	spawnerSigner darc.Signer, name string) (*User, error) {
-	if err := cl.UseNode(1); err != nil {
-		return nil, xerrors.Errorf("couldn't set UseNode: %v", err)
-	}
 	ub, err := NewUserBuilder(name)
 	if err != nil {
 		return nil, xerrors.Errorf("couldn't create user builder: %v", err)

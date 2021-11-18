@@ -226,6 +226,8 @@ type SetAdminDarcIDsReply struct {
 type EmailSetup struct {
 	// ByzCoinID where the email service is running.
 	ByzCoinID skipchain.SkipBlockID
+	// Roster of the nodes where the byzcoin service is running.
+	Roster onet.Roster
 	// DeviceURL, as created from the dynacred-frontend
 	DeviceURL string
 	// EmailDarcID is the darc where new users will be added to

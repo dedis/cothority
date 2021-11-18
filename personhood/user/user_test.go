@@ -22,30 +22,50 @@ var genesisRules = []string{
 	"invoke:" + contracts2.ContractCoinID + ".transfer",
 }
 
+type userTest struct {
+	*byzcoin.BCTest
+	*testing.T
+	user *User
+}
+
+func newUserTest(t *testing.T) *userTest {
+	ut := &userTest{
+		BCTest: byzcoin.NewBCTestDefault(t),
+		T:      t,
+	}
+	ut.AddGenesisRules(genesisRules...)
+	ut.CreateByzCoin()
+	return ut
+}
+
+func (ut *userTest) addUser() *User {
+	userName := "testUser"
+	var err error
+	ut.user, err = NewFromByzcoin(ut.Client, ut.GenesisDarc.GetBaseID(),
+		ut.Signer, userName)
+	require.NoError(ut, err)
+	pubArgs := ut.user.GetPublic()
+	require.Equal(ut, userName, string(pubArgs[0].Value))
+
+	return ut.user
+}
+
 func TestUser_NewFromByzcoin(t *testing.T) {
-	bct := byzcoin.NewBCTestDefault(t)
-	bct.AddGenesisRules(genesisRules...)
-	bct.CreateByzCoin()
-	defer bct.CloseAll()
+	ut := newUserTest(t)
+	defer ut.CloseAll()
 
 	userName := "testUser"
-	user, err := NewFromByzcoin(bct.Client, bct.GenesisDarc.GetBaseID(), bct.Signer,
-		userName)
+	user, err := NewFromByzcoin(ut.Client, ut.GenesisDarc.GetBaseID(),
+		ut.Signer, userName)
 	require.NoError(t, err)
 	pubArgs := user.GetPublic()
 	require.Equal(t, userName, string(pubArgs[0].Value))
 }
 
 func TestUser_SwitchKey(t *testing.T) {
-	bct := byzcoin.NewBCTestDefault(t)
-	bct.AddGenesisRules(genesisRules...)
-	bct.CreateByzCoin()
-	defer bct.CloseAll()
-
-	userName := "testUser"
-	user, err := NewFromByzcoin(bct.Client, bct.GenesisDarc.GetBaseID(), bct.Signer,
-		userName)
-	require.NoError(t, err)
+	ut := newUserTest(t)
+	defer ut.CloseAll()
+	user := ut.addUser()
 
 	log.Lvl1("All set up - switching key for the 1st time")
 
@@ -64,24 +84,15 @@ func TestUser_SwitchKey(t *testing.T) {
 
 // TestUser_AddDevice
 func TestUser_AddDevice(t *testing.T) {
-	bct := byzcoin.NewBCTestDefault(t)
-	bct.AddGenesisRules(genesisRules...)
-	bct.CreateByzCoin()
-	defer bct.CloseAll()
-
-	userName := "testUser"
-	user, err := NewFromByzcoin(bct.Client, bct.GenesisDarc.GetBaseID(), bct.Signer,
-		userName)
-	require.NoError(t, err)
-
-	genesisCoin := bct.CreateCoin(nil, 1e9)
-	bct.TransferCoin(nil, genesisCoin, user.CoinID, 1e9)
+	ut := newUserTest(t)
+	defer ut.CloseAll()
+	user := ut.addUser()
 
 	log.Lvl1("All set up - adding device")
 	deviceStr, err := user.AddDevice("https://something.com", "supplementary")
 	require.NoError(t, err)
 
-	user2, err := NewFromURL(bct.Client, deviceStr)
+	user2, err := NewFromURL(ut.Client, deviceStr)
 	require.NoError(t, err)
 
 	require.Equal(t, user.CredIID, user2.CredIID)
@@ -101,23 +112,21 @@ func TestUser_AddDevice(t *testing.T) {
 }
 
 func TestUser_CreateNewUser(t *testing.T) {
-	bct := byzcoin.NewBCTestDefault(t)
-	bct.AddGenesisRules(genesisRules...)
-	bct.CreateByzCoin()
-	defer bct.CloseAll()
+	ut := newUserTest(t)
+	defer ut.CloseAll()
+	user := ut.addUser()
 
-	userName := "testUser"
-	user, err := NewFromByzcoin(bct.Client, bct.GenesisDarc.GetBaseID(), bct.Signer,
-		userName)
-	require.NoError(t, err)
-
-	genesisCoin := bct.CreateCoin(nil, 1e9)
-	bct.TransferCoin(nil, genesisCoin, user.CoinID, 1e9)
-
-	_, err = user.CreateNewUser("testUser2", "test@user2.com")
+	user2, err := user.CreateNewUser("testUser2", "test@user2.com")
 	require.NoError(t, err)
 	require.NoError(t, user.UpdateCredential())
 	require.Equal(t, 32, len(user.credStruct.GetPublic(contracts.APContacts)))
+
+	var user2coin byzcoin.Coin
+	_, err = ut.Client.GetInstance(user2.CoinID, contracts2.ContractCoinID,
+		&user2coin)
+	require.NoError(t, err)
+	require.Equal(t, uint64(2000), user2coin.Value)
+	require.Equal(t, contracts.SpawnerCoin, user2coin.Name)
 
 	_, err = user.CreateNewUser("testUser3", "test@user3.com")
 	require.NoError(t, err)
@@ -126,18 +135,9 @@ func TestUser_CreateNewUser(t *testing.T) {
 }
 
 func TestUser_Recover(t *testing.T) {
-	bct := byzcoin.NewBCTestDefault(t)
-	bct.AddGenesisRules(genesisRules...)
-	bct.CreateByzCoin()
-	defer bct.CloseAll()
-
-	userName := "testUser"
-	user, err := NewFromByzcoin(bct.Client, bct.GenesisDarc.GetBaseID(), bct.Signer,
-		userName)
-	require.NoError(t, err)
-
-	genesisCoin := bct.CreateCoin(nil, 1e9)
-	bct.TransferCoin(nil, genesisCoin, user.CoinID, 1e9)
+	ut := newUserTest(t)
+	defer ut.CloseAll()
+	user := ut.addUser()
 
 	user2, err := user.CreateNewUser("testUser2", "test@user2.com")
 	require.NoError(t, err)
@@ -147,7 +147,7 @@ func TestUser_Recover(t *testing.T) {
 	recoverStr, err := user.Recover(user2.CredIID, "https://something.com")
 	require.NoError(t, err)
 
-	user2recover, err := NewFromURL(bct.Client, recoverStr)
+	user2recover, err := NewFromURL(ut.Client, recoverStr)
 	require.NoError(t, err)
 	require.Equal(t, user2.CredIID, user2recover.CredIID)
 }
