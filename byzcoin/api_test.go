@@ -1,6 +1,7 @@
 package byzcoin
 
 import (
+	"encoding/hex"
 	"sync"
 	"testing"
 	"time"
@@ -293,6 +294,22 @@ func TestClient_SignerCounterDecoder(t *testing.T) {
 	c.Latest.Index = 2
 	// Incorrect scenario where the reply is older.
 	require.Error(t, c.signerCounterDecoder(buf, &reply))
+}
+
+func TestClient_GetNodes(t *testing.T) {
+	t.Skip("This does only work with a running dedis-blockchain")
+	si := &network.ServerIdentity{
+		Address: "tls://conode.c4dt.org:7770",
+		URL:     "https://conode.c4dt.org",
+		Public:  cothority.Suite.Point()}
+	bcID, _ := hex.DecodeString(
+		"9cc36071ccb902a1de7e0d21a2c176d73894b1cf88ae4cc2ba4c95cd76f474f3")
+	reply, err := skipchain.NewClient().GetUpdateChain(onet.NewRoster(
+		[]*network.ServerIdentity{si}), bcID)
+	require.NoError(t, err)
+
+	cl := NewClient(bcID, *reply.Update[len(reply.Update)-1].Roster)
+	cl.UpdateNodes()
 }
 
 const testServiceName = "TestByzCoin"

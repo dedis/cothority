@@ -35,65 +35,30 @@ type User struct {
 // It looks the credential instance up on ByzCoin and returns an error if
 // something went wrong: user not existing, wrong type of contract.
 func New(cl *byzcoin.Client, credIID byzcoin.InstanceID) (u User, err error) {
-	resp, err := cl.GetProof(credIID[:])
+	did, err := cl.GetInstance(credIID, contracts.ContractCredentialID,
+		&u.credStruct)
 	if err != nil {
 		return u, xerrors.Errorf("while getting proof for credential instance"+
 			": %v", err)
 	}
-	buf, cid, did, err := resp.Proof.Get(credIID[:])
-	if err != nil {
-		return u, xerrors.Errorf("reading proof: %v", err)
-	}
-	if cid != contracts.ContractCredentialID {
-		return u, xerrors.Errorf(
-			"credIID points to wrong contract: %s instead of %s", cid,
-			contracts.ContractCredentialID)
-	}
-	if err = protobuf.Decode(buf, &u.credStruct); err != nil {
-		return u, xerrors.Errorf("while decoding CredentialStruct: %v", err)
-	}
 
-	resp, err = cl.GetProof(did)
-	if err != nil {
-		return u, xerrors.Errorf("while getting proof for credential-DARC: %v"+
-			"", err)
+	var credDarc darc.Darc
+	if _, err := cl.GetInstance(byzcoin.NewInstanceID(did),
+		byzcoin.ContractDarcID, &credDarc); err != nil {
+		return u, xerrors.Errorf("while getting proof for credential darc: %v", err)
 	}
-	buf, cid, _, err = resp.Proof.Get(did)
-	if err != nil {
-		return u, xerrors.Errorf("reading proof for credential-DARC: %v", err)
-	}
-	if cid != byzcoin.ContractDarcID {
-		return u, xerrors.Errorf("wrong contract: %s instead of %s", cid, byzcoin.ContractDarcID)
-	}
-	d, err := darc.NewFromProtobuf(buf)
-	if err != nil {
-		return u, xerrors.Errorf("couldn't decode credential-DARC: %v", err)
-	}
-	ids := strings.Split(string(d.Rules.GetSignExpr()), "|")
+	ids := strings.Split(string(credDarc.Rules.GetSignExpr()), "|")
 	idSignerStr := strings.TrimPrefix(strings.TrimSpace(ids[0]), "darc:")
 	idSignerID, err := hex.DecodeString(idSignerStr)
 	if err != nil {
 		return u, xerrors.Errorf("couldn't get id for signer darc: %v", err)
 	}
 
-	resp, err = cl.GetProof(idSignerID)
-	if err != nil {
-		return u, xerrors.Errorf("while getting proof for signer-DARC: %v"+
-			"", err)
-	}
-	buf, cid, _, err = resp.Proof.Get(idSignerID)
-	if err != nil {
-		return u, xerrors.Errorf("reading proof for signer-DARC: %v", err)
-	}
-	if cid != byzcoin.ContractDarcID {
-		return u, xerrors.Errorf("wrong contract: %s instead of %s", cid, byzcoin.ContractDarcID)
-	}
-	signerDarc, err := darc.NewFromProtobuf(buf)
-	if err != nil {
-		return u, xerrors.Errorf("couldn't decode credential-DARC: %v", err)
+	if _, err := cl.GetInstance(byzcoin.NewInstanceID(idSignerID),
+		byzcoin.ContractDarcID, &u.SignerDarc); err != nil {
+		return u, xerrors.Errorf("while getting proof for signer darc: %v", err)
 	}
 
-	u.SignerDarc = *signerDarc
 	u.CredIID = credIID
 	u.CoinID = byzcoin.NewInstanceID(u.credStruct.GetPublic(contracts.APCoinID))
 	spawnerID := u.credStruct.GetConfig(contracts.ACSpawner)
@@ -200,23 +165,9 @@ func (u User) getAttributeDarcs(name contracts.CredentialEntry) (map[string]darc
 	darcs := make(map[string]darc.Darc)
 	for _, id := range darcIDs {
 		log.Lvlf2("Fetching device-DARC %x", id.Value)
-		resp, err := u.cl.GetProof(id.Value)
-		if err != nil {
-			return nil, xerrors.Errorf("couldn't get proof: %v", err)
-		}
-		buf, cid, _, err := resp.Proof.Get(id.Value)
-		if err != nil {
-			log.Warnf("While scanning users devices: %+v", err)
-			continue
-		}
-		if cid != byzcoin.ContractDarcID {
-			log.Warnf("Found invalid device: %s instead of %s", cid,
-				byzcoin.ContractDarcID)
-			continue
-		}
 		var d darc.Darc
-		if err := protobuf.Decode(buf, &d); err != nil {
-			log.Warnf("Couldn't decode darc: %+v", err)
+		if _, err := u.cl.GetInstance(byzcoin.NewInstanceID(id.Value), byzcoin.ContractDarcID, &d); err != nil {
+			log.Errorf("Couldn't get device-DARC: %v", err)
 			continue
 		}
 		darcs[string(id.Name)] = d
@@ -430,16 +381,9 @@ func (u User) SendUpdateCredential() error {
 
 // UpdateCredential fetches the latest version of the credential from byzcoin.
 func (u *User) UpdateCredential() error {
-	pr, err := u.cl.GetProof(u.CredIID[:])
-	if err != nil {
-		return xerrors.Errorf("couldn't get proof: %v", err)
-	}
-	buf, _, _, err := pr.Proof.Get(u.CredIID[:])
-	if err != nil {
+	if _, err := u.cl.GetInstance(u.CredIID, contracts.ContractCredentialID,
+		&u.credStruct); err != nil {
 		return xerrors.Errorf("couldn't get credential: %v", err)
-	}
-	if err := protobuf.Decode(buf, &u.credStruct); err != nil {
-		return xerrors.Errorf("couldn't decode credential: %v", err)
 	}
 	return nil
 }

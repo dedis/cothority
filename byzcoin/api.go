@@ -33,6 +33,8 @@ type Client struct {
 	Genesis *skipchain.SkipBlock
 	// Latest keeps track of the most recent known block for the client.
 	Latest *skipchain.SkipBlock
+	// nodes that are most probably useful and alive
+	nodes []*network.ServerIdentity
 	// Keeps the server identities that replied first to a DownloadState request
 	noncesSI map[uint64]*network.ServerIdentity
 	// Used for SendProtobufParallel. If it is nil, default values will be used.
@@ -83,6 +85,70 @@ func (c *Client) getLatestKnownBlock() *skipchain.SkipBlock {
 	}
 
 	return c.Latest
+}
+
+type nodeBlock struct {
+	si *network.ServerIdentity
+	sb *skipchain.SkipBlock
+}
+
+// UpdateNodes asks all nodes for their last skipblock and creates a list of the
+// nodes with the highest block number.
+func (c *Client) UpdateNodes() {
+	nodes := make(chan nodeBlock, 1)
+	scCl := skipchain.NewClient()
+	latestID := c.ID
+	if c.Latest != nil {
+		latestID = c.Latest.SkipChainID()
+	}
+
+	// Get the latest block from all nodes.
+	for _, si := range c.Roster.List {
+		go func(si *network.ServerIdentity) {
+			r := onet.NewRoster([]*network.ServerIdentity{si})
+			reply, err := scCl.GetUpdateChain(r, latestID)
+			if err != nil {
+				log.Lvl2("Error in GetUpdateChain:", err)
+				return
+			}
+			nodes <- nodeBlock{si, reply.Update[len(reply.Update)-1]}
+		}(si)
+	}
+
+	// Wait for all nodes to reply or for the timeout to happen
+	var nodeList []nodeBlock
+	for i := 0; i < len(c.Roster.List); i++ {
+		select {
+		case n := <-nodes:
+			if c.Latest == nil || n.sb.Index > c.Latest.Index {
+				c.Latest = n.sb
+				c.Roster = *n.sb.Roster
+			}
+			nodeList = append(nodeList, n)
+		case <-time.After(time.Second * 2):
+			break
+		}
+	}
+
+	// Choose all nodes that are alive and have the latest block
+	c.nodes = []*network.ServerIdentity{}
+	for _, si := range c.Roster.List {
+		for _, n := range nodeList {
+			if n.si.Equal(si) && n.sb.Index == c.Latest.Index {
+				c.nodes = append(c.nodes, si)
+				break
+			}
+		}
+	}
+}
+
+// GetNodes returns either the list of nodes that are alive and have the latest
+// block, or the full roster.
+func (c *Client) GetNodes() []*network.ServerIdentity {
+	if len(c.nodes) > 0 {
+		return c.nodes
+	}
+	return c.Roster.List
 }
 
 // UseNode sets the options so that only the given node will be contacted
@@ -183,7 +249,7 @@ func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxRe
 	latest := c.getLatestKnownBlock()
 
 	reply := &AddTxResponse{}
-	_, err := c.SendProtobufParallel(c.Roster.List, &AddTxRequest{
+	_, err := c.SendProtobufParallel(c.GetNodes(), &AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   c.ID,
 		Transaction:   tx,
@@ -214,22 +280,18 @@ func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxRe
 // GetInstance returns the buffer of an instance. Internally it calls
 // GetProofFromlatest, and verifies that the proof actually exists and that
 // the contract-type is correct.
-func (c *Client) GetInstance(iid InstanceID, contractID string) ([]byte, error) {
-	if err := c.WaitPropagation(-1); err != nil {
-		return nil, xerrors.Errorf("wait propagation: %v", err)
-	}
+func (c *Client) GetInstance(iid InstanceID, contractID string,
+	inst interface{}) (darc.ID, error) {
 	proof, err := c.GetProofFromLatest(iid[:])
 	if err != nil {
 		return nil, xerrors.Errorf("getting proof: %v", err)
 	}
-	buf, cid, _, err := proof.Proof.Get(iid[:])
-	if err != nil {
-		return nil, xerrors.Errorf("getting buffer from proof: %v", err)
-	}
+	buf, cid, did, err := proof.Proof.Get(iid[:])
 	if cid != contractID {
-		return nil, xerrors.Errorf("contractID mismatch: %v != %v", cid, contractID)
+		return nil, xerrors.Errorf("contractID mismatch: %v != %v", cid,
+			contractID)
 	}
-	return buf, nil
+	return did, protobuf.Decode(buf, inst)
 }
 
 // GetProof returns a proof for the key stored in the skipchain starting from
@@ -317,7 +379,7 @@ func (c *Client) GetUpdates(keyVer []IDVersion, flags GetUpdatesFlags,
 		Flags:         flags,
 		LatestBlockID: latest,
 	}
-	_, err = c.SendProtobufParallel(c.Roster.List, req, rep, c.options)
+	_, err = c.SendProtobufParallel(c.GetNodes(), req, rep, c.options)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't get updates: %v", err)
 	}
@@ -358,7 +420,7 @@ func (c *Client) getProofRaw(key []byte, from, include *skipchain.SkipBlock) (*G
 	}
 
 	reply := &GetProofResponse{}
-	_, err := c.SendProtobufParallelWithDecoder(c.Roster.List, req, reply, c.options, decoder)
+	_, err := c.SendProtobufParallelWithDecoder(c.GetNodes(), req, reply, c.options, decoder)
 	if err != nil {
 		return nil, xerrors.Errorf("sending: %+v", err)
 	}
@@ -413,7 +475,7 @@ func (c *Client) GetDeferredDataAfter(instrID InstanceID, barrier *skipchain.Ski
 // execute in the given darc.
 func (c *Client) CheckAuthorization(dID darc.ID, ids ...darc.Identity) ([]darc.Action, error) {
 	reply := &CheckAuthorizationResponse{}
-	_, err := c.SendProtobufParallel(c.Roster.List, &CheckAuthorization{
+	_, err := c.SendProtobufParallel(c.GetNodes(), &CheckAuthorization{
 		Version:    CurrentVersion,
 		ByzCoinID:  c.ID,
 		DarcID:     dID,
@@ -566,14 +628,14 @@ func (c *Client) StreamTransactions(handler func(StreamingResponse, error)) erro
 	req := StreamingRequest{
 		ID: c.ID,
 	}
-	n := int(rand.Int31n(int32(len(c.Roster.List))))
+	n := int(rand.Int31n(int32(len(c.GetNodes()))))
 	if c.options != nil {
 		if c.options.DontShuffle {
 			n = c.options.StartNode
 		}
 	}
 
-	conn, err := c.Stream(c.Roster.List[n], &req)
+	conn, err := c.Stream(c.GetNodes()[n], &req)
 	if err != nil {
 		handler(StreamingResponse{}, err)
 		return xerrors.Errorf("stream error: %v", err)
@@ -589,7 +651,7 @@ func (c *Client) StreamTransactions(handler func(StreamingResponse, error)) erro
 			// send the block only if the integrity is correct
 			handler(resp, nil)
 		} else {
-			err := xerrors.Errorf("got a corrupted block from %v", c.Roster.List[0])
+			err := xerrors.Errorf("got a corrupted block from %v", c.GetNodes()[0])
 			log.Warnf("%+v", err)
 			handler(StreamingResponse{}, err)
 		}
@@ -642,7 +704,7 @@ func (c *Client) GetSignerCounters(ids ...string) (*GetSignerCountersResponse, e
 		SignerIDs:   ids,
 	}
 	var reply GetSignerCountersResponse
-	_, err := c.SendProtobufParallelWithDecoder(c.Roster.List, &req, &reply,
+	_, err := c.SendProtobufParallelWithDecoder(c.GetNodes(), &req, &reply,
 		c.options, c.signerCounterDecoder)
 	return &reply, cothority.ErrorOrNil(err, "request failed")
 }
@@ -695,7 +757,7 @@ func (c *Client) DownloadState(byzcoinID skipchain.SkipBlockID, nonce uint64, le
 	}
 
 	reply = &DownloadStateResponse{}
-	l := len(c.Roster.List)
+	l := len(c.GetNodes())
 	indexStart := 0
 	if l > 3 {
 		// This is the leader plus the subleaders, don't contact them
@@ -721,7 +783,7 @@ func (c *Client) DownloadState(byzcoinID skipchain.SkipBlockID, nonce uint64, le
 			po.DontShuffle = true
 			po.AskNodes = 1
 		}
-		si, err = c.SendProtobufParallel(c.Roster.List, msg, reply, &po)
+		si, err = c.SendProtobufParallel(c.GetNodes(), msg, reply, &po)
 		err = cothority.ErrorOrNil(err, "request failed")
 		c.noncesSI[reply.Nonce] = si
 	}
@@ -738,7 +800,7 @@ func (c *Client) ResolveInstanceID(darcID darc.ID, name string) (InstanceID, err
 	}
 	reply := ResolvedInstanceID{}
 
-	_, err := c.SendProtobufParallel(c.Roster.List, &req, &reply, c.options)
+	_, err := c.SendProtobufParallel(c.GetNodes(), &req, &reply, c.options)
 	return reply.InstanceID, cothority.ErrorOrNil(err, "request failed")
 }
 
@@ -757,7 +819,7 @@ searchLatest:
 		if i > 0 {
 			time.Sleep(100 * time.Millisecond)
 		}
-		for node := range c.Roster.List {
+		for node := range c.GetNodes() {
 			log.Lvlf2("Searching node %d for block %d", node, sb.Index)
 			if err := c.UseNode(node); err != nil {
 				return xerrors.Errorf("couldn't set node: %+v", err)
@@ -765,7 +827,7 @@ searchLatest:
 			pr, err := c.GetProof(make([]byte, 32))
 			if err != nil {
 				log.Warnf("error while querying node %s - ignoring",
-					c.Roster.List[node])
+					c.GetNodes()[node])
 				continue
 			}
 			if pr.Proof.Latest.Index > sb.Index {
@@ -895,7 +957,7 @@ func (c *Client) fetchGenesis() error {
 	skClient := skipchain.NewClient()
 
 	// Integrity check is done by the request function.
-	sb, err := skClient.GetSingleBlock(&c.Roster, c.ID)
+	sb, err := skClient.GetSingleBlock(onet.NewRoster(c.GetNodes()), c.ID)
 	if err != nil {
 		return xerrors.Errorf("request failed: %v", err)
 	}

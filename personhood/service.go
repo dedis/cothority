@@ -10,7 +10,6 @@ import (
 	"crypto/sha256"
 	"errors"
 	"go.dedis.ch/cothority/v3/personhood/user"
-	"go.dedis.ch/protobuf"
 	"net/mail"
 	"sort"
 	"time"
@@ -532,15 +531,10 @@ func (s *Service) EmailSignup(rq *EmailSignup) (*EmailSignupReply, error) {
 	contacts := u.GetCredentialsCopy().GetPublic(contracts.APContacts)
 	for contact := 0; contact < len(contacts); contact += 32 {
 		contactID := contacts[contact : contact+32]
-		credentialBuf, err := cl.GetInstance(byzcoin.NewInstanceID(contactID),
-			contracts.ContractCredentialID)
-		if err != nil {
-			log.Warn("Got invalid contact in contacts of base user")
-			continue
-		}
 		var credential contracts.CredentialStruct
-		if err := protobuf.Decode(credentialBuf, &credential); err != nil {
-			log.Warn("Got an invalid credential in contacts of base user")
+		if _, err := cl.GetInstance(byzcoin.NewInstanceID(contactID),
+			contracts.ContractCredentialID, &credential); err != nil {
+			log.Warn("Got invalid contact in contacts of base user")
 			continue
 		}
 		if bytes.Equal(credential.GetPublic(contracts.APEmail),
@@ -578,17 +572,14 @@ func (s *Service) EmailSignup(rq *EmailSignup) (*EmailSignupReply, error) {
 		return nil, xerrors.Errorf("failed to send mail: %v", err)
 	}
 
-	emailDarcBuf, err := cl.GetInstance(s.storage.EmailConfig.EmailDarcID,
-		byzcoin.ContractDarcID)
-	if err != nil {
+	var emailDarc darc.Darc
+	if _, err := cl.GetInstance(s.storage.EmailConfig.EmailDarcID,
+		byzcoin.ContractDarcID, &emailDarc); err != nil {
 		return nil, xerrors.Errorf("failed to get EmailDarc from proof: %v",
 			err)
 	}
 
-	var emailDarc darc.Darc
-	if protobuf.Decode(emailDarcBuf, &emailDarc) != nil {
-		return nil, xerrors.Errorf("failed to decode darc: %v", err)
-	}
+	log.Lvl2("Signing up new user: updating signup darc")
 	emailDarcNew := emailDarc.Copy()
 	if err := emailDarcNew.EvolveFrom(&emailDarc); err != nil {
 		return nil, xerrors.Errorf("failed to evolve darc: %v", err)

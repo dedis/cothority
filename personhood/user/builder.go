@@ -83,10 +83,6 @@ func (ub *Builder) CreateFromSpawner(spawner ActiveSpawner) (*User, error) {
 		return nil, xerrors.Errorf("couldn't send transaction: %v", err)
 	}
 
-	if err := spawner.cl.WaitPropagation(-1); err != nil {
-		return nil, xerrors.Errorf("couldn't wait for propagation: %v", err)
-	}
-
 	u, err := New(spawner.cl, ub.UserID)
 	if err != nil {
 		return nil, xerrors.Errorf("couldn't get finished user: %v", err)
