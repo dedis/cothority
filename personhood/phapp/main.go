@@ -175,8 +175,8 @@ var cmds = cli.Commands{
 				Usage: "setup the email service",
 				Flags: []cli.Flag{
 					cli.StringFlag{
-						Name:     "bcID",
-						Usage:    "ByzCoin ID",
+						Name:     "bc",
+						Usage:    "ByzCoin configuration file",
 						Required: true,
 					},
 					cli.StringFlag{
@@ -600,27 +600,14 @@ func show(c *cli.Context) error {
 	}
 	credIID := byzcoin.NewInstanceID(credBuf)
 
-	p, err := cl.GetProofFromLatest(credIID.Slice())
-	if err != nil {
-		return err
-	}
-	if !p.Proof.InclusionProof.Match(credBuf) {
-		return errors.New("this credentialIID does not exist")
-	}
-	val, cid, _, err := p.Proof.Get(credBuf)
-	if err != nil {
-		return err
-	}
-	if cid != contracts.ContractCredentialID {
-		return errors.New("the instance at this IID is not a credential, but: " + cid)
-	}
-	cred, err := contracts.ContractCredentialFromBytes(val)
-	if err != nil {
-		return err
+	var cred contracts.CredentialStruct
+	if _, err := cl.GetInstance(credIID, contracts.ContractCredentialID,
+		&cred); err != nil {
+		return xerrors.Errorf("couldn't get credential: %v", err)
 	}
 
 	log.Infof("Credentials of %x", credBuf)
-	for _, c := range cred.(*contracts.ContractCredential).Credentials {
+	for _, c := range cred.Credentials {
 		var atts []string
 		for _, a := range c.Attributes {
 			atts = append(atts, fmt.Sprintf("%s: %x", a.Name, a.Value))
@@ -759,11 +746,7 @@ func emailRecovery(c *cli.Context) error {
 
 func emailGetAddrEmail(c *cli.Context) (*network.ServerIdentity, string,
 	string, error) {
-	if c.NArg() != 3 {
-		return nil, "", "", xerrors.Errorf("Please give the following arguments:" +
-			"host:port alias email-address")
-	}
-	hp := c.String("node")
+	hp := c.String("addr")
 	if _, err := url.Parse(hp); err != nil {
 		return nil, "", "", xerrors.Errorf("couldn't parse node address: %v", err)
 	}
@@ -783,12 +766,13 @@ func emailGetRequest(c *cli.Context) (si *network.ServerIdentity,
 	err error) {
 	es = &personhood.EmailSetup{}
 
-	bcIDStr := c.String("bcID")
-	es.ByzCoinID, err = hex.DecodeString(bcIDStr)
-	if err != nil || len(es.ByzCoinID) != 32 {
-		return nil, nil, xerrors.New("ByzCoinID needs to be an InstanceID of length 32" +
-			" bytes, encoded in hexadecimal")
+	cfg, _, err := lib.LoadConfig(c.String("bc"))
+	if err != nil {
+		return nil, nil, xerrors.Errorf("couldn't open file: %v", err)
 	}
+	es.ByzCoinID = cfg.ByzCoinID
+	es.Roster = cfg.Roster
+
 	privateToml := c.String("private")
 	if _, err := os.Stat(privateToml); os.IsNotExist(err) {
 		return nil, nil, xerrors.New("private.toml file doesn't exist")

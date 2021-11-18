@@ -76,6 +76,7 @@ func (ts *testService) callSetup() *EmailSetupReply {
 
 	emSetup := &EmailSetup{
 		ByzCoinID:   ts.Genesis.SkipChainID(),
+		Roster:      *ts.Roster,
 		DeviceURL:   deviceURL,
 		EmailDarcID: byzcoin.NewInstanceID(ts.emailDarc.GetBaseID()),
 		SMTPHost:    "localhost:25",
@@ -110,6 +111,7 @@ func TestService_EmailSetup(t *testing.T) {
 
 	emSetup := &EmailSetup{
 		ByzCoinID:   ts.Genesis.SkipChainID(),
+		Roster:      *ts.Roster,
 		DeviceURL:   deviceURL,
 		EmailDarcID: byzcoin.NewInstanceID(ts.emailDarc.GetBaseID()),
 	}
@@ -171,6 +173,12 @@ func TestService_EmailRecover(t *testing.T) {
 	newUserSignup, err := user.NewFromURL(ts.Client, newUserURL)
 	require.NoError(t, err)
 	require.NotEqual(t, ts.baseUser.CredIID, newUserSignup.CredIID)
+	var newUserCoin byzcoin.Coin
+	_, err = ts.Client.GetInstance(newUserSignup.CoinID,
+		contracts2.ContractCoinID, &newUserCoin)
+	require.NoError(t, err)
+	require.Equal(t, uint64(2000), newUserCoin.Value)
+	require.Equal(t, contracts.SpawnerCoin, newUserCoin.Name)
 
 	reply, err := ts.s.EmailRecover(&EmailRecover{
 		Email: "linus.gasser2@epfl.ch",

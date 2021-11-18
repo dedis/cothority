@@ -65,8 +65,8 @@ func (ub *Builder) CreateFromSpawner(spawner ActiveSpawner) (*User, error) {
 		return nil, xerrors.Errorf("couldn't spawn darcs: %v", err)
 	}
 
-	coinIID, err := spawner.SpawnCoin(contracts2.CoinName,
-		ub.darcCoin.GetBaseID(), 10000)
+	coinIID, err := spawner.SpawnCoin(contracts.SpawnerCoin,
+		ub.darcCoin.GetBaseID(), 2000)
 	if err != nil {
 		return nil, xerrors.Errorf("couldn't spawn coin: %v", err)
 	}
@@ -178,12 +178,30 @@ func (ub *Builder) instrsFromDarc(spawnerDarcID darc.ID) (instrs byzcoin.
 	Instructions, err error) {
 	spdID := byzcoin.NewInstanceID(spawnerDarcID)
 
+	cost100 := byzcoin.Coin{Name: contracts.SpawnerCoin, Value: 100}
+	cost100buf, err := protobuf.Encode(&cost100)
+	if err != nil {
+		return nil, xerrors.Errorf("couldn't encode coin: %v", err)
+	}
+	cost500 := byzcoin.Coin{Name: contracts.SpawnerCoin, Value: 500}
+	cost500buf, err := protobuf.Encode(&cost500)
+	if err != nil {
+		return nil, xerrors.Errorf("couldn't encode coin: %v", err)
+	}
 	spawnerInst := byzcoin.Instruction{
 		InstanceID: spdID,
 		Spawn: &byzcoin.Spawn{
 			ContractID: contracts.ContractSpawnerID,
 			Args: byzcoin.Arguments{
 				{Name: "preID", Value: random.Bits(256, true, random.New())},
+				{Name: "costDarc", Value: cost100buf},
+				{Name: "costCoin", Value: cost100buf},
+				{Name: "costCredential", Value: cost500buf},
+				{Name: "costParty", Value: cost500buf},
+				{Name: "costRoPaSci", Value: cost100buf},
+				{Name: "costCWrite", Value: cost500buf},
+				{Name: "costCRead", Value: cost100buf},
+				{Name: "costValue", Value: cost100buf},
 			},
 		},
 	}
@@ -210,6 +228,7 @@ func (ub *Builder) instrsFromDarc(spawnerDarcID darc.ID) (instrs byzcoin.
 			Args: byzcoin.Arguments{
 				{Name: "coinID", Value: random.Bits(256, true, random.New())},
 				{Name: "darcID", Value: ub.darcCoin.GetBaseID()},
+				{Name: "type", Value: contracts.SpawnerCoin[:]},
 			},
 		},
 	}
@@ -251,7 +270,8 @@ func (ub *Builder) instrsFromDarc(spawnerDarcID darc.ID) (instrs byzcoin.
 // createCoin is used for a new user from a DARC,
 // so that the new user can have some coins to start other transactions.
 func (ub *Builder) createCoin(spawnerDarc darc.ID) byzcoin.Instructions {
-	coinInstr, coinID := contracts2.ContractCoinSpawn(spawnerDarc, nil)
+	coinInstr, coinID := contracts2.ContractCoinSpawn(spawnerDarc,
+		&contracts.SpawnerCoin)
 	coinMintInstr := contracts2.ContractCoinMint(coinID, 1e9)
 	coinTransferInstr := contracts2.ContractCoinTransfer(coinID, ub.coinID, 1e9)
 	return byzcoin.Instructions{coinInstr, coinMintInstr, coinTransferInstr}

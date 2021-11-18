@@ -208,22 +208,24 @@ message SetAdminDarcIDsReply {
 message EmailSetup {
   // ByzCoinID where the email service is running.
   required bytes byzcoinid = 1;
+  // Roster of the nodes where the byzcoin service is running.
+  required onet.Roster roster = 2;
   // DeviceURL, as created from the dynacred-frontend
-  required string deviceurl = 2;
+  required string deviceurl = 3;
   // EmailDarcID is the darc where new users will be added to
-  required bytes emaildarcid = 3;
+  required bytes emaildarcid = 4;
   // SMTPHost: "[tls://]host:port" - should support emails with a
   // sender "from".
-  required string smtphost = 4;
+  required string smtphost = 5;
   // SMTPFrom that will be used for the SMTP host
-  required string smtpfrom = 5;
+  required string smtpfrom = 6;
   // SMTPReplyTo is the email address that will be used as reply-to
-  required string smtpreplyto = 6;
+  required string smtpreplyto = 7;
   // BaseURL is prepended to the recovery string and should point to the
   // publicly available frontend.
-  required string baseurl = 7;
+  required string baseurl = 8;
   // Signature is on the sha256 of the above fields
-  required bytes signature = 8;
+  required bytes signature = 9;
 }
 
 // EmailSetupReply when everything went well.

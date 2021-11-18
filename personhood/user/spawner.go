@@ -92,19 +92,24 @@ func (as *ActiveSpawner) SpawnDarcs(newDarcs ...darc.Darc) error {
 // SpawnCoin prepares for spawning a coin. It does not send the instruction.
 func (as *ActiveSpawner) SpawnCoin(coinType byzcoin.InstanceID,
 	darcID darc.ID, value uint64) (byzcoin.InstanceID, error) {
-	coinIID := random.Bits(256, true, random.New())
+	coinIIDPre := random.Bits(256, true, random.New())
 	valueBuf := make([]byte, 8)
 	binary.LittleEndian.PutUint64(valueBuf, value)
 	as.Spawn(contracts2.ContractCoinID, as.costs.CostCoin.Value,
 		byzcoin.Arguments{
-			{Name: "coinID", Value: coinIID},
-			{Name: "type", Value: coinType[:]},
+			{Name: "coinID", Value: coinIIDPre},
+			{Name: "coinName", Value: coinType[:]},
 			{Name: "darcID", Value: darcID},
 			{Name: "coinValue", Value: valueBuf},
 		}...)
 	as.cost += value
+	coinIID, err := as.instructions[len(as.instructions)-1].DeriveIDArg("",
+		"coinID")
+	if err != nil {
+		return byzcoin.InstanceID{}, xerrors.Errorf("couldn't get coinIID: %v", err)
+	}
 
-	return as.instructions[len(as.instructions)-1].DeriveIDArg("", "coinID")
+	return coinIID, nil
 }
 
 // SpawnCredential prepares for sending a credential.
