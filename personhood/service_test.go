@@ -11,7 +11,6 @@ import (
 	"go.dedis.ch/cothority/v3/personhood/contracts"
 	"go.dedis.ch/cothority/v3/personhood/user"
 	"go.dedis.ch/onet/v3/log"
-	"go.dedis.ch/protobuf"
 	"regexp"
 	"strings"
 	"testing"
@@ -97,10 +96,9 @@ func (ts *testService) callSetup() *EmailSetupReply {
 
 func (ts *testService) updateEmailDarc() {
 	require.NoError(ts, ts.Client.WaitPropagation(-1))
-	edBuf, err := ts.Client.GetInstance(byzcoin.NewInstanceID(ts.emailDarc.
-		GetBaseID()), byzcoin.ContractDarcID)
+	_, err := ts.Client.GetInstance(byzcoin.NewInstanceID(ts.
+		emailDarc.GetBaseID()), byzcoin.ContractDarcID, ts.emailDarc)
 	require.NoError(ts, err)
-	require.NoError(ts, protobuf.Decode(edBuf, ts.emailDarc))
 }
 
 func TestService_EmailSetup(t *testing.T) {

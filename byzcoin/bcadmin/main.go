@@ -1725,14 +1725,21 @@ func getInfo(c *cli.Context) error {
 		return xerrors.New("--bc flag is required")
 	}
 
-	cfg, _, err := lib.LoadConfig(bcArg)
+	cfg, cl, err := lib.LoadConfig(bcArg)
 	if err != nil {
 		return err
 	}
 
+	cl.UpdateNodes()
+	var bcCfg byzcoin.ChainConfig
+	if _, err := cl.GetInstance(byzcoin.ConfigInstanceID,
+		byzcoin.ContractConfigID, &bcCfg); err != nil {
+		return xerrors.Errorf("couldn't get chain config: %v", err)
+	}
 	log.Infof("%s\n"+
-		"- BC: %s\n",
-		cfg.String(), bcArg)
+		"- BC: %s\n"+
+		"%v",
+		cfg.String(), bcArg, bcCfg)
 
 	return nil
 }

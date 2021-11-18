@@ -170,10 +170,10 @@ type Storage struct {
 // If TargetSkipChainID is an empty slice, the service will create a new
 // skipchain and store the given block as genesis-block.
 func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, error) {
-	if len(s.Storage.Clients) > 0 {
+	if len(s.Storage.Clients) > 0 && psbd.NewBlock.Index == 0 {
 		if psbd.Signature == nil {
 			return nil, errors.New(
-				"cannot create new skipblock without authentication")
+				"cannot create new skipchain without authentication")
 		}
 		if !s.authenticate(psbd.NewBlock.CalculateHash(), *psbd.Signature) {
 			return nil, errors.New(
@@ -1339,6 +1339,17 @@ func (s *Service) bftForwardLinkLevel0(msg, data []byte) bool {
 		return false
 	}
 
+	// Store the block in the buffer anyway,
+	// supposing that the block is correct.
+	// This is mainly needed, because the bftForwardLinkLevel0Ack needs the
+	// block, and on a slow node bftForwardLinkLevel0 might not be done yet
+	// when the leader decides to go forward to the acknowledge phase.
+	s.verifyNewBlockBuffer.Store(sliceToArr(msg), true)
+	// We can cache the block because it has been verified by this conode
+	// but it will be added to the DB later on after the protocol
+	// has succeeded
+	s.blockBuffer.add(fs.Newest)
+
 	ok = func() bool {
 		for i, verifier := range prevSB.VerifierIDs {
 			if !verifier.Equal(fs.Newest.VerifierIDs[i]) {
@@ -1373,12 +1384,11 @@ func (s *Service) bftForwardLinkLevel0(msg, data []byte) bool {
 		}
 		return true
 	}()
-	if ok {
-		s.verifyNewBlockBuffer.Store(sliceToArr(msg), true)
-		// We can cache the block because it has been verified by this conode
-		// but it will be added to the DB later on after the protocol
-		// has succeeded
-		s.blockBuffer.add(fs.Newest)
+	if !ok {
+		// So the fast storage was too fast, and the cached blocks need to
+		// be removed.
+		s.verifyNewBlockBuffer.Delete(sliceToArr(msg))
+		s.blockBuffer.clear(fs.Newest.Hash)
 	}
 	return ok
 }
@@ -1703,6 +1713,8 @@ func (s *Service) propagateForwardLinkHandler(msg network.Message) error {
 	// Get the block to update the list of FLs
 	sb := s.db.GetByID(pfl.ForwardLink.From)
 	if sb == nil {
+		log.Errorf("Missing block when wanting to add forward-link: %x",
+			pfl.ForwardLink.To)
 		// Here we assume the block must be there because it should
 		// have caught up during the signature request
 		return xerrors.New("couldn't get the block to attach the forward link")

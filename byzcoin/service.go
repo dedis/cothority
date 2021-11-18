@@ -1176,7 +1176,9 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 	if sb.Roster.List[0].Equal(s.ServerIdentity()) {
 		ssbReply, err = s.skService().StoreSkipBlockInternal(&ssb)
 	} else {
-		log.Lvl2("Sending new block to other node", sb.Roster.List[0])
+		// This is in case of a view-change: the old leader sends the
+		// proposed block to the new leader.
+		log.Lvl2("Sending new block to leader node", sb.Roster.List[0])
 		ssbReply = &skipchain.StoreSkipBlockReply{}
 		err = skipchain.NewClient().SendProtobuf(sb.Roster.List[0], &ssb, ssbReply)
 		if err != nil {
@@ -1495,6 +1497,15 @@ func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID, sbID
 	// We don't return as the following steps will create the trie.
 	if scID.Equal(sbID) {
 		s.db().Store(sb)
+	} else {
+		// Check if it's the latest block, and the previous exists.
+		// Then no full catchup is needed.
+		if sb.GetForwardLen() == 0 {
+			if previous := s.db().GetByID(sb.BackLinkIDs[0]); previous != nil {
+				log.Lvl2("Got latest block - no need for full catchup")
+				return nil
+			}
+		}
 	}
 
 	// catch up the intermediate missing blocks
@@ -2118,7 +2129,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 
 	for i := range txOut {
 		if txOut[i].Accepted != body.TxResults[i].Accepted {
-			log.Lvl2(s.ServerIdentity(), "Client Transaction accept mistmatch on tx", i)
+			log.Lvl2(s.ServerIdentity(), "Client Transaction accept mismatch on tx", i)
 			return false
 		}
 	}
@@ -2189,7 +2200,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		return false
 	}
 
-	log.Lvl4(s.ServerIdentity(), "verification completed")
+	log.Lvl4(s.ServerIdentity(), "verification successfully completed")
 	return true
 }
 

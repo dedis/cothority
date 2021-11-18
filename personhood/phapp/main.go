@@ -818,8 +818,6 @@ func emailGetRequest(c *cli.Context) (si *network.ServerIdentity,
 	if baseURL.Path != "" {
 		es.BaseURL = es.BaseURL + baseURL.Path
 	}
-	log.Printf("")
-	log.Print("BaseURL is:", es.BaseURL)
 
 	darcIDStr := c.String("darcID")
 	edID, err := hex.DecodeString(darcIDStr)
@@ -904,18 +902,12 @@ func combineInstrsAndSign(cl *byzcoin.Client, signer darc.Signer, instrs ...byzc
 
 func verifyAdminDarc(cl *byzcoin.Client, cfg lib.Config, signer darc.Signer) error {
 	gdID := cfg.AdminDarc.GetBaseID()
-	p, err := cl.GetProofFromLatest(gdID)
-	if err != nil {
-		return err
+	var gdarc darc.Darc
+	if _, err := cl.GetInstance(byzcoin.NewInstanceID(gdID),
+		byzcoin.ContractDarcID, &gdarc); err != nil {
+		return xerrors.Errorf("couldn't get admin darc: %v", err)
 	}
-	v, _, _, err := p.Proof.Get(gdID)
-	if err != nil {
-		return err
-	}
-	gdarc, err := darc.NewFromProtobuf(v)
-	if err != nil {
-		return err
-	}
+
 	found := 0
 	spawners := []string{"credential", "coin", "spawner"}
 	invokes := []string{contracts.ContractCredentialID + ".update"}
@@ -930,7 +922,7 @@ func verifyAdminDarc(cl *byzcoin.Client, cfg lib.Config, signer darc.Signer) err
 	if found < len(spawners)+len(invokes) {
 		log.Info("Adding spawners and invokes to genesis darc")
 		gDarcNew := gdarc.Copy()
-		gDarcNew.EvolveFrom(gdarc)
+		gDarcNew.EvolveFrom(&gdarc)
 		for _, s := range spawners {
 			r := darc.Action("spawn:" + s)
 			log.Info("Adding", r)
