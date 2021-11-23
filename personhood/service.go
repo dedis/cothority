@@ -588,8 +588,9 @@ func (s *Service) EmailSignup(rq *EmailSignup) (*EmailSignupReply, error) {
 	}
 
 	log.Lvl2("Signing up new user: sending email")
+	cc := u.GetCredentialsCopy().GetPublic(contracts.APEmail)
 	err = s.storage.EmailConfig.SendMail(
-		rq.Email, "DEDIS/EPFL byzcoin setup",
+		rq.Email, string(cc), "DEDIS/EPFL byzcoin setup",
 		"This email is to inform you that you have been signed up for\r\n"+
 			"the DEDIS/Byzcoin blockchain.\r\n\n"+
 			"Please click on the following link to set up your account:\r\n\r\n"+
@@ -656,8 +657,9 @@ func (s *Service) EmailRecover(rq *EmailRecover) (*EmailRecoverReply, error) {
 			}
 
 			log.Lvl2("Recovering user: sending email")
+			cc := u.GetCredentialsCopy().GetPublic(contracts.APEmail)
 			err = s.storage.EmailConfig.SendMail(
-				rq.Email, "DEDIS/EPFL byzcoin recovery",
+				rq.Email, string(cc), "DEDIS/EPFL byzcoin recovery",
 				"This email is to recover your byzcoin account from\r\n"+
 					"the DEDIS/Byzcoin blockchain.\r\n\n"+
 					"Please click on the following link to recover your"+

@@ -209,7 +209,8 @@ func TestEmailConfig_SendMail(t *testing.T) {
 		SMTPFrom:    "noreply@epfl.ch",
 		SMTPReplyTo: "c4dt-services@listes.epfl.ch",
 	}
-	require.NoError(t, ec.SendMail("linus.gasser@epfl.ch", "Test",
+	require.NoError(t, ec.SendMail("linus.gasser@epfl.ch",
+		"c4dt-services@listes.epfl.ch", "Test",
 		fmt.Sprintf("This is a test message at %s",
 			time.Now().Format(time.RFC3339))))
 }
@@ -218,9 +219,10 @@ func TestEmailConfig_SendMailDummy(t *testing.T) {
 	var dummy bytes.Buffer
 	ec := emailConfig{dummy: &dummy}
 	to := "linus.gasser@epfl.ch"
+	cc := "c4dt-services@listes.epfl.ch"
 	subject := "Test"
 	body := "This is a test message"
-	require.NoError(t, ec.SendMail(to, subject, body))
+	require.NoError(t, ec.SendMail(to, cc, subject, body))
 	msg := dummy.String()
 	require.True(t, strings.Contains(msg, to))
 	require.True(t, strings.Contains(msg, subject))
