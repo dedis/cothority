@@ -69,7 +69,7 @@ type emailConfig struct {
 // SendMail sends an email to the given address. As the EPFL SMTP server
 // supports sending without authentication, the steps need to be done
 // manually.
-func (ec emailConfig) SendMail(to, subject, body string) error {
+func (ec emailConfig) SendMail(to, cc, subject, body string) error {
 	if ec.dummy != nil {
 		_, err := fmt.Fprintf(ec.dummy, "Sending email to %s: %s\n%s\n",
 			to, subject, body)
@@ -98,8 +98,7 @@ func (ec emailConfig) SendMail(to, subject, body string) error {
 	if err := client.Rcpt(to); err != nil {
 		return xerrors.Errorf("failed to set to: %v", err)
 	}
-	hardcodedCC := "c4dt-services@listes.epfl.ch"
-	if err := client.Rcpt(hardcodedCC); err != nil {
+	if err := client.Rcpt(cc); err != nil {
 		return xerrors.Errorf("failed to set cc: %v", err)
 	}
 	data, err := client.Data()
@@ -111,7 +110,7 @@ func (ec emailConfig) SendMail(to, subject, body string) error {
 		"CC: %s\r\n"+
 		"From: %s\r\n"+
 		"Subject: %s\r\n\r\n%s\r\n",
-		to, ec.SMTPReplyTo, hardcodedCC, ec.SMTPReplyTo, subject, body))
+		to, ec.SMTPReplyTo, cc, ec.SMTPReplyTo, subject, body))
 	if _, err := data.Write(msg); err != nil {
 		return xerrors.Errorf("failed to write data: %v", err)
 	}
