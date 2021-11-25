@@ -123,14 +123,14 @@ func (ub *Builder) createDarcs() error {
 	deviceDarcID := darc.NewIdentityDarc(ub.darcDevice.GetBaseID())
 
 	devicesExp := expression.Expr(deviceDarcID.String())
+	signerRules := darc.NewRules()
+	if err := signerRules.AddRule("_sign", devicesExp); err != nil {
+		return xerrors.Errorf("while updating sign: %v", err)
+	}
 	for _, recovery := range ub.credentialStruct.Get(contracts.CERecoveries).
 		Attributes {
 		devicesExp = devicesExp.AddOrElement(
 			darc.NewIdentityDarc(recovery.Value).String())
-	}
-	signerRules := darc.NewRules()
-	if err := signerRules.AddRule("_sign", devicesExp); err != nil {
-		return xerrors.Errorf("while updating sign: %v", err)
 	}
 	if err := signerRules.AddRule(byzcoin.ContractDarcInvokeEvolve,
 		devicesExp); err != nil {
