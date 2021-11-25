@@ -161,7 +161,7 @@ using docker.
 
 First, we need to get the conode program. The recommended way for getting the
 conode program is to download it from the official releases on
-[Github](https://github.com/dedis/cothority/releases) (replace with the latest
+[GitHub](https://github.com/dedis/cothority/releases) (replace with the latest
 version):
 
 ```bash
