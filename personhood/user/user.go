@@ -252,7 +252,7 @@ func (u User) Recover(other byzcoin.InstanceID, baseURL string) (string, error) 
 		return "", xerrors.New("can't recover this user")
 	}
 	newSigner := darc.NewSignerEd25519(nil, nil)
-	if err := u.createRecovery(baseURL, otherUser, newSigner); err != nil {
+	if err := u.createRecovery(otherUser, newSigner); err != nil {
 		return "", xerrors.Errorf("couldn't create recovery: %v", err)
 	}
 
@@ -275,7 +275,7 @@ func (u User) canRecover(otherUser User) bool {
 	return false
 }
 
-func (u User) createRecovery(baseURL string, otherUser User,
+func (u User) createRecovery(otherUser User,
 	newSigner darc.Signer) error {
 	recoveryDeviceIDs := []darc.Identity{newSigner.Identity()}
 	recoveryDeviceRules := darc.InitRulesWith(recoveryDeviceIDs, recoveryDeviceIDs, byzcoin.ContractDarcInvokeEvolve)
@@ -328,7 +328,10 @@ func (u User) createRecovery(baseURL string, otherUser User,
 			}},
 		},
 	}, 0)
-	ap.AddInstruction(byzcoin.Instruction{
+	if err := ap.SendTransaction(); err != nil {
+		return xerrors.Errorf("couldn't send transaction: %v", err)
+	}
+	ctx, err := u.cl.CreateTransaction(byzcoin.Instruction{
 		InstanceID: otherUser.CredIID,
 		Invoke: &byzcoin.Invoke{
 			ContractID: contracts.ContractCredentialID,
@@ -338,9 +341,15 @@ func (u User) createRecovery(baseURL string, otherUser User,
 				Value: credStructBuf,
 			}},
 		},
-	}, 0)
-	if err := ap.SendTransaction(); err != nil {
-		return xerrors.Errorf("couldn't send transaction: %v", err)
+	})
+	if err != nil {
+		return xerrors.Errorf("couldn't create transaction: %v", err)
+	}
+	if err := u.cl.SignTransaction(ctx, newSigner); err != nil {
+		return xerrors.Errorf("couldn't sign transaction: %v", err)
+	}
+	if _, err := u.cl.AddTransactionAndWait(ctx, 10); err != nil {
+		return xerrors.Errorf("couldn't add transaction: %v", err)
 	}
 
 	return nil
