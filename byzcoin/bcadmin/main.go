@@ -1744,8 +1744,7 @@ func getInfo(c *cli.Context) error {
 
 	if c.Bool("roster") {
 		group := app.Group{
-			Roster:      &bcCfg.Roster,
-			Description: map[*network.ServerIdentity]string{},
+			Roster: &bcCfg.Roster,
 		}
 		groupToml, err := group.Toml(cothority.Suite)
 		if err != nil {
