@@ -853,6 +853,10 @@ var cmds = cli.Commands{
 				EnvVar: "BC",
 				Usage:  "the ByzCoin config to use (required)",
 			},
+			cli.BoolFlag{
+				Name:  "roster",
+				Usage: "the full roster of the config",
+			},
 		},
 	},
 
