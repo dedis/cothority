@@ -1730,6 +1730,7 @@ func getInfo(c *cli.Context) error {
 		return err
 	}
 
+	log.Info("Fetching the latest config")
 	cl.UpdateNodes()
 	var bcCfg byzcoin.ChainConfig
 	if _, err := cl.GetInstance(byzcoin.ConfigInstanceID,
@@ -1740,6 +1741,18 @@ func getInfo(c *cli.Context) error {
 		"- BC: %s\n"+
 		"%v",
 		cfg.String(), bcArg, bcCfg)
+
+	if c.Bool("roster") {
+		group := app.Group{
+			Roster:      &bcCfg.Roster,
+			Description: map[*network.ServerIdentity]string{},
+		}
+		groupToml, err := group.Toml(cothority.Suite)
+		if err != nil {
+			return xerrors.Errorf("couldn't create toml: %v", err)
+		}
+		log.Infof("Full roster is:\n%s", groupToml.String())
+	}
 
 	return nil
 }
