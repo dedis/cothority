@@ -146,8 +146,18 @@ func TestUser_Recover(t *testing.T) {
 
 	recoverStr, err := user.Recover(user2.CredIID, "https://something.com")
 	require.NoError(t, err)
+	require.NoError(t, user2.UpdateSignerDarc())
 
 	user2recover, err := NewFromURL(ut.Client, recoverStr)
+	require.NoError(t, err)
+	require.Equal(t, user2.CredIID, user2recover.CredIID)
+	require.NoError(t, user2.UpdateSignerDarc())
+
+	// Recover a second time
+	recoverStr, err = user.Recover(user2.CredIID, "https://something.com")
+	require.NoError(t, err)
+
+	user2recover, err = NewFromURL(ut.Client, recoverStr)
 	require.NoError(t, err)
 	require.Equal(t, user2.CredIID, user2recover.CredIID)
 }

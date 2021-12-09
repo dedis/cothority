@@ -180,12 +180,24 @@ func TestService_EmailRecover(t *testing.T) {
 	require.Equal(t, uint64(2000), newUserCoin.Value)
 	require.Equal(t, contracts.SpawnerCoin, newUserCoin.Name)
 
+	// Test wrong email
 	reply, err := ts.s.EmailRecover(&EmailRecover{
 		Email: "linus.gasser2@epfl.ch",
 	})
 	require.Error(t, err)
 	require.Equal(t, EREUnknown, reply.Status)
 
+	// Test correct email
+	ts.dummyEmail.Reset()
+	reply, err = ts.s.EmailRecover(&EmailRecover{
+		Email: "linus.gasser@epfl.ch",
+	})
+	// Need to wait for the update to go through the network.
+	require.NoError(t, err)
+	require.Equal(t, ERERecovered, reply.Status)
+	time.Sleep(time.Second)
+
+	// Test correct email a 2nd time
 	ts.dummyEmail.Reset()
 	reply, err = ts.s.EmailRecover(&EmailRecover{
 		Email: "linus.gasser@epfl.ch",
