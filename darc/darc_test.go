@@ -748,3 +748,19 @@ func TestParseIdentity(t *testing.T) {
 	// ToLower() because common.Address uses address checksum (EIP-55)
 	require.Equal(t, in, strings.ToLower(i.String()))
 }
+
+// Test any identity
+func testIdentity(t *testing.T, sig Signer) {
+	msg := []byte("something secret")
+	signed, err := sig.Sign(msg)
+	require.NoError(t, err)
+
+	id := sig.Identity()
+	require.NoError(t, id.Verify(msg, signed))
+	require.Error(t, id.Verify([]byte("wrong message"), signed))
+}
+
+// Test the different identities available - currently only Ed25519.
+func TestIdentities(t *testing.T) {
+	testIdentity(t, NewSignerEd25519(nil, nil))
+}
