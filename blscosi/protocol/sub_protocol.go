@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"golang.org/x/xerrors"
 	"sync"
 	"time"
 
@@ -207,8 +208,7 @@ func (p *SubBlsCosi) dispatchRoot() error {
 		case err := <-subLeaderActive:
 			if err != nil {
 				p.subleaderNotResponding <- true
-				log.Warnf("Couldn't contact subleader: %v", err)
-				return nil
+				return xerrors.Errorf("Couldn't contact subleader: %v", err)
 			}
 		case <-p.closeChan:
 			return nil
@@ -245,7 +245,17 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 		return err
 	}
 
-	p.sendToChildren(a)
+	if len(p.Children()) > 0 {
+		for _, node := range p.Children() {
+			go func(node *onet.TreeNode) {
+				err := p.SendTo(node, a)
+				if err != nil {
+					log.Warnf("Error while sending to leaf %s: %v",
+						node.Name(), err)
+				}
+			}(node)
+		}
+	}
 
 	responses := make(ResponseMap)
 	for _, c := range p.Children() {
@@ -446,17 +456,4 @@ func (p *SubBlsCosi) checkIntegrity() error {
 	}
 
 	return nil
-}
-
-// sendToChildren does not collect error messages,
-// but doesn't block on nodes with a non-rejecting firewall in front of them.
-func (p *SubBlsCosi) sendToChildren(msg interface{}) {
-	for _, c := range p.Children() {
-		go func(tn *onet.TreeNode) {
-			err := p.SendTo(tn, msg)
-			if err != nil {
-				log.Warnf("Error while sending to children: %v", err)
-			}
-		}(c)
-	}
 }

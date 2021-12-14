@@ -104,9 +104,7 @@ func DefaultSubLeaders(nodes int) int {
 	if nodes == 1 {
 		return 1
 	}
-	// As `math.Pow` calculates `9 ** (1/2) < 3`,
-	// we add 0.0001 for the rounding error.
-	return int(math.Pow(float64(nodes-1), 1.0/2.0) + 0.0001)
+	return int(math.Pow(float64(nodes-1), 1.0/2.0))
 }
 
 // NewBlsCosi method is used to define the blscosi protocol.
