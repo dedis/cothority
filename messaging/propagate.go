@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"go.dedis.ch/cothority/v3/blscosi/protocol"
 	"reflect"
-	"strings"
 	"sync"
 	"time"
 
@@ -208,16 +207,7 @@ func (p *Propagate) Dispatch() error {
 				process = false
 			}
 			log.Lvl3(p.ServerIdentity(), "Sending to children", p.Children())
-			if errs = p.SendToChildrenInParallel(&msg.PropagateSendData); len(errs) != 0 {
-				errsStr := make([]string, len(errs))
-				for i, e := range errs {
-					errsStr[i] = e.Error()
-				}
-				log.Lvl2("Error while sending to children:", errsStr)
-				if len(errs) > p.allowedFailures {
-					return errors.New(strings.Join(errsStr, "\n"))
-				}
-			}
+			p.sendToChildren(&msg.PropagateSendData)
 		case <-p.ChannelReply:
 			if !gotSendData {
 				log.Error("got response before send")
@@ -274,4 +264,17 @@ func (p *Propagate) Config(d []byte, timeout time.Duration) {
 func (p *Propagate) Shutdown() error {
 	close(p.closing)
 	return nil
+}
+
+// sendToChildren does not collect error messages,
+// but doesn't block on nodes with a non-rejecting firewall in front of them.
+func (p *Propagate) sendToChildren(msg interface{}) {
+	for _, c := range p.Children() {
+		go func(tn *onet.TreeNode) {
+			err := p.SendTo(tn, msg)
+			if err != nil {
+				log.Warnf("Error while sending to children: %v", err)
+			}
+		}(c)
+	}
 }

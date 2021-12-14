@@ -192,7 +192,7 @@ func TestProtocol_FailingLeaves_25_9(t *testing.T) {
 func TestDefaultSubLeaders(t *testing.T) {
 	require.Equal(t, DefaultSubLeaders(1), 1)
 	for subleaders := 2; subleaders < 58; subleaders++ {
-		nodes := int(math.Pow(float64(subleaders), 3.0))
+		nodes := int(math.Pow(float64(subleaders), 2.0)) + 1
 		require.Equal(t, DefaultSubLeaders(nodes-1), subleaders-1)
 		require.Equal(t, DefaultSubLeaders(nodes), subleaders)
 	}
