@@ -2,6 +2,7 @@ package calypso
 
 import (
 	"fmt"
+	"go.dedis.ch/kyber/v3"
 	"strings"
 
 	"go.dedis.ch/cothority/v3"
@@ -277,4 +278,49 @@ func (c ContractWrite) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst byz
 		return inst.VerifyWithOption(rst, ctxHash, &byzcoin.VerificationOptions{EvalAttr: evalAttr})
 	}
 	return inst.VerifyWithOption(rst, ctxHash, nil)
+}
+
+// ContractWriteSpawnInstruction returns the spawn instruction for a Write
+// contract.
+func ContractWriteSpawnInstruction(wr *Write,
+	d *darc.Darc) (*byzcoin.Instruction, error) {
+	writeBuf, err := protobuf.Encode(wr)
+	if err != nil {
+		return nil, xerrors.Errorf("couldn't encode write: %v", err)
+	}
+	return &byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(d.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: ContractWriteID,
+			Args: byzcoin.Arguments{
+				{
+					Name:  "write",
+					Value: writeBuf,
+				},
+			},
+		},
+	}, nil
+}
+
+// ContractReadSpawnInstruction returns the spawn instruction for a Read
+// contract.
+func ContractReadSpawnInstruction(wrID byzcoin.InstanceID,
+	xc kyber.Point) (*byzcoin.Instruction, error) {
+	var readBuf []byte
+	read := &Read{
+		Write: wrID,
+		Xc:    xc,
+	}
+	readBuf, err := protobuf.Encode(read)
+	if err != nil {
+		return nil, xerrors.Errorf("encoding Read message: %v", err)
+	}
+
+	return &byzcoin.Instruction{
+		InstanceID: wrID,
+		Spawn: &byzcoin.Spawn{
+			ContractID: ContractReadID,
+			Args:       byzcoin.Arguments{{Name: "read", Value: readBuf}},
+		},
+	}, nil
 }
