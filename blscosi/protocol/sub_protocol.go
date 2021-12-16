@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"golang.org/x/xerrors"
 	"sync"
 	"time"
 
@@ -190,36 +191,42 @@ func (p *SubBlsCosi) dispatchRoot() error {
 		return nil
 	}
 
-	// Only one child anyway
-	err := p.SendToChildren(&Announcement{
-		Msg:       p.Msg,
-		Data:      p.Data,
-		Timeout:   p.Timeout,
-		Threshold: p.Threshold,
-	})
-	if err != nil {
-		// Only log what happened so we can try to finish the protocol
-		// (e.g. one child is offline)
-		log.Warnf("Error when broadcasting to children: %s", err.Error())
-	}
+	subLeaderActive := make(chan error, 1)
+	// Because SendToChildren blocks on some firewalls instead of returning
+	// an error, this call is put in a go-routine.
+	go func() {
+		subLeaderActive <- p.SendToChildren(&Announcement{
+			Msg:       p.Msg,
+			Data:      p.Data,
+			Timeout:   p.Timeout,
+			Threshold: p.Threshold,
+		})
+	}()
 
-	select {
-	case <-p.closeChan:
-		return nil
-	case reply := <-p.ChannelResponse:
-		if reply.Equal(p.Root().Children[0]) {
-			// Transfer the response to the parent protocol
-			p.subResponse <- reply
+	for {
+		select {
+		case err := <-subLeaderActive:
+			if err != nil {
+				p.subleaderNotResponding <- true
+				return xerrors.Errorf("Couldn't contact subleader: %v", err)
+			}
+		case <-p.closeChan:
+			return nil
+		case reply := <-p.ChannelResponse:
+			if reply.Equal(p.Root().Children[0]) {
+				// Transfer the response to the parent protocol
+				p.subResponse <- reply
+			}
+			return nil
+		case <-time.After(p.Timeout):
+			// It might be only the subleader then we send a notification
+			// to let the parent protocol take actions
+			log.Warnf("%s: timed out while waiting for subleader response while %s",
+				p.ServerIdentity(), p.Tree().Dump())
+			p.subleaderNotResponding <- true
+			return nil
 		}
-	case <-time.After(p.Timeout):
-		// It might be only the subleader then we send a notification
-		// to let the parent protocol take actions
-		log.Warnf("%s: timed out while waiting for subleader response while %s",
-			p.ServerIdentity(), p.Tree().Dump())
-		p.subleaderNotResponding <- true
 	}
-
-	return nil
 }
 
 // dispatchSubLeader takes care of synchronizing the children
@@ -238,9 +245,16 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 		return err
 	}
 
-	errs := p.SendToChildrenInParallel(a)
-	if len(errs) > 0 {
-		log.Error(errs)
+	if len(p.Children()) > 0 {
+		for _, node := range p.Children() {
+			go func(node *onet.TreeNode) {
+				err := p.SendTo(node, a)
+				if err != nil {
+					log.Warnf("Error while sending to leaf %s: %v",
+						node.Name(), err)
+				}
+			}(node)
+		}
 	}
 
 	responses := make(ResponseMap)
@@ -264,9 +278,7 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 	// we need to timeout the children faster than the root timeout to let it
 	// know the subleader is alive, but some children are failing
 	timeout := time.After(p.Timeout / 2)
-	// If an error happens when sending the announcement, we can assume there
-	// will be a timeout from this node
-	done := len(errs)
+	done := 0
 	for done < len(p.Children()) {
 		select {
 		case <-p.closeChan:

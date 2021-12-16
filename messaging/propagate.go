@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"go.dedis.ch/cothority/v3/blscosi/protocol"
 	"reflect"
-	"strings"
 	"sync"
 	"time"
 
@@ -173,6 +172,7 @@ func (p *Propagate) Dispatch() error {
 	var gotSendData bool
 	var errs []error
 	subtreeCount := p.TreeNode().SubtreeCount()
+	errsChan := make(chan error, subtreeCount)
 
 	for process {
 		p.Lock()
@@ -208,15 +208,18 @@ func (p *Propagate) Dispatch() error {
 				process = false
 			}
 			log.Lvl3(p.ServerIdentity(), "Sending to children", p.Children())
-			if errs = p.SendToChildrenInParallel(&msg.PropagateSendData); len(errs) != 0 {
-				errsStr := make([]string, len(errs))
-				for i, e := range errs {
-					errsStr[i] = e.Error()
-				}
-				log.Lvl2("Error while sending to children:", errsStr)
-				if len(errs) > p.allowedFailures {
-					return errors.New(strings.Join(errsStr, "\n"))
-				}
+
+			// Just blindly send to the children - we don't care if they receive it or
+			// not. If they don't receive it, they will complain later.
+			for _, c := range p.Children() {
+				go func(tn *onet.TreeNode) {
+					err := p.SendTo(tn, &msg.PropagateSendData)
+					if err != nil {
+						log.Warnf("Error while sending to child %s: %v",
+							tn.Name(), err)
+						errsChan <- err
+					}
+				}(c)
 			}
 		case <-p.ChannelReply:
 			if !gotSendData {
@@ -229,6 +232,11 @@ func (p *Propagate) Dispatch() error {
 				if err := p.SendToParent(&PropagateReply{}); err != nil {
 					return err
 				}
+			}
+			errsChan <- nil
+		case err := <-errsChan:
+			if err != nil {
+				errs = append(errs, err)
 			}
 			// Only wait for the number of children that successfully received our message.
 			if received == subtreeCount-len(errs) && received >= subtreeCount-p.allowedFailures {

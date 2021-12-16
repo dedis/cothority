@@ -99,13 +99,12 @@ func DefaultThreshold(n int) int {
 }
 
 // DefaultSubLeaders returns the number of sub-leaders, which is the
-// cube-root of the number of nodes.
+// square root of the number of nodes - 1.
 func DefaultSubLeaders(nodes int) int {
-	// As `math.Pow` calculates `8 ** (1/3) < 2`,
-	// we add 0.0001 for the rounding error.
-	// This works for up to 57 ** 3 = 185'193, which should be enough
-	// nodes.
-	return int(math.Pow(float64(nodes), 1.0/3.0) + 0.0001)
+	if nodes == 1 {
+		return 1
+	}
+	return int(math.Pow(float64(nodes-1), 1.0/2.0))
 }
 
 // NewBlsCosi method is used to define the blscosi protocol.
