@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/kyber/v3/util/key"
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
@@ -216,4 +217,127 @@ func TestClient_Calypso(t *testing.T) {
 	require.Equal(t, key1, keyCopy1)
 
 	// use keyCopy to unlock the stuff in writeInstance.Data
+}
+
+// Tests the Calypso system with a simple write/read scenario.
+// But it does the signing outside of the `Read` and `Write` methods for
+// integration of the MPC signing by OneKey.
+func TestClient_Calypso_Simple(t *testing.T) {
+	l := onet.NewTCPTest(cothority.Suite)
+	_, roster, _ := l.GenTree(3, true)
+	defer l.CloseAll()
+
+	admin := darc.NewSignerEd25519(nil, nil)
+	adminCt := uint64(1)
+	user := darc.NewSignerEd25519(nil, nil)
+	// Initialise the genesis message and send it to the service.
+	// The admin has the privilege to spawn darcs
+	msg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
+		[]string{"spawn:" + ContractLongTermSecretID},
+		admin.Identity())
+
+	msg.BlockInterval = 500 * time.Millisecond
+	require.NoError(t, err)
+	// The darc inside it should be valid.
+	gDarc := msg.GenesisDarc
+	require.Nil(t, gDarc.Verify(true))
+	//Create Ledger
+	c, _, err := byzcoin.NewLedger(msg, false)
+	require.NoError(t, err)
+	//Create a Calypso Client (Byzcoin + Onet)
+	calypsoClient := NewClient(c)
+
+	//Create the LTS sets up an aggregate public key used by the secret management committee
+	for _, who := range roster.List {
+		err := calypsoClient.Authorize(who, c.ID)
+		require.NoError(t, err)
+	}
+	ltsReply, err := calypsoClient.CreateLTS(roster, gDarc.GetBaseID(), []darc.Signer{admin}, []uint64{adminCt})
+	adminCt++
+	require.NoError(t, err)
+	//If no error, assign it
+	calypsoClient.ltsReply = ltsReply
+
+	//Create a signer darc
+	userDarc := darc.NewDarc(darc.InitRules([]darc.Identity{user.Identity()},
+		[]darc.Identity{user.Identity()}), []byte("Provider1"))
+	// user can read and write.
+	// This can be changed to two different public keys.
+	err = userDarc.Rules.AddRule(darc.Action("spawn:"+ContractWriteID),
+		expression.InitOrExpr(user.Identity().String()))
+	require.NoError(t, err)
+	err = userDarc.Rules.AddRule(darc.Action("spawn:"+ContractReadID),
+		expression.InitOrExpr(user.Identity().String()))
+	require.NoError(t, err)
+	require.NotNil(t, userDarc)
+	_, err = calypsoClient.SpawnDarc(admin, adminCt, gDarc, *userDarc, 10)
+	adminCt++
+	require.NoError(t, err)
+
+	data := []byte("Some secret data - or the user's private key")
+	// Create a Write structure
+	write1, err := NewWriteData(cothority.Suite,
+		calypsoClient.ltsReply.InstanceID,
+		userDarc.GetBaseID(), calypsoClient.ltsReply.X, data)
+	require.NoError(t, err)
+
+	// Create a write-instance and send it to Byzcoin - here
+	// the instruction and the transaction is created manually,
+	// so that an external signer can sign the hash of the instruction.
+	wrInst, err := ContractWriteSpawnInstruction(write1, userDarc)
+	require.NoError(t, err)
+	wrInst.SignerCounter = []uint64{1}
+	wrInst.SignerIdentities = []darc.Identity{user.Identity()}
+	wrTx, err := calypsoClient.bcClient.CreateTransaction(*wrInst)
+	require.NoError(t, err)
+	digest := wrTx.Instructions.Hash()
+
+	// This signature can be replaced by an external signature.
+	signature, err := user.Sign(digest)
+	require.NoError(t, err)
+	wrTx.Instructions[0].Signatures = [][]byte{signature}
+
+	// Send the transaction to ByzCoin
+	_, err = calypsoClient.bcClient.AddTransactionAndWait(wrTx, 10)
+	require.NoError(t, err)
+	wrID := wrTx.Instructions[0].DeriveID("")
+	proofWr, err := calypsoClient.WaitProof(wrID, time.Second, nil)
+	require.NoError(t, err)
+
+	// Create a read-instance and send it to ByzCoin.
+	ephemeral := key.NewKeyPair(cothority.Suite)
+	readInst, err := ContractReadSpawnInstruction(wrID, ephemeral.Public)
+	require.NoError(t, err)
+	readInst.SignerCounter = []uint64{2}
+	readInst.SignerIdentities = []darc.Identity{user.Identity()}
+	readTx, err := calypsoClient.bcClient.CreateTransaction(*readInst)
+	require.NoError(t, err)
+	digest = readTx.Instructions.Hash()
+
+	// This signature can be replaced by an external signature
+	signature, err = user.Sign(digest)
+	require.NoError(t, err)
+	readTx.Instructions[0].Signatures = [][]byte{signature}
+	readID := readTx.Instructions[0].DeriveID("")
+
+	// Send the transaction to ByzCoin
+	_, err = calypsoClient.bcClient.AddTransactionAndWait(readTx, 10)
+	require.NoError(t, err)
+	proofRd, err := calypsoClient.WaitProof(readID, time.Second,
+		nil)
+	require.NoError(t, err)
+
+	// Make sure you can actually decrypt
+	dk, err := calypsoClient.DecryptKey(&DecryptKey{Read: *proofRd,
+		Write: *proofWr})
+	require.NoError(t, err)
+	require.True(t, dk.X.Equal(calypsoClient.ltsReply.X))
+	keyCopy, err := dk.RecoverKey(ephemeral.Private)
+	require.NoError(t, err)
+	var wrCopy Write
+	require.NoError(t, proofWr.VerifyAndDecode(cothority.Suite, ContractWriteID,
+		&wrCopy))
+	dataDecrypt, err := wrCopy.Decrypt(keyCopy)
+	require.NoError(t, err)
+	require.Equal(t, data, dataDecrypt)
 }
