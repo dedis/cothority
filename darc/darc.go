@@ -868,6 +868,8 @@ func (id Identity) Type() int {
 		return 3
 	case id.EvmContract != nil:
 		return 4
+	case id.ECDSA != nil:
+		return 5
 	}
 	return -1
 }
