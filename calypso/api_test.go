@@ -2,11 +2,11 @@ package calypso
 
 import (
 	"encoding/binary"
-	"go.dedis.ch/kyber/v3/util/key"
 	"testing"
 	"time"
 
 	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/kyber/v3/util/key"
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
@@ -167,7 +167,6 @@ func TestClient_Calypso(t *testing.T) {
 	_, err = calypsoClient.SpawnDarc(admin, adminCt, gDarc, *darc2, 10)
 	adminCt++
 	require.NoError(t, err)
-
 	//Create a secret key
 	key1 := []byte("secret key 1")
 	//Create a Write instance

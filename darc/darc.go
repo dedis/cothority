@@ -33,6 +33,7 @@ package darc
 import (
 	"bytes"
 	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/sha256"
 	"crypto/sha512"
 	"crypto/x509"
@@ -773,6 +774,8 @@ func (s Signer) Type() int {
 		return 3
 	case s.EvmContract != nil:
 		return 4
+	case s.ECDSA != nil:
+		return 5
 	default:
 		return -1
 	}
@@ -790,6 +793,8 @@ func (s Signer) Identity() Identity {
 		return NewIdentityProxy(s.Proxy)
 	case 4:
 		return NewIdentityEvmContract(s.EvmContract)
+	case 5:
+		return NewIdentityECDSA(s.ECDSA.PublicKey)
 	default:
 		return Identity{}
 	}
@@ -863,6 +868,8 @@ func (id Identity) Type() int {
 		return 3
 	case id.EvmContract != nil:
 		return 4
+	case id.ECDSA != nil:
+		return 5
 	}
 	return -1
 }
@@ -937,6 +944,8 @@ func (id Identity) Verify(msg, sig []byte) error {
 		return id.Proxy.Verify(msg, sig)
 	case 4:
 		return id.EvmContract.Verify(msg, sig)
+	case 5:
+		return id.ECDSA.Verify(msg, sig)
 	default:
 		return errors.New("unknown identity")
 	}
@@ -964,6 +973,10 @@ func (id Identity) GetPublicBytes() []byte {
 		return buf
 	case 4:
 		return id.EvmContract.Address[:]
+	case 5:
+		buf := elliptic.Marshal(id.ECDSA.PublicKey.Curve, id.ECDSA.PublicKey.X, id.ECDSA.PublicKey.Y)
+		//TODO: add error check here?
+		return buf
 	default:
 		return nil
 	}
@@ -1010,6 +1023,25 @@ func NewIdentityX509EC(public []byte) Identity {
 			Public: public,
 		},
 	}
+}
+
+// NewIdentityECDSA creates a new ECDSA identity struct given a public key
+func NewIdentityECDSA(publicKey ecdsa.PublicKey) Identity {
+	return Identity{
+		ECDSA: &IdentityECDSA{
+			PublicKey: publicKey,
+		},
+	}
+}
+
+//TODO make calls to tsm  available
+func (ide IdentityECDSA) Verify(msg []byte, sig []byte) error {
+	hashMsg := sha256.Sum256(msg)
+	valid := ecdsa.VerifyASN1(&ide.PublicKey, hashMsg[:], sig)
+	if !valid {
+		return errors.New("Signature failed to verify")
+	}
+	return nil
 }
 
 // NewIdentityProxy creates a new OpenID Connect identity struct.
@@ -1120,6 +1152,8 @@ func ParseIdentity(in string) (Identity, error) {
 		return parseIDProxy(fields[1])
 	case "evm_contract":
 		return parseIDEvmContract(fields[1])
+	case "secp256k1":
+		return parseIDECDSA(fields[1])
 	default:
 		return Identity{}, fmt.Errorf("unknown identity type %v", fields[0])
 	}
@@ -1140,6 +1174,25 @@ func parseIDX509ec(in string) (Identity, error) {
 		return Identity{}, err
 	}
 	return Identity{X509EC: &IdentityX509EC{Public: id}}, nil
+}
+
+//necessary function, needs to be refactored only supports elliptic.P256 curve
+//needs to be tested Unmarshal might not work
+func parseIDECDSA(in string) (Identity, error) {
+	id := make([]byte, hex.DecodedLen(len(in)))
+	_, err := hex.Decode(id, []byte(in))
+
+	x, y := elliptic.Unmarshal(elliptic.P256(), id)
+
+	pubkey := ecdsa.PublicKey{
+		Curve: elliptic.P256(),
+		X:     x,
+		Y:     y,
+	}
+	if err != nil {
+		return Identity{}, err
+	}
+	return Identity{ECDSA: &IdentityECDSA{PublicKey: pubkey}}, nil
 }
 
 func parseIDDarc(in string) (Identity, error) {
@@ -1444,6 +1497,22 @@ func NewSignerX509EC() Signer {
 
 // Sign creates a RSA signature on the message.
 func (kcs SignerX509EC) Sign(msg []byte) ([]byte, error) {
+	return nil, errors.New("not yet implemented")
+}
+
+// new signer creates a signer only with a public key used to verify signatures
+func NewSignerECDSA(public ecdsa.PublicKey) Signer {
+	if public.X == nil {
+		return Signer{}
+	}
+	return Signer{ECDSA: &SignerECDSA{
+		PublicKey: public,
+	}}
+}
+
+//TODO
+func (kcs SignerECDSA) Sign(msg []byte) ([]byte, error) {
+	//call tsm to sign
 	return nil, errors.New("not yet implemented")
 }
 

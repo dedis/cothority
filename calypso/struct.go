@@ -6,6 +6,8 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
+	"io"
+
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
@@ -15,7 +17,6 @@ import (
 	"go.dedis.ch/kyber/v3/xof/keccak"
 	"go.dedis.ch/onet/v3/network"
 	"golang.org/x/xerrors"
-	"io"
 )
 
 func init() {
