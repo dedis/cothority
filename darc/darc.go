@@ -1500,8 +1500,14 @@ func (kcs SignerX509EC) Sign(msg []byte) ([]byte, error) {
 	return nil, errors.New("not yet implemented")
 }
 
-func NewSignerECDSA() Signer {
-	return Signer{}
+// new signer creates a signer only with a public key used to verify signatures
+func NewSignerECDSA(public ecdsa.PublicKey) Signer {
+	if public.X == nil {
+		return Signer{}
+	}
+	return Signer{ECDSA: &SignerECDSA{
+		PublicKey: public,
+	}}
 }
 
 //TODO
