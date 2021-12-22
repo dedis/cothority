@@ -2,7 +2,6 @@ package calypso
 
 import (
 	"fmt"
-	"go.dedis.ch/kyber/v3"
 	"strings"
 
 	"go.dedis.ch/cothority/v3"
