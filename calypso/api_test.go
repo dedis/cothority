@@ -1,12 +1,15 @@
 package calypso
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"encoding/binary"
-	"go.dedis.ch/kyber/v3/util/key"
+	"math/big"
 	"testing"
 	"time"
 
 	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/kyber/v3/util/key"
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
@@ -165,7 +168,6 @@ func TestClient_Calypso(t *testing.T) {
 	_, err = calypsoClient.SpawnDarc(admin, adminCt, gDarc, *darc2, 10)
 	adminCt++
 	require.NoError(t, err)
-
 	//Create a secret key
 	key1 := []byte("secret key 1")
 	//Create a Write instance
@@ -226,9 +228,18 @@ func TestClient_Calypso_Simple(t *testing.T) {
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 
+	//create an example public key
+	var x, _ = new(big.Int).SetString("25613385885653880697990944418179706546134037329992108968315147853972798913688", 10)
+	var y, _ = new(big.Int).SetString("74946767262888349555270609195205284686604880870734462312238891495596941025713", 10)
+	pk := ecdsa.PublicKey{
+		Curve: elliptic.P256(),
+		X:     x,
+		Y:     y,
+	}
+
 	admin := darc.NewSignerEd25519(nil, nil)
 	adminCt := uint64(1)
-	user := darc.NewSignerEd25519(nil, nil)
+	user := darc.NewSignerECDSA(pk)
 	// Initialise the genesis message and send it to the service.
 	// The admin has the privilege to spawn darcs
 	msg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
@@ -290,6 +301,7 @@ func TestClient_Calypso_Simple(t *testing.T) {
 	digest := wrTx.Instructions.Hash()
 
 	// This signature can be replaced by an external signature.
+	//TODO add sepior signature of digest here
 	signature, err := user.Sign(digest)
 	require.NoError(t, err)
 	wrTx.Instructions[0].Signatures = [][]byte{signature}
@@ -312,6 +324,7 @@ func TestClient_Calypso_Simple(t *testing.T) {
 	digest = readTx.Instructions.Hash()
 
 	// This signature can be replaced by an external signature
+	// TODO add signature on digest from MPC nodes
 	signature, err = user.Sign(digest)
 	require.NoError(t, err)
 	readTx.Instructions[0].Signatures = [][]byte{signature}

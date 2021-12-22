@@ -1,8 +1,12 @@
 package darc
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"math/big"
 	"net/url"
 	"strings"
 	"testing"
@@ -750,17 +754,25 @@ func TestParseIdentity(t *testing.T) {
 }
 
 // Test any identity
-func testIdentity(t *testing.T, sig Signer) {
-	msg := []byte("something secret")
-	signed, err := sig.Sign(msg)
-	require.NoError(t, err)
+func testIdentity(t *testing.T, id Identity) {
+	msg := []byte(`Hello World`)
 
-	id := sig.Identity()
+	//Signature from code example go-tsm-sdk corresponding to ecdsa public key example
+	signed, _ := hex.DecodeString("304402204f0b20a44efacec7b0514683233a79552026fe80e468078f6fed6cfe3f3e8a0402201eb12db7f6fe0828cafe8b0a032a37ff377b342799cfe77cfbac40c8ec1fa9e8")
+
 	require.NoError(t, id.Verify(msg, signed))
 	require.Error(t, id.Verify([]byte("wrong message"), signed))
 }
 
 // Test the different identities available - currently only Ed25519.
 func TestIdentities(t *testing.T) {
-	testIdentity(t, NewSignerEd25519(nil, nil))
+	//Ecdsa public key example
+	var x, _ = new(big.Int).SetString("25613385885653880697990944418179706546134037329992108968315147853972798913688", 10)
+	var y, _ = new(big.Int).SetString("74946767262888349555270609195205284686604880870734462312238891495596941025713", 10)
+	pk := ecdsa.PublicKey{
+		Curve: elliptic.P256(),
+		X:     x,
+		Y:     y,
+	}
+	testIdentity(t, NewIdentityECDSA(pk))
 }
