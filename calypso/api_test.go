@@ -138,8 +138,6 @@ func TestClient_Calypso(t *testing.T) {
 	ltsReply, err := calypsoClient.CreateLTS(roster, gDarc.GetBaseID(), []darc.Signer{admin}, []uint64{adminCt})
 	adminCt++
 	require.NoError(t, err)
-	//If no error, assign it
-	calypsoClient.ltsReply = ltsReply
 
 	//Create a signer, darc for data point #1
 	darc1 := darc.NewDarc(darc.InitRules([]darc.Identity{provider1.Identity()},
@@ -171,8 +169,8 @@ func TestClient_Calypso(t *testing.T) {
 	//Create a secret key
 	key1 := []byte("secret key 1")
 	//Create a Write instance
-	write1 := NewWrite(cothority.Suite, calypsoClient.ltsReply.InstanceID,
-		darc1.GetBaseID(), calypsoClient.ltsReply.X, key1)
+	write1 := NewWrite(cothority.Suite, ltsReply.InstanceID,
+		darc1.GetBaseID(), ltsReply.X, key1)
 	//Write it to calypso
 	wr1, err := calypsoClient.AddWrite(write1, provider1, 1, *darc1, 10)
 	require.NoError(t, err)
@@ -190,8 +188,8 @@ func TestClient_Calypso(t *testing.T) {
 
 	key2 := []byte("secret key 2")
 	//Create a Write instance
-	write2 := NewWrite(cothority.Suite, calypsoClient.ltsReply.InstanceID,
-		darc2.GetBaseID(), calypsoClient.ltsReply.X, key2)
+	write2 := NewWrite(cothority.Suite, ltsReply.InstanceID,
+		darc2.GetBaseID(), ltsReply.X, key2)
 	wr2, err := calypsoClient.AddWrite(write2, provider2, 1, *darc2, 10)
 	require.NoError(t, err)
 	prWr2, err := calypsoClient.WaitProof(wr2.InstanceID, time.Second, nil)
@@ -212,7 +210,7 @@ func TestClient_Calypso(t *testing.T) {
 	// Make sure you can actually decrypt
 	dk1, err := calypsoClient.DecryptKey(&DecryptKey{Read: *prRe1, Write: *prWr1})
 	require.NoError(t, err)
-	require.True(t, dk1.X.Equal(calypsoClient.ltsReply.X))
+	require.True(t, dk1.X.Equal(ltsReply.X))
 	keyCopy1, err := dk1.RecoverKey(reader1.Ed25519.Secret)
 	require.NoError(t, err)
 	require.Equal(t, key1, keyCopy1)
@@ -256,8 +254,6 @@ func TestClient_Calypso_Simple(t *testing.T) {
 	ltsReply, err := calypsoClient.CreateLTS(roster, gDarc.GetBaseID(), []darc.Signer{admin}, []uint64{adminCt})
 	adminCt++
 	require.NoError(t, err)
-	//If no error, assign it
-	calypsoClient.ltsReply = ltsReply
 
 	//Create a signer darc
 	userDarc := darc.NewDarc(darc.InitRules([]darc.Identity{user.Identity()},
@@ -278,8 +274,8 @@ func TestClient_Calypso_Simple(t *testing.T) {
 	data := []byte("Some secret data - or the user's private key")
 	// Create a Write structure
 	write1, err := NewWriteData(cothority.Suite,
-		calypsoClient.ltsReply.InstanceID,
-		userDarc.GetBaseID(), calypsoClient.ltsReply.X, data)
+		ltsReply.InstanceID,
+		userDarc.GetBaseID(), ltsReply.X, data)
 	require.NoError(t, err)
 
 	// Create a write-instance and send it to Byzcoin - here
@@ -332,7 +328,7 @@ func TestClient_Calypso_Simple(t *testing.T) {
 	dk, err := calypsoClient.DecryptKey(&DecryptKey{Read: *proofRd,
 		Write: *proofWr})
 	require.NoError(t, err)
-	require.True(t, dk.X.Equal(calypsoClient.ltsReply.X))
+	require.True(t, dk.X.Equal(ltsReply.X))
 	keyCopy, err := dk.RecoverKey(ephemeral.Private)
 	require.NoError(t, err)
 	var wrCopy Write
