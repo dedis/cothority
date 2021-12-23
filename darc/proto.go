@@ -187,7 +187,6 @@ type SignerX509EC struct {
 // SignerTSM holds a public and private keys necessary to sign Darcs,
 // but the private key will not be given out.
 type SignerTSM struct {
-	PublicKey  ecdsa.PublicKey
 	PrivateKey ecdsa.PrivateKey
 }
 

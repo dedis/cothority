@@ -451,14 +451,9 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops 
 	// check the signature
 	// Save the identities that provide good signatures
 	identitiesWithCorrectSignatures := make([]string, 0)
-	log.Print("SignerIdentities:", instr.SignerIdentities)
 	for i := range instr.Signatures {
 		if err := instr.SignerIdentities[i].Verify(msg, instr.Signatures[i]); err == nil {
-			log.Printf("OK when checking %s with %x", msg, instr.Signatures[i])
 			identitiesWithCorrectSignatures = append(identitiesWithCorrectSignatures, instr.SignerIdentities[i].String())
-		} else {
-			log.Printf("Failed when checking %s with %x", msg,
-				instr.Signatures[i])
 		}
 	}
 

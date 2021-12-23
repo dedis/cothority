@@ -2,10 +2,7 @@ package calypso
 
 import (
 	"crypto/ecdsa"
-	"crypto/elliptic"
-	"crypto/rand"
 	"encoding/binary"
-	"go.dedis.ch/onet/v3/log"
 	"testing"
 	"time"
 
@@ -231,14 +228,9 @@ func TestClient_Calypso_Simple(t *testing.T) {
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 
-	//create an example public key
-	random := rand.Reader
-	p, err := ecdsa.GenerateKey(elliptic.P256(), random)
-	//require.NoError(t, err)
-
 	admin := darc.NewSignerEd25519(nil, nil)
 	adminCt := uint64(1)
-	user := darc.NewSignerTSM(p.PublicKey)
+	user := darc.NewSignerTSM(ecdsa.PrivateKey{})
 	//user := darc.NewSignerEd25519(nil, nil)
 	// Initialise the genesis message and send it to the service.
 	// The admin has the privilege to spawn darcs
@@ -304,11 +296,9 @@ func TestClient_Calypso_Simple(t *testing.T) {
 
 	// This signature can be replaced by an external signature.
 	//TODO add sepior signature of digest here
-	signature, err := ecdsa.SignASN1(random, p, digest)
-	//signature, err := user.Sign(digest)
+	signature, err := user.Sign(digest)
 	require.NoError(t, err)
 	wrTx.Instructions[0].Signatures = [][]byte{signature}
-	log.Printf("wrTx is: %+v", wrTx)
 
 	// Send the transaction to ByzCoin
 	_, err = calypsoClient.bcClient.AddTransactionAndWait(wrTx, 10)
@@ -329,8 +319,7 @@ func TestClient_Calypso_Simple(t *testing.T) {
 
 	// This signature can be replaced by an external signature
 	// TODO add signature on digest from MPC nodes
-	signature, err = ecdsa.SignASN1(random, p, digest)
-	//signature, err = user.Sign(digest)
+	signature, err = user.Sign(digest)
 	require.NoError(t, err)
 	readTx.Instructions[0].Signatures = [][]byte{signature}
 	readID := readTx.Instructions[0].DeriveID("")

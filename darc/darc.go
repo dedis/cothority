@@ -34,6 +34,7 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"crypto/elliptic"
+	"crypto/rand"
 	"crypto/sha256"
 	"crypto/sha512"
 	"crypto/x509"
@@ -797,7 +798,7 @@ func (s Signer) Identity() Identity {
 	case 4:
 		return NewIdentityEvmContract(s.EvmContract)
 	case 6:
-		return NewIdentityTSM(s.TSM.PublicKey)
+		return NewIdentityTSM(s.TSM.PrivateKey.PublicKey)
 	default:
 		return Identity{}
 	}
@@ -819,6 +820,8 @@ func (s Signer) Sign(msg []byte) ([]byte, error) {
 		return s.Proxy.Sign(msg)
 	case 4:
 		return s.EvmContract.Sign(msg)
+	case 6:
+		return s.TSM.Sign(msg)
 	default:
 		return nil, errors.New("unknown signer type")
 	}
@@ -951,7 +954,7 @@ func (id Identity) Verify(msg, sig []byte) error {
 		return id.Proxy.Verify(msg, sig)
 	case 4:
 		return id.EvmContract.Verify(msg, sig)
-	case 5:
+	case 6:
 		return id.TSM.Verify(msg, sig)
 	default:
 		return errors.New("unknown identity")
@@ -980,7 +983,7 @@ func (id Identity) GetPublicBytes() []byte {
 		return buf
 	case 4:
 		return id.EvmContract.Address[:]
-	case 5:
+	case 6:
 		buf := elliptic.Marshal(id.TSM.PublicKey.Curve, id.TSM.PublicKey.X, id.TSM.PublicKey.Y)
 		//TODO: add error check here?
 		return buf
@@ -1043,8 +1046,7 @@ func NewIdentityTSM(publicKey ecdsa.PublicKey) Identity {
 
 // Verify the signature of the identity.
 func (ide IdentityTSM) Verify(msg []byte, sig []byte) error {
-	hashMsg := sha256.Sum256(msg)
-	valid := ecdsa.VerifyASN1(&ide.PublicKey, hashMsg[:], sig)
+	valid := ecdsa.VerifyASN1(&ide.PublicKey, msg, sig)
 	if !valid {
 		return errors.New("Signature failed to verify")
 	}
@@ -1523,22 +1525,26 @@ func (kcs SignerX509EC) Sign(msg []byte) ([]byte, error) {
 	return nil, errors.New("not yet implemented")
 }
 
-// NewSignerTSM creates a signer only with a public key used to verify
-// signatures
-func NewSignerTSM(public ecdsa.PublicKey) Signer {
-	if public.X == nil {
-		return Signer{}
+// NewSignerTSM creates a tsm signer with a SECP256K1 key.
+// If a nil key is given, then a random key is generated.
+func NewSignerTSM(private ecdsa.PrivateKey) Signer {
+	if private.D == nil {
+		priv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+		if err != nil {
+			panic("couldn't generate key: " + err.Error())
+		}
+		private = *priv
 	}
 	return Signer{TSM: &SignerTSM{
-		PublicKey: public,
+		PrivateKey: private,
 	}}
 }
 
 // Sign the message with the private key.
-// As this is using the TSM, and we don't want cothority/darc to depend on
-// TSM, we cannot sign here.
+// This is not really possible with the TSM signer,
+// so this is mostly useful for testing.
 func (kcs SignerTSM) Sign(msg []byte) ([]byte, error) {
-	return nil, errors.New("not yet implemented")
+	return ecdsa.SignASN1(rand.Reader, &kcs.PrivateKey, msg)
 }
 
 // NewSignerProxy creates a new SignerProxy. When Sign is called, the getSignature

@@ -3,6 +3,7 @@ package darc
 import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
+	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -754,18 +755,23 @@ func TestParseIdentity(t *testing.T) {
 }
 
 // Test any identity
-func testIdentity(t *testing.T, id Identity) {
-	msg := []byte(`Hello World`)
-
-	// Signature from code example go-tsm-sdk corresponding to tsm public
-	// key example
-	signed, _ := hex.DecodeString("304402204f0b20a44efacec7b0514683233a79552026fe80e468078f6fed6cfe3f3e8a0402201eb12db7f6fe0828cafe8b0a032a37ff377b342799cfe77cfbac40c8ec1fa9e8")
-
+func testIdentity(t *testing.T, sig Signer) {
+	msg := []byte("something secret")
+	signed, err := sig.Sign(msg)
+	require.NoError(t, err)
+	id := sig.Identity()
 	require.NoError(t, id.Verify(msg, signed))
 	require.Error(t, id.Verify([]byte("wrong message"), signed))
 }
 
-func getTSMId() Identity {
+// Test the different identities available - currently only Ed25519.
+func TestIdentities(t *testing.T) {
+	testIdentity(t, NewSignerEd25519(nil, nil))
+	testIdentity(t, NewSignerTSM(ecdsa.PrivateKey{}))
+}
+
+// Test a signature from the TSM
+func TestTSMSignature(t *testing.T) {
 	var x, _ = new(big.Int).SetString("25613385885653880697990944418179706546134037329992108968315147853972798913688", 10)
 	var y, _ = new(big.Int).SetString("74946767262888349555270609195205284686604880870734462312238891495596941025713", 10)
 	pk := ecdsa.PublicKey{
@@ -773,18 +779,22 @@ func getTSMId() Identity {
 		X:     x,
 		Y:     y,
 	}
-	return NewIdentityTSM(pk)
-}
+	id := NewIdentityTSM(pk)
 
-// Test the different identities available - currently only Ed25519.
-func TestIdentities(t *testing.T) {
-	// tsm public key example
-	testIdentity(t, getTSMId())
+	msg := []byte(`Hello World`)
+	digest := sha256.Sum256(msg)
+
+	// Signature from code example go-tsm-sdk corresponding to tsm public
+	// key example
+	signed, _ := hex.DecodeString("304402204f0b20a44efacec7b0514683233a79552026fe80e468078f6fed6cfe3f3e8a0402201eb12db7f6fe0828cafe8b0a032a37ff377b342799cfe77cfbac40c8ec1fa9e8")
+
+	require.NoError(t, id.Verify(digest[:], signed))
+	require.Error(t, id.Verify([]byte("wrong message"), signed))
 }
 
 // Make sure Marshalling and Unmarshalling work
-func TestTSM(t *testing.T) {
-	id := getTSMId()
+func TestTSMMarshalling(t *testing.T) {
+	id := NewSignerTSM(ecdsa.PrivateKey{}).Identity()
 	buf, err := id.TSM.MarshalBinary()
 	require.NoError(t, err)
 	var id2 IdentityTSM
