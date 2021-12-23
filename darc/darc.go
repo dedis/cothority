@@ -42,6 +42,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"go.dedis.ch/onet/v3/log"
 	"math/big"
 	"regexp"
 	"strconv"
@@ -1158,6 +1159,7 @@ func (id IdentityEvmContract) Verify(msg, s []byte) error {
 // ParseIdentity returns an Identity structure that matches
 // the given string.
 func ParseIdentity(in string) (Identity, error) {
+	log.Print("Parsing", in)
 	fields := strings.SplitN(in, ":", 2)
 	if len(fields) != 2 {
 		return Identity{}, errors.New("missing identity type")
