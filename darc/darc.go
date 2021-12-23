@@ -774,8 +774,10 @@ func (s Signer) Type() int {
 		return 3
 	case s.EvmContract != nil:
 		return 4
-	case s.ECDSA != nil:
+	case s.DID != nil:
 		return 5
+	case s.TSM != nil:
+		return 6
 	default:
 		return -1
 	}
@@ -793,8 +795,8 @@ func (s Signer) Identity() Identity {
 		return NewIdentityProxy(s.Proxy)
 	case 4:
 		return NewIdentityEvmContract(s.EvmContract)
-	case 5:
-		return NewIdentityECDSA(s.ECDSA.PublicKey)
+	case 6:
+		return NewIdentityTSM(s.TSM.PublicKey)
 	default:
 		return Identity{}
 	}
@@ -826,7 +828,7 @@ func (s Signer) GetPrivate() (kyber.Scalar, error) {
 	switch s.Type() {
 	case 1:
 		return s.Ed25519.Secret, nil
-	case 0, 2, 3:
+	case 0, 2, 3, 4, 5, 6:
 		return nil, errors.New("signer lacks a private key")
 	default:
 		return nil, errors.New("signer is of unknown type")
@@ -850,6 +852,8 @@ func (id Identity) Equal(id2 *Identity) bool {
 		return id.Proxy.Equal(id2.Proxy)
 	case 4:
 		return id.EvmContract.Equal(id2.EvmContract)
+	case 6:
+		return id.TSM.PublicKey.Equal(&id2.TSM.PublicKey)
 	}
 	return false
 }
@@ -868,8 +872,10 @@ func (id Identity) Type() int {
 		return 3
 	case id.EvmContract != nil:
 		return 4
-	case id.ECDSA != nil:
+	case id.DID != nil:
 		return 5
+	case id.TSM != nil:
+		return 6
 	}
 	return -1
 }
@@ -877,19 +883,7 @@ func (id Identity) Type() int {
 // PrimaryIdentity returns true if the identity is a primary identity, which is
 // an identity that is associated with a concrete public/private key.
 func (id Identity) PrimaryIdentity() bool {
-	switch {
-	case id.Darc != nil:
-		return false
-	case id.Ed25519 != nil:
-		return true
-	case id.X509EC != nil:
-		return true
-	case id.Proxy != nil:
-		return true
-	case id.EvmContract != nil:
-		return true
-	}
-	return false
+	return id.Type() != 0
 }
 
 // TypeString returns the string of the type of the identity.
@@ -905,6 +899,10 @@ func (id Identity) TypeString() string {
 		return "proxy"
 	case 4:
 		return "evm_contract"
+	case 5:
+		return "did"
+	case 6:
+		return "tsm"
 	default:
 		return "No identity"
 	}
@@ -925,6 +923,14 @@ func (id Identity) String() string {
 		bevmString := hex.EncodeToString(id.EvmContract.BEvmID)
 		addrString := id.EvmContract.Address.Hex()
 		return fmt.Sprintf("%s:%s:%s", id.TypeString(), bevmString, addrString)
+	case 5:
+		return fmt.Sprintf("%s:%s", id.TypeString(), id.DID.DID)
+	case 6:
+		buf, err := id.TSM.MarshalBinary()
+		if err != nil {
+			panic("couldn't marshal TSM key: " + err.Error())
+		}
+		return fmt.Sprintf("%s:%x", id.TypeString(), buf)
 	default:
 		return "No identity"
 	}
@@ -945,7 +951,7 @@ func (id Identity) Verify(msg, sig []byte) error {
 	case 4:
 		return id.EvmContract.Verify(msg, sig)
 	case 5:
-		return id.ECDSA.Verify(msg, sig)
+		return id.TSM.Verify(msg, sig)
 	default:
 		return errors.New("unknown identity")
 	}
@@ -974,7 +980,7 @@ func (id Identity) GetPublicBytes() []byte {
 	case 4:
 		return id.EvmContract.Address[:]
 	case 5:
-		buf := elliptic.Marshal(id.ECDSA.PublicKey.Curve, id.ECDSA.PublicKey.X, id.ECDSA.PublicKey.Y)
+		buf := elliptic.Marshal(id.TSM.PublicKey.Curve, id.TSM.PublicKey.X, id.TSM.PublicKey.Y)
 		//TODO: add error check here?
 		return buf
 	default:
@@ -1025,22 +1031,37 @@ func NewIdentityX509EC(public []byte) Identity {
 	}
 }
 
-// NewIdentityECDSA creates a new ECDSA identity struct given a public key
-func NewIdentityECDSA(publicKey ecdsa.PublicKey) Identity {
+// NewIdentityTSM creates a new TSM identity struct given a public key
+func NewIdentityTSM(publicKey ecdsa.PublicKey) Identity {
 	return Identity{
-		ECDSA: &IdentityECDSA{
+		TSM: &IdentityTSM{
 			PublicKey: publicKey,
 		},
 	}
 }
 
-//TODO make calls to tsm  available
-func (ide IdentityECDSA) Verify(msg []byte, sig []byte) error {
+// Verify the signature of the identity.
+func (ide IdentityTSM) Verify(msg []byte, sig []byte) error {
 	hashMsg := sha256.Sum256(msg)
 	valid := ecdsa.VerifyASN1(&ide.PublicKey, hashMsg[:], sig)
 	if !valid {
 		return errors.New("Signature failed to verify")
 	}
+	return nil
+}
+
+// MarshalBinary returns the compressed public key
+func (ide IdentityTSM) MarshalBinary() ([]byte, error) {
+	return elliptic.MarshalCompressed(ide.PublicKey.Curve, ide.PublicKey.X,
+		ide.PublicKey.Y), nil
+}
+
+// UnmarshalBinary copies the x and y coordinates from the compressed data
+func (ide *IdentityTSM) UnmarshalBinary(data []byte) error {
+	x, y := elliptic.UnmarshalCompressed(elliptic.P256(), data)
+	ide.PublicKey.X = x
+	ide.PublicKey.Y = y
+	ide.PublicKey.Curve = elliptic.P256()
 	return nil
 }
 
@@ -1152,8 +1173,8 @@ func ParseIdentity(in string) (Identity, error) {
 		return parseIDProxy(fields[1])
 	case "evm_contract":
 		return parseIDEvmContract(fields[1])
-	case "secp256k1":
-		return parseIDECDSA(fields[1])
+	case "tsm":
+		return parseIDTSM(fields[1])
 	default:
 		return Identity{}, fmt.Errorf("unknown identity type %v", fields[0])
 	}
@@ -1178,7 +1199,7 @@ func parseIDX509ec(in string) (Identity, error) {
 
 //necessary function, needs to be refactored only supports elliptic.P256 curve
 //needs to be tested Unmarshal might not work
-func parseIDECDSA(in string) (Identity, error) {
+func parseIDTSM(in string) (Identity, error) {
 	id := make([]byte, hex.DecodedLen(len(in)))
 	_, err := hex.Decode(id, []byte(in))
 
@@ -1192,7 +1213,7 @@ func parseIDECDSA(in string) (Identity, error) {
 	if err != nil {
 		return Identity{}, err
 	}
-	return Identity{ECDSA: &IdentityECDSA{PublicKey: pubkey}}, nil
+	return Identity{TSM: &IdentityTSM{PublicKey: pubkey}}, nil
 }
 
 func parseIDDarc(in string) (Identity, error) {
@@ -1500,19 +1521,21 @@ func (kcs SignerX509EC) Sign(msg []byte) ([]byte, error) {
 	return nil, errors.New("not yet implemented")
 }
 
-// new signer creates a signer only with a public key used to verify signatures
-func NewSignerECDSA(public ecdsa.PublicKey) Signer {
+// NewSignerTSM creates a signer only with a public key used to verify
+// signatures
+func NewSignerTSM(public ecdsa.PublicKey) Signer {
 	if public.X == nil {
 		return Signer{}
 	}
-	return Signer{ECDSA: &SignerECDSA{
+	return Signer{TSM: &SignerTSM{
 		PublicKey: public,
 	}}
 }
 
-//TODO
-func (kcs SignerECDSA) Sign(msg []byte) ([]byte, error) {
-	//call tsm to sign
+// Sign the message with the private key.
+// As this is using the TSM, and we don't want cothority/darc to depend on
+// TSM, we cannot sign here.
+func (kcs SignerTSM) Sign(msg []byte) ([]byte, error) {
 	return nil, errors.New("not yet implemented")
 }
 

@@ -73,8 +73,8 @@ type Identity struct {
 	EvmContract *IdentityEvmContract
 	// A claim signed by one of the keys in a DID Doc
 	DID *IdentityDID
-	// Publik-key identity from an ECDSA key
-	ECDSA *IdentityECDSA
+	// Public-key identity from an ECDSA key
+	TSM *IdentityTSM
 }
 
 // IdentityEd25519 holds a Ed25519 public key (Point)
@@ -82,8 +82,8 @@ type IdentityEd25519 struct {
 	Point kyber.Point
 }
 
-// IdentityECDSA holds a secp256k1 key (array of bytes)
-type IdentityECDSA struct {
+// IdentityTSM holds a secp256k1 key (array of bytes)
+type IdentityTSM struct {
 	PublicKey ecdsa.PublicKey
 }
 
@@ -168,7 +168,7 @@ type Signer struct {
 	Proxy       *SignerProxy
 	EvmContract *SignerEvmContract
 	DID         *SignerDID
-	ECDSA       *SignerECDSA
+	TSM         *SignerTSM
 }
 
 // SignerEd25519 holds a public and private keys necessary to sign Darcs
@@ -184,9 +184,9 @@ type SignerX509EC struct {
 	secret []byte
 }
 
-// SignerECDSA holds a public and private keys necessary to sign Darcs,
+// SignerTSM holds a public and private keys necessary to sign Darcs,
 // but the private key will not be given out.
-type SignerECDSA struct {
+type SignerTSM struct {
 	PublicKey  ecdsa.PublicKey
 	PrivateKey ecdsa.PrivateKey
 }

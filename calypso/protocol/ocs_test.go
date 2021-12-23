@@ -252,7 +252,7 @@ func DecodeKey(suite kyber.Group, X kyber.Point, Cs []kyber.Point, XhatEnc kyber
 		}
 		key = append(key, keyPart...)
 	}
-	return 
+	return
 }
 
 // starts a new service. No function needed.

@@ -207,9 +207,9 @@ func TestClient_Calypso(t *testing.T) {
 
 	// Make sure you can't decrypt with non-matching proofs
 	_, err = calypsoClient.DecryptKey(&DecryptKey{Read: *prRe1, Write: *prWr2})
-	require.NotNil(t, err)
+	require.Error(t, err)
 	_, err = calypsoClient.DecryptKey(&DecryptKey{Read: *prRe2, Write: *prWr1})
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	// Make sure you can actually decrypt
 	dk1, err := calypsoClient.DecryptKey(&DecryptKey{Read: *prRe1, Write: *prWr1})
@@ -237,7 +237,7 @@ func TestClient_Calypso_Simple(t *testing.T) {
 
 	admin := darc.NewSignerEd25519(nil, nil)
 	adminCt := uint64(1)
-	user := darc.NewSignerECDSA(p.PublicKey)
+	user := darc.NewSignerTSM(p.PublicKey)
 	// Initialise the genesis message and send it to the service.
 	// The admin has the privilege to spawn darcs
 	msg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
