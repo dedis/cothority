@@ -4,6 +4,7 @@ import { registerMessage } from "../protobuf";
 import IdentityDarc from "./identity-darc";
 import IdentityDid from "./identity-did";
 import IdentityEd25519 from "./identity-ed25519";
+import IdentityTsm from "./identity-tsm";
 
 /**
  * Protobuf representation of an identity
@@ -42,6 +43,11 @@ export default class IdentityWrapper extends Message<IdentityWrapper> {
             const id = new IdentityDid({method: Buffer.from(field[1]), did: Buffer.from(field[2]) });
             return new IdentityWrapper({did: id});
         }
+        if (idStr.startsWith("tsm:")) {
+            const field = idStr.split(":", 2);
+            const tsm = new IdentityTsm({publickey: Buffer.from(field[1])});
+            return new IdentityWrapper({tsm});
+        }
     }
 
     /**
@@ -54,6 +60,7 @@ export default class IdentityWrapper extends Message<IdentityWrapper> {
     readonly ed25519: IdentityEd25519;
     readonly darc: IdentityDarc;
     readonly did: IdentityDid;
+    readonly tsm: IdentityTsm;
 
     /**
      * Get the inner identity as bytes
@@ -68,6 +75,9 @@ export default class IdentityWrapper extends Message<IdentityWrapper> {
         }
         if (this.did) {
             return this.did.toBytes();
+        }
+        if (this.tsm) {
+            return this.tsm.toBytes();
         }
 
         return Buffer.from([]);
@@ -86,6 +96,9 @@ export default class IdentityWrapper extends Message<IdentityWrapper> {
         }
         if (this.did) {
             return this.did.toString();
+        }
+        if (this.tsm) {
+            return this.tsm.toString();
         }
 
         return "empty signer";
