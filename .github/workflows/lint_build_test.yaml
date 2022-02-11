@@ -5,7 +5,7 @@ on:
 
 env:
   NODE_VERSION: 10
-  GO_VERSION: 1.15
+  GO_VERSION: 1.16
   JAVA_VERSION: 9
 
 jobs:
@@ -39,7 +39,7 @@ jobs:
 
     strategy:
       matrix:
-        golang-version: [1.14, 1.15] # Cannot use env. here :(
+        golang-version: [1.16, 1.17] # Cannot use env. here :(
 
     steps:
       - uses: actions/checkout@main
