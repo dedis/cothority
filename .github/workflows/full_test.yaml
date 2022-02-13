@@ -5,7 +5,7 @@ on:
     - cron: "12 6 * * 1-5"
 
 env:
-  GO_VERSION: 1.15
+  GO_VERSION: 1.17
 
 jobs:
   go:

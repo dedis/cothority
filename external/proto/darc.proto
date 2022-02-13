@@ -50,11 +50,18 @@ message Identity {
   optional IdentityEvmContract evmcontract = 5;
   // A claim signed by one of the keys in a DID Doc
   optional IdentityDID did = 6;
+  // Public-key identity from an ECDSA key
+  optional IdentityTSM tsm = 7;
 }
 
 // IdentityEd25519 holds a Ed25519 public key (Point)
 message IdentityEd25519 {
   required bytes point = 1;
+}
+
+// IdentityTSM holds a secp256k1 key (array of bytes)
+message IdentityTSM {
+  required bytes publickey = 1;
 }
 
 // IdentityX509EC holds a public key from a X509EC

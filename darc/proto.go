@@ -1,6 +1,8 @@
 package darc
 
 import (
+	"crypto/ecdsa"
+
 	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/onet/v3/network"
@@ -71,11 +73,19 @@ type Identity struct {
 	EvmContract *IdentityEvmContract
 	// A claim signed by one of the keys in a DID Doc
 	DID *IdentityDID
+	// Public-key identity from an ECDSA key
+	TSM *IdentityTSM
 }
 
 // IdentityEd25519 holds a Ed25519 public key (Point)
 type IdentityEd25519 struct {
 	Point kyber.Point
+}
+
+// IdentityTSM holds a secp256k1 key (array of bytes)
+type IdentityTSM struct {
+	PublicKey []byte
+	ecKey     *ecdsa.PublicKey
 }
 
 // IdentityX509EC holds a public key from a X509EC
@@ -159,6 +169,7 @@ type Signer struct {
 	Proxy       *SignerProxy
 	EvmContract *SignerEvmContract
 	DID         *SignerDID
+	tsm         *SignerTSM
 }
 
 // SignerEd25519 holds a public and private keys necessary to sign Darcs

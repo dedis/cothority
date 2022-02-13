@@ -33,6 +33,8 @@ package darc
 import (
 	"bytes"
 	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"crypto/sha256"
 	"crypto/sha512"
 	"crypto/x509"
@@ -773,6 +775,10 @@ func (s Signer) Type() int {
 		return 3
 	case s.EvmContract != nil:
 		return 4
+	case s.DID != nil:
+		return 5
+	case s.tsm != nil:
+		return 6
 	default:
 		return -1
 	}
@@ -790,6 +796,8 @@ func (s Signer) Identity() Identity {
 		return NewIdentityProxy(s.Proxy)
 	case 4:
 		return NewIdentityEvmContract(s.EvmContract)
+	case 6:
+		return NewIdentityTSM(s.tsm.PrivateKey.PublicKey)
 	default:
 		return Identity{}
 	}
@@ -811,6 +819,8 @@ func (s Signer) Sign(msg []byte) ([]byte, error) {
 		return s.Proxy.Sign(msg)
 	case 4:
 		return s.EvmContract.Sign(msg)
+	case 6:
+		return s.tsm.Sign(msg)
 	default:
 		return nil, errors.New("unknown signer type")
 	}
@@ -821,7 +831,7 @@ func (s Signer) GetPrivate() (kyber.Scalar, error) {
 	switch s.Type() {
 	case 1:
 		return s.Ed25519.Secret, nil
-	case 0, 2, 3:
+	case 0, 2, 3, 4, 5, 6:
 		return nil, errors.New("signer lacks a private key")
 	default:
 		return nil, errors.New("signer is of unknown type")
@@ -845,6 +855,8 @@ func (id Identity) Equal(id2 *Identity) bool {
 		return id.Proxy.Equal(id2.Proxy)
 	case 4:
 		return id.EvmContract.Equal(id2.EvmContract)
+	case 6:
+		return bytes.Equal(id.TSM.PublicKey, id2.TSM.PublicKey)
 	}
 	return false
 }
@@ -863,6 +875,10 @@ func (id Identity) Type() int {
 		return 3
 	case id.EvmContract != nil:
 		return 4
+	case id.DID != nil:
+		return 5
+	case id.TSM != nil:
+		return 6
 	}
 	return -1
 }
@@ -870,19 +886,7 @@ func (id Identity) Type() int {
 // PrimaryIdentity returns true if the identity is a primary identity, which is
 // an identity that is associated with a concrete public/private key.
 func (id Identity) PrimaryIdentity() bool {
-	switch {
-	case id.Darc != nil:
-		return false
-	case id.Ed25519 != nil:
-		return true
-	case id.X509EC != nil:
-		return true
-	case id.Proxy != nil:
-		return true
-	case id.EvmContract != nil:
-		return true
-	}
-	return false
+	return id.Type() != 0
 }
 
 // TypeString returns the string of the type of the identity.
@@ -898,6 +902,10 @@ func (id Identity) TypeString() string {
 		return "proxy"
 	case 4:
 		return "evm_contract"
+	case 5:
+		return "did"
+	case 6:
+		return "tsm"
 	default:
 		return "No identity"
 	}
@@ -918,6 +926,11 @@ func (id Identity) String() string {
 		bevmString := hex.EncodeToString(id.EvmContract.BEvmID)
 		addrString := id.EvmContract.Address.Hex()
 		return fmt.Sprintf("%s:%s:%s", id.TypeString(), bevmString, addrString)
+	case 5:
+		return fmt.Sprintf("%s:%s", id.TypeString(), id.DID.DID)
+	case 6:
+		buf, _ := id.TSM.MarshalBinary()
+		return fmt.Sprintf("%s:%x", id.TypeString(), buf)
 	default:
 		return "No identity"
 	}
@@ -937,6 +950,8 @@ func (id Identity) Verify(msg, sig []byte) error {
 		return id.Proxy.Verify(msg, sig)
 	case 4:
 		return id.EvmContract.Verify(msg, sig)
+	case 6:
+		return id.TSM.Verify(msg, sig)
 	default:
 		return errors.New("unknown identity")
 	}
@@ -964,6 +979,8 @@ func (id Identity) GetPublicBytes() []byte {
 		return buf
 	case 4:
 		return id.EvmContract.Address[:]
+	case 6:
+		return id.TSM.PublicKey
 	default:
 		return nil
 	}
@@ -1010,6 +1027,52 @@ func NewIdentityX509EC(public []byte) Identity {
 			Public: public,
 		},
 	}
+}
+
+// NewIdentityTSM creates a new TSM identity struct given a public key
+func NewIdentityTSM(ecKey ecdsa.PublicKey) Identity {
+	return Identity{
+		TSM: &IdentityTSM{
+			PublicKey: elliptic.MarshalCompressed(ecKey.Curve, ecKey.X,
+				ecKey.Y),
+			ecKey: &ecKey,
+		},
+	}
+}
+
+// GetPublic returns the public key of the Identity.
+// As it is stored in binary format, it might have to be converted.
+func (ide *IdentityTSM) GetPublic() ecdsa.PublicKey {
+	if ide.ecKey == nil {
+		ecKey := ecdsa.PublicKey{}
+		x, y := elliptic.UnmarshalCompressed(elliptic.P256(), ide.PublicKey)
+		ecKey.X = x
+		ecKey.Y = y
+		ecKey.Curve = elliptic.P256()
+		ide.ecKey = &ecKey
+	}
+	return *ide.ecKey
+}
+
+// Verify the signature of the identity.
+func (ide *IdentityTSM) Verify(msg []byte, sig []byte) error {
+	ecKey := ide.GetPublic()
+	valid := ecdsa.VerifyASN1(&ecKey, msg, sig)
+	if !valid {
+		return errors.New("Signature failed to verify")
+	}
+	return nil
+}
+
+// MarshalBinary returns the compressed public key
+func (ide IdentityTSM) MarshalBinary() ([]byte, error) {
+	return ide.PublicKey, nil
+}
+
+// UnmarshalBinary stores the compressed public key
+func (ide *IdentityTSM) UnmarshalBinary(data []byte) error {
+	ide.PublicKey = data
+	return nil
 }
 
 // NewIdentityProxy creates a new OpenID Connect identity struct.
@@ -1120,6 +1183,8 @@ func ParseIdentity(in string) (Identity, error) {
 		return parseIDProxy(fields[1])
 	case "evm_contract":
 		return parseIDEvmContract(fields[1])
+	case "tsm":
+		return parseIDTSM(fields[1])
 	default:
 		return Identity{}, fmt.Errorf("unknown identity type %v", fields[0])
 	}
@@ -1140,6 +1205,16 @@ func parseIDX509ec(in string) (Identity, error) {
 		return Identity{}, err
 	}
 	return Identity{X509EC: &IdentityX509EC{Public: id}}, nil
+}
+
+func parseIDTSM(in string) (Identity, error) {
+	idTSM := IdentityTSM{}
+	_, err := hex.Decode(idTSM.PublicKey, []byte(in))
+	if err != nil {
+		return Identity{}, err
+	}
+
+	return Identity{TSM: &idTSM}, nil
 }
 
 func parseIDDarc(in string) (Identity, error) {
@@ -1445,6 +1520,37 @@ func NewSignerX509EC() Signer {
 // Sign creates a RSA signature on the message.
 func (kcs SignerX509EC) Sign(msg []byte) ([]byte, error) {
 	return nil, errors.New("not yet implemented")
+}
+
+// SignerTSM holds the private key necessary to sign Darcs.
+// As this is only used in testing, it is not in proto.go and thus
+// not exported.
+type SignerTSM struct {
+	PrivateKey ecdsa.PrivateKey
+}
+
+// NewSignerTSM creates a tsm signer with a SECP256K1 key.
+// If a nil key is given, then a random key is generated.
+// This is mostly used for testing, as the real TSM is a hardware device
+// and not supported in tests.
+func NewSignerTSM(private ecdsa.PrivateKey) Signer {
+	if private.D == nil {
+		priv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+		if err != nil {
+			panic("couldn't generate key: " + err.Error())
+		}
+		private = *priv
+	}
+	return Signer{tsm: &SignerTSM{
+		PrivateKey: private,
+	}}
+}
+
+// Sign the message with the private key.
+// This is not really possible with the TSM signer,
+// so this is mostly useful for testing.
+func (kcs SignerTSM) Sign(msg []byte) ([]byte, error) {
+	return ecdsa.SignASN1(rand.Reader, &kcs.PrivateKey, msg)
 }
 
 // NewSignerProxy creates a new SignerProxy. When Sign is called, the getSignature
