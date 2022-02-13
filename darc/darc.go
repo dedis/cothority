@@ -929,10 +929,7 @@ func (id Identity) String() string {
 	case 5:
 		return fmt.Sprintf("%s:%s", id.TypeString(), id.DID.DID)
 	case 6:
-		buf, err := id.TSM.MarshalBinary()
-		if err != nil {
-			panic("couldn't marshal TSM key: " + err.Error())
-		}
+		buf, _ := id.TSM.MarshalBinary()
 		return fmt.Sprintf("%s:%x", id.TypeString(), buf)
 	default:
 		return "No identity"
@@ -983,8 +980,7 @@ func (id Identity) GetPublicBytes() []byte {
 	case 4:
 		return id.EvmContract.Address[:]
 	case 6:
-		buf := id.TSM.PublicKey
-		return buf
+		return id.TSM.PublicKey
 	default:
 		return nil
 	}
