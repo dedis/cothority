@@ -32,6 +32,6 @@ export default class IdentityTsm extends Message<IdentityTsm> implements IIdenti
 
     /** @inheritdoc */
     toString(): string {
-        return `tsm:${this.publickey.toString('hex')}`;
+        return `tsm:${this.publickey.toString("hex")}`;
     }
 }
