@@ -1839,7 +1839,7 @@ public final class Calypso {
        * <code>optional .byzcoin.Coin cost = 9;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder> 
           getCostFieldBuilder() {
         if (costBuilder_ == null) {
           costBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -5298,7 +5298,7 @@ public final class Calypso {
        * <code>required .byzcoin.Proof proof = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> 
           getProofFieldBuilder() {
         if (proofBuilder_ == null) {
           proofBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -6752,7 +6752,7 @@ public final class Calypso {
        * <code>required .byzcoin.Proof proof = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> 
           getProofFieldBuilder() {
         if (proofBuilder_ == null) {
           proofBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -7834,7 +7834,7 @@ public final class Calypso {
        * <code>required .byzcoin.Proof proof = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> 
           getProofFieldBuilder() {
         if (proofBuilder_ == null) {
           proofBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -9102,7 +9102,7 @@ public final class Calypso {
        * <code>required .byzcoin.Proof read = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> 
           getReadFieldBuilder() {
         if (readBuilder_ == null) {
           readBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -9258,7 +9258,7 @@ public final class Calypso {
        * <code>required .byzcoin.Proof write = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder>
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> 
           getWriteFieldBuilder() {
         if (writeBuilder_ == null) {
           writeBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -11346,7 +11346,7 @@ public final class Calypso {
        * <code>required .onet.Roster roster = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder>
+          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder> 
           getRosterFieldBuilder() {
         if (rosterBuilder_ == null) {
           rosterBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -11413,82 +11413,82 @@ public final class Calypso {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_calypso_Write_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_calypso_Write_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_calypso_Read_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_calypso_Read_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_calypso_Authorise_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_calypso_Authorise_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_calypso_AuthoriseReply_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_calypso_AuthoriseReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_calypso_Authorize_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_calypso_Authorize_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_calypso_AuthorizeReply_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_calypso_AuthorizeReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_calypso_CreateLTS_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_calypso_CreateLTS_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_calypso_CreateLTSReply_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_calypso_CreateLTSReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_calypso_ReshareLTS_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_calypso_ReshareLTS_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_calypso_ReshareLTSReply_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_calypso_ReshareLTSReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_calypso_UpdateValidPeers_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_calypso_UpdateValidPeers_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_calypso_UpdateValidPeersReply_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_calypso_UpdateValidPeersReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_calypso_DecryptKey_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_calypso_DecryptKey_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_calypso_DecryptKeyReply_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_calypso_DecryptKeyReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_calypso_GetLTSReply_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_calypso_GetLTSReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_calypso_LtsInstanceInfo_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_calypso_LtsInstanceInfo_fieldAccessorTable;
 

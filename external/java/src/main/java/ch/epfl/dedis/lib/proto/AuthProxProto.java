@@ -256,7 +256,7 @@ public final class AuthProxProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -274,7 +274,7 @@ public final class AuthProxProto {
         getTypeBytes() {
       java.lang.Object ref = type_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         type_ = b;
@@ -304,7 +304,7 @@ public final class AuthProxProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -322,7 +322,7 @@ public final class AuthProxProto {
         getIssuerBytes() {
       java.lang.Object ref = issuer_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         issuer_ = b;
@@ -917,7 +917,7 @@ public final class AuthProxProto {
           getTypeBytes() {
         java.lang.Object ref = type_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           type_ = b;
@@ -1001,7 +1001,7 @@ public final class AuthProxProto {
           getIssuerBytes() {
         java.lang.Object ref = issuer_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           issuer_ = b;
@@ -1243,7 +1243,7 @@ public final class AuthProxProto {
        * <code>required .authprox.PriShare longpri = 4;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.AuthProxProto.PriShare, ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.Builder, ch.epfl.dedis.lib.proto.AuthProxProto.PriShareOrBuilder>
+          ch.epfl.dedis.lib.proto.AuthProxProto.PriShare, ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.Builder, ch.epfl.dedis.lib.proto.AuthProxProto.PriShareOrBuilder> 
           getLongpriFieldBuilder() {
         if (longpriBuilder_ == null) {
           longpriBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -2068,7 +2068,7 @@ public final class AuthProxProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -2086,7 +2086,7 @@ public final class AuthProxProto {
         getTypeBytes() {
       java.lang.Object ref = type_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         type_ = b;
@@ -2116,7 +2116,7 @@ public final class AuthProxProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -2134,7 +2134,7 @@ public final class AuthProxProto {
         getIssuerBytes() {
       java.lang.Object ref = issuer_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         issuer_ = b;
@@ -2771,7 +2771,7 @@ public final class AuthProxProto {
           getTypeBytes() {
         java.lang.Object ref = type_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           type_ = b;
@@ -2855,7 +2855,7 @@ public final class AuthProxProto {
           getIssuerBytes() {
         java.lang.Object ref = issuer_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           issuer_ = b;
@@ -3054,7 +3054,7 @@ public final class AuthProxProto {
        * <code>required .authprox.PriShare randpri = 4;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.AuthProxProto.PriShare, ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.Builder, ch.epfl.dedis.lib.proto.AuthProxProto.PriShareOrBuilder>
+          ch.epfl.dedis.lib.proto.AuthProxProto.PriShare, ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.Builder, ch.epfl.dedis.lib.proto.AuthProxProto.PriShareOrBuilder> 
           getRandpriFieldBuilder() {
         if (randpriBuilder_ == null) {
           randpriBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -4394,7 +4394,7 @@ public final class AuthProxProto {
        * <code>required .authprox.PriShare partial = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.AuthProxProto.PriShare, ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.Builder, ch.epfl.dedis.lib.proto.AuthProxProto.PriShareOrBuilder>
+          ch.epfl.dedis.lib.proto.AuthProxProto.PriShare, ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.Builder, ch.epfl.dedis.lib.proto.AuthProxProto.PriShareOrBuilder> 
           getPartialFieldBuilder() {
         if (partialBuilder_ == null) {
           partialBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -5132,7 +5132,7 @@ public final class AuthProxProto {
        * <code>required .authprox.PartialSig partialsignature = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig, ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig.Builder, ch.epfl.dedis.lib.proto.AuthProxProto.PartialSigOrBuilder>
+          ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig, ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig.Builder, ch.epfl.dedis.lib.proto.AuthProxProto.PartialSigOrBuilder> 
           getPartialsignatureFieldBuilder() {
         if (partialsignatureBuilder_ == null) {
           partialsignatureBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -6071,7 +6071,7 @@ public final class AuthProxProto {
     /**
      * <code>repeated .authprox.EnrollmentInfo enrollments = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo>
+    java.util.List<ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo> 
         getEnrollmentsList();
     /**
      * <code>repeated .authprox.EnrollmentInfo enrollments = 1;</code>
@@ -6084,7 +6084,7 @@ public final class AuthProxProto {
     /**
      * <code>repeated .authprox.EnrollmentInfo enrollments = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfoOrBuilder>
+    java.util.List<? extends ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfoOrBuilder> 
         getEnrollmentsOrBuilderList();
     /**
      * <code>repeated .authprox.EnrollmentInfo enrollments = 1;</code>
@@ -6200,7 +6200,7 @@ public final class AuthProxProto {
      * <code>repeated .authprox.EnrollmentInfo enrollments = 1;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfoOrBuilder>
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfoOrBuilder> 
         getEnrollmentsOrBuilderList() {
       return enrollments_;
     }
@@ -6541,7 +6541,7 @@ public final class AuthProxProto {
               enrollmentsBuilder_ = null;
               enrollments_ = other.enrollments_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              enrollmentsBuilder_ =
+              enrollmentsBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getEnrollmentsFieldBuilder() : null;
             } else {
@@ -6779,7 +6779,7 @@ public final class AuthProxProto {
       /**
        * <code>repeated .authprox.EnrollmentInfo enrollments = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfoOrBuilder>
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfoOrBuilder> 
            getEnrollmentsOrBuilderList() {
         if (enrollmentsBuilder_ != null) {
           return enrollmentsBuilder_.getMessageOrBuilderList();
@@ -6805,12 +6805,12 @@ public final class AuthProxProto {
       /**
        * <code>repeated .authprox.EnrollmentInfo enrollments = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo.Builder>
+      public java.util.List<ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo.Builder> 
            getEnrollmentsBuilderList() {
         return getEnrollmentsFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo, ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo.Builder, ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfoOrBuilder>
+          ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo, ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo.Builder, ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfoOrBuilder> 
           getEnrollmentsFieldBuilder() {
         if (enrollmentsBuilder_ == null) {
           enrollmentsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -7048,7 +7048,7 @@ public final class AuthProxProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -7066,7 +7066,7 @@ public final class AuthProxProto {
         getTypeBytes() {
       java.lang.Object ref = type_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         type_ = b;
@@ -7096,7 +7096,7 @@ public final class AuthProxProto {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -7114,7 +7114,7 @@ public final class AuthProxProto {
         getIssuerBytes() {
       java.lang.Object ref = issuer_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         issuer_ = b;
@@ -7568,7 +7568,7 @@ public final class AuthProxProto {
           getTypeBytes() {
         java.lang.Object ref = type_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           type_ = b;
@@ -7652,7 +7652,7 @@ public final class AuthProxProto {
           getIssuerBytes() {
         java.lang.Object ref = issuer_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           issuer_ = b;
@@ -7798,47 +7798,47 @@ public final class AuthProxProto {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_authprox_EnrollRequest_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_authprox_EnrollRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_authprox_EnrollResponse_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_authprox_EnrollResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_authprox_SignatureRequest_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_authprox_SignatureRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_authprox_PriShare_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_authprox_PriShare_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_authprox_PartialSig_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_authprox_PartialSig_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_authprox_SignatureResponse_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_authprox_SignatureResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_authprox_EnrollmentsRequest_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_authprox_EnrollmentsRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_authprox_EnrollmentsResponse_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_authprox_EnrollmentsResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_authprox_EnrollmentInfo_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_authprox_EnrollmentInfo_fieldAccessorTable;
 

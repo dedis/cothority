@@ -84,7 +84,8 @@ type IdentityEd25519 struct {
 
 // IdentityTSM holds a secp256k1 key (array of bytes)
 type IdentityTSM struct {
-	PublicKey ecdsa.PublicKey
+	PublicKey []byte
+	ecKey     *ecdsa.PublicKey
 }
 
 // IdentityX509EC holds a public key from a X509EC
@@ -168,7 +169,7 @@ type Signer struct {
 	Proxy       *SignerProxy
 	EvmContract *SignerEvmContract
 	DID         *SignerDID
-	TSM         *SignerTSM
+	tsm         *SignerTSM
 }
 
 // SignerEd25519 holds a public and private keys necessary to sign Darcs
@@ -182,12 +183,6 @@ type SignerEd25519 struct {
 type SignerX509EC struct {
 	Point  []byte
 	secret []byte
-}
-
-// SignerTSM holds a public and private keys necessary to sign Darcs,
-// but the private key will not be given out.
-type SignerTSM struct {
-	PrivateKey ecdsa.PrivateKey
 }
 
 // SignerProxy holds the information necessary to verify claims

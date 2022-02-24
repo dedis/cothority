@@ -43,7 +43,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"go.dedis.ch/onet/v3/log"
 	"math/big"
 	"regexp"
 	"strconv"
@@ -778,7 +777,7 @@ func (s Signer) Type() int {
 		return 4
 	case s.DID != nil:
 		return 5
-	case s.TSM != nil:
+	case s.tsm != nil:
 		return 6
 	default:
 		return -1
@@ -798,7 +797,7 @@ func (s Signer) Identity() Identity {
 	case 4:
 		return NewIdentityEvmContract(s.EvmContract)
 	case 6:
-		return NewIdentityTSM(s.TSM.PrivateKey.PublicKey)
+		return NewIdentityTSM(s.tsm.PrivateKey.PublicKey)
 	default:
 		return Identity{}
 	}
@@ -821,7 +820,7 @@ func (s Signer) Sign(msg []byte) ([]byte, error) {
 	case 4:
 		return s.EvmContract.Sign(msg)
 	case 6:
-		return s.TSM.Sign(msg)
+		return s.tsm.Sign(msg)
 	default:
 		return nil, errors.New("unknown signer type")
 	}
@@ -857,7 +856,7 @@ func (id Identity) Equal(id2 *Identity) bool {
 	case 4:
 		return id.EvmContract.Equal(id2.EvmContract)
 	case 6:
-		return id.TSM.PublicKey.Equal(&id2.TSM.PublicKey)
+		return bytes.Equal(id.TSM.PublicKey, id2.TSM.PublicKey)
 	}
 	return false
 }
@@ -930,10 +929,7 @@ func (id Identity) String() string {
 	case 5:
 		return fmt.Sprintf("%s:%s", id.TypeString(), id.DID.DID)
 	case 6:
-		buf, err := id.TSM.MarshalBinary()
-		if err != nil {
-			panic("couldn't marshal TSM key: " + err.Error())
-		}
+		buf, _ := id.TSM.MarshalBinary()
 		return fmt.Sprintf("%s:%x", id.TypeString(), buf)
 	default:
 		return "No identity"
@@ -984,9 +980,7 @@ func (id Identity) GetPublicBytes() []byte {
 	case 4:
 		return id.EvmContract.Address[:]
 	case 6:
-		buf := elliptic.Marshal(id.TSM.PublicKey.Curve, id.TSM.PublicKey.X, id.TSM.PublicKey.Y)
-		//TODO: add error check here?
-		return buf
+		return id.TSM.PublicKey
 	default:
 		return nil
 	}
@@ -1036,17 +1030,34 @@ func NewIdentityX509EC(public []byte) Identity {
 }
 
 // NewIdentityTSM creates a new TSM identity struct given a public key
-func NewIdentityTSM(publicKey ecdsa.PublicKey) Identity {
+func NewIdentityTSM(ecKey ecdsa.PublicKey) Identity {
 	return Identity{
 		TSM: &IdentityTSM{
-			PublicKey: publicKey,
+			PublicKey: elliptic.MarshalCompressed(ecKey.Curve, ecKey.X,
+				ecKey.Y),
+			ecKey: &ecKey,
 		},
 	}
 }
 
+// GetPublic returns the public key of the Identity.
+// As it is stored in binary format, it might have to be converted.
+func (ide *IdentityTSM) GetPublic() ecdsa.PublicKey {
+	if ide.ecKey == nil {
+		ecKey := ecdsa.PublicKey{}
+		x, y := elliptic.UnmarshalCompressed(elliptic.P256(), ide.PublicKey)
+		ecKey.X = x
+		ecKey.Y = y
+		ecKey.Curve = elliptic.P256()
+		ide.ecKey = &ecKey
+	}
+	return *ide.ecKey
+}
+
 // Verify the signature of the identity.
-func (ide IdentityTSM) Verify(msg []byte, sig []byte) error {
-	valid := ecdsa.VerifyASN1(&ide.PublicKey, msg, sig)
+func (ide *IdentityTSM) Verify(msg []byte, sig []byte) error {
+	ecKey := ide.GetPublic()
+	valid := ecdsa.VerifyASN1(&ecKey, msg, sig)
 	if !valid {
 		return errors.New("Signature failed to verify")
 	}
@@ -1055,16 +1066,12 @@ func (ide IdentityTSM) Verify(msg []byte, sig []byte) error {
 
 // MarshalBinary returns the compressed public key
 func (ide IdentityTSM) MarshalBinary() ([]byte, error) {
-	return elliptic.MarshalCompressed(ide.PublicKey.Curve, ide.PublicKey.X,
-		ide.PublicKey.Y), nil
+	return ide.PublicKey, nil
 }
 
-// UnmarshalBinary copies the x and y coordinates from the compressed data
+// UnmarshalBinary stores the compressed public key
 func (ide *IdentityTSM) UnmarshalBinary(data []byte) error {
-	x, y := elliptic.UnmarshalCompressed(elliptic.P256(), data)
-	ide.PublicKey.X = x
-	ide.PublicKey.Y = y
-	ide.PublicKey.Curve = elliptic.P256()
+	ide.PublicKey = data
 	return nil
 }
 
@@ -1161,7 +1168,6 @@ func (id IdentityEvmContract) Verify(msg, s []byte) error {
 // ParseIdentity returns an Identity structure that matches
 // the given string.
 func ParseIdentity(in string) (Identity, error) {
-	log.Print("Parsing", in)
 	fields := strings.SplitN(in, ":", 2)
 	if len(fields) != 2 {
 		return Identity{}, errors.New("missing identity type")
@@ -1201,23 +1207,14 @@ func parseIDX509ec(in string) (Identity, error) {
 	return Identity{X509EC: &IdentityX509EC{Public: id}}, nil
 }
 
-//necessary function, needs to be refactored only supports elliptic.P256 curve
-//needs to be tested Unmarshal might not work
 func parseIDTSM(in string) (Identity, error) {
-	id := make([]byte, hex.DecodedLen(len(in)))
-	_, err := hex.Decode(id, []byte(in))
-
-	x, y := elliptic.Unmarshal(elliptic.P256(), id)
-
-	pubkey := ecdsa.PublicKey{
-		Curve: elliptic.P256(),
-		X:     x,
-		Y:     y,
-	}
+	idTSM := IdentityTSM{}
+	_, err := hex.Decode(idTSM.PublicKey, []byte(in))
 	if err != nil {
 		return Identity{}, err
 	}
-	return Identity{TSM: &IdentityTSM{PublicKey: pubkey}}, nil
+
+	return Identity{TSM: &idTSM}, nil
 }
 
 func parseIDDarc(in string) (Identity, error) {
@@ -1525,8 +1522,17 @@ func (kcs SignerX509EC) Sign(msg []byte) ([]byte, error) {
 	return nil, errors.New("not yet implemented")
 }
 
+// SignerTSM holds the private key necessary to sign Darcs.
+// As this is only used in testing, it is not in proto.go and thus
+// not exported.
+type SignerTSM struct {
+	PrivateKey ecdsa.PrivateKey
+}
+
 // NewSignerTSM creates a tsm signer with a SECP256K1 key.
 // If a nil key is given, then a random key is generated.
+// This is mostly used for testing, as the real TSM is a hardware device
+// and not supported in tests.
 func NewSignerTSM(private ecdsa.PrivateKey) Signer {
 	if private.D == nil {
 		priv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
@@ -1535,7 +1541,7 @@ func NewSignerTSM(private ecdsa.PrivateKey) Signer {
 		}
 		private = *priv
 	}
-	return Signer{TSM: &SignerTSM{
+	return Signer{tsm: &SignerTSM{
 		PrivateKey: private,
 	}}
 }

@@ -2112,7 +2112,7 @@ public final class TrieProto {
     /**
      * <code>repeated .trie.InteriorNode interiors = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.TrieProto.InteriorNode>
+    java.util.List<ch.epfl.dedis.lib.proto.TrieProto.InteriorNode> 
         getInteriorsList();
     /**
      * <code>repeated .trie.InteriorNode interiors = 1;</code>
@@ -2125,7 +2125,7 @@ public final class TrieProto {
     /**
      * <code>repeated .trie.InteriorNode interiors = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.TrieProto.InteriorNodeOrBuilder>
+    java.util.List<? extends ch.epfl.dedis.lib.proto.TrieProto.InteriorNodeOrBuilder> 
         getInteriorsOrBuilderList();
     /**
      * <code>repeated .trie.InteriorNode interiors = 1;</code>
@@ -2315,7 +2315,7 @@ public final class TrieProto {
      * <code>repeated .trie.InteriorNode interiors = 1;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.TrieProto.InteriorNodeOrBuilder>
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.TrieProto.InteriorNodeOrBuilder> 
         getInteriorsOrBuilderList() {
       return interiors_;
     }
@@ -2829,7 +2829,7 @@ public final class TrieProto {
               interiorsBuilder_ = null;
               interiors_ = other.interiors_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              interiorsBuilder_ =
+              interiorsBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getInteriorsFieldBuilder() : null;
             } else {
@@ -3088,7 +3088,7 @@ public final class TrieProto {
       /**
        * <code>repeated .trie.InteriorNode interiors = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.TrieProto.InteriorNodeOrBuilder>
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.TrieProto.InteriorNodeOrBuilder> 
            getInteriorsOrBuilderList() {
         if (interiorsBuilder_ != null) {
           return interiorsBuilder_.getMessageOrBuilderList();
@@ -3114,12 +3114,12 @@ public final class TrieProto {
       /**
        * <code>repeated .trie.InteriorNode interiors = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.TrieProto.InteriorNode.Builder>
+      public java.util.List<ch.epfl.dedis.lib.proto.TrieProto.InteriorNode.Builder> 
            getInteriorsBuilderList() {
         return getInteriorsFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.TrieProto.InteriorNode, ch.epfl.dedis.lib.proto.TrieProto.InteriorNode.Builder, ch.epfl.dedis.lib.proto.TrieProto.InteriorNodeOrBuilder>
+          ch.epfl.dedis.lib.proto.TrieProto.InteriorNode, ch.epfl.dedis.lib.proto.TrieProto.InteriorNode.Builder, ch.epfl.dedis.lib.proto.TrieProto.InteriorNodeOrBuilder> 
           getInteriorsFieldBuilder() {
         if (interiorsBuilder_ == null) {
           interiorsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -3240,7 +3240,7 @@ public final class TrieProto {
        * <code>required .trie.LeafNode leaf = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.TrieProto.LeafNode, ch.epfl.dedis.lib.proto.TrieProto.LeafNode.Builder, ch.epfl.dedis.lib.proto.TrieProto.LeafNodeOrBuilder>
+          ch.epfl.dedis.lib.proto.TrieProto.LeafNode, ch.epfl.dedis.lib.proto.TrieProto.LeafNode.Builder, ch.epfl.dedis.lib.proto.TrieProto.LeafNodeOrBuilder> 
           getLeafFieldBuilder() {
         if (leafBuilder_ == null) {
           leafBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -3360,7 +3360,7 @@ public final class TrieProto {
        * <code>required .trie.EmptyNode empty = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.TrieProto.EmptyNode, ch.epfl.dedis.lib.proto.TrieProto.EmptyNode.Builder, ch.epfl.dedis.lib.proto.TrieProto.EmptyNodeOrBuilder>
+          ch.epfl.dedis.lib.proto.TrieProto.EmptyNode, ch.epfl.dedis.lib.proto.TrieProto.EmptyNode.Builder, ch.epfl.dedis.lib.proto.TrieProto.EmptyNodeOrBuilder> 
           getEmptyFieldBuilder() {
         if (emptyBuilder_ == null) {
           emptyBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -3469,22 +3469,22 @@ public final class TrieProto {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_trie_InteriorNode_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_trie_InteriorNode_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_trie_EmptyNode_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_trie_EmptyNode_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_trie_LeafNode_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_trie_LeafNode_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_trie_Proof_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_trie_Proof_fieldAccessorTable;
 

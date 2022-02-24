@@ -45,7 +45,7 @@ export default class IdentityWrapper extends Message<IdentityWrapper> {
         }
         if (idStr.startsWith("tsm:")) {
             const field = idStr.split(":", 2);
-            const tsm = new IdentityTsm({publickey: Buffer.from(field[1])});
+            const tsm = new IdentityTsm({publickey: Buffer.from(field[1], "hex")});
             return new IdentityWrapper({tsm});
         }
     }
