@@ -14,7 +14,7 @@ export default class IdentityWrapper extends Message<IdentityWrapper> {
      * @see README#Message classes
      */
     static register() {
-      registerMessage("Identity", IdentityWrapper, IdentityEd25519, IdentityDarc, IdentityDid);
+      registerMessage("Identity", IdentityWrapper, IdentityEd25519, IdentityDarc, IdentityDid, IdentityTsm);
     }
 
     /**

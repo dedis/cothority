@@ -1,7 +1,6 @@
 package calypso
 
 import (
-	"crypto/ecdsa"
 	"encoding/binary"
 	"testing"
 	"time"
@@ -230,7 +229,7 @@ func TestClient_Calypso_Simple(t *testing.T) {
 
 	admin := darc.NewSignerEd25519(nil, nil)
 	adminCt := uint64(1)
-	user := darc.NewSignerTSM(ecdsa.PrivateKey{})
+	user := darc.NewSignerTSM(nil)
 	//user := darc.NewSignerEd25519(nil, nil)
 	// Initialise the genesis message and send it to the service.
 	// The admin has the privilege to spawn darcs

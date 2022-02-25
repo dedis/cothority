@@ -120,7 +120,7 @@ export class WebSocketConnection implements IConnection {
             let timer = setTimeout(() => ws.close(1000, "timeout"), this.timeout);
 
             ws.onOpen(() => {
-                Log.lvl3("Sending message to", url.href);
+                Log.lvl3("Sending message", bytes.toString("hex"), "to", url.href);
                 ws.send(bytes);
             });
 

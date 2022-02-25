@@ -929,8 +929,7 @@ func (id Identity) String() string {
 	case 5:
 		return fmt.Sprintf("%s:%s", id.TypeString(), id.DID.DID)
 	case 6:
-		buf, _ := id.TSM.MarshalBinary()
-		return fmt.Sprintf("%s:%x", id.TypeString(), buf)
+		return fmt.Sprintf("%s:%x", id.TypeString(), id.TSM.PublicKey)
 	default:
 		return "No identity"
 	}
@@ -1061,17 +1060,6 @@ func (ide *IdentityTSM) Verify(msg []byte, sig []byte) error {
 	if !valid {
 		return errors.New("Signature failed to verify")
 	}
-	return nil
-}
-
-// MarshalBinary returns the compressed public key
-func (ide IdentityTSM) MarshalBinary() ([]byte, error) {
-	return ide.PublicKey, nil
-}
-
-// UnmarshalBinary stores the compressed public key
-func (ide *IdentityTSM) UnmarshalBinary(data []byte) error {
-	ide.PublicKey = data
 	return nil
 }
 
@@ -1533,16 +1521,16 @@ type SignerTSM struct {
 // If a nil key is given, then a random key is generated.
 // This is mostly used for testing, as the real TSM is a hardware device
 // and not supported in tests.
-func NewSignerTSM(private ecdsa.PrivateKey) Signer {
-	if private.D == nil {
+func NewSignerTSM(private *ecdsa.PrivateKey) Signer {
+	if private == nil {
 		priv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 		if err != nil {
 			panic("couldn't generate key: " + err.Error())
 		}
-		private = *priv
+		private = priv
 	}
 	return Signer{tsm: &SignerTSM{
-		PrivateKey: private,
+		PrivateKey: *private,
 	}}
 }
 
