@@ -598,7 +598,8 @@ func (s *Service) GetProof(req *GetProof) (*GetProofResponse, error) {
 // fulfill a given rule of a given darc. Because all darcs are now used in
 // an online fashion, we need to offer this check.
 func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthorizationResponse, err error) {
-	log.Lvlf2("%s getting authorizations of darc %x", s.ServerIdentity(), req.DarcID)
+	log.Lvlf2("%s getting authorizations of darc %x for identities %v",
+		s.ServerIdentity(), req.DarcID, req.Identities)
 
 	resp = &CheckAuthorizationResponse{}
 	st, err := s.GetReadOnlyStateTrie(req.ByzCoinID)

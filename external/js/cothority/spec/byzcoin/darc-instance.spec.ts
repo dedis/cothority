@@ -1,9 +1,7 @@
+import { randomBytes } from "crypto";
 import ByzCoinRPC from "../../src/byzcoin/byzcoin-rpc";
 import DarcInstance from "../../src/byzcoin/contracts/darc-instance";
-import Darc from "../../src/darc/darc";
-import IdentityDarc from "../../src/darc/identity-darc";
-import { Rule } from "../../src/darc/rules";
-import SignerEd25519 from "../../src/darc/signer-ed25519";
+import { Darc, IdentityDarc, IdentityTsm, IdentityWrapper, Rule, SignerEd25519 } from "../../src/darc";
 import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/conondes";
 
 describe("DarcInstance Tests", () => {
@@ -27,5 +25,21 @@ describe("DarcInstance Tests", () => {
         const di3 = await DarcInstance.spawn(rpc, darc.getBaseID(), [SIGNER], d3);
         expect(di1.ruleMatch(Darc.ruleSign, [sig])).toBeTruthy();
         expect(di1.ruleMatch(Darc.ruleSign, [new IdentityDarc({id: d2.getBaseID()})])).toBeTruthy();
+    });
+
+    it("should find tsm authorization", async () => {
+        const darc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster);
+
+        const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
+        rpc.setParallel(1);
+        const di = await DarcInstance.fromByzcoin(rpc, darc.getBaseID());
+
+        const id = new IdentityTsm({publickey: randomBytes(32)});
+        const newDarc = darc.evolve();
+        newDarc.addIdentity("spawn:test", id, Rule.OR);
+        await di.evolveDarcAndWait(newDarc, [SIGNER], 10);
+
+        const rules = await rpc.checkAuthorization(rpc.genesisID, darc.getBaseID(), IdentityWrapper.fromIdentity(id));
+        expect(rules).toEqual(["spawn:test"]);
     });
 });
