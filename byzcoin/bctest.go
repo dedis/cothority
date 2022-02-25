@@ -244,6 +244,38 @@ func (b *BCTest) TransferCoin(args *TxArgs, coinSrc, coinDst InstanceID,
 	})
 }
 
+// SpawnDarc spawns a new darc on byzcoin.
+func (b *BCTest) SpawnDarc(args *TxArgs, d *darc.Darc) {
+	buf, err := d.ToProto()
+	require.NoError(b.T, err)
+	b.SendInst(args, Instruction{
+		InstanceID: NewInstanceID(b.GenesisDarc.GetBaseID()),
+		Spawn: &Spawn{
+			ContractID: "darc",
+			Args: Arguments{
+				{Name: "darc", Value: buf},
+			},
+		},
+	})
+}
+
+// EvolveDarc invokes 'evolve' on the given darc. The darc must have a
+// 'version' greater than the already existing darc.
+func (b *BCTest) EvolveDarc(args *TxArgs, d *darc.Darc) {
+	buf, err := d.ToProto()
+	require.NoError(b.T, err)
+	b.SendInst(args, Instruction{
+		InstanceID: NewInstanceID(b.GenesisDarc.GetBaseID()),
+		Invoke: &Invoke{
+			ContractID: "darc",
+			Command:    "evolve",
+			Args: Arguments{
+				{Name: "darc", Value: buf},
+			},
+		},
+	})
+}
+
 // DummyContractName is the name of the dummy contract.
 const DummyContractName = "dummy"
 

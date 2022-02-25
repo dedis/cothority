@@ -14,7 +14,17 @@
     "typeRoots": [
       "../types",
       "./node_modules/@types"
-    ]
+    ],
+    "paths": {
+      "@dedis/kyber": [
+        "node_modules/@dedis/kyber/dist",
+        "node_modules/@dedis/kyber"
+      ],
+      "@dedis/kyber/*": [
+        "node_modules/@dedis/kyber/dist/*",
+        "node_modules/@dedis/kyber/*"
+      ]
+    }
   },
   "include": [
     "src/**/*"

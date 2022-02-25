@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"go.dedis.ch/protobuf"
 	"math/big"
 	"net/url"
 	"strings"
@@ -767,7 +768,7 @@ func testIdentity(t *testing.T, sig Signer) {
 // Test the different identities available - currently only Ed25519.
 func TestIdentities(t *testing.T) {
 	testIdentity(t, NewSignerEd25519(nil, nil))
-	testIdentity(t, NewSignerTSM(ecdsa.PrivateKey{}))
+	testIdentity(t, NewSignerTSM(nil))
 }
 
 // Test a signature from the TSM
@@ -794,10 +795,10 @@ func TestTSMSignature(t *testing.T) {
 
 // Make sure Marshalling and Unmarshalling work
 func TestTSMMarshalling(t *testing.T) {
-	id := NewSignerTSM(ecdsa.PrivateKey{}).Identity()
-	buf, err := id.TSM.MarshalBinary()
+	id := NewSignerTSM(nil).Identity()
+	buf, err := protobuf.Encode(&id)
 	require.NoError(t, err)
-	var id2 IdentityTSM
-	require.NoError(t, id2.UnmarshalBinary(buf))
-	require.True(t, id.Equal(&Identity{TSM: &id2}))
+	var id2 Identity
+	require.NoError(t, protobuf.Decode(buf, &id2))
+	require.True(t, id.Equal(&id2))
 }

@@ -1478,6 +1478,31 @@ func TestService_DarcDelegation(t *testing.T) {
 	require.True(t, pr.Proof.InclusionProof.Match(darc3.GetBaseID()))
 }
 
+func TestService_CheckAuthorization_TSM(t *testing.T) {
+	b := newBCTRun(t, nil)
+	defer b.CloseAll()
+
+	// Add a new rule to the genesis darc and check if it is
+	// authorized.
+	signerTSM := darc.NewSignerTSM(nil)
+	ids := []darc.Identity{signerTSM.Identity()}
+	tsmDarcRules := darc.InitRules(ids, ids)
+	tsmDarc := darc.NewDarc(tsmDarcRules, []byte("tsmDarc"))
+	b.SpawnDarc(nil, tsmDarc)
+
+	newDarc := b.GenesisDarc.Copy()
+	require.NoError(t, newDarc.EvolveFrom(b.GenesisDarc))
+	require.NoError(t, newDarc.Rules.AddRule("spawn:test",
+		expression.Expr(darc.NewIdentityDarc(tsmDarc.GetBaseID()).String())))
+	b.EvolveDarc(nil, newDarc)
+
+	log.Lvl1("TSM:", signerTSM.Identity())
+	actions, err := b.Client.CheckAuthorization(b.GenesisDarc.GetBaseID(),
+		signerTSM.Identity())
+	require.NoError(t, err)
+	require.Contains(t, actions, darc.Action("spawn:test"))
+}
+
 func TestService_CheckAuthorization(t *testing.T) {
 	b := newBCTRun(t, nil)
 	defer b.CloseAll()
