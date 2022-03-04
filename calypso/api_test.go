@@ -2,6 +2,8 @@ package calypso
 
 import (
 	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"encoding/binary"
 	"testing"
 	"time"
@@ -205,9 +207,9 @@ func TestClient_Calypso(t *testing.T) {
 
 	// Make sure you can't decrypt with non-matching proofs
 	_, err = calypsoClient.DecryptKey(&DecryptKey{Read: *prRe1, Write: *prWr2})
-	require.Error(t, err)
+	require.NotNil(t, err)
 	_, err = calypsoClient.DecryptKey(&DecryptKey{Read: *prRe2, Write: *prWr1})
-	require.Error(t, err)
+	require.NotNil(t, err)
 
 	// Make sure you can actually decrypt
 	dk1, err := calypsoClient.DecryptKey(&DecryptKey{Read: *prRe1, Write: *prWr1})
@@ -223,15 +225,20 @@ func TestClient_Calypso(t *testing.T) {
 // Tests the Calypso system with a simple write/read scenario.
 // But it does the signing outside of the `Read` and `Write` methods for
 // integration of the MPC signing by OneKey.
-func TestClient_Calypso_Simple(t *testing.T) {
+func BenchmarkClient_Calypso_Simple(b *testing.B) {
+	b.StopTimer()
 	l := onet.NewTCPTest(cothority.Suite)
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 
+	//create an example public key
+	random := rand.Reader
+	p, err := ecdsa.GenerateKey(elliptic.P256(), random)
+	require.NoError(b, err)
+
 	admin := darc.NewSignerEd25519(nil, nil)
 	adminCt := uint64(1)
-	user := darc.NewSignerTSM(ecdsa.PrivateKey{})
-	//user := darc.NewSignerEd25519(nil, nil)
+	user := darc.NewIdentityTSM(p.PublicKey)
 	// Initialise the genesis message and send it to the service.
 	// The admin has the privilege to spawn darcs
 	msg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
@@ -239,109 +246,112 @@ func TestClient_Calypso_Simple(t *testing.T) {
 		admin.Identity())
 
 	msg.BlockInterval = 500 * time.Millisecond
-	require.NoError(t, err)
+	require.NoError(b, err)
 	// The darc inside it should be valid.
 	gDarc := msg.GenesisDarc
-	require.Nil(t, gDarc.Verify(true))
+	require.Nil(b, gDarc.Verify(true))
 	//Create Ledger
 	c, _, err := byzcoin.NewLedger(msg, false)
-	require.NoError(t, err)
+	require.NoError(b, err)
 	//Create a Calypso Client (Byzcoin + Onet)
 	calypsoClient := NewClient(c)
 
 	//Create the LTS
 	for _, who := range roster.List {
 		err := calypsoClient.Authorize(who, c.ID)
-		require.NoError(t, err)
+		require.NoError(b, err)
 	}
 	ltsReply, err := calypsoClient.CreateLTS(roster, gDarc.GetBaseID(), []darc.Signer{admin}, []uint64{adminCt})
 	adminCt++
-	require.NoError(t, err)
+	require.NoError(b, err)
 	//If no error, assign it
 	//calypsoClient.ltsReply = ltsReply
-
+	b.StartTimer()
 	//Create a signer darc
-	userDarc := darc.NewDarc(darc.InitRules([]darc.Identity{user.Identity()},
-		[]darc.Identity{user.Identity()}), []byte("Provider1"))
-	// user can read and write.
-	// This can be changed to two different public keys.
-	err = userDarc.Rules.AddRule(darc.Action("spawn:"+ContractWriteID),
-		expression.InitOrExpr(user.Identity().String()))
-	require.NoError(t, err)
-	err = userDarc.Rules.AddRule(darc.Action("spawn:"+ContractReadID),
-		expression.InitOrExpr(user.Identity().String()))
-	require.NoError(t, err)
-	require.NotNil(t, userDarc)
-	_, err = calypsoClient.SpawnDarc(admin, adminCt, gDarc, *userDarc, 10)
-	adminCt++
-	require.NoError(t, err)
+	for n := 0; n < b.N; n++ {
+		
+		userDarc := darc.NewDarc(darc.InitRules([]darc.Identity{user},
+			[]darc.Identity{user}), []byte("Provider1"))
+		// user can read and write.
+		// This can be changed to two different public keys.
+		err = userDarc.Rules.AddRule(darc.Action("spawn:"+ContractWriteID),
+			expression.InitOrExpr(user.String()))
+		require.NoError(b, err)
+		err = userDarc.Rules.AddRule(darc.Action("spawn:"+ContractReadID),
+			expression.InitOrExpr(user.String()))
+		require.NoError(b, err)
+		require.NotNil(b, userDarc)
+		_, err = calypsoClient.SpawnDarc(admin, adminCt, gDarc, *userDarc, 10)
+		adminCt++
+		require.NoError(b, err)
 
-	data := []byte("Some secret data - or the user's private key")
-	// Create a Write structure
-	write1, err := NewWriteData(cothority.Suite,
-		ltsReply.InstanceID,
-		userDarc.GetBaseID(), ltsReply.X, data)
-	require.NoError(t, err)
+		data := []byte("johns_private_key")
+		// Create a Write structure
+		write1, err := NewWriteData(cothority.Suite,
+			ltsReply.InstanceID,
+			userDarc.GetBaseID(), ltsReply.X, data)
+		require.NoError(b, err)
 
-	// Create a write-instance and send it to Byzcoin - here
-	// the instruction and the transaction is created manually,
-	// so that an external signer can sign the hash of the instruction.
-	wrInst, err := ContractWriteSpawnInstruction(write1, userDarc)
-	require.NoError(t, err)
-	wrInst.SignerCounter = []uint64{1}
-	wrInst.SignerIdentities = []darc.Identity{user.Identity()}
-	wrTx, err := calypsoClient.bcClient.CreateTransaction(*wrInst)
-	require.NoError(t, err)
-	digest := wrTx.Instructions.Hash()
+		// Create a write-instance and send it to Byzcoin - here
+		// the instruction and the transaction is created manually,
+		// so that an external signer can sign the hash of the instruction.
+		wrInst, err := ContractWriteSpawnInstruction(write1, userDarc)
+		require.NoError(b, err)
+		wrInst.SignerCounter = []uint64{1}
+		wrInst.SignerIdentities = []darc.Identity{user}
+		wrTx, err := calypsoClient.bcClient.CreateTransaction(*wrInst)
+		require.NoError(b, err)
+		digest := wrTx.Instructions.Hash()
 
-	// This signature can be replaced by an external signature.
-	//TODO add sepior signature of digest here
-	signature, err := user.Sign(digest)
-	require.NoError(t, err)
-	wrTx.Instructions[0].Signatures = [][]byte{signature}
+		// This signature can be replaced by an external signature.
+		//TODO add sepior signature of digest here
+		signature, err := ecdsa.SignASN1(random, p, digest)
+		require.NoError(b, err)
+		wrTx.Instructions[0].Signatures = [][]byte{signature}
 
-	// Send the transaction to ByzCoin
-	_, err = calypsoClient.bcClient.AddTransactionAndWait(wrTx, 10)
-	require.NoError(t, err)
-	wrID := wrTx.Instructions[0].DeriveID("")
-	proofWr, err := calypsoClient.WaitProof(wrID, time.Second, nil)
-	require.NoError(t, err)
+		// Send the transaction to ByzCoin
+		_, err = calypsoClient.bcClient.AddTransactionAndWait(wrTx, 10)
+		require.NoError(b, err)
+		wrID := wrTx.Instructions[0].DeriveID("")
+		proofWr, err := calypsoClient.WaitProof(wrID, time.Second, nil)
+		require.NoError(b, err)
+		
+		// Create a read-instance and send it to ByzCoin.
+		ephemeral := key.NewKeyPair(cothority.Suite)
+		readInst, err := ContractReadSpawnInstruction(wrID, ephemeral.Public)
+		require.NoError(b, err)
+		readInst.SignerCounter = []uint64{2}
+		readInst.SignerIdentities = []darc.Identity{user}
+		readTx, err := calypsoClient.bcClient.CreateTransaction(*readInst)
+		require.NoError(b, err)
+		digest = readTx.Instructions.Hash()
 
-	// Create a read-instance and send it to ByzCoin.
-	ephemeral := key.NewKeyPair(cothority.Suite)
-	readInst, err := ContractReadSpawnInstruction(wrID, ephemeral.Public)
-	require.NoError(t, err)
-	readInst.SignerCounter = []uint64{2}
-	readInst.SignerIdentities = []darc.Identity{user.Identity()}
-	readTx, err := calypsoClient.bcClient.CreateTransaction(*readInst)
-	require.NoError(t, err)
-	digest = readTx.Instructions.Hash()
+		// This signature can be replaced by an external signature
+		// TODO add signature on digest from MPC nodes
+		signature, err = ecdsa.SignASN1(random, p, digest)
+		require.NoError(b, err)
+		readTx.Instructions[0].Signatures = [][]byte{signature}
+		readID := readTx.Instructions[0].DeriveID("")
 
-	// This signature can be replaced by an external signature
-	// TODO add signature on digest from MPC nodes
-	signature, err = user.Sign(digest)
-	require.NoError(t, err)
-	readTx.Instructions[0].Signatures = [][]byte{signature}
-	readID := readTx.Instructions[0].DeriveID("")
+		// Send the transaction to ByzCoin
+		_, err = calypsoClient.bcClient.AddTransactionAndWait(readTx, 10)
+		require.NoError(b, err)
+		proofRd, err := calypsoClient.WaitProof(readID, time.Second,
+			nil)
+		require.NoError(b, err)
 
-	// Send the transaction to ByzCoin
-	_, err = calypsoClient.bcClient.AddTransactionAndWait(readTx, 10)
-	require.NoError(t, err)
-	proofRd, err := calypsoClient.WaitProof(readID, time.Second,
-		nil)
-	require.NoError(t, err)
-
-	// Make sure you can actually decrypt
-	dk, err := calypsoClient.DecryptKey(&DecryptKey{Read: *proofRd,
-		Write: *proofWr})
-	require.NoError(t, err)
-	require.True(t, dk.X.Equal(ltsReply.X))
-	keyCopy, err := dk.RecoverKey(ephemeral.Private)
-	require.NoError(t, err)
-	var wrCopy Write
-	require.NoError(t, proofWr.VerifyAndDecode(cothority.Suite, ContractWriteID,
-		&wrCopy))
-	dataDecrypt, err := wrCopy.Decrypt(keyCopy)
-	require.NoError(t, err)
-	require.Equal(t, data, dataDecrypt)
+		// Make sure you can actually decrypt
+		dk, err := calypsoClient.DecryptKey(&DecryptKey{Read: *proofRd,
+			Write: *proofWr})
+		require.NoError(b, err)
+		require.True(b, dk.X.Equal(ltsReply.X))
+		keyCopy, err := dk.RecoverKey(ephemeral.Private)
+		require.NoError(b, err)
+		var wrCopy Write
+		require.NoError(b, proofWr.VerifyAndDecode(cothority.Suite, ContractWriteID,
+			&wrCopy))
+		dataDecrypt, err := wrCopy.Decrypt(keyCopy)
+		require.NoError(b, err)
+		require.Equal(b, data, dataDecrypt)
+	}
 }
