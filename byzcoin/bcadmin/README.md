@@ -268,10 +268,10 @@ A `cached.db` is available at https://demo.c4dt.org/omniledger/cached.db
 
 ## User management
 
-To interact with the (dynacred)[../../personhood/dynacred/README.md]
+To interact with the [dynacred](../../personhood/dynacred/README.md)
 structures on ByzCoin, bcadmin allows to link to your personal dynacred-account.
-This supposes you're using the (omniledger)[https://github.com/c4dt
-/omniledger] web-interface to manage your account.
+This supposes you're using the [omniledger](https://github.com/c4dt/omniledger)
+web-interface to manage your account.
 
 In your account, e.g., https://login.c4dt.org/admin/devices, start by adding a
  new device.
