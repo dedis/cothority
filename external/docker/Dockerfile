@@ -13,6 +13,8 @@ COPY co6/*.toml co6/
 COPY co7/*.toml co7/
 COPY conode /usr/local/bin/
 COPY conode /root
+COPY bcadmin /root
+COPY csadmin /root
 COPY run_nodes.sh /root
 
 # local - run this as a set of local nodes in the docker

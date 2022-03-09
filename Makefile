@@ -29,12 +29,15 @@ proto:
 
 docker:
 	docker run -t -v $(PWD):/cothority golang:1.15-buster \
-		bash -c "cd /cothority; go build -o external/docker/conode -tags test ./conode"
+		bash -c "cd /cothority && \
+		go build -o external/docker/conode -tags test ./conode && \
+		go build -o external/docker/csadmin -tags test ./calypso/csadmin && \
+		go build -o external/docker/bcadmin -tags test ./byzcoin/bcadmin"
 	cp conode/run_nodes.sh external/docker
 	docker build -t $(TEST_IMAGE_NAME) external/docker
 
 docker_test_run: docker
-	docker run -ti -p7770-7777:7770-7777 dedis/conode-test
+	docker run -ti -p7770-7777:7770-7777 $(TEST_IMAGE_NAME)
 
 test_java: docker
 	cd external/java; mvn test
