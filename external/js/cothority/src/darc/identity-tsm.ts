@@ -27,7 +27,7 @@ export default class IdentityTsm extends Message<IdentityTsm> implements IIdenti
 
     /** @inheritdoc */
     toBytes(): Buffer {
-        return Buffer.from(this.toString());
+        return Buffer.from(this.publickey);
     }
 
     /** @inheritdoc */
