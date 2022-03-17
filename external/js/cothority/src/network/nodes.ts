@@ -190,6 +190,7 @@ export class Nodes {
  */
 export class Node {
     private services: Map<string, IConnection> = new Map<string, IConnection>();
+    private timeout: undefined | number;
 
     constructor(readonly address: string) {
     }
@@ -203,7 +204,11 @@ export class Node {
         if (this.services.has(name)) {
             return this.services.get(name);
         }
-        this.services.set(name, new WebSocketConnection(this.address, name));
+        const conn = new WebSocketConnection(this.address, name);
+        if (this.timeout !== undefined) {
+            conn.setTimeout(this.timeout);
+        }
+        this.services.set(name, conn);
         return this.getService(name);
     }
 
@@ -211,6 +216,7 @@ export class Node {
      * Sets the timeout for all connections of this node.
      */
     setTimeout(t: number) {
+        this.timeout = t;
         this.services.forEach((conn) => conn.setTimeout(t));
     }
 }

@@ -122,6 +122,8 @@ export class GetUpdateChain extends Message<GetUpdateChain> {
     }
 
     readonly latestID: Buffer;
+    readonly maxHeight: number | null;
+    readonly maxBlocks: number | null;
 
     constructor(props?: Properties<GetUpdateChain>) {
         super(props);

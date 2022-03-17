@@ -8,8 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/network"
 
 	"go.dedis.ch/cothority/v3/skipchain"
@@ -29,43 +27,6 @@ const (
 
 func init() {
 	network.RegisterMessages(Election{}, Ballot{}, Box{}, Mix{}, Partial{})
-}
-
-// Election is the base object for a voting procedure. It is stored
-// in the second skipblock right after the (empty) genesis block. A reference
-// to the election skipchain is appended to the master skipchain upon opening.
-type Election struct {
-	Name    map[string]string // Name of the election. lang-code, value pair
-	Creator uint32            // Creator is the election responsible.
-	Users   []uint32          // Users is the list of registered voters.
-
-	ID        skipchain.SkipBlockID // ID is the hash of the genesis block.
-	Master    skipchain.SkipBlockID // Master is the hash of the master skipchain.
-	Roster    *onet.Roster          // Roster is the set of responsible nodes.
-	Key       kyber.Point           // Key is the DKG public key.
-	MasterKey kyber.Point           // MasterKey is the front-end public key.
-	Stage     ElectionState         // Stage indicates the phase of election and is used for filtering in frontend
-
-	Candidates []uint32          // Candidates is the list of candidate scipers.
-	MaxChoices int               // MaxChoices is the max votes in allowed in a ballot.
-	Subtitle   map[string]string // Description in string format. lang-code, value pair
-	MoreInfo   string            // MoreInfo is the url to AE Website for the given election.
-	Start      int64             // Start denotes the election start unix timestamp
-	End        int64             // End (termination) datetime as unix timestamp.
-
-	Theme  string // Theme denotes the CSS class for selecting background color of card title.
-	Footer Footer // Footer denotes the Election footer
-
-	Voted        skipchain.SkipBlockID // Voted denotes if a user has already cast a ballot for this election.
-	MoreInfoLang map[string]string     // MoreInfoLang, is MoreInfo, but as a lang-code/value map. MoreInfoLang should be used in preference to MoreInfo.
-}
-
-// Footer denotes the fields for the election footer
-type Footer struct {
-	Text         string // Text is for storing footer content.
-	ContactTitle string // ContactTitle stores the title of the Contact person.
-	ContactPhone string // ContactPhone stores the phone number of the Contact person.
-	ContactEmail string // ContactEmail stores the email address of the Contact person.
 }
 
 // GetElection fetches the election structure from its skipchain and sets the stage.

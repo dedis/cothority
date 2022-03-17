@@ -188,6 +188,12 @@ func getCommands() cli.Commands {
 						},
 					},
 				},
+				{
+					Name:      "scan",
+					Usage:     "get all skipchains from a node",
+					Action:    scScan,
+					ArgsUsage: "URL of node",
+				},
 			},
 		},
 

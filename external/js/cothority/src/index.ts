@@ -3,6 +3,7 @@ import * as byzcoin from "./byzcoin";
 import * as contracts from "./byzcoin/contracts";
 import * as calypso from "./calypso";
 import * as darc from "./darc";
+import * as evoting from "./evoting/proto";
 import Log, { Logger } from "./log";
 import * as network from "./network";
 import * as protobuf from "./protobuf";
@@ -19,6 +20,7 @@ export {
     protobuf,
     skipchain,
     status,
+    evoting,
     Log,
     Logger,
 };

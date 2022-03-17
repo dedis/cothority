@@ -100,6 +100,8 @@ export class LongTermSecret extends OnChainSecretRPC {
             roster = LtsInstanceInfo.decode(instBS.getValue().value).roster;
         }
         const conn = new RosterWSConnection(roster, OnChainSecretRPC.serviceID);
+        // As the LTS servers can be down, timeout quite quickly.
+        conn.setTimeout(2000);
         const reply = await conn.send<CreateLTSReply>(new GetLTSReply({ltsid}), CreateLTSReply);
         return new LongTermSecret(bc, ltsid, reply.X, roster);
     }

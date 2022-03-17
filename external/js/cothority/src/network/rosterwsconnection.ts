@@ -86,9 +86,7 @@ export class RosterWSConnection implements IConnection {
                 do {
                     const idStr = `${this.connNbr}/${msgNbr.toString()}: ${conn.getURL()}`;
                     try {
-                        Log.lvl3(idStr, "sending");
                         const sub = await conn.send(message, reply);
-                        Log.lvl3(idStr, "received OK");
 
                         if (list.done(conn) === 0) {
                             Log.lvl3(idStr, "first to receive");

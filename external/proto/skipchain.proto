@@ -64,6 +64,8 @@ message GetSingleBlockByIndexReply {
 message GetUpdateChain {
 	// latest known id of a block.
 	required bytes latestID = 1;
+  optional sint32 maxHeight = 2;
+  optional sint32 maxBlocks = 3;
 }
 
 // GetUpdateChainReply - returns the shortest chain to the current SkipBlock,
