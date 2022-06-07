@@ -3,8 +3,6 @@ package lib
 import (
 	"errors"
 
-	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/network"
 
 	"go.dedis.ch/cothority/v3/skipchain"
@@ -12,24 +10,6 @@ import (
 
 func init() {
 	network.RegisterMessages(Master{}, Link{})
-}
-
-// Master is the foundation object of the entire service.
-// It contains mission critical information that can only be accessed and
-// set by an administrators.
-type Master struct {
-	ID     skipchain.SkipBlockID // ID is the hash of the genesis skipblock.
-	Roster *onet.Roster          // Roster is the set of responsible conodes.
-
-	Admins []uint32 // Admins is the list of administrators.
-
-	Key kyber.Point // Key is the front-end public key.
-}
-
-// Link is a wrapper around the genesis Skipblock identifier of an
-// election. Every newly created election adds a new link to the master Skipchain.
-type Link struct {
-	ID skipchain.SkipBlockID
 }
 
 // GetMaster retrieves the master object from its skipchain.

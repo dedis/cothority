@@ -5048,6 +5048,28 @@ public final class SkipchainProto {
      * @return The latestID.
      */
     com.google.protobuf.ByteString getLatestID();
+
+    /**
+     * <code>optional sint32 maxHeight = 2;</code>
+     * @return Whether the maxHeight field is set.
+     */
+    boolean hasMaxHeight();
+    /**
+     * <code>optional sint32 maxHeight = 2;</code>
+     * @return The maxHeight.
+     */
+    int getMaxHeight();
+
+    /**
+     * <code>optional sint32 maxBlocks = 3;</code>
+     * @return Whether the maxBlocks field is set.
+     */
+    boolean hasMaxBlocks();
+    /**
+     * <code>optional sint32 maxBlocks = 3;</code>
+     * @return The maxBlocks.
+     */
+    int getMaxBlocks();
   }
   /**
    * <pre>
@@ -5105,6 +5127,16 @@ public final class SkipchainProto {
             case 10: {
               bitField0_ |= 0x00000001;
               latestID_ = input.readBytes();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              maxHeight_ = input.readSInt32();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              maxBlocks_ = input.readSInt32();
               break;
             }
             default: {
@@ -5167,6 +5199,44 @@ public final class SkipchainProto {
       return latestID_;
     }
 
+    public static final int MAXHEIGHT_FIELD_NUMBER = 2;
+    private int maxHeight_;
+    /**
+     * <code>optional sint32 maxHeight = 2;</code>
+     * @return Whether the maxHeight field is set.
+     */
+    @java.lang.Override
+    public boolean hasMaxHeight() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     * <code>optional sint32 maxHeight = 2;</code>
+     * @return The maxHeight.
+     */
+    @java.lang.Override
+    public int getMaxHeight() {
+      return maxHeight_;
+    }
+
+    public static final int MAXBLOCKS_FIELD_NUMBER = 3;
+    private int maxBlocks_;
+    /**
+     * <code>optional sint32 maxBlocks = 3;</code>
+     * @return Whether the maxBlocks field is set.
+     */
+    @java.lang.Override
+    public boolean hasMaxBlocks() {
+      return ((bitField0_ & 0x00000004) != 0);
+    }
+    /**
+     * <code>optional sint32 maxBlocks = 3;</code>
+     * @return The maxBlocks.
+     */
+    @java.lang.Override
+    public int getMaxBlocks() {
+      return maxBlocks_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -5188,6 +5258,12 @@ public final class SkipchainProto {
       if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, latestID_);
       }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        output.writeSInt32(2, maxHeight_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        output.writeSInt32(3, maxBlocks_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -5200,6 +5276,14 @@ public final class SkipchainProto {
       if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, latestID_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt32Size(2, maxHeight_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt32Size(3, maxBlocks_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -5221,6 +5305,16 @@ public final class SkipchainProto {
         if (!getLatestID()
             .equals(other.getLatestID())) return false;
       }
+      if (hasMaxHeight() != other.hasMaxHeight()) return false;
+      if (hasMaxHeight()) {
+        if (getMaxHeight()
+            != other.getMaxHeight()) return false;
+      }
+      if (hasMaxBlocks() != other.hasMaxBlocks()) return false;
+      if (hasMaxBlocks()) {
+        if (getMaxBlocks()
+            != other.getMaxBlocks()) return false;
+      }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -5235,6 +5329,14 @@ public final class SkipchainProto {
       if (hasLatestID()) {
         hash = (37 * hash) + LATESTID_FIELD_NUMBER;
         hash = (53 * hash) + getLatestID().hashCode();
+      }
+      if (hasMaxHeight()) {
+        hash = (37 * hash) + MAXHEIGHT_FIELD_NUMBER;
+        hash = (53 * hash) + getMaxHeight();
+      }
+      if (hasMaxBlocks()) {
+        hash = (37 * hash) + MAXBLOCKS_FIELD_NUMBER;
+        hash = (53 * hash) + getMaxBlocks();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -5377,6 +5479,10 @@ public final class SkipchainProto {
         super.clear();
         latestID_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
+        maxHeight_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        maxBlocks_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -5409,6 +5515,14 @@ public final class SkipchainProto {
           to_bitField0_ |= 0x00000001;
         }
         result.latestID_ = latestID_;
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.maxHeight_ = maxHeight_;
+          to_bitField0_ |= 0x00000002;
+        }
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.maxBlocks_ = maxBlocks_;
+          to_bitField0_ |= 0x00000004;
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -5460,6 +5574,12 @@ public final class SkipchainProto {
         if (other == ch.epfl.dedis.lib.proto.SkipchainProto.GetUpdateChain.getDefaultInstance()) return this;
         if (other.hasLatestID()) {
           setLatestID(other.getLatestID());
+        }
+        if (other.hasMaxHeight()) {
+          setMaxHeight(other.getMaxHeight());
+        }
+        if (other.hasMaxBlocks()) {
+          setMaxBlocks(other.getMaxBlocks());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -5548,6 +5668,84 @@ public final class SkipchainProto {
       public Builder clearLatestID() {
         bitField0_ = (bitField0_ & ~0x00000001);
         latestID_ = getDefaultInstance().getLatestID();
+        onChanged();
+        return this;
+      }
+
+      private int maxHeight_ ;
+      /**
+       * <code>optional sint32 maxHeight = 2;</code>
+       * @return Whether the maxHeight field is set.
+       */
+      @java.lang.Override
+      public boolean hasMaxHeight() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       * <code>optional sint32 maxHeight = 2;</code>
+       * @return The maxHeight.
+       */
+      @java.lang.Override
+      public int getMaxHeight() {
+        return maxHeight_;
+      }
+      /**
+       * <code>optional sint32 maxHeight = 2;</code>
+       * @param value The maxHeight to set.
+       * @return This builder for chaining.
+       */
+      public Builder setMaxHeight(int value) {
+        bitField0_ |= 0x00000002;
+        maxHeight_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional sint32 maxHeight = 2;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearMaxHeight() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        maxHeight_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private int maxBlocks_ ;
+      /**
+       * <code>optional sint32 maxBlocks = 3;</code>
+       * @return Whether the maxBlocks field is set.
+       */
+      @java.lang.Override
+      public boolean hasMaxBlocks() {
+        return ((bitField0_ & 0x00000004) != 0);
+      }
+      /**
+       * <code>optional sint32 maxBlocks = 3;</code>
+       * @return The maxBlocks.
+       */
+      @java.lang.Override
+      public int getMaxBlocks() {
+        return maxBlocks_;
+      }
+      /**
+       * <code>optional sint32 maxBlocks = 3;</code>
+       * @param value The maxBlocks to set.
+       * @return This builder for chaining.
+       */
+      public Builder setMaxBlocks(int value) {
+        bitField0_ |= 0x00000004;
+        maxBlocks_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional sint32 maxBlocks = 3;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearMaxBlocks() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        maxBlocks_ = 0;
         onChanged();
         return this;
       }
@@ -11999,24 +12197,25 @@ public final class SkipchainProto {
       "lockByIndex\022\017\n\007genesis\030\001 \002(\014\022\r\n\005index\030\002 " +
       "\002(\021\"l\n\032GetSingleBlockByIndexReply\022\'\n\tski" +
       "pblock\030\001 \002(\0132\024.skipchain.SkipBlock\022%\n\005li" +
-      "nks\030\002 \003(\0132\026.skipchain.ForwardLink\"\"\n\016Get" +
-      "UpdateChain\022\020\n\010latestID\030\001 \002(\014\";\n\023GetUpda" +
-      "teChainReply\022$\n\006update\030\001 \003(\0132\024.skipchain" +
-      ".SkipBlock\"\230\002\n\tSkipBlock\022\r\n\005index\030\001 \002(\021\022" +
-      "\016\n\006height\030\002 \002(\021\022\022\n\nmax_height\030\003 \002(\021\022\023\n\013b" +
-      "ase_height\030\004 \002(\021\022\021\n\tbacklinks\030\005 \003(\014\022\021\n\tv" +
-      "erifiers\030\006 \003(\014\022\017\n\007genesis\030\007 \002(\014\022\014\n\004data\030" +
-      "\010 \002(\014\022\034\n\006roster\030\t \002(\0132\014.onet.Roster\022\014\n\004h" +
-      "ash\030\n \002(\014\022\'\n\007forward\030\013 \003(\0132\026.skipchain.F" +
-      "orwardLink\022\017\n\007payload\030\014 \001(\014\022\030\n\020signature" +
-      "_scheme\030\r \001(\r\"r\n\013ForwardLink\022\014\n\004from\030\001 \002" +
-      "(\014\022\n\n\002to\030\002 \002(\014\022\037\n\tnewRoster\030\003 \001(\0132\014.onet" +
-      ".Roster\022(\n\tsignature\030\004 \002(\0132\025.skipchain.B" +
-      "yzcoinSig\"&\n\nByzcoinSig\022\013\n\003msg\030\001 \002(\014\022\013\n\003" +
-      "sig\030\002 \002(\014\"1\n\nSchnorrSig\022\021\n\tchallenge\030\001 \002" +
-      "(\014\022\020\n\010response\030\002 \002(\014\".\n\tException\022\r\n\005ind" +
-      "ex\030\001 \002(\021\022\022\n\ncommitment\030\002 \002(\014B)\n\027ch.epfl." +
-      "dedis.lib.protoB\016SkipchainProto"
+      "nks\030\002 \003(\0132\026.skipchain.ForwardLink\"H\n\016Get" +
+      "UpdateChain\022\020\n\010latestID\030\001 \002(\014\022\021\n\tmaxHeig" +
+      "ht\030\002 \001(\021\022\021\n\tmaxBlocks\030\003 \001(\021\";\n\023GetUpdate" +
+      "ChainReply\022$\n\006update\030\001 \003(\0132\024.skipchain.S" +
+      "kipBlock\"\230\002\n\tSkipBlock\022\r\n\005index\030\001 \002(\021\022\016\n" +
+      "\006height\030\002 \002(\021\022\022\n\nmax_height\030\003 \002(\021\022\023\n\013bas" +
+      "e_height\030\004 \002(\021\022\021\n\tbacklinks\030\005 \003(\014\022\021\n\tver" +
+      "ifiers\030\006 \003(\014\022\017\n\007genesis\030\007 \002(\014\022\014\n\004data\030\010 " +
+      "\002(\014\022\034\n\006roster\030\t \002(\0132\014.onet.Roster\022\014\n\004has" +
+      "h\030\n \002(\014\022\'\n\007forward\030\013 \003(\0132\026.skipchain.For" +
+      "wardLink\022\017\n\007payload\030\014 \001(\014\022\030\n\020signature_s" +
+      "cheme\030\r \001(\r\"r\n\013ForwardLink\022\014\n\004from\030\001 \002(\014" +
+      "\022\n\n\002to\030\002 \002(\014\022\037\n\tnewRoster\030\003 \001(\0132\014.onet.R" +
+      "oster\022(\n\tsignature\030\004 \002(\0132\025.skipchain.Byz" +
+      "coinSig\"&\n\nByzcoinSig\022\013\n\003msg\030\001 \002(\014\022\013\n\003si" +
+      "g\030\002 \002(\014\"1\n\nSchnorrSig\022\021\n\tchallenge\030\001 \002(\014" +
+      "\022\020\n\010response\030\002 \002(\014\".\n\tException\022\r\n\005index" +
+      "\030\001 \002(\021\022\022\n\ncommitment\030\002 \002(\014B)\n\027ch.epfl.de" +
+      "dis.lib.protoB\016SkipchainProto"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -12070,7 +12269,7 @@ public final class SkipchainProto {
     internal_static_skipchain_GetUpdateChain_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_skipchain_GetUpdateChain_descriptor,
-        new java.lang.String[] { "LatestID", });
+        new java.lang.String[] { "LatestID", "MaxHeight", "MaxBlocks", });
     internal_static_skipchain_GetUpdateChainReply_descriptor =
       getDescriptor().getMessageTypes().get(8);
     internal_static_skipchain_GetUpdateChainReply_fieldAccessorTable = new

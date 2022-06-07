@@ -147,14 +147,17 @@ export default class SkipchainRPC {
      *
      * @param latestID  ID of the block
      * @param verify    Verify the integrity of the chain when true
+     * @param acceptProxy if another node can reply even if its not in the roster
+     * @param maxHeight What maximal height to jump. 0: as high as possible, 1: only direct links
      * @returns a promise that resolves with the list of blocks
      */
-    async getUpdateChain(latestID: Buffer, verify = true, acceptProxy = false): Promise<SkipBlock[]> {
+    async getUpdateChain(latestID: Buffer, verify = true, acceptProxy = false,
+                         maxHeight = 0): Promise<SkipBlock[]> {
         const blocks: SkipBlock[] = [];
         // Run as long as there is a new blockID to be checked
         for (let previousID = Buffer.alloc(0); !previousID.equals(latestID);) {
             previousID = latestID;
-            const req = new GetUpdateChain({latestID});
+            const req = new GetUpdateChain({latestID, maxHeight});
             const ret = await this.conn.send<GetUpdateChainReply>(req, GetUpdateChainReply);
             const newBlocks = ret.update;
             if (newBlocks.length === 0) {

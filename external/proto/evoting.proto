@@ -1,0 +1,126 @@
+syntax = "proto2";
+package evoting;
+import "onet.proto";
+
+option java_package = "ch.epfl.dedis.lib.proto";
+option java_outer_classname = "Evoting";
+
+// Transaction is the sole data structure withing the blocks of an election
+// skipchain, it holds all the other containers.
+message Transaction {
+  optional Master master = 1;
+  optional Link link = 2;
+  optional Election election = 3;
+  optional Ballot ballot = 4;
+  optional Mix mix = 5;
+  optional Partial partial = 6;
+  required uint32 user = 7;
+  required bytes signature = 8;
+}
+
+// Master is the foundation object of the entire service.
+// It contains mission critical information that can only be accessed and
+// set by an administrators.
+message Master {
+  // ID is the hash of the genesis skipblock.
+  required bytes id = 1;
+  // Roster is the set of responsible conodes.
+  optional onet.Roster roster = 2;
+  // Admins is the list of administrators.
+  repeated uint32 admins = 3 [packed=true];
+  // Key is the front-end public key.
+  required bytes key = 4;
+}
+
+// Link is a wrapper around the genesis Skipblock identifier of an
+// election. Every newly created election adds a new link to the master Skipchain.
+message Link {
+  required bytes id = 1;
+}
+
+// Election is the base object for a voting procedure. It is stored
+// in the second skipblock right after the (empty) genesis block. A reference
+// to the election skipchain is appended to the master skipchain upon opening.
+message Election {
+  // Name of the election. lang-code, value pair
+   map<string, string> name = 1;
+  // Creator is the election responsible.
+  required uint32 creator = 2;
+  // Users is the list of registered voters.
+  repeated uint32 users = 3 [packed=true];
+  // ID is the hash of the genesis block.
+  required bytes id = 4;
+  // Master is the hash of the master skipchain.
+  required bytes master = 5;
+  // Roster is the set of responsible nodes.
+  optional onet.Roster roster = 6;
+  // Key is the DKG public key.
+  required bytes key = 7;
+  // MasterKey is the front-end public key.
+  required bytes masterkey = 8;
+  // Stage indicates the phase of election and is used for filtering in frontend
+  required uint32 stage = 9;
+  // Candidates is the list of candidate scipers.
+  repeated uint32 candidates = 10 [packed=true];
+  // MaxChoices is the max votes in allowed in a ballot.
+  required sint32 maxchoices = 11;
+  // Description in string format. lang-code, value pair
+   map<string, string> subtitle = 12;
+  // MoreInfo is the url to AE Website for the given election.
+  required string moreinfo = 13;
+  // Start denotes the election start unix timestamp
+  required sint64 start = 14;
+  // End (termination) datetime as unix timestamp.
+  required sint64 end = 15;
+  // Theme denotes the CSS class for selecting background color of card title.
+  required string theme = 16;
+  // Footer denotes the Election footer
+  required Footer footer = 17;
+  // Voted denotes if a user has already cast a ballot for this election.
+  required bytes voted = 18;
+  // MoreInfoLang, is MoreInfo, but as a lang-code/value map. MoreInfoLang should be used in preference to MoreInfo.
+   map<string, string> moreinfolang = 19;
+}
+
+// Footer denotes the fields for the election footer
+message Footer {
+  // Text is for storing footer content.
+  required string text = 1;
+  // ContactTitle stores the title of the Contact person.
+  required string contacttitle = 2;
+  // ContactPhone stores the phone number of the Contact person.
+  required string contactphone = 3;
+  // ContactEmail stores the email address of the Contact person.
+  required string contactemail = 4;
+}
+
+// Ballot represents an encrypted vote.
+message Ballot {
+  // User identifier.
+  required uint32 user = 1;
+  // ElGamal ciphertext pair.
+  required bytes alpha = 2;
+  required bytes beta = 3;
+}
+
+// Mix contains the shuffled ballots.
+message Mix {
+  // Ballots are permuted and re-encrypted.
+  repeated Ballot ballots = 1;
+  // Proof of the shuffle.
+  required bytes proof = 2;
+  // Node signifies the creator of the mix.
+  required bytes nodeid = 3;
+  // Signature of the public key
+  required bytes signature = 4;
+}
+
+// Partial contains the partially decrypted ballots.
+message Partial {
+  // Points are the partially decrypted plaintexts.
+  repeated bytes points = 1;
+  // NodeID is the node having signed the partial
+  required bytes nodeid = 2;
+  // Signature of the public key
+  required bytes signature = 3;
+}

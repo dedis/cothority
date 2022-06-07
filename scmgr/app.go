@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"golang.org/x/xerrors"
 	"io/ioutil"
 	"math/rand"
 	"net"
@@ -492,6 +493,43 @@ func scOptimize(c *cli.Context) error {
 	}
 
 	log.Infof("Chain optimized with %d blocks", len(reply.Proof))
+	return nil
+}
+
+func scScan(c *cli.Context) error {
+	if c.NArg() < 1 {
+		return errors.New("please give one remote URL")
+	}
+	si := network.ServerIdentity{Address: network.Address(c.Args().First()),
+		URL: c.Args().First(), Public: cothority.Suite.Point()}
+	cl := skipchain.NewClient()
+
+	if c.NArg() == 2 {
+		chain, err := hex.DecodeString(c.Args().Get(1))
+		if err != nil {
+			return xerrors.Errorf("wrong chain format: %v")
+		}
+		roster := onet.NewRoster([]*network.ServerIdentity{&si})
+		update, err := cl.GetUpdateChain(roster, chain)
+		if err != nil {
+			return xerrors.Errorf("while getting update: %v", err)
+		}
+		latest := update.Update[len(update.Update)-1]
+		group := app.Group{Roster: latest.Roster}
+		toml, err := group.Toml(cothority.Suite)
+		if err != nil {
+			return xerrors.Errorf("while creating toml group: %v", err)
+		}
+		log.Infof("Group-toml is: \n%s", toml.String())
+	} else {
+		chains, err := cl.GetAllSkipChainIDs(&si)
+		if err != nil {
+			return xerrors.Errorf("couldn't fetch chains: %v", err)
+		}
+		for _, chain := range chains.IDs {
+			log.Infof("Chain is: %x", chain)
+		}
+	}
 	return nil
 }
 

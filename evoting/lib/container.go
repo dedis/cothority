@@ -1,24 +1,13 @@
 package lib
 
 import (
+	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/proof"
 	"go.dedis.ch/kyber/v3/share/dkg/rabin"
 	"go.dedis.ch/kyber/v3/shuffle"
 	"go.dedis.ch/kyber/v3/util/random"
-	"go.dedis.ch/onet/v3/network"
-
-	"go.dedis.ch/cothority/v3"
 )
-
-// Ballot represents an encrypted vote.
-type Ballot struct {
-	User uint32 // User identifier.
-
-	// ElGamal ciphertext pair.
-	Alpha kyber.Point
-	Beta  kyber.Point
-}
 
 // Box is a wrapper around a list of encrypted ballots.
 type Box struct {
@@ -40,23 +29,6 @@ func (b *Box) genMix(key kyber.Point, n int) []*Mix {
 		x, y = v, w
 	}
 	return mixes
-}
-
-// Mix contains the shuffled ballots.
-type Mix struct {
-	Ballots []*Ballot // Ballots are permuted and re-encrypted.
-	Proof   []byte    // Proof of the shuffle.
-
-	NodeID    network.ServerIdentityID // Node signifies the creator of the mix.
-	Signature []byte                   // Signature of the public key
-}
-
-// Partial contains the partially decrypted ballots.
-type Partial struct {
-	Points []kyber.Point // Points are the partially decrypted plaintexts.
-
-	NodeID    network.ServerIdentityID // NodeID is the node having signed the partial
-	Signature []byte                   // Signature of the public key
 }
 
 // genPartials generates partial decryptions for a given list of shared secrets.
