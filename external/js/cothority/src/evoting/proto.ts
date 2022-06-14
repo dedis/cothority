@@ -1,3 +1,4 @@
+import { Point, PointFactory } from "@dedis/kyber";
 import Long from "long";
 import { Message } from "protobufjs/light";
 import { Roster } from "../network";
@@ -104,6 +105,10 @@ export class Partial extends Message<Partial> {
     readonly points: Buffer[];
     readonly nodeid: Buffer;
     readonly signature: Buffer;
+
+    points_curve(): Point[] {
+        return this.points.map((p) => PointFactory.fromProto(p));
+    }
 }
 
 Transaction.register();
