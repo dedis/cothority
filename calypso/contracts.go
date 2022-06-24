@@ -79,6 +79,18 @@ func (c ContractWrite) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 			err = xerrors.Errorf("proof of write failed: %v", err)
 			return
 		}
+		var cid string
+		_, _, cid, _, err = rst.GetValues(c.Write.LTSID[:])
+		if err != nil {
+			err = xerrors.Errorf("couldn't find the corresponding LTSID: %v",
+				err)
+			return
+		}
+		if cid != ContractLongTermSecretID {
+			err = xerrors.Errorf("given LTSID points to wrong contract: %s",
+				cid)
+			return
+		}
 		instID, err := inst.DeriveIDArg("", "preID")
 		if err != nil {
 			return nil, nil, xerrors.Errorf(
