@@ -197,6 +197,8 @@ func TestContractSpawnerPreID(t *testing.T) {
 	testPreID(t, sr, instCred, ca, null, false)
 
 	ltsID := byzcoin.NewInstanceID(random.Bits(256, true, random.New()))
+	require.NoError(t, sr.CreateSCB(byzcoin.Create,
+		calypso.ContractLongTermSecretID, ltsID, nil, nil))
 	ltsKP := key.NewKeyPair(cothority.Suite)
 	wr := calypso.NewWrite(cothority.Suite, ltsID,
 		darc.ID{}, ltsKP.Public, []byte("key"))
