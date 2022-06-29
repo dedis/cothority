@@ -1,58 +1,5 @@
-[[servers]]
-  Address = "tls://conode.dedis.ch:7000"
-  Suite = "Ed25519"
-  Public = "ec5c65a3c922d1df32075640e3de606197be24af76059a2ef145501122884bd3"
-  Description = "EPFL Cothority-server"
-  URL = "https://conode.dedis.ch"
-  [servers.Services]
-    [servers.Services.ByzCoin]
-      Public = "6f69dc10dbef8f4d80072aa9d1bee191b0f68b137a9d06d006c39fe6667738fa2d3439caf428a1dcb6f4a5bd2ce6ff6f1462ebb1b7374080d95310bc6e1115e105d7ae38f9fed1585094b0cb13dc3a0f3e74daeaa794ca10058e44ef339055510f4d12a7234779f8db2e093dd8a14a03440a7d5a8ef04cac8fd735f20440b589"
-      Suite = "bn256.adapter"
-    [servers.Services.Skipchain]
-      Public = "32ba0cccec06ac4259b39102dcba13677eb385e0fdce99c93406542c5cbed3ec6ac71a81b01207451346402542923449ecf71fc0d69b1d019df34407b532fb2a09005c801e359afb377cc3255e918a096912bf6f7b7e4040532404996e05f78c408760b57fcf9e04c50eb7bc413438aca9d653dd0b6a8353d128370ebd4bdb10"
-      Suite = "bn256.adapter"
-
-[[servers]]
-  Address = "tls://fairywren.ch:7770"
-  Suite = "Ed25519"
-  Public = "0bcdaebde16f50fb65b717a0501e7ede020045286d6ece10fdea1bdd8f37af39"
-  Description = "Gaylor's Conode"
-  URL = "https://fairywren.ch:7771"
-  [servers.Services]
-    [servers.Services.ByzCoin]
-      Public = "2754e502579e77f92322458022f6b97ff18471f2e7523028ea6dab720da11ab189f98ef9a0308c7aa656f3339baded992248def25e3e2e1428c1601809579b934bb2aaf66b3d8a68712f68d744661d270278ebcf434204af961c729db6db85a54930dfe6b75184647d0e81138db2a87ccaeccff3500be2bf409827eef5ec150d"
-      Suite = "bn256.adapter"
-    [servers.Services.Skipchain]
-      Public = "69088f9df0396cfd296eeeb060bc84d807f3f2cf3b02b8eafd953f30e9e979a203fd11035e9f1fca2662383841c3c630ee3554150ec2b5fdb50819a22a2682dd341f0424fec4eafb8a17041b939ef18eabdd8c38e2f057619a541c506bbae5755265ae6b9156690b7a2907ca0ec6394d79363d5492aa2c9512e3fba882aad358"
-      Suite = "bn256.adapter"
-
-[[servers]]
-  Address = "tls://gasser.blue:7770"
-  Suite = "Ed25519"
-  Public = "0e4c620122daca9518cace2a6b11c5c0892fbde7b130d04e8a194fd02906ffc6"
-  Description = "Ineiti's conode"
-  URL = "https://gasser.blue:7771"
-  [servers.Services]
-    [servers.Services.ByzCoin]
-      Public = "00fe956fe1b90332bd7c5182d9f125c0e2108f5178d71b42b5f02582f9f2814281d4f2e0c9bd25f711c7138f9c2fb5fb6578b65aeae8cff1c349df34c497882f86ba36037678275d086b57bd04a9a020a80a47242b08274c696c009f097d3e7a31d0a6fc2b2e01b9d005e8c2ea538f3c581baac918cacb0650f6b3c2082e549f"
-      Suite = "bn256.adapter"
-    [servers.Services.Skipchain]
-      Public = "5878c63855bf0ad9a2575865b18a8e5856ed6c6b1cbfe1bacc0f4e889b9cd79f78b024fdcef448be2ffb292622927595047227f45a361e9094d5bb3ebcfd9bdb60bf179d5c6c3319d4c8bf2e1e149b78c1056814ac581b7c97decd9c58a570d6018712143844e5fd0a31ddb61e2d81bc1f35bfc47e8a884683d9692529119240"
-      Suite = "bn256.adapter"
-
-[[servers]]
-  Address = "tls://188.166.35.173:7770"
-  Suite = "Ed25519"
-  Public = "a59fc58c0a445b70dcd57e01603a714a2ee99c1cc14ca71780383abada5d7143"
-  Description = "Wookiee's Cothority"
-  URL = "https://wookiee.ch/conode"
-  [servers.Services]
-    [servers.Services.ByzCoin]
-      Public = "70c192537778a53abb9315979f48e170da9182b324c7974462cbdde90fc0c51d440e2de266a81fe7a3d9d2b6665ef07ba3bbe8df027af9b8a3b4ea6569d7f72a41f0dfe4dc222aa8fd4c99ced2212d7d1711267f66293732c88e8d43a2cf6b3e2e1cd0c57b8f222a73a393e70cf81e53a0ce8ed2a426e3b0fa6b0da30ff27b1a"
-      Suite = "bn256.adapter"
-    [servers.Services.Skipchain]
-      Public = "63e2ed93333bd0888ed2b5e51b5e2544831b4d79dead571cf67604cdd96bc0212f68e582468267697403d7ed418e70ed9fcb01940e4c603373994ef00c04542c24091939bddca515381e0285ab805826cec457346be482e687475a973a20fca48f16c76e352076ccc0c866d7abb3ac50d02f9874d065f85404a0127efc1acf49"
-      Suite = "bn256.adapter"
+ByzCoinID = "9cc36071ccb902a1de7e0d21a2c176d73894b1cf88ae4cc2ba4c95cd76f474f3"
+SignupNode = "https://byzcoin-signup.c4dt.org"
 
 [[servers]]
   Address = "tls://conode.c4dt.org:7770"
@@ -83,15 +30,31 @@
       Suite = "bn256.adapter"
 
 [[servers]]
-  Address = "tls://conode.gnarula.com:7770"
+  Address = "tls://conode3.c4dt.org:7772"
   Suite = "Ed25519"
-  Public = "de4945452449c9a740b0c665e83ee0dd5c52d3e8cda56272d4984d3fb58ee34c"
-  Description = "gnarula's conode"
-  URL = "https://conode.gnarula.com"
+  Public = "388f01c171518d24618f7a06583df3d73d31a3258f734bfea8b6f153f64082c1"
+  Description = "C4DT Conode 3"
+  URL = "https://conode3.c4dt.org"
+
   [servers.Services]
     [servers.Services.ByzCoin]
-      Public = "7bdae8fb51544aa5bfbecc74146c0e2df7edd68c724e59a0922e5f6fb735bef10cfc070f7e29ac8fa92594a5f71eaa4047ab30710e93df1a6b6095a99c6237681f8ef292387ea80528f25906b3f4951995c60eda4f7d99e520d07216b949e9b54d3ca223a78829867958110690a60ec1607d05971551f1505c3258760d6fa22a"
+      Public = "0c3119258655739c09446738bad7ec47c1923dc51769ba450a743b25efa6601481aab0eb72122f3cb6ae3490fa8d892f1d6841401730a0e5ad220d4c00b493fd00193d3fa0b17e1d65367b0d9460554ef1cb219b60f6da9fbfe7bf250734bf4741bed60d5781c5906e7422cd055a8275a25f0a5d824b7c95db5238514215d989"
       Suite = "bn256.adapter"
     [servers.Services.Skipchain]
-      Public = "3bc985c3073f51219e435fa254c84ae3301360905c5acec4996a677056f0418c4713148d29a13c3315d2bd4f81540a759da5c28603bac0d626f93c8d867fc369391cb40d5a303fd550d64d382da4cb14ed72f2b55990cb59a80f16f83394740b29cd38f795b48213bf35d95e4f5aed4c5efef42952f712d90c1722e5eb2ddf9e"
+      Public = "0a8f9ce316368b0156f58e59a1f59107e2890f5d58fc94e6bb46d831173698e71baee51415b2652d2bf0dd5e1459da315c38899c685f214f33ed07612f3dabaa6ec23fe29ba975089893c5e1557d574695d9aff962e7645ba062bb7e92b517a95cd7112ded75fd79582d5cd567f51ba5649fc8b0ce62199321aeca58c7c00b4a"
+      Suite = "bn256.adapter"
+
+[[servers]]
+  Address = "tls://conode4.c4dt.org:7773"
+  Suite = "Ed25519"
+  Public = "ac4437e2a83d688bd2e1b4c0ae1d87bcdcc8b6de28fa29018ec128a34635c59e"
+  Description = "C4DT Conode 4"
+  URL = "https://conode4.c4dt.org"
+
+  [servers.Services]
+    [servers.Services.ByzCoin]
+      Public = "55c01edd498d0278369cd13c0b19c30961fbf6ae8fc307166e5be2f62f0b86226b862b569d91e5286b17b786c288d681a1ad49248533d12f4b07f1dc447446ef7afdbd9a881cdd66c905af1c7d653938c72991a58fc315d77fc453268a59717c7f6a286413a85f7f45c532cc59de85da204f9c94910f050139cd96e6102038d2"
+      Suite = "bn256.adapter"
+    [servers.Services.Skipchain]
+      Public = "14a7356af43279218196c09d82a9a88c970200171129f632960c2abb4eb7f3f13f6ecb481e9af4975fc5c87ae46f78f9d5191d3b3eaceacf09e5c65bbe5ec3f88380dbee9287bc1942afccc6f81e506b21376121eae94eaa257304becd869b451c27928d9b6018e681424ce5435d8c38bec9ee9e60b4ce0da83599de5c4c7639"
       Suite = "bn256.adapter"
