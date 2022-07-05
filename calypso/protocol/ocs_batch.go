@@ -80,7 +80,7 @@ func (o *OCSBatch) Start() error {
 		//rcb.RC = append(rcb.RC, rc)
 		rcb.RC[idx] = rc
 	}
-	o.timeout = time.AfterFunc(5*time.Minute, func() {
+	o.timeout = time.AfterFunc(10*time.Minute, func() {
 		log.Lvl1("OCSBatch protocol timeout")
 		o.finish(false)
 	})

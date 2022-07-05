@@ -35,7 +35,8 @@ var calypsoID onet.ServiceID
 var ServiceName = "Calypso"
 
 // dkgTimeout is how long the system waits for the DKG to finish
-const propagationTimeout = 10 * time.Second
+//const propagationTimeout = 10 * time.Second
+const propagationTimeout = 60 * time.Second
 
 func init() {
 	var err error

@@ -88,7 +88,8 @@ func (o *OCS) Start() error {
 			return errors.New("refused to reencrypt")
 		}
 	}
-	o.timeout = time.AfterFunc(1*time.Minute, func() {
+	//o.timeout = time.AfterFunc(1*time.Minute, func() {
+	o.timeout = time.AfterFunc(5*time.Minute, func() {
 		log.Lvl1("OCS protocol timeout")
 		o.finish(false)
 	})
