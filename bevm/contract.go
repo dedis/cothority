@@ -413,10 +413,48 @@ func (c *contractBEvm) Delete(rst byzcoin.ReadOnlyStateTrie,
 	return
 }
 
+// An EVM call can generate several Byzcoin instructions, all originating from
+// different contracts (inter-contract calls).
+// The following map helps to keep track of the signer counters while
+// processing all the events of an EVM call.
+type signerCounters struct {
+	rst byzcoin.ReadOnlyStateTrie
+	ctr map[common.Address]uint64
+}
+
+func newSignerCounters(rst byzcoin.ReadOnlyStateTrie) *signerCounters {
+	return &signerCounters{
+		rst: rst,
+		ctr: map[common.Address]uint64{},
+	}
+}
+
+func (c *signerCounters) getNext(address common.Address,
+	identity darc.Identity) (uint64, error) {
+	var err error
+
+	// Retrieve counter from map
+	counter, ok := c.ctr[address]
+	if !ok {
+		// Counter not yet available -- retrieve from Byzcoin
+		counter, err = c.rst.GetSignerCounter(identity)
+		if err != nil {
+			return 0, xerrors.Errorf("failed to get counter "+
+				"for identity '%s': %v", identity, err)
+		}
+	}
+
+	// Update counter
+	counter++
+	c.ctr[address] = counter
+
+	return counter, nil
+}
+
 // Handle the log entries produced by an EVM execution.
 // Currently, only the special entries allowing to interact with Byzcoin
 // contracts are handled, the other ones are ignored.
-func handleLogs(inst byzcoin.Instruction, rst byzcoin.ReadOnlyStateTrie,
+func handleLogs(bevmInstr byzcoin.Instruction, rst byzcoin.ReadOnlyStateTrie,
 	logEntries []*types.Log) (
 	[]byzcoin.StateChange, error) {
 	var err error
@@ -426,13 +464,8 @@ func handleLogs(inst byzcoin.Instruction, rst byzcoin.ReadOnlyStateTrie,
 			"events: %v", err)
 	}
 
+	counters := newSignerCounters(rst)
 	var stateChanges []byzcoin.StateChange
-
-	// An EVM call can generate several Byzcoin instructions, all originating
-	// from different contracts (inter-contract calls).
-	// The following map helps to keep track of the signer counters while
-	// processing all the events of an EVM call.
-	counters := map[common.Address]uint64{}
 
 	for _, logEntry := range logEntries {
 		// See https://solidity.readthedocs.io/en/v0.5.3/abi-spec.html#events
@@ -451,61 +484,65 @@ func handleLogs(inst byzcoin.Instruction, rst byzcoin.ReadOnlyStateTrie,
 			continue
 		}
 
-		// Build the instruction from the event
-		instr, err := getInstrForEvent(eventName, eventData)
+		sc, err := handleLogEntry(bevmInstr.InstanceID[:], rst, eventName,
+			eventData, logEntry.Address, counters)
 		if err != nil {
-			return nil, xerrors.Errorf("failed to build instruction "+
+			return nil, xerrors.Errorf("failed to handle log entry "+
 				"for EVM event: %v", err)
 		}
 
-		signer := darc.NewSignerEvmContract(inst.InstanceID[:],
-			logEntry.Address)
-		identity := signer.Identity()
-
-		// Retrieve counter
-		counter, ok := counters[logEntry.Address]
-		if !ok {
-			// Counter not yet available -- retrieve from Byzcoin
-			counter, err = rst.GetSignerCounter(identity)
-			if err != nil {
-				return nil, xerrors.Errorf("failed to get counter "+
-					"for identity '%s': %v", identity, err)
-			}
-		}
-
-		// Update counter
-		counter++
-		counters[logEntry.Address] = counter
-
-		// Fill in  missing information and sign
-		instr.SignerIdentities = []darc.Identity{identity}
-		instr.SignerCounter = []uint64{counter}
-
-		instr.SetVersion(rst.GetVersion())
-
-		err = instr.SignWith([]byte{}, signer)
-		if err != nil {
-			return nil, xerrors.Errorf("failed to sign instruction "+
-				"from EVM: %v", err)
-		}
-
-		// Encode the instruction and store it in the state change's value
-		encodedInstr, err := protobuf.Encode(instr)
-		if err != nil {
-			return nil, xerrors.Errorf("failed to encode instruction "+
-				"from EVM: %v", err)
-		}
-
-		sc := byzcoin.NewStateChange(
-			byzcoin.GenerateInstruction,
-			byzcoin.NewInstanceID(nil),
-			"",
-			encodedInstr,
-			nil,
-		)
-
-		stateChanges = append(stateChanges, sc)
+		stateChanges = append(stateChanges, *sc)
 	}
 
 	return stateChanges, nil
+}
+
+// Handle a single log entry.
+func handleLogEntry(bevmInstanceID []byte, rst byzcoin.ReadOnlyStateTrie,
+	eventName string, eventData []interface{}, address common.Address,
+	counters *signerCounters) (*byzcoin.StateChange, error) {
+	// Build the instruction from the event
+	instr, err := getInstrForEvent(eventName, eventData)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to build instruction "+
+			"for EVM event: %v", err)
+	}
+
+	signer := darc.NewSignerEvmContract(bevmInstanceID, address)
+	identity := signer.Identity()
+
+	// Get next counter
+	counter, err := counters.getNext(address, identity)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to get counter: %v", err)
+	}
+
+	// Fill in  missing information and sign
+	instr.SignerIdentities = []darc.Identity{identity}
+	instr.SignerCounter = []uint64{counter}
+
+	instr.SetVersion(rst.GetVersion())
+
+	err = instr.SignWith([]byte{}, signer)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to sign instruction "+
+			"from EVM: %v", err)
+	}
+
+	// Encode the instruction and store it in the state change's value
+	encodedInstr, err := protobuf.Encode(instr)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to encode instruction "+
+			"from EVM: %v", err)
+	}
+
+	sc := byzcoin.NewStateChange(
+		byzcoin.GenerateInstruction,
+		byzcoin.NewInstanceID(nil),
+		"",
+		encodedInstr,
+		nil,
+	)
+
+	return &sc, nil
 }

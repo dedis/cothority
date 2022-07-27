@@ -192,118 +192,146 @@ func getArgs(eventArg interface{}) (byzcoin.Arguments, error) {
 	return args, nil
 }
 
+func getInstrForSpawnEvent(eventData []interface{}) (
+	*byzcoin.Instruction, error) {
+	if len(eventData) != 3 {
+		return nil, xerrors.Errorf("invalid data for 'spawn' event: "+
+			"got %d values, expected 3", len(eventData))
+	}
+
+	instanceID, err := get32Byte(eventData[0])
+	if err != nil {
+		return nil, xerrors.Errorf("invalid instanceID for 'spawn' event: "+
+			"%v", err)
+	}
+
+	contractID, err := getString(eventData[1])
+	if err != nil {
+		return nil, xerrors.Errorf("invalid contractID for 'spawn' event: "+
+			"%v", err)
+	}
+
+	args, err := getArgs(eventData[2])
+	if err != nil {
+		return nil, xerrors.Errorf("invalid args for 'spawn' event: "+
+			"%v", err)
+	}
+
+	if !evmSpawnableContracts[contractID] {
+		return nil, xerrors.Errorf("contract '%s' has not been "+
+			"whitelisted to be spawned by an EVM contract",
+			contractID)
+	}
+
+	return &byzcoin.Instruction{
+		InstanceID: instanceID,
+		Spawn: &byzcoin.Spawn{
+			ContractID: contractID,
+			Args:       args,
+		},
+	}, nil
+}
+
+func getInstrForInvokeEvent(eventData []interface{}) (
+	*byzcoin.Instruction, error) {
+	if len(eventData) != 4 {
+		return nil, xerrors.Errorf("invalid data for 'invoke' event: "+
+			"got %d values, expected 4", len(eventData))
+	}
+
+	instanceID, err := get32Byte(eventData[0])
+	if err != nil {
+		return nil, xerrors.Errorf("invalid instanceID for 'invoke' event: "+
+			"%v", err)
+	}
+
+	contractID, err := getString(eventData[1])
+	if err != nil {
+		return nil, xerrors.Errorf("invalid contractID for 'invoke' event: "+
+			"%v", err)
+	}
+
+	command, err := getString(eventData[2])
+	if err != nil {
+		return nil, xerrors.Errorf("invalid command for 'invoke' event: "+
+			"%v", err)
+	}
+
+	args, err := getArgs(eventData[3])
+	if err != nil {
+		return nil, xerrors.Errorf("invalid args for 'invoke' event: "+
+			"%v", err)
+	}
+
+	return &byzcoin.Instruction{
+		InstanceID: instanceID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: contractID,
+			Command:    command,
+			Args:       args,
+		},
+	}, nil
+}
+
+func getInstrForDeleteEvent(eventData []interface{}) (
+	*byzcoin.Instruction, error) {
+	if len(eventData) != 3 {
+		return nil, xerrors.Errorf("invalid data for 'delete' event: "+
+			"got %d values, expected 3", len(eventData))
+	}
+
+	instanceID, err := get32Byte(eventData[0])
+	if err != nil {
+		return nil, xerrors.Errorf("invalid instanceID for 'delete' event: "+
+			"%v", err)
+	}
+
+	contractID, err := getString(eventData[1])
+	if err != nil {
+		return nil, xerrors.Errorf("invalid contractID for 'delete' event: "+
+			"%v", err)
+	}
+
+	args, err := getArgs(eventData[2])
+	if err != nil {
+		return nil, xerrors.Errorf("invalid args for 'delete' event: "+
+			"%v", err)
+	}
+
+	return &byzcoin.Instruction{
+		InstanceID: instanceID,
+		Delete: &byzcoin.Delete{
+			ContractID: contractID,
+			Args:       args,
+		},
+	}, nil
+}
+
 func getInstrForEvent(name string, eventData []interface{}) (
 	*byzcoin.Instruction, error) {
 	var instr *byzcoin.Instruction
+	var err error
 
 	switch name {
 	case byzcoinSpawnEvent:
-		if len(eventData) != 3 {
-			return nil, xerrors.Errorf("invalid data for 'spawn' event: "+
-				"got %d values, expected 3", len(eventData))
-		}
-
-		instanceID, err := get32Byte(eventData[0])
+		instr, err = getInstrForSpawnEvent(eventData)
 		if err != nil {
-			return nil, xerrors.Errorf("invalid instanceID for 'spawn' event: "+
+			return nil, xerrors.Errorf("failed to handle 'spawn' event: "+
 				"%v", err)
-		}
-
-		contractID, err := getString(eventData[1])
-		if err != nil {
-			return nil, xerrors.Errorf("invalid contractID for 'spawn' event: "+
-				"%v", err)
-		}
-
-		args, err := getArgs(eventData[2])
-		if err != nil {
-			return nil, xerrors.Errorf("invalid args for 'spawn' event: "+
-				"%v", err)
-		}
-
-		if !evmSpawnableContracts[contractID] {
-			return nil, xerrors.Errorf("contract '%s' has not been "+
-				"whitelisted to be spawned by an EVM contract",
-				contractID)
-		}
-
-		instr = &byzcoin.Instruction{
-			InstanceID: instanceID,
-			Spawn: &byzcoin.Spawn{
-				ContractID: contractID,
-				Args:       args,
-			},
 		}
 
 	case byzcoinInvokeEvent:
-		if len(eventData) != 4 {
-			return nil, xerrors.Errorf("invalid data for 'invoke' event: "+
-				"got %d values, expected 4", len(eventData))
-		}
-
-		instanceID, err := get32Byte(eventData[0])
+		instr, err = getInstrForInvokeEvent(eventData)
 		if err != nil {
-			return nil, xerrors.Errorf("invalid instanceID for 'invoke' event: "+
+			return nil, xerrors.Errorf("failed to handle 'invoke' event: "+
 				"%v", err)
-		}
-
-		contractID, err := getString(eventData[1])
-		if err != nil {
-			return nil, xerrors.Errorf("invalid contractID for 'invoke' event: "+
-				"%v", err)
-		}
-
-		command, err := getString(eventData[2])
-		if err != nil {
-			return nil, xerrors.Errorf("invalid command for 'invoke' event: "+
-				"%v", err)
-		}
-
-		args, err := getArgs(eventData[3])
-		if err != nil {
-			return nil, xerrors.Errorf("invalid args for 'invoke' event: "+
-				"%v", err)
-		}
-
-		instr = &byzcoin.Instruction{
-			InstanceID: instanceID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: contractID,
-				Command:    command,
-				Args:       args,
-			},
 		}
 
 	case byzcoinDeleteEvent:
-		if len(eventData) != 3 {
-			return nil, xerrors.Errorf("invalid data for 'delete' event: "+
-				"got %d values, expected 3", len(eventData))
-		}
-
-		instanceID, err := get32Byte(eventData[0])
+		instr, err = getInstrForDeleteEvent(eventData)
 		if err != nil {
-			return nil, xerrors.Errorf("invalid instanceID for 'delete' event: "+
+			return nil, xerrors.Errorf("failed to handle 'delete' event: "+
 				"%v", err)
-		}
-
-		contractID, err := getString(eventData[1])
-		if err != nil {
-			return nil, xerrors.Errorf("invalid contractID for 'delete' event: "+
-				"%v", err)
-		}
-
-		args, err := getArgs(eventData[2])
-		if err != nil {
-			return nil, xerrors.Errorf("invalid args for 'delete' event: "+
-				"%v", err)
-		}
-
-		instr = &byzcoin.Instruction{
-			InstanceID: instanceID,
-			Delete: &byzcoin.Delete{
-				ContractID: contractID,
-				Args:       args,
-			},
 		}
 
 	default:
