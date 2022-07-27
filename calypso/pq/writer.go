@@ -15,37 +15,32 @@ import (
 
 const LENGTH = 32 + 12
 
-func GenerateSSPoly() *share.PriPoly {
-	f := 5
-	t := f + 1
+// t = f + 1
+func GenerateSSPoly(t int) *share.PriPoly {
 	priPoly := share.NewPriPoly(cothority.Suite, t, nil, cothority.Suite.RandomStream())
 	return priPoly
 }
 
-//func NewWrite()
-
-func GenerateCommitments(priPoly *share.PriPoly, n int) ([][]byte, error) {
-	if len(priPoly.Coefficients()) != n {
-		return nil, errors.New("Wrong group size")
-	}
-	rands := make([][8]byte, n)
-	for i := 0; i < n; i++ {
-		random.Bytes(rands[i][:], random.New())
-	}
+func GenerateCommitments(priPoly *share.PriPoly, n int) ([]*share.PriShare, [][]byte, [][]byte, error) {
+	var rand [8]byte
+	rands := make([][]byte, n)
 	shares := priPoly.Shares(n)
 	commitments := make([][]byte, n)
 	h := sha256.New()
 	for i := 0; i < n; i++ {
+		rands[i] = make([]byte, 8)
+		random.Bytes(rand[:], random.New())
+		copy(rands[i], rand[:])
 		shb, err := shares[i].V.MarshalBinary()
 		if err != nil {
-			return nil, err
+			return nil, nil, nil, err
 		}
-		h.Write(rands[i][:])
 		h.Write(shb)
+		h.Write(rands[i])
 		commitments[i] = h.Sum(nil)
 		h.Reset()
 	}
-	return commitments, nil
+	return shares, rands, commitments, nil
 }
 
 func Encrypt(s kyber.Scalar, mesg []byte) ([]byte, []byte, error) {

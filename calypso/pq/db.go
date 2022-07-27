@@ -1,6 +1,7 @@
 package pq
 
 import (
+	"go.dedis.ch/kyber/v3/share"
 	"go.dedis.ch/onet/v3/log"
 	"golang.org/x/xerrors"
 	"sync"
@@ -9,7 +10,7 @@ import (
 var storageKey = []byte("storage")
 
 type storage struct {
-	Shares map[string][]byte
+	Shares map[string]*share.PriShare
 	sync.Mutex
 }
 
@@ -33,7 +34,7 @@ func (s *Service) tryLoad() error {
 	// Make sure we don't have any unallocated maps.
 	defer func() {
 		if len(s.storage.Shares) == 0 {
-			s.storage.Shares = make(map[string][]byte)
+			s.storage.Shares = make(map[string]*share.PriShare)
 		}
 	}()
 
