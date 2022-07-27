@@ -1,15 +1,21 @@
 package calypso
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
-
+	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/suites"
+	"go.dedis.ch/kyber/v3/util/random"
 	"go.dedis.ch/kyber/v3/xof/keccak"
 	"go.dedis.ch/onet/v3/network"
+	"golang.org/x/xerrors"
+	"io"
 )
 
 func init() {
@@ -68,6 +74,20 @@ func NewWrite(suite suites.Suite, ltsid byzcoin.InstanceID, writeDarc darc.ID, X
 	return wr
 }
 
+// NewWriteData is like NewWrite,
+// but it encrypts the data with a random key and adds the data to the Write
+// structure.
+func NewWriteData(suite suites.Suite, ltsid byzcoin.InstanceID,
+	writeDarc darc.ID, X kyber.Point, data []byte) (wr *Write, err error) {
+	key := random.Bits(192, true, random.New())
+	wr = NewWrite(suite, ltsid, writeDarc, X, key)
+	wr.Data, err = AeadSeal(key, data)
+	if err != nil {
+		return nil, xerrors.Errorf("couldn't seal data: %v", err)
+	}
+	return
+}
+
 // CheckProof verifies that the write-request has actually been created with
 // somebody having access to the secret key.
 func (wr *Write) CheckProof(suite suite, writeID darc.ID) error {
@@ -95,6 +115,60 @@ func (wr *Write) CheckProof(suite suite, writeID darc.ID) error {
 
 	return fmt.Errorf("recreated proof is not equal to stored proof:\n"+
 		"%s\n%s", e.String(), wr.E.String())
+}
+
+// Decrypt calls AeadOpen to decrypt the data with the given key.
+func (wr *Write) Decrypt(key []byte) ([]byte, error) {
+	return AeadOpen(key, wr.Data)
+}
+
+// This suggested length is from https://godoc.org/crypto/cipher#NewGCM example
+const nonceLen = 12
+
+// AeadSeal encrypts the given plaintext with the given key.
+// It adds a 12-byte nonce to the ciphertext.
+func AeadSeal(symKey, data []byte) ([]byte, error) {
+	block, err := aes.NewCipher(symKey)
+	if err != nil {
+		return nil,
+			xerrors.Errorf("creating aes cipher block instance: %v", err)
+	}
+
+	// Never use more than 2^32 random nonces with a given key because of the risk of a repeat.
+	nonce := make([]byte, nonceLen)
+	_, err = io.ReadFull(rand.Reader, nonce)
+	if err != nil {
+		return nil, xerrors.Errorf("reading nonce: %v", err)
+	}
+
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, xerrors.Errorf("creating aesgcm instance: %v", err)
+	}
+	encData := aesgcm.Seal(nil, nonce, data, nil)
+	encData = append(encData, nonce...)
+	return encData, nil
+}
+
+// AeadOpen decrypts a given ciphertext with the given key.
+func AeadOpen(key, ciphertext []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil,
+			xerrors.Errorf("creating aes cipher block instance: %v", err)
+	}
+
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, xerrors.Errorf("creating aesgcm instance: %v", err)
+	}
+
+	if len(ciphertext) < 12 {
+		return nil, xerrors.New("ciphertext too short")
+	}
+	nonce := ciphertext[len(ciphertext)-nonceLen:]
+	out, err := aesgcm.Open(nil, nonce, ciphertext[0:len(ciphertext)-nonceLen], nil)
+	return out, cothority.ErrorOrNil(err, "decrypting ciphertext")
 }
 
 type newLtsConfig struct {
