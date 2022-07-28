@@ -99,4 +99,15 @@ func TestAll(t *testing.T) {
 	wReply, err := cl.AddWrite(&wr, sigs, thr, provider1, 1, *darc1, 10)
 	require.NoError(t, err)
 	require.NotNil(t, wReply.InstanceID)
+
+	prWr, err := cl.WaitProof(wReply.InstanceID, time.Second, nil)
+	require.NoError(t, err)
+	require.NotNil(t, prWr)
+
+	rReply, err := cl.AddRead(prWr, reader1, 1, 10)
+	require.NoError(t, err)
+	prRe1, err := cl.WaitProof(rReply.InstanceID, time.Second, nil)
+	require.NoError(t, err)
+	require.True(t, prRe1.InclusionProof.Match(rReply.InstanceID.Slice()))
+
 }

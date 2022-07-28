@@ -10,6 +10,7 @@ import (
 	"go.dedis.ch/protobuf"
 	"golang.org/x/xerrors"
 	"sync"
+	"time"
 )
 
 type Client struct {
@@ -90,6 +91,42 @@ func (c *Client) AddWrite(write *Write, sigs map[int][]byte, t int,
 	return reply, err
 }
 
+func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer,
+	signerCtr uint64, wait int) (reply *ReadReply, err error) {
+	var readBuf []byte
+	read := &Read{
+		Write: byzcoin.NewInstanceID(proof.InclusionProof.Key()),
+		Xc:    signer.Ed25519.Point,
+	}
+	reply = &ReadReply{}
+	readBuf, err = protobuf.Encode(read)
+	if err != nil {
+		return nil, xerrors.Errorf("encoding Read message: %v", err)
+	}
+
+	ctx := byzcoin.NewClientTransaction(byzcoin.CurrentVersion,
+		byzcoin.Instruction{
+			InstanceID: byzcoin.NewInstanceID(proof.InclusionProof.Key()),
+			Spawn: &byzcoin.Spawn{
+				ContractID: ContractReadID,
+				Args:       byzcoin.Arguments{{Name: "read", Value: readBuf}},
+			},
+			SignerCounter: []uint64{signerCtr},
+		},
+	)
+	err = ctx.FillSignersAndSignWith(signer)
+	if err != nil {
+		return nil, xerrors.Errorf("signing txn: %v", err)
+	}
+
+	reply.InstanceID = ctx.Instructions[0].DeriveID("")
+	reply.AddTxResponse, err = c.bcClient.AddTransactionAndWait(ctx, wait)
+	if err != nil {
+		return nil, xerrors.Errorf("adding txn: %v", err)
+	}
+	return reply, nil
+}
+
 func (c *Client) SpawnDarc(signer darc.Signer, signerCtr uint64,
 	controlDarc darc.Darc, spawnDarc darc.Darc, wait int) (
 	reply *byzcoin.AddTxResponse, err error) {
@@ -118,4 +155,10 @@ func (c *Client) SpawnDarc(signer darc.Signer, signerCtr uint64,
 
 	reply, err = c.bcClient.AddTransactionAndWait(ctx, wait)
 	return reply, cothority.ErrorOrNil(err, "adding txn")
+}
+
+// WaitProof calls the byzcoin client's wait proof
+func (c *Client) WaitProof(id byzcoin.InstanceID, interval time.Duration,
+	value []byte) (*byzcoin.Proof, error) {
+	return c.bcClient.WaitProof(id, interval, value)
 }

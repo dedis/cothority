@@ -36,8 +36,8 @@ type WriteReply struct {
 // Read is the data stored in a read instance. It has a pointer to the write
 // instance and the public key used to re-encrypt the secret to.
 type Read struct {
-	PQWrite byzcoin.InstanceID
-	//Xc    kyber.Point
+	Write byzcoin.InstanceID
+	Xc    kyber.Point
 }
 
 // ReadReply is is returned upon successfully spawning a Read instance.

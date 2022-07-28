@@ -69,25 +69,25 @@ func (c ContractPQWrite) Spawn(rst byzcoin.ReadOnlyStateTrie,
 		sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, instID,
 			ContractPQWriteID, wb, darcID))
 	case ContractReadID:
-		//var rd Read
-		//r := inst.Spawn.Args.Search("read")
-		//if r == nil || len(r) == 0 {
-		//	return nil, nil, xerrors.New("need a read argument")
-		//}
-		//err = protobuf.DecodeWithConstructors(r, &rd, network.DefaultConstructors(cothority.Suite))
-		//if err != nil {
-		//	return nil, nil, xerrors.Errorf("passed read argument is invalid: %v", err)
-		//}
-		//if !rd.Write.Equal(inst.InstanceID) {
-		//	return nil, nil, xerrors.New("the read request doesn't reference this write-instance")
-		//}
-		//instID, err := inst.DeriveIDArg("", "preID")
-		//if err != nil {
-		//	return nil, nil, xerrors.Errorf(
-		//		"couldn't get ID for instance: %v", err)
-		//}
-		//sc = byzcoin.StateChanges{byzcoin.NewStateChange(byzcoin.Create,
-		//	instID, ContractReadID, r, darcID)}
+		var rd Read
+		r := inst.Spawn.Args.Search("read")
+		if r == nil || len(r) == 0 {
+			return nil, nil, xerrors.New("need a read argument")
+		}
+		err = protobuf.DecodeWithConstructors(r, &rd, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			return nil, nil, xerrors.Errorf("passed read argument is invalid: %v", err)
+		}
+		if !rd.Write.Equal(inst.InstanceID) {
+			return nil, nil, xerrors.New("the read request doesn't reference this write-instance")
+		}
+		instID, err := inst.DeriveIDArg("", "preID")
+		if err != nil {
+			return nil, nil, xerrors.Errorf(
+				"couldn't get ID for instance: %v", err)
+		}
+		sc = byzcoin.StateChanges{byzcoin.NewStateChange(byzcoin.Create,
+			instID, ContractReadID, r, darcID)}
 	default:
 		err = xerrors.New("can only spawn writes and reads")
 	}
