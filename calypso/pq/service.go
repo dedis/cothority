@@ -17,28 +17,23 @@ import (
 )
 
 // Used for tests
-var ocspqID onet.ServiceID
+var pqOtsID onet.ServiceID
 
-const ServiceName = "OCSPQ"
+const ServiceName = "PQ-OTS"
 
 func init() {
 	var err error
-	ocspqID, err = onet.RegisterNewService(ServiceName, newService)
+	pqOtsID, err = onet.RegisterNewService(ServiceName, newService)
 	log.ErrFatal(err)
 	network.RegisterMessages(&storage{}, &vData{})
-
-	//err = byzcoin.RegisterGlobalContract(ContractWriteID, contractWriteFromBytes)
-	//if err != nil {
-	//	log.ErrFatal(err)
-	//}
-	//err = byzcoin.RegisterGlobalContract(ContractReadID, contractReadFromBytes)
-	//if err != nil {
-	//	log.ErrFatal(err)
-	//}
-	//err = byzcoin.RegisterGlobalContract(ContractLongTermSecretID, contractLTSFromBytes)
-	//if err != nil {
-	//	log.ErrFatal(err)
-	//}
+	err = byzcoin.RegisterGlobalContract(ContractPQWriteID, contractPQWriteFromBytes)
+	if err != nil {
+		log.ErrFatal(err)
+	}
+	err = byzcoin.RegisterGlobalContract(ContractReadID, contractReadFromBytes)
+	if err != nil {
+		log.ErrFatal(err)
+	}
 }
 
 type Service struct {
