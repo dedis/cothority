@@ -3,7 +3,6 @@ package pq
 import (
 	"crypto/sha256"
 	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
 	"go.dedis.ch/onet/v3/log"
@@ -13,7 +12,8 @@ import (
 )
 
 func init() {
-	network.RegisterMessages(VerifyWrite{}, VerifyWriteReply{})
+	network.RegisterMessages(VerifyWriteRequest{}, VerifyWriteReply{}, DecryptKeyRequest{},
+		DecryptKeyReply{})
 }
 
 type suite interface {
@@ -21,32 +21,7 @@ type suite interface {
 	kyber.XOFFactory
 }
 
-type WriteRequest struct {
-	Threshold int
-	Write     Write
-	Sigs      map[int][]byte
-}
-
-// WriteReply is returned upon successfully spawning a Write instance.
-type WriteReply struct {
-	*byzcoin.AddTxResponse
-	byzcoin.InstanceID
-}
-
-// Read is the data stored in a read instance. It has a pointer to the write
-// instance and the public key used to re-encrypt the secret to.
-type Read struct {
-	Write byzcoin.InstanceID
-	Xc    kyber.Point
-}
-
-// ReadReply is is returned upon successfully spawning a Read instance.
-type ReadReply struct {
-	*byzcoin.AddTxResponse
-	byzcoin.InstanceID
-}
-
-func (wr *WriteRequest) CheckSignatures(suite suite) error {
+func (wr *WriteTxn) CheckSignatures(suite suite) error {
 	validSig := 0
 	success := false
 	wb, err := protobuf.Encode(&wr.Write)

@@ -42,7 +42,7 @@ func (c ContractPQWrite) Spawn(rst byzcoin.ReadOnlyStateTrie,
 			err = xerrors.New("need a write req in 'writereq' argument")
 			return
 		}
-		var req WriteRequest
+		var req WriteTxn
 		err = protobuf.DecodeWithConstructors(wrb, &req,
 			network.DefaultConstructors(cothority.Suite))
 		if err != nil {

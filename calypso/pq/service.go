@@ -6,20 +6,22 @@ import (
 	"encoding/hex"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
-	"go.dedis.ch/cothority/v3/darc"
-	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/cothority/v3/calypso/pq/protocol"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3/share"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 	"golang.org/x/xerrors"
+	"sync"
 )
 
 // Used for tests
 var pqOtsID onet.ServiceID
 
-const ServiceName = "PQ-OTS"
+const ServiceName = "PQOTS"
 
 func init() {
 	var err error
@@ -38,19 +40,18 @@ func init() {
 
 type Service struct {
 	*onet.ServiceProcessor
-	storage *storage
+	storage           *storage
+	genesisBlocks     map[string]*skipchain.SkipBlock
+	genesisBlocksLock sync.Mutex
 }
 
-// vData is sent to all nodes when re-encryption takes place. If Ephemeral
-// is non-nil, Signature needs to hold a valid signature from the reader
-// in the Proof.
+// vData is sent to all nodes when re-encryption takes place.
 type vData struct {
-	Proof     byzcoin.Proof
-	Ephemeral kyber.Point
-	Signature *darc.Signature
+	Read  *byzcoin.Proof
+	Write *byzcoin.Proof
 }
 
-func (s *Service) VerifyWrite(req *VerifyWrite) (*VerifyWriteReply,
+func (s *Service) VerifyWrite(req *VerifyWriteRequest) (*VerifyWriteReply,
 	error) {
 	err := verifyCommitment(req)
 	if err != nil {
@@ -73,7 +74,7 @@ func (s *Service) VerifyWrite(req *VerifyWrite) (*VerifyWriteReply,
 	return &VerifyWriteReply{Sig: sig}, nil
 }
 
-func verifyCommitment(req *VerifyWrite) error {
+func verifyCommitment(req *VerifyWriteRequest) error {
 	cmt := req.Write.Commitments[req.Idx]
 	shb, err := req.Share.V.MarshalBinary()
 	if err != nil {
@@ -89,26 +90,194 @@ func verifyCommitment(req *VerifyWrite) error {
 	return nil
 }
 
+func (s *Service) DecryptKey(req *DecryptKeyRequest) (*DecryptKeyReply, error) {
+	log.Lvl2(s.ServerIdentity(), "Re-encrypt the key to the public key of the reader")
+
+	var read Read
+	if err := req.Read.VerifyAndDecode(cothority.Suite, ContractReadID,
+		&read); err != nil {
+		return nil, xerrors.New("didn't get a read instance: " + err.Error())
+	}
+
+	var write Write
+	if err := req.Write.VerifyAndDecode(cothority.Suite, ContractPQWriteID,
+		&write); err != nil {
+		return nil, xerrors.New("didn't get a write instance: " + err.Error())
+	}
+	//if !read.Write.Equal(byzcoin.NewInstanceID(req.Write.InclusionProof.Key())) {
+	//	return nil, xerrors.New("read doesn't point to passed write")
+	//}
+
+	if err := s.verifyProof(&req.Read); err != nil {
+		return nil, xerrors.Errorf(
+			"read proof cannot be verified to come from scID: %v",
+			err)
+	}
+	if err := s.verifyProof(&req.Write); err != nil {
+		return nil, xerrors.Errorf(
+			"write proof cannot be verified to come from scID: %v",
+			err)
+	}
+
+	//wb, err := protobuf.Encode(&req.Write)
+	//if err != nil {
+	//	return nil, xerrors.Errorf("cannot encode write: %v", err)
+	//}
+	//h := sha256.New()
+	//h.Write(wb)
+	//key := hex.EncodeToString(h.Sum(nil))
+	nodes := len(req.Roster.List)
+	tree := req.Roster.GenerateNaryTreeWithRoot(nodes, s.ServerIdentity())
+	pi, err := s.CreateProtocol(protocol.NamePQOTS, tree)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to create the pqots-protocol: %v",
+			err)
+	}
+	pqotsProto := pi.(*protocol.PQOTS)
+	pqotsProto.Xc = read.Xc
+	verificationData := &vData{
+		Read:  &req.Read,
+		Write: &req.Write,
+	}
+	pqotsProto.VerificationData, err = protobuf.Encode(verificationData)
+	if err != nil {
+		return nil, xerrors.Errorf("couldn't marshall verification data: %v",
+			err)
+	}
+	pqotsProto.Verify = s.verifyReencryption
+	pqotsProto.GetShare = s.getShare
+	err = pqotsProto.Start()
+	if err != nil {
+		return nil, xerrors.Errorf("failed to start pqots-protocol: %v", err)
+	}
+	if !<-pqotsProto.Reencrypted {
+		return nil, xerrors.New("reencryption got refused")
+	}
+	log.Lvl3("Reencryption protocol is done.")
+	return &DecryptKeyReply{Reencryptions: pqotsProto.Reencryptions}, nil
+}
+
+func (s *Service) verifyProof(proof *byzcoin.Proof) error {
+	scID := proof.Latest.SkipChainID()
+	sb, err := s.fetchGenesisBlock(scID, proof.Latest.Roster)
+	if err != nil {
+		return xerrors.Errorf("fetching genesis block: %v", err)
+	}
+
+	return cothority.ErrorOrNil(proof.VerifyFromBlock(sb),
+		"verifying proof from block")
+}
+func (s *Service) fetchGenesisBlock(scID skipchain.SkipBlockID, roster *onet.Roster) (*skipchain.SkipBlock, error) {
+	s.genesisBlocksLock.Lock()
+	defer s.genesisBlocksLock.Unlock()
+	sb := s.genesisBlocks[string(scID)]
+	if sb != nil {
+		return sb, nil
+	}
+
+	cl := skipchain.NewClient()
+	sb, err := cl.GetSingleBlock(roster, scID)
+	if err != nil {
+		return nil, xerrors.Errorf("getting single block: %v", err)
+	}
+
+	// Genesis block can be reused later on.
+	s.genesisBlocks[string(scID)] = sb
+
+	return sb, nil
+}
+
+func (s *Service) NewProtocol(tn *onet.TreeNodeInstance,
+	conf *onet.GenericConfig) (onet.ProtocolInstance, error) {
+	switch tn.ProtocolName() {
+	case protocol.NamePQOTS:
+		pi, err := protocol.NewPQOTS(tn)
+		if err != nil {
+			return nil, xerrors.Errorf(
+				"creating PQOTS protocol instance: %v", err)
+		}
+		pqOts := pi.(*protocol.PQOTS)
+		pqOts.Verify = s.verifyReencryption
+		pqOts.GetShare = s.getShare
+		return pqOts, nil
+	}
+	return nil, nil
+}
+
+func (s *Service) getShare(data []byte) (*share.PriShare, error) {
+	var verificationData vData
+	err := protobuf.DecodeWithConstructors(data, &verificationData,
+		network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		return nil, xerrors.Errorf("decoding verification data: %v", err)
+	}
+	var write Write
+	if err := verificationData.Write.VerifyAndDecode(cothority.Suite,
+		ContractPQWriteID, &write); err != nil {
+		return nil, xerrors.New("didn't get a write instance: " + err.Error())
+	}
+	wb, err := protobuf.Encode(&write)
+	if err != nil {
+		return nil, xerrors.Errorf("cannot encode write: %v", err)
+	}
+	h := sha256.New()
+	h.Write(wb)
+	key := hex.EncodeToString(h.Sum(nil))
+	s.storage.Lock()
+	defer s.storage.Unlock()
+	sh, ok := s.storage.Shares[key]
+	if !ok {
+		return nil, xerrors.Errorf("could not find the share for key %v", key)
+	}
+	return sh, nil
+}
+
+// verifyReencryption checks that the read and the write instances match.
+func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
+	err := func() error {
+		var verificationData vData
+		err := protobuf.DecodeWithConstructors(*rc.VerificationData,
+			&verificationData, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			return xerrors.Errorf("decoding verification data: %v", err)
+		}
+		var read Read
+		if err := verificationData.Read.VerifyAndDecode(cothority.Suite,
+			ContractReadID, &read); err != nil {
+			return xerrors.New("didn't get a read instance: " + err.Error())
+		}
+		var write Write
+		if err := verificationData.Write.VerifyAndDecode(cothority.Suite,
+			ContractPQWriteID, &write); err != nil {
+			return xerrors.New("didn't get a write instance: " + err.Error())
+		}
+		if !read.Write.Equal(byzcoin.NewInstanceID(verificationData.Write.
+			InclusionProof.Key())) {
+			return xerrors.New("read doesn't point to passed write")
+		}
+		if !read.Xc.Equal(rc.Xc) {
+			return xerrors.New("wrong reader")
+		}
+		return nil
+	}()
+	if err != nil {
+		log.Lvl2(s.ServerIdentity(), "wrong reencryption:", err)
+		return false
+	}
+	return true
+}
+
 func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
+		genesisBlocks:    make(map[string]*skipchain.SkipBlock),
 	}
-	if err := s.RegisterHandlers(s.VerifyWrite); err != nil {
+	if err := s.RegisterHandlers(s.VerifyWrite, s.DecryptKey); err != nil {
 		return nil, xerrors.New("Couldn't register messages")
 	}
-	//if err := s.RegisterHandlers(s.CreateLTS, s.ReshareLTS, s.DecryptKey,
-	//	s.GetLTSReply, s.Authorise, s.Authorize, s.updateValidPeers); err != nil {
-	//	return nil, xerrors.New("couldn't register messages")
-	//}
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
 		return nil, xerrors.Errorf("loading configuration: %v", err)
 	}
-
-	// Initialize the sets of valid peers for all existing LTS
-	//for ltsID, roster := range s.storage.Rosters {
-	//	s.SetValidPeers(s.NewPeerSetID(ltsID[:]), roster.List)
-	//}
-
 	return s, nil
 }

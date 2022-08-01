@@ -23,6 +23,18 @@ func NewClient(byzcoin *byzcoin.Client) *Client {
 		cothority.Suite, ServiceName)}
 }
 
+// WriteReply is returned upon successfully spawning a Write instance.
+type WriteReply struct {
+	*byzcoin.AddTxResponse
+	byzcoin.InstanceID
+}
+
+// ReadReply is is returned upon successfully spawning a Read instance.
+type ReadReply struct {
+	*byzcoin.AddTxResponse
+	byzcoin.InstanceID
+}
+
 func (c *Client) VerifyWriteAll(roster *onet.Roster, write *Write,
 	shares []*share.PriShare, rands [][]byte) []*VerifyWriteReply {
 	var wg sync.WaitGroup
@@ -44,20 +56,20 @@ func (c *Client) VerifyWrite(who *network.ServerIdentity, write *Write,
 	share *share.PriShare, rand []byte, idx int) (reply *VerifyWriteReply,
 	err error) {
 	reply = &VerifyWriteReply{}
-	err = c.c.SendProtobuf(who, &VerifyWrite{
+	err = c.c.SendProtobuf(who, &VerifyWriteRequest{
 		Idx:   idx,
 		Write: write,
 		Share: share,
 		Rand:  rand,
 	}, reply)
-	return reply, cothority.ErrorOrNil(err, "Sending VerifyWrite request")
+	return reply, cothority.ErrorOrNil(err, "Sending VerifyWriteRequest request")
 }
 
 func (c *Client) AddWrite(write *Write, sigs map[int][]byte, t int,
 	signer darc.Signer, signerCtr uint64, darc darc.Darc,
 	wait int) (reply *WriteReply, err error) {
 	reply = &WriteReply{}
-	req := WriteRequest{
+	req := WriteTxn{
 		Threshold: t,
 		Write:     *write,
 		Sigs:      sigs,
@@ -125,6 +137,12 @@ func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer,
 		return nil, xerrors.Errorf("adding txn: %v", err)
 	}
 	return reply, nil
+}
+
+func (c *Client) DecryptKey(dkr *DecryptKeyRequest) (reply *DecryptKeyReply, err error) {
+	reply = &DecryptKeyReply{}
+	err = c.c.SendProtobuf(c.bcClient.Roster.List[0], dkr, reply)
+	return reply, err
 }
 
 func (c *Client) SpawnDarc(signer darc.Signer, signerCtr uint64,

@@ -6,9 +6,13 @@ import (
 	"crypto/sha256"
 	"errors"
 	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/calypso/pq/protocol"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/share"
+	"go.dedis.ch/kyber/v3/suites"
 	"go.dedis.ch/kyber/v3/util/random"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/protobuf"
 	"golang.org/x/crypto/hkdf"
 	"hash"
 )
@@ -80,4 +84,27 @@ func deriveKey(hash func() hash.Hash, s kyber.Scalar) ([]byte, error) {
 		return nil, errors.New("HKDF-derived key too short")
 	}
 	return key, nil
+}
+
+func elGamalDecrypt(suite suites.Suite, sk kyber.Scalar,
+	reencs []*protocol.EGP) []*share.PriShare {
+	size := len(reencs)
+	decShares := make([]*share.PriShare, size)
+	for i := 0; i < size; i++ {
+		var decSh []byte
+		var tmpSh share.PriShare
+		tmp := reencs[i]
+		for _, C := range tmp.Cs {
+			S := suite.Point().Mul(sk, tmp.K)
+			decShPart := suite.Point().Sub(C, S)
+			decShPartData, _ := decShPart.Data()
+			decSh = append(decSh, decShPartData...)
+		}
+		err := protobuf.Decode(decSh, &tmpSh)
+		if err != nil {
+			log.Errorf("Cannot decode share")
+		}
+		decShares[i] = &tmpSh
+	}
+	return decShares
 }

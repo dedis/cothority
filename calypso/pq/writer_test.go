@@ -7,6 +7,7 @@ import (
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/darc/expression"
+	"go.dedis.ch/kyber/v3/share"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
 	"go.dedis.ch/onet/v3"
 	"testing"
@@ -106,8 +107,27 @@ func TestAll(t *testing.T) {
 
 	rReply, err := cl.AddRead(prWr, reader1, 1, 10)
 	require.NoError(t, err)
-	prRe1, err := cl.WaitProof(rReply.InstanceID, time.Second, nil)
+	prRe, err := cl.WaitProof(rReply.InstanceID, time.Second, nil)
 	require.NoError(t, err)
-	require.True(t, prRe1.InclusionProof.Match(rReply.InstanceID.Slice()))
+	require.True(t, prRe.InclusionProof.Match(rReply.InstanceID.Slice()))
 
+	dkReply, err := cl.DecryptKey(&DecryptKeyRequest{
+		Roster: roster,
+		Read:   *prRe,
+		Write:  *prWr,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, dkReply.Reencryptions)
+
+	//recShares := make([]share.PriShare, len(roster.List))
+	decShares := elGamalDecrypt(cothority.Suite, reader1.Ed25519.Secret,
+		dkReply.Reencryptions)
+	for _, ds := range decShares {
+		require.NotNil(t, ds)
+	}
+
+	recSecret, err := share.RecoverSecret(cothority.Suite, decShares, thr, n)
+	require.NoError(t, err)
+	require.NotNil(t, recSecret)
+	require.True(t, recSecret.Equal(poly.Secret()))
 }
