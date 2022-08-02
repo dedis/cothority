@@ -69,6 +69,22 @@ func Encrypt(s kyber.Scalar, mesg []byte) ([]byte, []byte, error) {
 	return ctxt, ctxtHash[:], nil
 }
 
+func Decrypt(s kyber.Scalar, ctxt []byte) ([]byte, error) {
+	hash := sha256.New
+	buf, err := deriveKey(hash, s)
+	if err != nil {
+		return nil, err
+	}
+	key := buf[:32]
+	nonce := buf[32:LENGTH]
+	aes, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	aesgcm, err := cipher.NewGCM(aes)
+	return aesgcm.Open(nil, nonce, ctxt, nil)
+}
+
 func deriveKey(hash func() hash.Hash, s kyber.Scalar) ([]byte, error) {
 	sb, err := s.MarshalBinary()
 	if err != nil {

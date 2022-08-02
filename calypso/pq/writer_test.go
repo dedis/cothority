@@ -1,6 +1,7 @@
 package pq
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
@@ -128,6 +129,8 @@ func TestAll(t *testing.T) {
 
 	recSecret, err := share.RecoverSecret(cothority.Suite, decShares, thr, n)
 	require.NoError(t, err)
-	require.NotNil(t, recSecret)
 	require.True(t, recSecret.Equal(poly.Secret()))
+	ptxt, err := Decrypt(recSecret, ctxt)
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(ptxt, mesg))
 }
