@@ -17,7 +17,8 @@ import (
 	"hash"
 )
 
-const LENGTH = 32 + 12
+const KEY_LENGTH = 32
+const LENGTH = KEY_LENGTH + 12
 
 // t = f + 1
 func GenerateSSPoly(t int) *share.PriPoly {
@@ -53,8 +54,8 @@ func Encrypt(s kyber.Scalar, mesg []byte) ([]byte, []byte, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	key := buf[:32]
-	nonce := buf[32:LENGTH]
+	key := buf[:KEY_LENGTH]
+	nonce := buf[KEY_LENGTH:LENGTH]
 
 	aes, err := aes.NewCipher(key)
 	if err != nil {

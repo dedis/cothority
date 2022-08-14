@@ -75,7 +75,7 @@ func TestAll(t *testing.T) {
 	_, err = cl.SpawnDarc(admin, adminCt, gDarc, *darc1, 10)
 	adminCt++
 	require.NoError(t, err)
-
+	
 	poly := GenerateSSPoly(f + 1)
 	shares, rands, commitments, err := GenerateCommitments(poly, n)
 	require.NoError(t, err)
