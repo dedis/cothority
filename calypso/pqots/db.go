@@ -1,4 +1,4 @@
-package pq
+package pqots
 
 import (
 	"go.dedis.ch/kyber/v3/share"

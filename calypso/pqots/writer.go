@@ -1,4 +1,4 @@
-package pq
+package pqots
 
 import (
 	"crypto/aes"
@@ -6,7 +6,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/calypso/pq/protocol"
+	"go.dedis.ch/cothority/v3/calypso/pqots/protocol"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/share"
 	"go.dedis.ch/kyber/v3/suites"

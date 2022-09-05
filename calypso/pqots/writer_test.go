@@ -1,4 +1,4 @@
-package pq
+package pqots
 
 import (
 	"bytes"
@@ -66,16 +66,16 @@ func TestAll(t *testing.T) {
 	darc1 := darc.NewDarc(darc.InitRules([]darc.Identity{provider1.Identity()},
 		[]darc.Identity{provider1.Identity()}), []byte("Provider1"))
 	// provider1 is the owner, while reader1 is allowed to do read
-	darc1.Rules.AddRule(darc.Action("spawn:"+ContractPQWriteID),
+	darc1.Rules.AddRule(darc.Action("spawn:"+ContractPQOTSWriteID),
 		expression.InitOrExpr(provider1.Identity().String()))
-	darc1.Rules.AddRule(darc.Action("spawn:"+ContractReadID),
+	darc1.Rules.AddRule(darc.Action("spawn:"+ContractPQOTSReadID),
 		expression.InitOrExpr(reader1.Identity().String()))
 	require.NotNil(t, darc1)
 	require.NoError(t, err)
 	_, err = cl.SpawnDarc(admin, adminCt, gDarc, *darc1, 10)
 	adminCt++
 	require.NoError(t, err)
-	
+
 	poly := GenerateSSPoly(f + 1)
 	shares, rands, commitments, err := GenerateCommitments(poly, n)
 	require.NoError(t, err)

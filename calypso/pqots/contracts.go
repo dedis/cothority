@@ -1,4 +1,4 @@
-package pq
+package pqots
 
 import (
 	"go.dedis.ch/cothority/v3"
@@ -10,21 +10,21 @@ import (
 	"golang.org/x/xerrors"
 )
 
-// ContractPQWriteID references a system-wide contract for PQ-OTS.
-const ContractPQWriteID = "calypsoPQWrite"
+// ContractPQOTSWriteID references a system-wide contract for PQ-OTS.
+const ContractPQOTSWriteID = "calypsoPQOTSWrite"
 
-// ContractPQWrite represents one calypso pq-write instance.
-type ContractPQWrite struct {
+// ContractPQOTSWrite represents one calypso pqots-write instance.
+type ContractPQOTSWrite struct {
 	byzcoin.BasicContract
 	Write
 }
 
 func contractPQWriteFromBytes(in []byte) (byzcoin.Contract, error) {
-	c := &ContractPQWrite{}
+	c := &ContractPQOTSWrite{}
 	err := protobuf.DecodeWithConstructors(in, &c.Write, network.DefaultConstructors(cothority.Suite))
 	return c, cothority.ErrorOrNil(err, "couldn't unmarshal write")
 }
-func (c ContractPQWrite) Spawn(rst byzcoin.ReadOnlyStateTrie,
+func (c ContractPQOTSWrite) Spawn(rst byzcoin.ReadOnlyStateTrie,
 	inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
@@ -36,25 +36,25 @@ func (c ContractPQWrite) Spawn(rst byzcoin.ReadOnlyStateTrie,
 	}
 
 	switch inst.Spawn.ContractID {
-	case ContractPQWriteID:
-		wrb := inst.Spawn.Args.Search("writereq")
-		if wrb == nil || len(wrb) == 0 {
-			err = xerrors.New("need a write req in 'writereq' argument")
+	case ContractPQOTSWriteID:
+		buf := inst.Spawn.Args.Search("writetxn")
+		if buf == nil || len(buf) == 0 {
+			err = xerrors.New("need a write txn in 'writetxn' argument")
 			return
 		}
-		var req WriteTxn
-		err = protobuf.DecodeWithConstructors(wrb, &req,
+		var wTxn WriteTxn
+		err = protobuf.DecodeWithConstructors(buf, &wTxn,
 			network.DefaultConstructors(cothority.Suite))
 		if err != nil {
-			err = xerrors.New("couldn't unmarshal write req: " + err.Error())
+			err = xerrors.New("couldn't unmarshal write txn: " + err.Error())
+			return
+		}
+		if err = wTxn.CheckSignatures(cothority.Suite); err != nil {
+			err = xerrors.Errorf("Verifying write failed: %v", err)
 			return
 		}
 		if d := inst.Spawn.Args.Search("darcID"); d != nil {
 			darcID = d
-		}
-		if err = req.CheckSignatures(cothority.Suite); err != nil {
-			err = xerrors.Errorf("Verifying write failed: %v", err)
-			return
 		}
 		instID, err := inst.DeriveIDArg("", "preID")
 		if err != nil {
@@ -62,13 +62,13 @@ func (c ContractPQWrite) Spawn(rst byzcoin.ReadOnlyStateTrie,
 				"couldn't get ID for instance: %v", err)
 		}
 		log.Lvlf3("Successfully verified write request and will store in %x", instID)
-		wb, err := protobuf.Encode(&req.Write)
+		wb, err := protobuf.Encode(&wTxn.Write)
 		if err != nil {
 			return nil, nil, xerrors.Errorf("couldn't encode write: %v", err)
 		}
 		sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, instID,
-			ContractPQWriteID, wb, darcID))
-	case ContractReadID:
+			ContractPQOTSWriteID, wb, darcID))
+	case ContractPQOTSReadID:
 		var rd Read
 		r := inst.Spawn.Args.Search("read")
 		if r == nil || len(r) == 0 {
@@ -87,15 +87,15 @@ func (c ContractPQWrite) Spawn(rst byzcoin.ReadOnlyStateTrie,
 				"couldn't get ID for instance: %v", err)
 		}
 		sc = byzcoin.StateChanges{byzcoin.NewStateChange(byzcoin.Create,
-			instID, ContractReadID, r, darcID)}
+			instID, ContractPQOTSReadID, r, darcID)}
 	default:
 		err = xerrors.New("can only spawn writes and reads")
 	}
 	return
 }
 
-// ContractReadID references a read contract system-wide.
-const ContractReadID = "calypsoRead"
+// ContractPQOTSReadID references a read contract system-wide.
+const ContractPQOTSReadID = "calypsoPQOTSRead"
 
 // ContractRead represents one read contract.
 type ContractRead struct {

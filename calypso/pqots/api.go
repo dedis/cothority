@@ -1,4 +1,4 @@
-package pq
+package pqots
 
 import (
 	"go.dedis.ch/cothority/v3"
@@ -69,12 +69,12 @@ func (c *Client) AddWrite(write *Write, sigs map[int][]byte, t int,
 	signer darc.Signer, signerCtr uint64, darc darc.Darc,
 	wait int) (reply *WriteReply, err error) {
 	reply = &WriteReply{}
-	req := WriteTxn{
+	txn := WriteTxn{
 		Threshold: t,
 		Write:     *write,
 		Sigs:      sigs,
 	}
-	reqBuf, err := protobuf.Encode(&req)
+	txnBuf, err := protobuf.Encode(&txn)
 	if err != nil {
 		return nil, xerrors.Errorf("encoding write request: %v", err)
 	}
@@ -82,9 +82,9 @@ func (c *Client) AddWrite(write *Write, sigs map[int][]byte, t int,
 		byzcoin.Instruction{
 			InstanceID: byzcoin.NewInstanceID(darc.GetBaseID()),
 			Spawn: &byzcoin.Spawn{
-				ContractID: ContractPQWriteID,
+				ContractID: ContractPQOTSWriteID,
 				Args: byzcoin.Arguments{{
-					Name: "writereq", Value: reqBuf}},
+					Name: "writetxn", Value: txnBuf}},
 			},
 			SignerCounter: []uint64{signerCtr},
 		},
@@ -120,7 +120,7 @@ func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer,
 		byzcoin.Instruction{
 			InstanceID: byzcoin.NewInstanceID(proof.InclusionProof.Key()),
 			Spawn: &byzcoin.Spawn{
-				ContractID: ContractReadID,
+				ContractID: ContractPQOTSReadID,
 				Args:       byzcoin.Arguments{{Name: "read", Value: readBuf}},
 			},
 			SignerCounter: []uint64{signerCtr},

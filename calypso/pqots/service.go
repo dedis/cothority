@@ -1,4 +1,4 @@
-package pq
+package pqots
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
-	"go.dedis.ch/cothority/v3/calypso/pq/protocol"
+	"go.dedis.ch/cothority/v3/calypso/pqots/protocol"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/kyber/v3/share"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
@@ -28,11 +28,11 @@ func init() {
 	pqOtsID, err = onet.RegisterNewService(ServiceName, newService)
 	log.ErrFatal(err)
 	network.RegisterMessages(&storage{}, &vData{})
-	err = byzcoin.RegisterGlobalContract(ContractPQWriteID, contractPQWriteFromBytes)
+	err = byzcoin.RegisterGlobalContract(ContractPQOTSWriteID, contractPQWriteFromBytes)
 	if err != nil {
 		log.ErrFatal(err)
 	}
-	err = byzcoin.RegisterGlobalContract(ContractReadID, contractReadFromBytes)
+	err = byzcoin.RegisterGlobalContract(ContractPQOTSReadID, contractReadFromBytes)
 	if err != nil {
 		log.ErrFatal(err)
 	}
@@ -94,13 +94,13 @@ func (s *Service) DecryptKey(req *DecryptKeyRequest) (*DecryptKeyReply, error) {
 	log.Lvl2(s.ServerIdentity(), "Re-encrypt the key to the public key of the reader")
 
 	var read Read
-	if err := req.Read.VerifyAndDecode(cothority.Suite, ContractReadID,
+	if err := req.Read.VerifyAndDecode(cothority.Suite, ContractPQOTSReadID,
 		&read); err != nil {
 		return nil, xerrors.New("didn't get a read instance: " + err.Error())
 	}
 
 	var write Write
-	if err := req.Write.VerifyAndDecode(cothority.Suite, ContractPQWriteID,
+	if err := req.Write.VerifyAndDecode(cothority.Suite, ContractPQOTSWriteID,
 		&write); err != nil {
 		return nil, xerrors.New("didn't get a write instance: " + err.Error())
 	}
@@ -213,7 +213,7 @@ func (s *Service) getShare(data []byte) (*share.PriShare, error) {
 	}
 	var write Write
 	if err := verificationData.Write.VerifyAndDecode(cothority.Suite,
-		ContractPQWriteID, &write); err != nil {
+		ContractPQOTSWriteID, &write); err != nil {
 		return nil, xerrors.New("didn't get a write instance: " + err.Error())
 	}
 	wb, err := protobuf.Encode(&write)
@@ -243,12 +243,12 @@ func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
 		}
 		var read Read
 		if err := verificationData.Read.VerifyAndDecode(cothority.Suite,
-			ContractReadID, &read); err != nil {
+			ContractPQOTSReadID, &read); err != nil {
 			return xerrors.New("didn't get a read instance: " + err.Error())
 		}
 		var write Write
 		if err := verificationData.Write.VerifyAndDecode(cothority.Suite,
-			ContractPQWriteID, &write); err != nil {
+			ContractPQOTSWriteID, &write); err != nil {
 			return xerrors.New("didn't get a write instance: " + err.Error())
 		}
 		if !read.Write.Equal(byzcoin.NewInstanceID(verificationData.Write.

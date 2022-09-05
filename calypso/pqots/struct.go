@@ -1,8 +1,7 @@
-package pq
+package pqots
 
 import (
 	"crypto/sha256"
-	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
 	"go.dedis.ch/onet/v3/log"
@@ -32,7 +31,7 @@ func (wr *WriteTxn) CheckSignatures(suite suite) error {
 	h.Write(wb)
 	buf := h.Sum(nil)
 	for i, pk := range wr.Write.Publics {
-		err := schnorr.Verify(cothority.Suite, pk, buf, wr.Sigs[i])
+		err := schnorr.Verify(suite, pk, buf, wr.Sigs[i])
 		if err == nil {
 			validSig++
 			if validSig >= wr.Threshold {

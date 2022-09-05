@@ -1,8 +1,8 @@
-package pq
+package pqots
 
 import (
 	"go.dedis.ch/cothority/v3/byzcoin"
-	"go.dedis.ch/cothority/v3/calypso/pq/protocol"
+	"go.dedis.ch/cothority/v3/calypso/pqots/protocol"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/share"
 	"go.dedis.ch/onet/v3"
@@ -12,7 +12,6 @@ type Write struct {
 	CtxtHash    []byte
 	Publics     []kyber.Point
 	Commitments [][]byte
-	//TODO: DARC policy
 }
 
 type WriteTxn struct {
