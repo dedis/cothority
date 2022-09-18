@@ -11,8 +11,8 @@ import (
 )
 
 func init() {
-	network.RegisterMessages(VerifyWriteRequest{}, VerifyWriteReply{}, DecryptKeyRequest{},
-		DecryptKeyReply{})
+	network.RegisterMessages(VerifyWriteRequest{}, VerifyWriteReply{},
+		DecryptKeyRequest{}, DecryptKeyReply{})
 }
 
 type suite interface {

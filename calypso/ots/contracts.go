@@ -10,16 +10,16 @@ import (
 	"golang.org/x/xerrors"
 )
 
-// ContractOTSWriteID references a system-wide contract for PQ-OTS.
+// ContractOTSWriteID references a system-wide contract for OTS.
 const ContractOTSWriteID = "calypsoOTSWrite"
 
-// ContractOTSWrite represents one calypso pqots-write instance.
+// ContractOTSWrite represents one calypso ots-write instance.
 type ContractOTSWrite struct {
 	byzcoin.BasicContract
 	Write
 }
 
-func contractPQWriteFromBytes(in []byte) (byzcoin.Contract, error) {
+func contractOTSWriteFromBytes(in []byte) (byzcoin.Contract, error) {
 	c := &ContractOTSWrite{}
 	err := protobuf.DecodeWithConstructors(in, &c.Write, network.DefaultConstructors(cothority.Suite))
 	return c, cothority.ErrorOrNil(err, "couldn't unmarshal write")
@@ -42,8 +42,8 @@ func (c ContractOTSWrite) Spawn(rst byzcoin.ReadOnlyStateTrie,
 			err = xerrors.New("need a write req in 'write' argument")
 			return
 		}
-		var wr Write
-		err = protobuf.DecodeWithConstructors(wb, &wr,
+		//var wr Write
+		err = protobuf.DecodeWithConstructors(wb, &c.Write,
 			network.DefaultConstructors(cothority.Suite))
 		if err != nil {
 			err = xerrors.New("couldn't unmarshal write: " + err.Error())
@@ -52,19 +52,22 @@ func (c ContractOTSWrite) Spawn(rst byzcoin.ReadOnlyStateTrie,
 		if d := inst.Spawn.Args.Search("darcID"); d != nil {
 			darcID = d
 		}
+		if !darcID.Equal(c.Write.PolicyID) {
+			return nil, nil, xerrors.New("darcIDs do not match")
+		}
+		err := c.Write.VerifyWrite(cothority.Suite, darcID)
+		if err != nil {
+			return nil, nil, err
+		}
 		instID, err := inst.DeriveIDArg("", "preID")
 		if err != nil {
 			return nil, nil, xerrors.Errorf(
 				"couldn't get ID for instance: %v", err)
 		}
 		log.Lvlf3("Successfully verified write request and will store in %x", instID)
-		//wb, err := protobuf.Encode(&wr.Write)
-		//if err != nil {
-		//	return nil, nil, xerrors.Errorf("couldn't encode write: %v", err)
-		//}
-		//sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, instID,
-		//	ContractOTSWriteID, wb, darcID))
-	case ContractPQOTSReadID:
+		sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, instID,
+			ContractOTSWriteID, wb, darcID))
+	case ContractOTSReadID:
 		var rd Read
 		r := inst.Spawn.Args.Search("read")
 		if r == nil || len(r) == 0 {
@@ -83,22 +86,22 @@ func (c ContractOTSWrite) Spawn(rst byzcoin.ReadOnlyStateTrie,
 				"couldn't get ID for instance: %v", err)
 		}
 		sc = byzcoin.StateChanges{byzcoin.NewStateChange(byzcoin.Create,
-			instID, ContractPQOTSReadID, r, darcID)}
+			instID, ContractOTSReadID, r, darcID)}
 	default:
 		err = xerrors.New("can only spawn writes and reads")
 	}
 	return
 }
 
-// ContractPQOTSReadID references a read contract system-wide.
-const ContractPQOTSReadID = "calypsoPQOTSRead"
+// ContractOTSReadID references a read contract system-wide.
+const ContractOTSReadID = "calypsoOTSRead"
 
-// ContractRead represents one read contract.
-type ContractRead struct {
+// ContractOTSRead represents one read contract.
+type ContractOTSRead struct {
 	byzcoin.BasicContract
 	Read
 }
 
-func contractReadFromBytes(in []byte) (byzcoin.Contract, error) {
+func contractOTSReadFromBytes(in []byte) (byzcoin.Contract, error) {
 	return nil, xerrors.New("calypso read instances are never instantiated")
 }

@@ -1,21 +1,21 @@
 package protocol
 
 import (
+	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/kyber/v3/share"
+	"go.dedis.ch/kyber/v3/share/pvss"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/network"
 )
 
-const NamePQOTS = "PQOTS"
+const NameOTS = "OTS"
 
 func init() {
 	network.RegisterMessages(&Reencrypt{}, &ReencryptReply{})
 }
 
-type VerifyRequest func(rc *Reencrypt) *share.PriShare
-
-//type GetShare func([]byte) (*share.PriShare, error)
+type VerifyRequest func(rc *Reencrypt, idx int) (*pvss.PubVerShare,
+	kyber.Point, darc.ID)
 
 type Reencrypt struct {
 	Xc               kyber.Point

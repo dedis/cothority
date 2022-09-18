@@ -26,7 +26,6 @@ type PQOTS struct {
 
 	VerificationData []byte
 	Verify           VerifyRequest
-	GetShare         GetShare
 
 	Reencrypted   chan bool
 	Reencryptions []*EGP
@@ -48,82 +47,98 @@ func NewPQOTS(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	return pqOts, nil
 }
 
-func (pqOts *PQOTS) Start() error {
+func (p *PQOTS) Start() error {
 	rc := &Reencrypt{
-		Xc: pqOts.Xc,
+		Xc: p.Xc,
 	}
-	if len(pqOts.VerificationData) > 0 {
-		rc.VerificationData = &pqOts.VerificationData
+	if len(p.VerificationData) > 0 {
+		rc.VerificationData = &p.VerificationData
 	}
-	if pqOts.Verify != nil {
-		if !pqOts.Verify(rc) {
-			pqOts.finish(false)
-			return xerrors.New("refused to reencrypt")
+	//if p.Verify != nil {
+	//	if !p.Verify(rc) {
+	//		p.finish(false)
+	//		return xerrors.New("refused to reencrypt")
+	//	}
+	//}
+	//if p.GetShare != nil {
+	//	sh, err := p.GetShare(p.VerificationData)
+	//	if err != nil {
+	//		p.finish(false)
+	//		return xerrors.Errorf("cannot get share: %v", err)
+	//	}
+	//	p.Share = sh
+	//}
+	if p.Verify != nil {
+		p.Share = p.Verify(rc)
+		if p.Share == nil {
+			p.finish(false)
+			return xerrors.Errorf("refused to reencrypt")
 		}
 	}
-	if pqOts.GetShare != nil {
-		sh, err := pqOts.GetShare(pqOts.VerificationData)
-		if err != nil {
-			pqOts.finish(false)
-			return xerrors.Errorf("cannot get share: %v", err)
-		}
-		pqOts.Share = sh
-	}
-	K, Cs, err := elGamalEncrypt(cothority.Suite, pqOts.Xc, pqOts.Share)
+	K, Cs, err := elGamalEncrypt(cothority.Suite, p.Xc, p.Share)
 	if err != nil {
-		pqOts.Failures++
-		log.Lvl1(pqOts.ServerIdentity(), "cannot reencrypt:", err.Error())
+		p.Failures++
+		log.Lvl1(p.ServerIdentity(), "cannot reencrypt:", err.Error())
 	} else {
-		pqOts.replies = append(pqOts.replies, ReencryptReply{
-			Index: pqOts.Share.I,
+		p.replies = append(p.replies, ReencryptReply{
+			Index: p.Share.I,
 			Egp:   &EGP{K: K, Cs: Cs},
 		})
 	}
-	pqOts.timeout = time.AfterFunc(1*time.Minute, func() {
+	p.timeout = time.AfterFunc(1*time.Minute, func() {
 		log.Lvl1("PQOTS protocol timeout")
-		pqOts.finish(false)
+		p.finish(false)
 	})
-	errs := pqOts.Broadcast(rc)
-	if len(errs) > (len(pqOts.Roster().List)-1)/3 {
+	errs := p.Broadcast(rc)
+	if len(errs) > (len(p.Roster().List)-1)/3 {
 		log.Errorf("Some nodes failed with error(s) %v", errs)
 		return xerrors.New("too many nodes failed in broadcast")
 	}
 	return nil
 }
 
-func (pqOts *PQOTS) reencrypt(r structReencrypt) error {
-	log.Lvl3(pqOts.Name() + ": starting reencrypt")
-	defer pqOts.Done()
+func (p *PQOTS) reencrypt(r structReencrypt) error {
+	log.Lvl3(p.Name() + ": starting reencrypt")
+	defer p.Done()
 
-	if pqOts.Verify != nil {
-		if !pqOts.Verify(&r.Reencrypt) {
-			log.Lvl2(pqOts.ServerIdentity(), "refused to reencrypt")
-			return cothority.ErrorOrNil(pqOts.SendToParent(&ReencryptReply{}),
+	//if p.Verify != nil {
+	//	if !p.Verify(&r.Reencrypt) {
+	//		log.Lvl2(p.ServerIdentity(), "refused to reencrypt")
+	//		return cothority.ErrorOrNil(p.SendToParent(&ReencryptReply{}),
+	//			"sending ReencryptReply to parent")
+	//	}
+	//}
+	//
+	//if p.GetShare != nil {
+	//	sh, err := p.GetShare(*r.VerificationData)
+	//	if err != nil {
+	//		log.Errorf("%v couldn't find share: %v", p.ServerIdentity(),
+	//			err)
+	//		return cothority.ErrorOrNil(p.SendToParent(
+	//			&ReencryptReply{}), "sending ReencryptReply to parent")
+	//	}
+	//	p.Share = sh
+	//}
+
+	if p.Verify != nil {
+		p.Share = p.Verify(&r.Reencrypt)
+		if p.Share == nil {
+			log.Lvl2(p.ServerIdentity(), "refused to reencrypt")
+			return cothority.ErrorOrNil(p.SendToParent(&ReencryptReply{}),
 				"sending ReencryptReply to parent")
 		}
 	}
-	log.Lvl1(pqOts.Name() + ": verified")
-	if pqOts.GetShare != nil {
-		sh, err := pqOts.GetShare(*r.VerificationData)
-		if err != nil {
-			log.Errorf("%v couldn't find share: %v", pqOts.ServerIdentity(),
-				err)
-			return cothority.ErrorOrNil(pqOts.SendToParent(
-				&ReencryptReply{}), "sending ReencryptReply to parent")
-		}
-		pqOts.Share = sh
-	}
-	log.Lvl1(pqOts.Name()+": received share ", pqOts.Share.I)
-	K, Cs, err := elGamalEncrypt(cothority.Suite, r.Xc, pqOts.Share)
+
+	K, Cs, err := elGamalEncrypt(cothority.Suite, r.Xc, p.Share)
 	if err != nil {
-		log.Lvl2(pqOts.ServerIdentity(), "cannot reencrypt")
-		return cothority.ErrorOrNil(pqOts.SendToParent(&ReencryptReply{}),
+		log.Lvl2(p.ServerIdentity(), "cannot reencrypt")
+		return cothority.ErrorOrNil(p.SendToParent(&ReencryptReply{}),
 			"sending ReencryptReply to parent")
 	}
-	log.Lvl1(pqOts.Name() + ": sending reply to parent")
+	log.Lvl1(p.Name() + ": sending reply to parent")
 	return cothority.ErrorOrNil(
-		pqOts.SendToParent(&ReencryptReply{
-			Index: pqOts.Share.I,
+		p.SendToParent(&ReencryptReply{
+			Index: p.Share.I,
 			Egp: &EGP{
 				K:  K,
 				Cs: Cs,
@@ -132,26 +147,26 @@ func (pqOts *PQOTS) reencrypt(r structReencrypt) error {
 	)
 }
 
-func (pqOts *PQOTS) reencryptReply(rr structReencryptReply) error {
+func (p *PQOTS) reencryptReply(rr structReencryptReply) error {
 	if rr.ReencryptReply.Egp == nil {
 		log.Lvl2("Node", rr.ServerIdentity, "refused to reply")
-		pqOts.Failures++
-		if pqOts.Failures > len(pqOts.Roster().List)-pqOts.Threshold {
+		p.Failures++
+		if p.Failures > len(p.Roster().List)-p.Threshold {
 			log.Lvl2(rr.ServerIdentity, "couldn't get enough shares")
-			pqOts.finish(false)
+			p.finish(false)
 		}
 		return nil
 	}
-	log.Lvl1("wrapping up reencrpyt reply")
-	pqOts.replies = append(pqOts.replies, rr.ReencryptReply)
 
-	//if len(pqOts.replies) >= (pqOts.Threshold - 1) {
-	if len(pqOts.replies) >= (pqOts.Threshold) {
-		pqOts.Reencryptions = make([]*EGP, len(pqOts.List()))
-		for _, r := range pqOts.replies {
-			pqOts.Reencryptions[r.Index] = r.Egp
+	p.replies = append(p.replies, rr.ReencryptReply)
+
+	//if len(p.replies) >= (p.Threshold - 1) {
+	if len(p.replies) >= (p.Threshold) {
+		p.Reencryptions = make([]*EGP, len(p.List()))
+		for _, r := range p.replies {
+			p.Reencryptions[r.Index] = r.Egp
 		}
-		pqOts.finish(true)
+		p.finish(true)
 	}
 	return nil
 }
@@ -188,14 +203,14 @@ func min(a int, b int) int {
 	return b
 }
 
-func (pqOts *PQOTS) finish(result bool) {
-	pqOts.timeout.Stop()
+func (p *PQOTS) finish(result bool) {
+	p.timeout.Stop()
 	select {
-	case pqOts.Reencrypted <- result:
+	case p.Reencrypted <- result:
 		// succeeded
 	default:
 		// would have blocked because some other call to finish()
 		// beat us.
 	}
-	pqOts.doneOnce.Do(func() { pqOts.Done() })
+	p.doneOnce.Do(func() { p.Done() })
 }

@@ -120,8 +120,10 @@ func elGamalDecrypt(suite suites.Suite, sk kyber.Scalar,
 		err := protobuf.Decode(decSh, &tmpSh)
 		if err != nil {
 			log.Errorf("Cannot decode share")
+			decShares[i] = nil
+		} else {
+			decShares[i] = &tmpSh
 		}
-		decShares[i] = &tmpSh
 	}
 	return decShares
 }

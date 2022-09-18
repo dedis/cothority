@@ -16,12 +16,15 @@ const ContractPQOTSWriteID = "calypsoPQOTSWrite"
 // ContractPQOTSWrite represents one calypso pqots-write instance.
 type ContractPQOTSWrite struct {
 	byzcoin.BasicContract
-	Write
+	//Write
+	WriteTxn
 }
 
-func contractPQWriteFromBytes(in []byte) (byzcoin.Contract, error) {
+func contractPQOTSWriteFromBytes(in []byte) (byzcoin.Contract, error) {
 	c := &ContractPQOTSWrite{}
-	err := protobuf.DecodeWithConstructors(in, &c.Write, network.DefaultConstructors(cothority.Suite))
+	//err := protobuf.DecodeWithConstructors(in, &c.Write, network.DefaultConstructors(cothority.Suite))
+	err := protobuf.DecodeWithConstructors(in, &c.Write,
+		network.DefaultConstructors(cothority.Suite))
 	return c, cothority.ErrorOrNil(err, "couldn't unmarshal write")
 }
 func (c ContractPQOTSWrite) Spawn(rst byzcoin.ReadOnlyStateTrie,
@@ -42,14 +45,17 @@ func (c ContractPQOTSWrite) Spawn(rst byzcoin.ReadOnlyStateTrie,
 			err = xerrors.New("need a write txn in 'writetxn' argument")
 			return
 		}
-		var wTxn WriteTxn
-		err = protobuf.DecodeWithConstructors(buf, &wTxn,
+		//var wTxn WriteTxn
+		//err = protobuf.DecodeWithConstructors(buf, &wTxn,
+		//	network.DefaultConstructors(cothority.Suite))
+		err = protobuf.DecodeWithConstructors(buf, &c.WriteTxn,
 			network.DefaultConstructors(cothority.Suite))
 		if err != nil {
 			err = xerrors.New("couldn't unmarshal write txn: " + err.Error())
 			return
 		}
-		if err = wTxn.CheckSignatures(cothority.Suite); err != nil {
+		if err = c.WriteTxn.CheckSignatures(cothority.Suite); err != nil {
+			//if err = wTxn.CheckSignatures(cothority.Suite); err != nil {
 			err = xerrors.Errorf("Verifying write failed: %v", err)
 			return
 		}
@@ -62,7 +68,8 @@ func (c ContractPQOTSWrite) Spawn(rst byzcoin.ReadOnlyStateTrie,
 				"couldn't get ID for instance: %v", err)
 		}
 		log.Lvlf3("Successfully verified write request and will store in %x", instID)
-		wb, err := protobuf.Encode(&wTxn.Write)
+		//wb, err := protobuf.Encode(&wTxn.Write)
+		wb, err := protobuf.Encode(&c.Write)
 		if err != nil {
 			return nil, nil, xerrors.Errorf("couldn't encode write: %v", err)
 		}
@@ -97,12 +104,12 @@ func (c ContractPQOTSWrite) Spawn(rst byzcoin.ReadOnlyStateTrie,
 // ContractPQOTSReadID references a read contract system-wide.
 const ContractPQOTSReadID = "calypsoPQOTSRead"
 
-// ContractRead represents one read contract.
-type ContractRead struct {
+// ContractPQOTSRead represents one read contract.
+type ContractPQOTSRead struct {
 	byzcoin.BasicContract
 	Read
 }
 
-func contractReadFromBytes(in []byte) (byzcoin.Contract, error) {
+func contractPQOTSReadFromBytes(in []byte) (byzcoin.Contract, error) {
 	return nil, xerrors.New("calypso read instances are never instantiated")
 }

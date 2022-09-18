@@ -5,11 +5,14 @@ import (
 	"crypto/cipher"
 	"crypto/sha256"
 	"errors"
+	"go.dedis.ch/cothority/v3/calypso/ots/protocol"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/share"
 	"go.dedis.ch/kyber/v3/share/pvss"
 	"go.dedis.ch/kyber/v3/suites"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/protobuf"
 	"golang.org/x/crypto/hkdf"
 	"hash"
 )
@@ -19,8 +22,7 @@ const LENGTH = KEY_LENGTH + 12
 
 func RunPVSS(suite suites.Suite, n int, t int, pubs []kyber.Point,
 	policy darc.ID) ([]*pvss.PubVerShare, *share.PubPoly, []kyber.Point,
-	error) {
-	//g := suite.Point().Base()
+	kyber.Scalar, error) {
 	hash := sha256.New()
 	hash.Write(policy)
 	// TODO: Check if this is safe
@@ -28,21 +30,17 @@ func RunPVSS(suite suites.Suite, n int, t int, pubs []kyber.Point,
 	secret := suite.Scalar().Pick(suite.RandomStream())
 	shares, poly, err := pvss.EncShares(suite, h, pubs, secret, t)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 	proofs := make([]kyber.Point, n)
 	for i := 0; i < n; i++ {
 		proofs[i] = poly.Eval(shares[i].S.I).V
 	}
-	return shares, poly, proofs, nil
+	return shares, poly, proofs, secret, nil
 }
 
 func Encrypt(suite suites.Suite, s kyber.Scalar, mesg []byte) ([]byte,
 	[]byte, error) {
-	//secret, err := suite.Point().Mul(s, nil).MarshalBinary()
-	//if err != nil {
-	//	return nil, nil, err
-	//}
 	hash := sha256.New
 	secret := suite.Point().Mul(s, nil)
 	buf, err := deriveKey(hash, secret)
@@ -62,6 +60,22 @@ func Encrypt(suite suites.Suite, s kyber.Scalar, mesg []byte) ([]byte,
 	return ctxt, ctxtHash[:], nil
 }
 
+func Decrypt(s kyber.Point, ctxt []byte) ([]byte, error) {
+	hash := sha256.New
+	buf, err := deriveKey(hash, s)
+	if err != nil {
+		return nil, err
+	}
+	key := buf[:32]
+	nonce := buf[32:LENGTH]
+	aes, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	aesgcm, err := cipher.NewGCM(aes)
+	return aesgcm.Open(nil, nonce, ctxt, nil)
+}
+
 func deriveKey(hash func() hash.Hash, s kyber.Point) ([]byte, error) {
 	sb, err := s.MarshalBinary()
 	if err != nil {
@@ -77,4 +91,29 @@ func deriveKey(hash func() hash.Hash, s kyber.Point) ([]byte, error) {
 		return nil, errors.New("HKDF-derived key too short")
 	}
 	return key, nil
+}
+
+func elGamalDecrypt(suite suites.Suite, sk kyber.Scalar,
+	reencs []*protocol.EGP) []*pvss.PubVerShare {
+	size := len(reencs)
+	decShares := make([]*pvss.PubVerShare, size)
+	for i := 0; i < size; i++ {
+		var decSh []byte
+		var tmpSh pvss.PubVerShare
+		tmp := reencs[i]
+		for _, C := range tmp.Cs {
+			S := suite.Point().Mul(sk, tmp.K)
+			decShPart := suite.Point().Sub(C, S)
+			decShPartData, _ := decShPart.Data()
+			decSh = append(decSh, decShPartData...)
+		}
+		err := protobuf.Decode(decSh, &tmpSh)
+		if err != nil {
+			log.Errorf("Cannot decode share")
+			decShares[i] = nil
+		} else {
+			decShares[i] = &tmpSh
+		}
+	}
+	return decShares
 }
