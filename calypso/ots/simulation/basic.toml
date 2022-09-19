@@ -1,0 +1,12 @@
+Simulation = "OTS"
+Servers = 4
+BF = 9
+Rounds = 3
+Delay = 100
+Bandwidth = 100
+RunWait = "1200s"
+Suite = "Ed25519"
+BlockInteval = 10
+
+Hosts
+10

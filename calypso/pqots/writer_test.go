@@ -15,10 +15,6 @@ import (
 	"time"
 )
 
-func TestWriter_CreatePoly(t *testing.T) {
-	GenerateSSPoly(5)
-}
-
 func TestSign(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
 	_, roster, _ := l.GenTree(3, true)
@@ -66,12 +62,13 @@ func TestAll(t *testing.T) {
 	darc1 := darc.NewDarc(darc.InitRules([]darc.Identity{provider1.Identity()},
 		[]darc.Identity{provider1.Identity()}), []byte("Provider1"))
 	// provider1 is the owner, while reader1 is allowed to do read
-	darc1.Rules.AddRule(darc.Action("spawn:"+ContractPQOTSWriteID),
+	err = darc1.Rules.AddRule(darc.Action("spawn:"+ContractPQOTSWriteID),
 		expression.InitOrExpr(provider1.Identity().String()))
-	darc1.Rules.AddRule(darc.Action("spawn:"+ContractPQOTSReadID),
-		expression.InitOrExpr(reader1.Identity().String()))
-	require.NotNil(t, darc1)
 	require.NoError(t, err)
+	err = darc1.Rules.AddRule(darc.Action("spawn:"+ContractPQOTSReadID),
+		expression.InitOrExpr(reader1.Identity().String()))
+	require.NoError(t, err)
+	require.NotNil(t, darc1)
 	_, err = cl.SpawnDarc(admin, adminCt, gDarc, *darc1, 10)
 	adminCt++
 	require.NoError(t, err)
@@ -121,7 +118,7 @@ func TestAll(t *testing.T) {
 	require.NotNil(t, dkReply.Reencryptions)
 
 	//recShares := make([]share.PriShare, len(roster.List))
-	decShares := elGamalDecrypt(cothority.Suite, reader1.Ed25519.Secret,
+	decShares := ElGamalDecrypt(cothority.Suite, reader1.Ed25519.Secret,
 		dkReply.Reencryptions)
 	for _, ds := range decShares {
 		require.NotNil(t, ds)

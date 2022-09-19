@@ -25,3 +25,6 @@ external/java/.project
 
 bypros/postgres
 bypros/storage/sqlstore/postgres
+
+simulation
+*test_data/

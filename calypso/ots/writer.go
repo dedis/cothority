@@ -93,7 +93,7 @@ func deriveKey(hash func() hash.Hash, s kyber.Point) ([]byte, error) {
 	return key, nil
 }
 
-func elGamalDecrypt(suite suites.Suite, sk kyber.Scalar,
+func ElGamalDecrypt(suite suites.Suite, sk kyber.Scalar,
 	reencs []*protocol.EGP) []*pvss.PubVerShare {
 	size := len(reencs)
 	decShares := make([]*pvss.PubVerShare, size)
