@@ -17,12 +17,10 @@ import (
 	"golang.org/x/xerrors"
 )
 
-// Used for tests
 var otsID onet.ServiceID
 
 const ServiceName = "OTS"
 
-// TODO: Fix contract names
 func init() {
 	var err error
 	otsID, err = onet.RegisterNewService(ServiceName, newService)
@@ -60,22 +58,6 @@ func (s *Service) DecryptKey(req *DecryptKeyRequest) (*DecryptKeyReply, error) {
 	if err := req.Read.VerifyAndDecode(cothority.Suite, ContractOTSReadID,
 		&read); err != nil {
 		return nil, xerrors.New("didn't get a read instance: " + err.Error())
-	}
-	var write Write
-	if err := req.Write.VerifyAndDecode(cothority.Suite, ContractOTSWriteID,
-		&write); err != nil {
-		return nil, xerrors.New("didn't get a write instance: " + err.Error())
-	}
-
-	if err := s.verifyProof(&req.Read); err != nil {
-		return nil, xerrors.Errorf(
-			"read proof cannot be verified to come from scID: %v",
-			err)
-	}
-	if err := s.verifyProof(&req.Write); err != nil {
-		return nil, xerrors.Errorf(
-			"write proof cannot be verified to come from scID: %v",
-			err)
 	}
 
 	nodes := len(req.Roster.List)
@@ -164,6 +146,16 @@ func (s *Service) verifyReencryption(rc *protocol.Reencrypt,
 		if err != nil {
 			return nil, nil, nil, xerrors.Errorf(
 				"decoding verification data: %v", err)
+		}
+		if err = s.verifyProof(verificationData.Read); err != nil {
+			return nil, nil, nil, xerrors.Errorf(
+				"read proof cannot be verified to come from scID: %v",
+				err)
+		}
+		if err = s.verifyProof(verificationData.Write); err != nil {
+			return nil, nil, nil, xerrors.Errorf(
+				"write proof cannot be verified to come from scID: %v",
+				err)
 		}
 		var read Read
 		if err := verificationData.Read.VerifyAndDecode(cothority.Suite,

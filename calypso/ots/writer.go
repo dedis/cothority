@@ -39,11 +39,11 @@ func RunPVSS(suite suites.Suite, n int, t int, pubs []kyber.Point,
 	return shares, poly, proofs, secret, nil
 }
 
-func Encrypt(suite suites.Suite, s kyber.Scalar, mesg []byte) ([]byte,
+func Encrypt(suite suites.Suite, secret kyber.Scalar, mesg []byte) ([]byte,
 	[]byte, error) {
 	hash := sha256.New
-	secret := suite.Point().Mul(s, nil)
-	buf, err := deriveKey(hash, secret)
+	shared := suite.Point().Mul(secret, nil)
+	buf, err := deriveKey(hash, shared)
 	key := buf[:KEY_LENGTH]
 	nonce := buf[KEY_LENGTH:LENGTH]
 
@@ -60,9 +60,9 @@ func Encrypt(suite suites.Suite, s kyber.Scalar, mesg []byte) ([]byte,
 	return ctxt, ctxtHash[:], nil
 }
 
-func Decrypt(s kyber.Point, ctxt []byte) ([]byte, error) {
+func Decrypt(shared kyber.Point, ctxt []byte) ([]byte, error) {
 	hash := sha256.New
-	buf, err := deriveKey(hash, s)
+	buf, err := deriveKey(hash, shared)
 	if err != nil {
 		return nil, err
 	}
@@ -76,8 +76,8 @@ func Decrypt(s kyber.Point, ctxt []byte) ([]byte, error) {
 	return aesgcm.Open(nil, nonce, ctxt, nil)
 }
 
-func deriveKey(hash func() hash.Hash, s kyber.Point) ([]byte, error) {
-	sb, err := s.MarshalBinary()
+func deriveKey(hash func() hash.Hash, shared kyber.Point) ([]byte, error) {
+	sb, err := shared.MarshalBinary()
 	if err != nil {
 		return nil, err
 	}

@@ -40,7 +40,7 @@ func TestAll(t *testing.T) {
 
 	admin := darc.NewSignerEd25519(nil, nil)
 	adminCt := uint64(1)
-	provider1 := darc.NewSignerEd25519(nil, nil)
+	writer1 := darc.NewSignerEd25519(nil, nil)
 	reader1 := darc.NewSignerEd25519(nil, nil)
 
 	// Initialise the genesis message and send it to the service.
@@ -59,11 +59,11 @@ func TestAll(t *testing.T) {
 	cl := NewClient(c)
 
 	//Create a signer, darc for data point #1
-	darc1 := darc.NewDarc(darc.InitRules([]darc.Identity{provider1.Identity()},
-		[]darc.Identity{provider1.Identity()}), []byte("Provider1"))
-	// provider1 is the owner, while reader1 is allowed to do read
+	darc1 := darc.NewDarc(darc.InitRules([]darc.Identity{writer1.Identity()},
+		[]darc.Identity{writer1.Identity()}), []byte("Writer1"))
+	// writer1 is the owner, while reader1 is allowed to do read
 	err = darc1.Rules.AddRule(darc.Action("spawn:"+ContractPQOTSWriteID),
-		expression.InitOrExpr(provider1.Identity().String()))
+		expression.InitOrExpr(writer1.Identity().String()))
 	require.NoError(t, err)
 	err = darc1.Rules.AddRule(darc.Action("spawn:"+ContractPQOTSReadID),
 		expression.InitOrExpr(reader1.Identity().String()))
@@ -95,7 +95,7 @@ func TestAll(t *testing.T) {
 		require.NotNil(t, r)
 		sigs[i] = r.Sig
 	}
-	wReply, err := cl.AddWrite(&wr, sigs, thr, provider1, 1, *darc1, 10)
+	wReply, err := cl.AddWrite(&wr, sigs, thr, writer1, 1, *darc1, 10)
 	require.NoError(t, err)
 	require.NotNil(t, wReply.InstanceID)
 

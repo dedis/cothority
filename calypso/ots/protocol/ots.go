@@ -59,6 +59,10 @@ func (o *OTS) Start() error {
 	if len(o.VerificationData) > 0 {
 		rc.VerificationData = &o.VerificationData
 	}
+	o.timeout = time.AfterFunc(1*time.Minute, func() {
+		log.Lvl1("OTS protocol timeout")
+		o.finish(false)
+	})
 	if o.Verify != nil {
 		o.Share, o.Proof, o.PolicyID = o.Verify(rc, o.Index())
 		if o.Share == nil || o.Proof == nil || o.PolicyID == nil {
@@ -84,10 +88,10 @@ func (o *OTS) Start() error {
 			})
 		}
 	}
-	o.timeout = time.AfterFunc(1*time.Minute, func() {
-		log.Lvl1("OTS protocol timeout")
-		o.finish(false)
-	})
+	//o.timeout = time.AfterFunc(1*time.Minute, func() {
+	//	log.Lvl1("OTS protocol timeout")
+	//	o.finish(false)
+	//})
 	errs := o.Broadcast(rc)
 	if len(errs) > (len(o.Roster().List)-1)/3 {
 		log.Errorf("Some nodes failed with error(s) %v", errs)

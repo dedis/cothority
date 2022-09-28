@@ -54,20 +54,10 @@ func (p *PQOTS) Start() error {
 	if len(p.VerificationData) > 0 {
 		rc.VerificationData = &p.VerificationData
 	}
-	//if p.Verify != nil {
-	//	if !p.Verify(rc) {
-	//		p.finish(false)
-	//		return xerrors.New("refused to reencrypt")
-	//	}
-	//}
-	//if p.GetShare != nil {
-	//	sh, err := p.GetShare(p.VerificationData)
-	//	if err != nil {
-	//		p.finish(false)
-	//		return xerrors.Errorf("cannot get share: %v", err)
-	//	}
-	//	p.Share = sh
-	//}
+	p.timeout = time.AfterFunc(1*time.Minute, func() {
+		log.Lvl1("PQOTS protocol timeout")
+		p.finish(false)
+	})
 	if p.Verify != nil {
 		p.Share = p.Verify(rc)
 		if p.Share == nil {
@@ -85,10 +75,6 @@ func (p *PQOTS) Start() error {
 			Egp:   &EGP{K: K, Cs: Cs},
 		})
 	}
-	p.timeout = time.AfterFunc(1*time.Minute, func() {
-		log.Lvl1("PQOTS protocol timeout")
-		p.finish(false)
-	})
 	errs := p.Broadcast(rc)
 	if len(errs) > (len(p.Roster().List)-1)/3 {
 		log.Errorf("Some nodes failed with error(s) %v", errs)
@@ -101,25 +87,6 @@ func (p *PQOTS) reencrypt(r structReencrypt) error {
 	log.Lvl3(p.Name() + ": starting reencrypt")
 	defer p.Done()
 
-	//if p.Verify != nil {
-	//	if !p.Verify(&r.Reencrypt) {
-	//		log.Lvl2(p.ServerIdentity(), "refused to reencrypt")
-	//		return cothority.ErrorOrNil(p.SendToParent(&ReencryptReply{}),
-	//			"sending ReencryptReply to parent")
-	//	}
-	//}
-	//
-	//if p.GetShare != nil {
-	//	sh, err := p.GetShare(*r.VerificationData)
-	//	if err != nil {
-	//		log.Errorf("%v couldn't find share: %v", p.ServerIdentity(),
-	//			err)
-	//		return cothority.ErrorOrNil(p.SendToParent(
-	//			&ReencryptReply{}), "sending ReencryptReply to parent")
-	//	}
-	//	p.Share = sh
-	//}
-
 	if p.Verify != nil {
 		p.Share = p.Verify(&r.Reencrypt)
 		if p.Share == nil {
@@ -128,7 +95,6 @@ func (p *PQOTS) reencrypt(r structReencrypt) error {
 				"sending ReencryptReply to parent")
 		}
 	}
-
 	K, Cs, err := elGamalEncrypt(cothority.Suite, r.Xc, p.Share)
 	if err != nil {
 		log.Lvl2(p.ServerIdentity(), "cannot reencrypt")
@@ -159,7 +125,6 @@ func (p *PQOTS) reencryptReply(rr structReencryptReply) error {
 	}
 
 	p.replies = append(p.replies, rr.ReencryptReply)
-
 	//if len(p.replies) >= (p.Threshold - 1) {
 	if len(p.replies) >= (p.Threshold) {
 		p.Reencryptions = make([]*EGP, len(p.List()))

@@ -18,7 +18,6 @@ import (
 	"sync"
 )
 
-// Used for tests
 var pqOtsID onet.ServiceID
 
 const ServiceName = "PQOTS"
@@ -99,23 +98,6 @@ func (s *Service) DecryptKey(req *DecryptKeyRequest) (*DecryptKeyReply, error) {
 		return nil, xerrors.New("didn't get a read instance: " + err.Error())
 	}
 
-	var write Write
-	if err := req.Write.VerifyAndDecode(cothority.Suite, ContractPQOTSWriteID,
-		&write); err != nil {
-		return nil, xerrors.New("didn't get a write instance: " + err.Error())
-	}
-
-	if err := s.verifyProof(&req.Read); err != nil {
-		return nil, xerrors.Errorf(
-			"read proof cannot be verified to come from scID: %v",
-			err)
-	}
-	if err := s.verifyProof(&req.Write); err != nil {
-		return nil, xerrors.Errorf(
-			"write proof cannot be verified to come from scID: %v",
-			err)
-	}
-
 	nodes := len(req.Roster.List)
 	tree := req.Roster.GenerateNaryTreeWithRoot(nodes, s.ServerIdentity())
 	pi, err := s.CreateProtocol(protocol.NamePQOTS, tree)
@@ -135,7 +117,6 @@ func (s *Service) DecryptKey(req *DecryptKeyRequest) (*DecryptKeyReply, error) {
 			err)
 	}
 	pqotsProto.Verify = s.verifyReencryption
-	//pqotsProto.GetShare = s.getShare
 	err = pqotsProto.Start()
 	if err != nil {
 		return nil, xerrors.Errorf("failed to start pqots-protocol: %v", err)
@@ -188,7 +169,6 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance,
 		}
 		pqOts := pi.(*protocol.PQOTS)
 		pqOts.Verify = s.verifyReencryption
-		//pqOts.GetShare = s.getShare
 		return pqOts, nil
 	}
 	return nil, nil
@@ -201,6 +181,16 @@ func (s *Service) verifyReencryption(rc *protocol.Reencrypt) *share.PriShare {
 			&verificationData, network.DefaultConstructors(cothority.Suite))
 		if err != nil {
 			return nil, xerrors.Errorf("decoding verification data: %v", err)
+		}
+		if err = s.verifyProof(verificationData.Read); err != nil {
+			return nil, xerrors.Errorf(
+				"read proof cannot be verified to come from scID: %v",
+				err)
+		}
+		if err = s.verifyProof(verificationData.Write); err != nil {
+			return nil, xerrors.Errorf(
+				"write proof cannot be verified to come from scID: %v",
+				err)
 		}
 		var read Read
 		if err := verificationData.Read.VerifyAndDecode(cothority.Suite,
@@ -240,69 +230,6 @@ func (s *Service) verifyReencryption(rc *protocol.Reencrypt) *share.PriShare {
 	}
 	return sh
 }
-
-//func (s *Service) getShare(data []byte) (*share.PriShare, error) {
-//	var verificationData vData
-//	err := protobuf.DecodeWithConstructors(data, &verificationData,
-//		network.DefaultConstructors(cothority.Suite))
-//	if err != nil {
-//		return nil, xerrors.Errorf("decoding verification data: %v", err)
-//	}
-//	var write Write
-//	if err := verificationData.Write.VerifyAndDecode(cothority.Suite,
-//		ContractPQOTSWriteID, &write); err != nil {
-//		return nil, xerrors.New("didn't get a write instance: " + err.Error())
-//	}
-//	wb, err := protobuf.Encode(&write)
-//	if err != nil {
-//		return nil, xerrors.Errorf("cannot encode write: %v", err)
-//	}
-//	h := sha256.New()
-//	h.Write(wb)
-//	key := hex.EncodeToString(h.Sum(nil))
-//	s.storage.Lock()
-//	defer s.storage.Unlock()
-//	sh, ok := s.storage.Shares[key]
-//	if !ok {
-//		return nil, xerrors.Errorf("could not find the share for key %v", key)
-//	}
-//	return sh, nil
-//}
-//
-//// verifyReencryption checks that the read and the write instances match.
-//func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
-//	err := func() error {
-//		var verificationData vData
-//		err := protobuf.DecodeWithConstructors(*rc.VerificationData,
-//			&verificationData, network.DefaultConstructors(cothority.Suite))
-//		if err != nil {
-//			return xerrors.Errorf("decoding verification data: %v", err)
-//		}
-//		var read Read
-//		if err := verificationData.Read.VerifyAndDecode(cothority.Suite,
-//			ContractPQOTSReadID, &read); err != nil {
-//			return xerrors.New("didn't get a read instance: " + err.Error())
-//		}
-//		var write Write
-//		if err := verificationData.Write.VerifyAndDecode(cothority.Suite,
-//			ContractPQOTSWriteID, &write); err != nil {
-//			return xerrors.New("didn't get a write instance: " + err.Error())
-//		}
-//		if !read.Write.Equal(byzcoin.NewInstanceID(verificationData.Write.
-//			InclusionProof.Key())) {
-//			return xerrors.New("read doesn't point to passed write")
-//		}
-//		if !read.Xc.Equal(rc.Xc) {
-//			return xerrors.New("wrong reader")
-//		}
-//		return nil
-//	}()
-//	if err != nil {
-//		log.Lvl2(s.ServerIdentity(), "wrong reencryption:", err)
-//		return false
-//	}
-//	return true
-//}
 
 func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
