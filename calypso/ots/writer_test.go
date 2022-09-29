@@ -2,7 +2,6 @@ package ots
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -81,7 +80,7 @@ func TestAll(t *testing.T) {
 	require.NotNil(t, pubPoly1)
 	require.NotNil(t, proofs1)
 
-	mesg1 := []byte("Hello regular OTS!")
+	mesg1 := []byte("Hello regular OTS #1!")
 	ctxt1, ctxtHash1, err := Encrypt(cothority.Suite, secret1, mesg1)
 	require.NoError(t, err)
 	require.NotNil(t, ctxt1)
@@ -181,7 +180,6 @@ func TestAll(t *testing.T) {
 	ptxt1, err := Decrypt(recSecret1, ctxt1)
 	require.NoError(t, err)
 	require.True(t, bytes.Equal(ptxt1, mesg1))
-	fmt.Println(string(ptxt1))
 
 	// Valid decrypt request for reader2
 	dkr2, err := cl.DecryptKey(&DecryptKeyRequest{
@@ -212,5 +210,4 @@ func TestAll(t *testing.T) {
 	ptxt2, err := Decrypt(recSecret2, ctxt2)
 	require.NoError(t, err)
 	require.True(t, bytes.Equal(ptxt2, mesg2))
-	fmt.Println(string(ptxt2))
 }
