@@ -66,8 +66,10 @@ func CustomSetup(n *onet.TreeNodeInstance, suite vss.Suite, keypair *key.Pair) (
 	if err != nil {
 		return nil, err
 	}
-	err = o.RegisterChannels(&o.structStartDeal, &o.structDeal, &o.structResponse,
-		&o.structWaitSetup, &o.structWaitReply)
+	//err = o.RegisterChannels(&o.structStartDeal, &o.structDeal, &o.structResponse,
+	//	&o.structWaitSetup, &o.structWaitReply)
+	err = o.RegisterChannelsLength(10000, &o.structStartDeal, &o.structDeal,
+		&o.structResponse, &o.structWaitSetup, &o.structWaitReply)
 	if err != nil {
 		return nil, err
 	}

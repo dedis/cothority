@@ -277,7 +277,7 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 
 	// we need to timeout the children faster than the root timeout to let it
 	// know the subleader is alive, but some children are failing
-	timeout := time.After(p.Timeout / 2)
+	timeout := time.After(p.Timeout / 2 * 2)
 	done := 0
 	for done < len(p.Children()) {
 		select {
@@ -318,8 +318,8 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 				log.Warnf("Duplicate refusal from %v", reply.ServerIdentity)
 			}
 		case <-timeout:
-			log.Lvlf3("Subleader reached timeout waiting for children"+
-				" responses: %v", p.ServerIdentity())
+			log.Lvlf3("Subleader reached timeout %d waiting for children"+
+				" responses: %v", p.Timeout, p.ServerIdentity())
 			// Use whatever we received until then to try to finish
 			// the protocol
 			done = len(p.Children())

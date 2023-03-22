@@ -1,6 +1,8 @@
 package calypso
 
 import (
+	"fmt"
+	"go.dedis.ch/cothority/v3/darc/expression"
 	"sync"
 	"testing"
 	"time"
@@ -222,19 +224,23 @@ func TestContract_Write(t *testing.T) {
 // TestContract_Write_Benchmark makes many write requests transactions and logs
 // the transaction per second.
 func TestContract_Write_Benchmark(t *testing.T) {
+	log.SetDebugVisible(1)
 	if testing.Short() {
 		t.Skip("running benchmark takes too long and it's extremely CPU intensive (100% CPU usage)")
 	}
 
-	s := newTS(t, 5)
+	//s := newTS(t, 5)
+	s := newTS(t, 10)
 	defer s.closeAll(t)
 	require.NoError(t, s.cl.UseNode(0))
 
-	totalTrans := 50
+	//totalTrans := 50
+	totalTrans := 256
 	var times []time.Duration
 
 	var ctr uint64 = 2
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 1; i++ {
+		//for i := 0; i < 1; i++ {
 		log.Lvl1("Creating transaction", i)
 		iids := make([]byzcoin.InstanceID, totalTrans)
 		start := time.Now()
@@ -243,6 +249,7 @@ func TestContract_Write_Benchmark(t *testing.T) {
 			ctr++
 		}
 		timeSend := time.Since(start)
+		fmt.Println("DURATION:" + timeSend.String())
 		log.Lvlf1("Time to send %d writes to the ledger: %s", totalTrans, timeSend)
 		start = time.Now()
 		for i := 0; i < totalTrans; i++ {
@@ -255,6 +262,110 @@ func TestContract_Write_Benchmark(t *testing.T) {
 			log.Lvlf1("Total time: %s - tps: %f", ti,
 				float64(totalTrans)/ti.Seconds())
 		}
+	}
+}
+
+func setupDarcs(s ts, count int) ([]darc.Signer, []*darc.Darc) {
+	writers := make([]darc.Signer, count)
+	wDarcs := make([]*darc.Darc, count)
+
+	for i := 0; i < count; i++ {
+		writer := darc.NewSignerEd25519(nil, nil)
+		wDarc := darc.NewDarc(darc.InitRules([]darc.Identity{writer.Identity()}, []darc.Identity{writer.Identity()}), []byte(fmt.Sprintf("%s%d", "Writer", i)))
+		wDarc.Rules.AddRule(darc.Action("spawn:"+ContractWriteID),
+			expression.InitOrExpr(writer.Identity().String()))
+		ctr := uint64(2)
+		darcBuf, _ := wDarc.ToProto()
+		ctx := byzcoin.NewClientTransaction(byzcoin.CurrentVersion,
+			byzcoin.Instruction{
+				InstanceID: byzcoin.NewInstanceID(s.gDarc.GetBaseID()),
+				Spawn: &byzcoin.Spawn{
+					ContractID: byzcoin.ContractDarcID,
+					Args: []byzcoin.Argument{{
+						Name:  "darc",
+						Value: darcBuf,
+					}},
+				},
+				SignerCounter: []uint64{ctr + uint64(i)},
+			},
+		)
+		_ = ctx.FillSignersAndSignWith(s.signer)
+		if i == count-1 {
+			_, _ = s.cl.AddTransactionAndWait(ctx, 10)
+		} else {
+			_, _ = s.cl.AddTransaction(ctx)
+		}
+		writers[i] = writer
+		wDarcs[i] = wDarc
+	}
+
+	return writers, wDarcs
+}
+
+func (s *ts) addWriteBurst(t *testing.T, writer darc.Signer, wDarc darc.Darc, key []byte, ctr uint64) byzcoin.InstanceID {
+	write := NewWrite(cothority.Suite, s.ltsReply.InstanceID, wDarc.GetBaseID(), s.ltsReply.X, key)
+	writeBuf, err := protobuf.Encode(write)
+	require.NoError(t, err)
+
+	ctx := byzcoin.NewClientTransaction(byzcoin.CurrentVersion,
+		byzcoin.Instruction{
+			InstanceID: byzcoin.NewInstanceID(wDarc.GetBaseID()),
+			Spawn: &byzcoin.Spawn{
+				ContractID: ContractWriteID,
+				Args:       byzcoin.Arguments{{Name: "write", Value: writeBuf}},
+			},
+			SignerCounter: []uint64{ctr},
+		},
+	)
+	require.Nil(t, ctx.FillSignersAndSignWith(writer))
+	_, err = s.cl.AddTransaction(ctx)
+	require.NoError(t, err)
+	return ctx.Instructions[0].DeriveID("")
+}
+
+// TestContract_Write_Benchmark makes many write requests transactions and logs
+// the transaction per second.
+func TestContract_WriteBurst_Benchmark(t *testing.T) {
+	log.SetDebugVisible(1)
+	var wg sync.WaitGroup
+	if testing.Short() {
+		t.Skip("running benchmark takes too long and it's extremely CPU intensive (100% CPU usage)")
+	}
+
+	s := newTS(t, 10)
+	defer s.closeAll(t)
+	require.NoError(t, s.cl.UseNode(0))
+
+	totalTrans := 4096
+	times := make([]time.Duration, totalTrans)
+
+	writers, wDarcs := setupDarcs(s, totalTrans)
+
+	for i := 0; i < 1; i++ {
+		log.Lvl1("Creating transaction", i)
+		iids := make([]byzcoin.InstanceID, totalTrans)
+		wg.Add(totalTrans)
+		for j := 0; j < totalTrans; j++ {
+			go func(idx int) {
+				defer wg.Done()
+				start := time.Now()
+				iids[idx] = s.addWriteBurst(t, writers[idx], *wDarcs[idx],
+					[]byte("secret key"), 1)
+				s.waitInstID(t, iids[idx])
+				timeWait := time.Since(start)
+				times[idx] = timeWait
+			}(j)
+		}
+		wg.Wait()
+
+		sum := 0.0
+		for _, ti := range times {
+			sum += ti.Seconds()
+			//log.Lvlf1("Total time: %s - tps: %f", ti,
+			//	float64(totalTrans)/ti.Seconds())
+		}
+		log.Lvlf1("Avg: %f", sum/float64(totalTrans))
+		log.Lvlf1("%d", len(times))
 	}
 }
 
@@ -438,15 +549,19 @@ func newTSWithExtras(t *testing.T, nodes int, extras int) ts {
 
 func (s *ts) createGenesis(t *testing.T) {
 	var err error
-	s.genesisMsg, err = byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, s.byzRoster,
-		[]string{"spawn:" + ContractWriteID,
-			"spawn:" + ContractReadID,
-			"spawn:" + ContractLongTermSecretID,
-			"invoke:" + ContractLongTermSecretID + ".reshare"},
-		s.signer.Identity())
+	s.genesisMsg, err = byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion,
+		s.byzRoster,
+		[]string{"spawn:" + ContractLongTermSecretID}, s.signer.Identity())
+	//s.genesisMsg, err = byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, s.byzRoster,
+	//	[]string{"spawn:" + ContractWriteID,
+	//		"spawn:" + ContractReadID,
+	//		"spawn:" + ContractLongTermSecretID,
+	//		"invoke:" + ContractLongTermSecretID + ".reshare"},
+	//	s.signer.Identity())
 	require.NoError(t, err)
 	s.gDarc = &s.genesisMsg.GenesisDarc
-	s.genesisMsg.BlockInterval = time.Second
+	//s.genesisMsg.BlockInterval = time.Second
+	s.genesisMsg.BlockInterval = 10 * time.Second
 
 	s.cl, s.gbReply, err = byzcoin.NewLedger(s.genesisMsg, false)
 	require.NoError(t, err)

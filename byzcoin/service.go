@@ -1713,8 +1713,8 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	}
 
 	// Set the server's set of valid peers from the roster in the latest block.
-	ctx := s.ServiceProcessor.Context
-	ctx.SetValidPeers(ctx.NewPeerSetID(sb.SkipChainID()), sb.Roster.List)
+	//ctx := s.ServiceProcessor.Context
+	//ctx.SetValidPeers(ctx.NewPeerSetID(sb.SkipChainID()), sb.Roster.List)
 
 	if sb.Index > trieIndex+1 {
 		log.Warn(s.ServerIdentity(), "Got new block while catching up - ignoring block for now")
@@ -2904,8 +2904,8 @@ func (s *Service) startChain(genesisID skipchain.SkipBlockID) error {
 		s.getSignatureThreshold(latest.Hash))
 
 	// Set the server's set of valid peers from the roster in the latest block.
-	ctx := s.ServiceProcessor.Context
-	ctx.SetValidPeers(ctx.NewPeerSetID(genesisID), latest.Roster.List)
+	//ctx := s.ServiceProcessor.Context
+	//ctx.SetValidPeers(ctx.NewPeerSetID(genesisID), latest.Roster.List)
 
 	return nil
 }
