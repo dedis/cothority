@@ -11,13 +11,12 @@ require (
 	github.com/btcsuite/btcd v0.20.1-beta // indirect
 	github.com/c4dt/qrgo v0.0.0-20210312092726-8242850e1027
 	github.com/cockroachdb/apd v1.1.0 // indirect
-	github.com/containerd/containerd v1.4.4 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/daviddengcn/go-colortext v1.0.0 // indirect
 	github.com/deckarep/golang-set v1.7.1 // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
-	github.com/docker/docker v20.10.5+incompatible
+	github.com/docker/docker v20.10.24+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
@@ -26,7 +25,6 @@ require (
 	github.com/go-ldap/ldap/v3 v3.1.7
 	github.com/gofrs/uuid v4.0.0+incompatible // indirect
 	github.com/golang/protobuf v1.3.5 // indirect
-	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
