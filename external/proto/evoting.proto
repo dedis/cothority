@@ -101,6 +101,11 @@ message Ballot {
   // ElGamal ciphertext pair.
   required bytes alpha = 2;
   required bytes beta = 3;
+  // Additional ciphertext pairs in case there are more than 9 candidates.
+  // As these are slices, the resulting protobuf is backward compatible with
+  // the old ones.
+  repeated bytes additionalalphas = 4;
+  repeated bytes additionalbetas = 5;
 }
 
 // Mix contains the shuffled ballots.
@@ -123,4 +128,14 @@ message Partial {
   required bytes nodeid = 2;
   // Signature of the public key
   required bytes signature = 3;
+  // Additional points from decrypted plaintexts.
+  // To keep backward-compatibility in the resulting protobuf,
+  // these points are added at the end of the structure.
+  repeated PartialAdditional additionalpoints = 4;
+}
+
+// PartialAdditional is used because protobuf cannot handle array of array of bytes.
+message PartialAdditional {
+  // All additional points from a single voter.
+  repeated bytes additionalpoints = 1;
 }

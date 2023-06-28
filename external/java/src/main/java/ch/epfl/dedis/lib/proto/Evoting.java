@@ -9650,6 +9650,58 @@ public final class Evoting {
      * @return The beta.
      */
     com.google.protobuf.ByteString getBeta();
+
+    /**
+     * <pre>
+     * Additional ciphertext pairs in case there are more than 9 candidates.
+     * As these are slices, the resulting protobuf is backward compatible with
+     * the old ones.
+     * </pre>
+     *
+     * <code>repeated bytes additionalalphas = 4;</code>
+     * @return A list containing the additionalalphas.
+     */
+    java.util.List<com.google.protobuf.ByteString> getAdditionalalphasList();
+    /**
+     * <pre>
+     * Additional ciphertext pairs in case there are more than 9 candidates.
+     * As these are slices, the resulting protobuf is backward compatible with
+     * the old ones.
+     * </pre>
+     *
+     * <code>repeated bytes additionalalphas = 4;</code>
+     * @return The count of additionalalphas.
+     */
+    int getAdditionalalphasCount();
+    /**
+     * <pre>
+     * Additional ciphertext pairs in case there are more than 9 candidates.
+     * As these are slices, the resulting protobuf is backward compatible with
+     * the old ones.
+     * </pre>
+     *
+     * <code>repeated bytes additionalalphas = 4;</code>
+     * @param index The index of the element to return.
+     * @return The additionalalphas at the given index.
+     */
+    com.google.protobuf.ByteString getAdditionalalphas(int index);
+
+    /**
+     * <code>repeated bytes additionalbetas = 5;</code>
+     * @return A list containing the additionalbetas.
+     */
+    java.util.List<com.google.protobuf.ByteString> getAdditionalbetasList();
+    /**
+     * <code>repeated bytes additionalbetas = 5;</code>
+     * @return The count of additionalbetas.
+     */
+    int getAdditionalbetasCount();
+    /**
+     * <code>repeated bytes additionalbetas = 5;</code>
+     * @param index The index of the element to return.
+     * @return The additionalbetas at the given index.
+     */
+    com.google.protobuf.ByteString getAdditionalbetas(int index);
   }
   /**
    * <pre>
@@ -9670,6 +9722,8 @@ public final class Evoting {
     private Ballot() {
       alpha_ = com.google.protobuf.ByteString.EMPTY;
       beta_ = com.google.protobuf.ByteString.EMPTY;
+      additionalalphas_ = java.util.Collections.emptyList();
+      additionalbetas_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
@@ -9718,6 +9772,22 @@ public final class Evoting {
               beta_ = input.readBytes();
               break;
             }
+            case 34: {
+              if (!((mutable_bitField0_ & 0x00000008) != 0)) {
+                additionalalphas_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
+                mutable_bitField0_ |= 0x00000008;
+              }
+              additionalalphas_.add(input.readBytes());
+              break;
+            }
+            case 42: {
+              if (!((mutable_bitField0_ & 0x00000010) != 0)) {
+                additionalbetas_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
+                mutable_bitField0_ |= 0x00000010;
+              }
+              additionalbetas_.add(input.readBytes());
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -9733,6 +9803,12 @@ public final class Evoting {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000008) != 0)) {
+          additionalalphas_ = java.util.Collections.unmodifiableList(additionalalphas_); // C
+        }
+        if (((mutable_bitField0_ & 0x00000010) != 0)) {
+          additionalbetas_ = java.util.Collections.unmodifiableList(additionalbetas_); // C
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -9824,6 +9900,78 @@ public final class Evoting {
       return beta_;
     }
 
+    public static final int ADDITIONALALPHAS_FIELD_NUMBER = 4;
+    private java.util.List<com.google.protobuf.ByteString> additionalalphas_;
+    /**
+     * <pre>
+     * Additional ciphertext pairs in case there are more than 9 candidates.
+     * As these are slices, the resulting protobuf is backward compatible with
+     * the old ones.
+     * </pre>
+     *
+     * <code>repeated bytes additionalalphas = 4;</code>
+     * @return A list containing the additionalalphas.
+     */
+    @java.lang.Override
+    public java.util.List<com.google.protobuf.ByteString>
+        getAdditionalalphasList() {
+      return additionalalphas_;
+    }
+    /**
+     * <pre>
+     * Additional ciphertext pairs in case there are more than 9 candidates.
+     * As these are slices, the resulting protobuf is backward compatible with
+     * the old ones.
+     * </pre>
+     *
+     * <code>repeated bytes additionalalphas = 4;</code>
+     * @return The count of additionalalphas.
+     */
+    public int getAdditionalalphasCount() {
+      return additionalalphas_.size();
+    }
+    /**
+     * <pre>
+     * Additional ciphertext pairs in case there are more than 9 candidates.
+     * As these are slices, the resulting protobuf is backward compatible with
+     * the old ones.
+     * </pre>
+     *
+     * <code>repeated bytes additionalalphas = 4;</code>
+     * @param index The index of the element to return.
+     * @return The additionalalphas at the given index.
+     */
+    public com.google.protobuf.ByteString getAdditionalalphas(int index) {
+      return additionalalphas_.get(index);
+    }
+
+    public static final int ADDITIONALBETAS_FIELD_NUMBER = 5;
+    private java.util.List<com.google.protobuf.ByteString> additionalbetas_;
+    /**
+     * <code>repeated bytes additionalbetas = 5;</code>
+     * @return A list containing the additionalbetas.
+     */
+    @java.lang.Override
+    public java.util.List<com.google.protobuf.ByteString>
+        getAdditionalbetasList() {
+      return additionalbetas_;
+    }
+    /**
+     * <code>repeated bytes additionalbetas = 5;</code>
+     * @return The count of additionalbetas.
+     */
+    public int getAdditionalbetasCount() {
+      return additionalbetas_.size();
+    }
+    /**
+     * <code>repeated bytes additionalbetas = 5;</code>
+     * @param index The index of the element to return.
+     * @return The additionalbetas at the given index.
+     */
+    public com.google.protobuf.ByteString getAdditionalbetas(int index) {
+      return additionalbetas_.get(index);
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -9859,6 +10007,12 @@ public final class Evoting {
       if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBytes(3, beta_);
       }
+      for (int i = 0; i < additionalalphas_.size(); i++) {
+        output.writeBytes(4, additionalalphas_.get(i));
+      }
+      for (int i = 0; i < additionalbetas_.size(); i++) {
+        output.writeBytes(5, additionalbetas_.get(i));
+      }
       unknownFields.writeTo(output);
     }
 
@@ -9879,6 +10033,24 @@ public final class Evoting {
       if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, beta_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < additionalalphas_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(additionalalphas_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getAdditionalalphasList().size();
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < additionalbetas_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(additionalbetas_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getAdditionalbetasList().size();
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -9910,6 +10082,10 @@ public final class Evoting {
         if (!getBeta()
             .equals(other.getBeta())) return false;
       }
+      if (!getAdditionalalphasList()
+          .equals(other.getAdditionalalphasList())) return false;
+      if (!getAdditionalbetasList()
+          .equals(other.getAdditionalbetasList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -9932,6 +10108,14 @@ public final class Evoting {
       if (hasBeta()) {
         hash = (37 * hash) + BETA_FIELD_NUMBER;
         hash = (53 * hash) + getBeta().hashCode();
+      }
+      if (getAdditionalalphasCount() > 0) {
+        hash = (37 * hash) + ADDITIONALALPHAS_FIELD_NUMBER;
+        hash = (53 * hash) + getAdditionalalphasList().hashCode();
+      }
+      if (getAdditionalbetasCount() > 0) {
+        hash = (37 * hash) + ADDITIONALBETAS_FIELD_NUMBER;
+        hash = (53 * hash) + getAdditionalbetasList().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -10076,6 +10260,10 @@ public final class Evoting {
         bitField0_ = (bitField0_ & ~0x00000002);
         beta_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000004);
+        additionalalphas_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000008);
+        additionalbetas_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
@@ -10116,6 +10304,16 @@ public final class Evoting {
           to_bitField0_ |= 0x00000004;
         }
         result.beta_ = beta_;
+        if (((bitField0_ & 0x00000008) != 0)) {
+          additionalalphas_ = java.util.Collections.unmodifiableList(additionalalphas_);
+          bitField0_ = (bitField0_ & ~0x00000008);
+        }
+        result.additionalalphas_ = additionalalphas_;
+        if (((bitField0_ & 0x00000010) != 0)) {
+          additionalbetas_ = java.util.Collections.unmodifiableList(additionalbetas_);
+          bitField0_ = (bitField0_ & ~0x00000010);
+        }
+        result.additionalbetas_ = additionalbetas_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -10173,6 +10371,26 @@ public final class Evoting {
         }
         if (other.hasBeta()) {
           setBeta(other.getBeta());
+        }
+        if (!other.additionalalphas_.isEmpty()) {
+          if (additionalalphas_.isEmpty()) {
+            additionalalphas_ = other.additionalalphas_;
+            bitField0_ = (bitField0_ & ~0x00000008);
+          } else {
+            ensureAdditionalalphasIsMutable();
+            additionalalphas_.addAll(other.additionalalphas_);
+          }
+          onChanged();
+        }
+        if (!other.additionalbetas_.isEmpty()) {
+          if (additionalbetas_.isEmpty()) {
+            additionalbetas_ = other.additionalbetas_;
+            bitField0_ = (bitField0_ & ~0x00000010);
+          } else {
+            ensureAdditionalbetasIsMutable();
+            additionalbetas_.addAll(other.additionalbetas_);
+          }
+          onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -10364,6 +10582,218 @@ public final class Evoting {
       public Builder clearBeta() {
         bitField0_ = (bitField0_ & ~0x00000004);
         beta_ = getDefaultInstance().getBeta();
+        onChanged();
+        return this;
+      }
+
+      private java.util.List<com.google.protobuf.ByteString> additionalalphas_ = java.util.Collections.emptyList();
+      private void ensureAdditionalalphasIsMutable() {
+        if (!((bitField0_ & 0x00000008) != 0)) {
+          additionalalphas_ = new java.util.ArrayList<com.google.protobuf.ByteString>(additionalalphas_);
+          bitField0_ |= 0x00000008;
+         }
+      }
+      /**
+       * <pre>
+       * Additional ciphertext pairs in case there are more than 9 candidates.
+       * As these are slices, the resulting protobuf is backward compatible with
+       * the old ones.
+       * </pre>
+       *
+       * <code>repeated bytes additionalalphas = 4;</code>
+       * @return A list containing the additionalalphas.
+       */
+      public java.util.List<com.google.protobuf.ByteString>
+          getAdditionalalphasList() {
+        return ((bitField0_ & 0x00000008) != 0) ?
+                 java.util.Collections.unmodifiableList(additionalalphas_) : additionalalphas_;
+      }
+      /**
+       * <pre>
+       * Additional ciphertext pairs in case there are more than 9 candidates.
+       * As these are slices, the resulting protobuf is backward compatible with
+       * the old ones.
+       * </pre>
+       *
+       * <code>repeated bytes additionalalphas = 4;</code>
+       * @return The count of additionalalphas.
+       */
+      public int getAdditionalalphasCount() {
+        return additionalalphas_.size();
+      }
+      /**
+       * <pre>
+       * Additional ciphertext pairs in case there are more than 9 candidates.
+       * As these are slices, the resulting protobuf is backward compatible with
+       * the old ones.
+       * </pre>
+       *
+       * <code>repeated bytes additionalalphas = 4;</code>
+       * @param index The index of the element to return.
+       * @return The additionalalphas at the given index.
+       */
+      public com.google.protobuf.ByteString getAdditionalalphas(int index) {
+        return additionalalphas_.get(index);
+      }
+      /**
+       * <pre>
+       * Additional ciphertext pairs in case there are more than 9 candidates.
+       * As these are slices, the resulting protobuf is backward compatible with
+       * the old ones.
+       * </pre>
+       *
+       * <code>repeated bytes additionalalphas = 4;</code>
+       * @param index The index to set the value at.
+       * @param value The additionalalphas to set.
+       * @return This builder for chaining.
+       */
+      public Builder setAdditionalalphas(
+          int index, com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureAdditionalalphasIsMutable();
+        additionalalphas_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Additional ciphertext pairs in case there are more than 9 candidates.
+       * As these are slices, the resulting protobuf is backward compatible with
+       * the old ones.
+       * </pre>
+       *
+       * <code>repeated bytes additionalalphas = 4;</code>
+       * @param value The additionalalphas to add.
+       * @return This builder for chaining.
+       */
+      public Builder addAdditionalalphas(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureAdditionalalphasIsMutable();
+        additionalalphas_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Additional ciphertext pairs in case there are more than 9 candidates.
+       * As these are slices, the resulting protobuf is backward compatible with
+       * the old ones.
+       * </pre>
+       *
+       * <code>repeated bytes additionalalphas = 4;</code>
+       * @param values The additionalalphas to add.
+       * @return This builder for chaining.
+       */
+      public Builder addAllAdditionalalphas(
+          java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
+        ensureAdditionalalphasIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, additionalalphas_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Additional ciphertext pairs in case there are more than 9 candidates.
+       * As these are slices, the resulting protobuf is backward compatible with
+       * the old ones.
+       * </pre>
+       *
+       * <code>repeated bytes additionalalphas = 4;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearAdditionalalphas() {
+        additionalalphas_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000008);
+        onChanged();
+        return this;
+      }
+
+      private java.util.List<com.google.protobuf.ByteString> additionalbetas_ = java.util.Collections.emptyList();
+      private void ensureAdditionalbetasIsMutable() {
+        if (!((bitField0_ & 0x00000010) != 0)) {
+          additionalbetas_ = new java.util.ArrayList<com.google.protobuf.ByteString>(additionalbetas_);
+          bitField0_ |= 0x00000010;
+         }
+      }
+      /**
+       * <code>repeated bytes additionalbetas = 5;</code>
+       * @return A list containing the additionalbetas.
+       */
+      public java.util.List<com.google.protobuf.ByteString>
+          getAdditionalbetasList() {
+        return ((bitField0_ & 0x00000010) != 0) ?
+                 java.util.Collections.unmodifiableList(additionalbetas_) : additionalbetas_;
+      }
+      /**
+       * <code>repeated bytes additionalbetas = 5;</code>
+       * @return The count of additionalbetas.
+       */
+      public int getAdditionalbetasCount() {
+        return additionalbetas_.size();
+      }
+      /**
+       * <code>repeated bytes additionalbetas = 5;</code>
+       * @param index The index of the element to return.
+       * @return The additionalbetas at the given index.
+       */
+      public com.google.protobuf.ByteString getAdditionalbetas(int index) {
+        return additionalbetas_.get(index);
+      }
+      /**
+       * <code>repeated bytes additionalbetas = 5;</code>
+       * @param index The index to set the value at.
+       * @param value The additionalbetas to set.
+       * @return This builder for chaining.
+       */
+      public Builder setAdditionalbetas(
+          int index, com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureAdditionalbetasIsMutable();
+        additionalbetas_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes additionalbetas = 5;</code>
+       * @param value The additionalbetas to add.
+       * @return This builder for chaining.
+       */
+      public Builder addAdditionalbetas(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureAdditionalbetasIsMutable();
+        additionalbetas_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes additionalbetas = 5;</code>
+       * @param values The additionalbetas to add.
+       * @return This builder for chaining.
+       */
+      public Builder addAllAdditionalbetas(
+          java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
+        ensureAdditionalbetasIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, additionalbetas_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes additionalbetas = 5;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearAdditionalbetas() {
+        additionalbetas_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000010);
         onChanged();
         return this;
       }
@@ -11843,6 +12273,60 @@ public final class Evoting {
      * @return The signature.
      */
     com.google.protobuf.ByteString getSignature();
+
+    /**
+     * <pre>
+     * Additional points from decrypted plaintexts.
+     * To keep backward-compatibility in the resulting protobuf,
+     * these points are added at the end of the structure.
+     * </pre>
+     *
+     * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+     */
+    java.util.List<ch.epfl.dedis.lib.proto.Evoting.PartialAdditional>
+        getAdditionalpointsList();
+    /**
+     * <pre>
+     * Additional points from decrypted plaintexts.
+     * To keep backward-compatibility in the resulting protobuf,
+     * these points are added at the end of the structure.
+     * </pre>
+     *
+     * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+     */
+    ch.epfl.dedis.lib.proto.Evoting.PartialAdditional getAdditionalpoints(int index);
+    /**
+     * <pre>
+     * Additional points from decrypted plaintexts.
+     * To keep backward-compatibility in the resulting protobuf,
+     * these points are added at the end of the structure.
+     * </pre>
+     *
+     * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+     */
+    int getAdditionalpointsCount();
+    /**
+     * <pre>
+     * Additional points from decrypted plaintexts.
+     * To keep backward-compatibility in the resulting protobuf,
+     * these points are added at the end of the structure.
+     * </pre>
+     *
+     * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+     */
+    java.util.List<? extends ch.epfl.dedis.lib.proto.Evoting.PartialAdditionalOrBuilder>
+        getAdditionalpointsOrBuilderList();
+    /**
+     * <pre>
+     * Additional points from decrypted plaintexts.
+     * To keep backward-compatibility in the resulting protobuf,
+     * these points are added at the end of the structure.
+     * </pre>
+     *
+     * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+     */
+    ch.epfl.dedis.lib.proto.Evoting.PartialAdditionalOrBuilder getAdditionalpointsOrBuilder(
+        int index);
   }
   /**
    * <pre>
@@ -11864,6 +12348,7 @@ public final class Evoting {
       points_ = java.util.Collections.emptyList();
       nodeid_ = com.google.protobuf.ByteString.EMPTY;
       signature_ = com.google.protobuf.ByteString.EMPTY;
+      additionalpoints_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
@@ -11915,6 +12400,15 @@ public final class Evoting {
               signature_ = input.readBytes();
               break;
             }
+            case 34: {
+              if (!((mutable_bitField0_ & 0x00000008) != 0)) {
+                additionalpoints_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.Evoting.PartialAdditional>();
+                mutable_bitField0_ |= 0x00000008;
+              }
+              additionalpoints_.add(
+                  input.readMessage(ch.epfl.dedis.lib.proto.Evoting.PartialAdditional.parser(), extensionRegistry));
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -11932,6 +12426,9 @@ public final class Evoting {
       } finally {
         if (((mutable_bitField0_ & 0x00000001) != 0)) {
           points_ = java.util.Collections.unmodifiableList(points_); // C
+        }
+        if (((mutable_bitField0_ & 0x00000008) != 0)) {
+          additionalpoints_ = java.util.Collections.unmodifiableList(additionalpoints_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -12044,6 +12541,76 @@ public final class Evoting {
       return signature_;
     }
 
+    public static final int ADDITIONALPOINTS_FIELD_NUMBER = 4;
+    private java.util.List<ch.epfl.dedis.lib.proto.Evoting.PartialAdditional> additionalpoints_;
+    /**
+     * <pre>
+     * Additional points from decrypted plaintexts.
+     * To keep backward-compatibility in the resulting protobuf,
+     * these points are added at the end of the structure.
+     * </pre>
+     *
+     * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+     */
+    @java.lang.Override
+    public java.util.List<ch.epfl.dedis.lib.proto.Evoting.PartialAdditional> getAdditionalpointsList() {
+      return additionalpoints_;
+    }
+    /**
+     * <pre>
+     * Additional points from decrypted plaintexts.
+     * To keep backward-compatibility in the resulting protobuf,
+     * these points are added at the end of the structure.
+     * </pre>
+     *
+     * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+     */
+    @java.lang.Override
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.Evoting.PartialAdditionalOrBuilder>
+        getAdditionalpointsOrBuilderList() {
+      return additionalpoints_;
+    }
+    /**
+     * <pre>
+     * Additional points from decrypted plaintexts.
+     * To keep backward-compatibility in the resulting protobuf,
+     * these points are added at the end of the structure.
+     * </pre>
+     *
+     * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+     */
+    @java.lang.Override
+    public int getAdditionalpointsCount() {
+      return additionalpoints_.size();
+    }
+    /**
+     * <pre>
+     * Additional points from decrypted plaintexts.
+     * To keep backward-compatibility in the resulting protobuf,
+     * these points are added at the end of the structure.
+     * </pre>
+     *
+     * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+     */
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Evoting.PartialAdditional getAdditionalpoints(int index) {
+      return additionalpoints_.get(index);
+    }
+    /**
+     * <pre>
+     * Additional points from decrypted plaintexts.
+     * To keep backward-compatibility in the resulting protobuf,
+     * these points are added at the end of the structure.
+     * </pre>
+     *
+     * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+     */
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Evoting.PartialAdditionalOrBuilder getAdditionalpointsOrBuilder(
+        int index) {
+      return additionalpoints_.get(index);
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -12075,6 +12642,9 @@ public final class Evoting {
       if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(3, signature_);
       }
+      for (int i = 0; i < additionalpoints_.size(); i++) {
+        output.writeMessage(4, additionalpoints_.get(i));
+      }
       unknownFields.writeTo(output);
     }
 
@@ -12100,6 +12670,10 @@ public final class Evoting {
       if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, signature_);
+      }
+      for (int i = 0; i < additionalpoints_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(4, additionalpoints_.get(i));
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -12128,6 +12702,8 @@ public final class Evoting {
         if (!getSignature()
             .equals(other.getSignature())) return false;
       }
+      if (!getAdditionalpointsList()
+          .equals(other.getAdditionalpointsList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -12150,6 +12726,10 @@ public final class Evoting {
       if (hasSignature()) {
         hash = (37 * hash) + SIGNATURE_FIELD_NUMBER;
         hash = (53 * hash) + getSignature().hashCode();
+      }
+      if (getAdditionalpointsCount() > 0) {
+        hash = (37 * hash) + ADDITIONALPOINTS_FIELD_NUMBER;
+        hash = (53 * hash) + getAdditionalpointsList().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -12283,6 +12863,7 @@ public final class Evoting {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
+          getAdditionalpointsFieldBuilder();
         }
       }
       @java.lang.Override
@@ -12294,6 +12875,12 @@ public final class Evoting {
         bitField0_ = (bitField0_ & ~0x00000002);
         signature_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000004);
+        if (additionalpointsBuilder_ == null) {
+          additionalpoints_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000008);
+        } else {
+          additionalpointsBuilder_.clear();
+        }
         return this;
       }
 
@@ -12335,6 +12922,15 @@ public final class Evoting {
           to_bitField0_ |= 0x00000002;
         }
         result.signature_ = signature_;
+        if (additionalpointsBuilder_ == null) {
+          if (((bitField0_ & 0x00000008) != 0)) {
+            additionalpoints_ = java.util.Collections.unmodifiableList(additionalpoints_);
+            bitField0_ = (bitField0_ & ~0x00000008);
+          }
+          result.additionalpoints_ = additionalpoints_;
+        } else {
+          result.additionalpoints_ = additionalpointsBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -12399,6 +12995,32 @@ public final class Evoting {
         }
         if (other.hasSignature()) {
           setSignature(other.getSignature());
+        }
+        if (additionalpointsBuilder_ == null) {
+          if (!other.additionalpoints_.isEmpty()) {
+            if (additionalpoints_.isEmpty()) {
+              additionalpoints_ = other.additionalpoints_;
+              bitField0_ = (bitField0_ & ~0x00000008);
+            } else {
+              ensureAdditionalpointsIsMutable();
+              additionalpoints_.addAll(other.additionalpoints_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.additionalpoints_.isEmpty()) {
+            if (additionalpointsBuilder_.isEmpty()) {
+              additionalpointsBuilder_.dispose();
+              additionalpointsBuilder_ = null;
+              additionalpoints_ = other.additionalpoints_;
+              bitField0_ = (bitField0_ & ~0x00000008);
+              additionalpointsBuilder_ =
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getAdditionalpointsFieldBuilder() : null;
+            } else {
+              additionalpointsBuilder_.addAllMessages(other.additionalpoints_);
+            }
+          }
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -12664,6 +13286,354 @@ public final class Evoting {
         onChanged();
         return this;
       }
+
+      private java.util.List<ch.epfl.dedis.lib.proto.Evoting.PartialAdditional> additionalpoints_ =
+        java.util.Collections.emptyList();
+      private void ensureAdditionalpointsIsMutable() {
+        if (!((bitField0_ & 0x00000008) != 0)) {
+          additionalpoints_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.Evoting.PartialAdditional>(additionalpoints_);
+          bitField0_ |= 0x00000008;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.Evoting.PartialAdditional, ch.epfl.dedis.lib.proto.Evoting.PartialAdditional.Builder, ch.epfl.dedis.lib.proto.Evoting.PartialAdditionalOrBuilder> additionalpointsBuilder_;
+
+      /**
+       * <pre>
+       * Additional points from decrypted plaintexts.
+       * To keep backward-compatibility in the resulting protobuf,
+       * these points are added at the end of the structure.
+       * </pre>
+       *
+       * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+       */
+      public java.util.List<ch.epfl.dedis.lib.proto.Evoting.PartialAdditional> getAdditionalpointsList() {
+        if (additionalpointsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(additionalpoints_);
+        } else {
+          return additionalpointsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <pre>
+       * Additional points from decrypted plaintexts.
+       * To keep backward-compatibility in the resulting protobuf,
+       * these points are added at the end of the structure.
+       * </pre>
+       *
+       * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+       */
+      public int getAdditionalpointsCount() {
+        if (additionalpointsBuilder_ == null) {
+          return additionalpoints_.size();
+        } else {
+          return additionalpointsBuilder_.getCount();
+        }
+      }
+      /**
+       * <pre>
+       * Additional points from decrypted plaintexts.
+       * To keep backward-compatibility in the resulting protobuf,
+       * these points are added at the end of the structure.
+       * </pre>
+       *
+       * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Evoting.PartialAdditional getAdditionalpoints(int index) {
+        if (additionalpointsBuilder_ == null) {
+          return additionalpoints_.get(index);
+        } else {
+          return additionalpointsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <pre>
+       * Additional points from decrypted plaintexts.
+       * To keep backward-compatibility in the resulting protobuf,
+       * these points are added at the end of the structure.
+       * </pre>
+       *
+       * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+       */
+      public Builder setAdditionalpoints(
+          int index, ch.epfl.dedis.lib.proto.Evoting.PartialAdditional value) {
+        if (additionalpointsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureAdditionalpointsIsMutable();
+          additionalpoints_.set(index, value);
+          onChanged();
+        } else {
+          additionalpointsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Additional points from decrypted plaintexts.
+       * To keep backward-compatibility in the resulting protobuf,
+       * these points are added at the end of the structure.
+       * </pre>
+       *
+       * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+       */
+      public Builder setAdditionalpoints(
+          int index, ch.epfl.dedis.lib.proto.Evoting.PartialAdditional.Builder builderForValue) {
+        if (additionalpointsBuilder_ == null) {
+          ensureAdditionalpointsIsMutable();
+          additionalpoints_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          additionalpointsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Additional points from decrypted plaintexts.
+       * To keep backward-compatibility in the resulting protobuf,
+       * these points are added at the end of the structure.
+       * </pre>
+       *
+       * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+       */
+      public Builder addAdditionalpoints(ch.epfl.dedis.lib.proto.Evoting.PartialAdditional value) {
+        if (additionalpointsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureAdditionalpointsIsMutable();
+          additionalpoints_.add(value);
+          onChanged();
+        } else {
+          additionalpointsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Additional points from decrypted plaintexts.
+       * To keep backward-compatibility in the resulting protobuf,
+       * these points are added at the end of the structure.
+       * </pre>
+       *
+       * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+       */
+      public Builder addAdditionalpoints(
+          int index, ch.epfl.dedis.lib.proto.Evoting.PartialAdditional value) {
+        if (additionalpointsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureAdditionalpointsIsMutable();
+          additionalpoints_.add(index, value);
+          onChanged();
+        } else {
+          additionalpointsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Additional points from decrypted plaintexts.
+       * To keep backward-compatibility in the resulting protobuf,
+       * these points are added at the end of the structure.
+       * </pre>
+       *
+       * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+       */
+      public Builder addAdditionalpoints(
+          ch.epfl.dedis.lib.proto.Evoting.PartialAdditional.Builder builderForValue) {
+        if (additionalpointsBuilder_ == null) {
+          ensureAdditionalpointsIsMutable();
+          additionalpoints_.add(builderForValue.build());
+          onChanged();
+        } else {
+          additionalpointsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Additional points from decrypted plaintexts.
+       * To keep backward-compatibility in the resulting protobuf,
+       * these points are added at the end of the structure.
+       * </pre>
+       *
+       * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+       */
+      public Builder addAdditionalpoints(
+          int index, ch.epfl.dedis.lib.proto.Evoting.PartialAdditional.Builder builderForValue) {
+        if (additionalpointsBuilder_ == null) {
+          ensureAdditionalpointsIsMutable();
+          additionalpoints_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          additionalpointsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Additional points from decrypted plaintexts.
+       * To keep backward-compatibility in the resulting protobuf,
+       * these points are added at the end of the structure.
+       * </pre>
+       *
+       * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+       */
+      public Builder addAllAdditionalpoints(
+          java.lang.Iterable<? extends ch.epfl.dedis.lib.proto.Evoting.PartialAdditional> values) {
+        if (additionalpointsBuilder_ == null) {
+          ensureAdditionalpointsIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, additionalpoints_);
+          onChanged();
+        } else {
+          additionalpointsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Additional points from decrypted plaintexts.
+       * To keep backward-compatibility in the resulting protobuf,
+       * these points are added at the end of the structure.
+       * </pre>
+       *
+       * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+       */
+      public Builder clearAdditionalpoints() {
+        if (additionalpointsBuilder_ == null) {
+          additionalpoints_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000008);
+          onChanged();
+        } else {
+          additionalpointsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Additional points from decrypted plaintexts.
+       * To keep backward-compatibility in the resulting protobuf,
+       * these points are added at the end of the structure.
+       * </pre>
+       *
+       * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+       */
+      public Builder removeAdditionalpoints(int index) {
+        if (additionalpointsBuilder_ == null) {
+          ensureAdditionalpointsIsMutable();
+          additionalpoints_.remove(index);
+          onChanged();
+        } else {
+          additionalpointsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Additional points from decrypted plaintexts.
+       * To keep backward-compatibility in the resulting protobuf,
+       * these points are added at the end of the structure.
+       * </pre>
+       *
+       * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Evoting.PartialAdditional.Builder getAdditionalpointsBuilder(
+          int index) {
+        return getAdditionalpointsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <pre>
+       * Additional points from decrypted plaintexts.
+       * To keep backward-compatibility in the resulting protobuf,
+       * these points are added at the end of the structure.
+       * </pre>
+       *
+       * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Evoting.PartialAdditionalOrBuilder getAdditionalpointsOrBuilder(
+          int index) {
+        if (additionalpointsBuilder_ == null) {
+          return additionalpoints_.get(index);  } else {
+          return additionalpointsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <pre>
+       * Additional points from decrypted plaintexts.
+       * To keep backward-compatibility in the resulting protobuf,
+       * these points are added at the end of the structure.
+       * </pre>
+       *
+       * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+       */
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.Evoting.PartialAdditionalOrBuilder>
+           getAdditionalpointsOrBuilderList() {
+        if (additionalpointsBuilder_ != null) {
+          return additionalpointsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(additionalpoints_);
+        }
+      }
+      /**
+       * <pre>
+       * Additional points from decrypted plaintexts.
+       * To keep backward-compatibility in the resulting protobuf,
+       * these points are added at the end of the structure.
+       * </pre>
+       *
+       * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Evoting.PartialAdditional.Builder addAdditionalpointsBuilder() {
+        return getAdditionalpointsFieldBuilder().addBuilder(
+            ch.epfl.dedis.lib.proto.Evoting.PartialAdditional.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * Additional points from decrypted plaintexts.
+       * To keep backward-compatibility in the resulting protobuf,
+       * these points are added at the end of the structure.
+       * </pre>
+       *
+       * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Evoting.PartialAdditional.Builder addAdditionalpointsBuilder(
+          int index) {
+        return getAdditionalpointsFieldBuilder().addBuilder(
+            index, ch.epfl.dedis.lib.proto.Evoting.PartialAdditional.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * Additional points from decrypted plaintexts.
+       * To keep backward-compatibility in the resulting protobuf,
+       * these points are added at the end of the structure.
+       * </pre>
+       *
+       * <code>repeated .evoting.PartialAdditional additionalpoints = 4;</code>
+       */
+      public java.util.List<ch.epfl.dedis.lib.proto.Evoting.PartialAdditional.Builder>
+           getAdditionalpointsBuilderList() {
+        return getAdditionalpointsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.Evoting.PartialAdditional, ch.epfl.dedis.lib.proto.Evoting.PartialAdditional.Builder, ch.epfl.dedis.lib.proto.Evoting.PartialAdditionalOrBuilder>
+          getAdditionalpointsFieldBuilder() {
+        if (additionalpointsBuilder_ == null) {
+          additionalpointsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.Evoting.PartialAdditional, ch.epfl.dedis.lib.proto.Evoting.PartialAdditional.Builder, ch.epfl.dedis.lib.proto.Evoting.PartialAdditionalOrBuilder>(
+                  additionalpoints_,
+                  ((bitField0_ & 0x00000008) != 0),
+                  getParentForChildren(),
+                  isClean());
+          additionalpoints_ = null;
+        }
+        return additionalpointsBuilder_;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -12712,6 +13682,663 @@ public final class Evoting {
 
     @java.lang.Override
     public ch.epfl.dedis.lib.proto.Evoting.Partial getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface PartialAdditionalOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:evoting.PartialAdditional)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * All additional points from a single voter.
+     * </pre>
+     *
+     * <code>repeated bytes additionalpoints = 1;</code>
+     * @return A list containing the additionalpoints.
+     */
+    java.util.List<com.google.protobuf.ByteString> getAdditionalpointsList();
+    /**
+     * <pre>
+     * All additional points from a single voter.
+     * </pre>
+     *
+     * <code>repeated bytes additionalpoints = 1;</code>
+     * @return The count of additionalpoints.
+     */
+    int getAdditionalpointsCount();
+    /**
+     * <pre>
+     * All additional points from a single voter.
+     * </pre>
+     *
+     * <code>repeated bytes additionalpoints = 1;</code>
+     * @param index The index of the element to return.
+     * @return The additionalpoints at the given index.
+     */
+    com.google.protobuf.ByteString getAdditionalpoints(int index);
+  }
+  /**
+   * <pre>
+   * PartialAdditional is used because protobuf cannot handle array of array of bytes.
+   * </pre>
+   *
+   * Protobuf type {@code evoting.PartialAdditional}
+   */
+  public static final class PartialAdditional extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:evoting.PartialAdditional)
+      PartialAdditionalOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use PartialAdditional.newBuilder() to construct.
+    private PartialAdditional(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private PartialAdditional() {
+      additionalpoints_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new PartialAdditional();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private PartialAdditional(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                additionalpoints_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              additionalpoints_.add(input.readBytes());
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
+          additionalpoints_ = java.util.Collections.unmodifiableList(additionalpoints_); // C
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.Evoting.internal_static_evoting_PartialAdditional_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.Evoting.internal_static_evoting_PartialAdditional_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.Evoting.PartialAdditional.class, ch.epfl.dedis.lib.proto.Evoting.PartialAdditional.Builder.class);
+    }
+
+    public static final int ADDITIONALPOINTS_FIELD_NUMBER = 1;
+    private java.util.List<com.google.protobuf.ByteString> additionalpoints_;
+    /**
+     * <pre>
+     * All additional points from a single voter.
+     * </pre>
+     *
+     * <code>repeated bytes additionalpoints = 1;</code>
+     * @return A list containing the additionalpoints.
+     */
+    @java.lang.Override
+    public java.util.List<com.google.protobuf.ByteString>
+        getAdditionalpointsList() {
+      return additionalpoints_;
+    }
+    /**
+     * <pre>
+     * All additional points from a single voter.
+     * </pre>
+     *
+     * <code>repeated bytes additionalpoints = 1;</code>
+     * @return The count of additionalpoints.
+     */
+    public int getAdditionalpointsCount() {
+      return additionalpoints_.size();
+    }
+    /**
+     * <pre>
+     * All additional points from a single voter.
+     * </pre>
+     *
+     * <code>repeated bytes additionalpoints = 1;</code>
+     * @param index The index of the element to return.
+     * @return The additionalpoints at the given index.
+     */
+    public com.google.protobuf.ByteString getAdditionalpoints(int index) {
+      return additionalpoints_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      for (int i = 0; i < additionalpoints_.size(); i++) {
+        output.writeBytes(1, additionalpoints_.get(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      {
+        int dataSize = 0;
+        for (int i = 0; i < additionalpoints_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(additionalpoints_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getAdditionalpointsList().size();
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Evoting.PartialAdditional)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.Evoting.PartialAdditional other = (ch.epfl.dedis.lib.proto.Evoting.PartialAdditional) obj;
+
+      if (!getAdditionalpointsList()
+          .equals(other.getAdditionalpointsList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getAdditionalpointsCount() > 0) {
+        hash = (37 * hash) + ADDITIONALPOINTS_FIELD_NUMBER;
+        hash = (53 * hash) + getAdditionalpointsList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.Evoting.PartialAdditional parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Evoting.PartialAdditional parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Evoting.PartialAdditional parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Evoting.PartialAdditional parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Evoting.PartialAdditional parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Evoting.PartialAdditional parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Evoting.PartialAdditional parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Evoting.PartialAdditional parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Evoting.PartialAdditional parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Evoting.PartialAdditional parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Evoting.PartialAdditional parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Evoting.PartialAdditional parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Evoting.PartialAdditional prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * PartialAdditional is used because protobuf cannot handle array of array of bytes.
+     * </pre>
+     *
+     * Protobuf type {@code evoting.PartialAdditional}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:evoting.PartialAdditional)
+        ch.epfl.dedis.lib.proto.Evoting.PartialAdditionalOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.Evoting.internal_static_evoting_PartialAdditional_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.Evoting.internal_static_evoting_PartialAdditional_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.Evoting.PartialAdditional.class, ch.epfl.dedis.lib.proto.Evoting.PartialAdditional.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.Evoting.PartialAdditional.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        additionalpoints_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.Evoting.internal_static_evoting_PartialAdditional_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Evoting.PartialAdditional getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Evoting.PartialAdditional.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Evoting.PartialAdditional build() {
+        ch.epfl.dedis.lib.proto.Evoting.PartialAdditional result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Evoting.PartialAdditional buildPartial() {
+        ch.epfl.dedis.lib.proto.Evoting.PartialAdditional result = new ch.epfl.dedis.lib.proto.Evoting.PartialAdditional(this);
+        int from_bitField0_ = bitField0_;
+        if (((bitField0_ & 0x00000001) != 0)) {
+          additionalpoints_ = java.util.Collections.unmodifiableList(additionalpoints_);
+          bitField0_ = (bitField0_ & ~0x00000001);
+        }
+        result.additionalpoints_ = additionalpoints_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.Evoting.PartialAdditional) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Evoting.PartialAdditional)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Evoting.PartialAdditional other) {
+        if (other == ch.epfl.dedis.lib.proto.Evoting.PartialAdditional.getDefaultInstance()) return this;
+        if (!other.additionalpoints_.isEmpty()) {
+          if (additionalpoints_.isEmpty()) {
+            additionalpoints_ = other.additionalpoints_;
+            bitField0_ = (bitField0_ & ~0x00000001);
+          } else {
+            ensureAdditionalpointsIsMutable();
+            additionalpoints_.addAll(other.additionalpoints_);
+          }
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.Evoting.PartialAdditional parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.Evoting.PartialAdditional) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.util.List<com.google.protobuf.ByteString> additionalpoints_ = java.util.Collections.emptyList();
+      private void ensureAdditionalpointsIsMutable() {
+        if (!((bitField0_ & 0x00000001) != 0)) {
+          additionalpoints_ = new java.util.ArrayList<com.google.protobuf.ByteString>(additionalpoints_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+      /**
+       * <pre>
+       * All additional points from a single voter.
+       * </pre>
+       *
+       * <code>repeated bytes additionalpoints = 1;</code>
+       * @return A list containing the additionalpoints.
+       */
+      public java.util.List<com.google.protobuf.ByteString>
+          getAdditionalpointsList() {
+        return ((bitField0_ & 0x00000001) != 0) ?
+                 java.util.Collections.unmodifiableList(additionalpoints_) : additionalpoints_;
+      }
+      /**
+       * <pre>
+       * All additional points from a single voter.
+       * </pre>
+       *
+       * <code>repeated bytes additionalpoints = 1;</code>
+       * @return The count of additionalpoints.
+       */
+      public int getAdditionalpointsCount() {
+        return additionalpoints_.size();
+      }
+      /**
+       * <pre>
+       * All additional points from a single voter.
+       * </pre>
+       *
+       * <code>repeated bytes additionalpoints = 1;</code>
+       * @param index The index of the element to return.
+       * @return The additionalpoints at the given index.
+       */
+      public com.google.protobuf.ByteString getAdditionalpoints(int index) {
+        return additionalpoints_.get(index);
+      }
+      /**
+       * <pre>
+       * All additional points from a single voter.
+       * </pre>
+       *
+       * <code>repeated bytes additionalpoints = 1;</code>
+       * @param index The index to set the value at.
+       * @param value The additionalpoints to set.
+       * @return This builder for chaining.
+       */
+      public Builder setAdditionalpoints(
+          int index, com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureAdditionalpointsIsMutable();
+        additionalpoints_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * All additional points from a single voter.
+       * </pre>
+       *
+       * <code>repeated bytes additionalpoints = 1;</code>
+       * @param value The additionalpoints to add.
+       * @return This builder for chaining.
+       */
+      public Builder addAdditionalpoints(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureAdditionalpointsIsMutable();
+        additionalpoints_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * All additional points from a single voter.
+       * </pre>
+       *
+       * <code>repeated bytes additionalpoints = 1;</code>
+       * @param values The additionalpoints to add.
+       * @return This builder for chaining.
+       */
+      public Builder addAllAdditionalpoints(
+          java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
+        ensureAdditionalpointsIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, additionalpoints_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * All additional points from a single voter.
+       * </pre>
+       *
+       * <code>repeated bytes additionalpoints = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearAdditionalpoints() {
+        additionalpoints_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:evoting.PartialAdditional)
+    }
+
+    // @@protoc_insertion_point(class_scope:evoting.PartialAdditional)
+    private static final ch.epfl.dedis.lib.proto.Evoting.PartialAdditional DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Evoting.PartialAdditional();
+    }
+
+    public static ch.epfl.dedis.lib.proto.Evoting.PartialAdditional getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<PartialAdditional>
+        PARSER = new com.google.protobuf.AbstractParser<PartialAdditional>() {
+      @java.lang.Override
+      public PartialAdditional parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new PartialAdditional(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<PartialAdditional> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<PartialAdditional> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Evoting.PartialAdditional getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -12772,6 +14399,11 @@ public final class Evoting {
   private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_evoting_Partial_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_evoting_PartialAdditional_descriptor;
+  private static final
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_evoting_PartialAdditional_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -12808,13 +14440,16 @@ public final class Evoting {
       "\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"X\n\006Foote" +
       "r\022\014\n\004text\030\001 \002(\t\022\024\n\014contacttitle\030\002 \002(\t\022\024\n" +
       "\014contactphone\030\003 \002(\t\022\024\n\014contactemail\030\004 \002(" +
-      "\t\"3\n\006Ballot\022\014\n\004user\030\001 \002(\r\022\r\n\005alpha\030\002 \002(\014" +
-      "\022\014\n\004beta\030\003 \002(\014\"Y\n\003Mix\022 \n\007ballots\030\001 \003(\0132\017" +
-      ".evoting.Ballot\022\r\n\005proof\030\002 \002(\014\022\016\n\006nodeid" +
-      "\030\003 \002(\014\022\021\n\tsignature\030\004 \002(\014\"<\n\007Partial\022\016\n\006" +
-      "points\030\001 \003(\014\022\016\n\006nodeid\030\002 \002(\014\022\021\n\tsignatur" +
-      "e\030\003 \002(\014B\"\n\027ch.epfl.dedis.lib.protoB\007Evot" +
-      "ing"
+      "\t\"f\n\006Ballot\022\014\n\004user\030\001 \002(\r\022\r\n\005alpha\030\002 \002(\014" +
+      "\022\014\n\004beta\030\003 \002(\014\022\030\n\020additionalalphas\030\004 \003(\014" +
+      "\022\027\n\017additionalbetas\030\005 \003(\014\"Y\n\003Mix\022 \n\007ball" +
+      "ots\030\001 \003(\0132\017.evoting.Ballot\022\r\n\005proof\030\002 \002(" +
+      "\014\022\016\n\006nodeid\030\003 \002(\014\022\021\n\tsignature\030\004 \002(\014\"r\n\007" +
+      "Partial\022\016\n\006points\030\001 \003(\014\022\016\n\006nodeid\030\002 \002(\014\022" +
+      "\021\n\tsignature\030\003 \002(\014\0224\n\020additionalpoints\030\004" +
+      " \003(\0132\032.evoting.PartialAdditional\"-\n\021Part" +
+      "ialAdditional\022\030\n\020additionalpoints\030\001 \003(\014B" +
+      "\"\n\027ch.epfl.dedis.lib.protoB\007Evoting"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -12874,7 +14509,7 @@ public final class Evoting {
     internal_static_evoting_Ballot_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_evoting_Ballot_descriptor,
-        new java.lang.String[] { "User", "Alpha", "Beta", });
+        new java.lang.String[] { "User", "Alpha", "Beta", "Additionalalphas", "Additionalbetas", });
     internal_static_evoting_Mix_descriptor =
       getDescriptor().getMessageTypes().get(6);
     internal_static_evoting_Mix_fieldAccessorTable = new
@@ -12886,7 +14521,13 @@ public final class Evoting {
     internal_static_evoting_Partial_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_evoting_Partial_descriptor,
-        new java.lang.String[] { "Points", "Nodeid", "Signature", });
+        new java.lang.String[] { "Points", "Nodeid", "Signature", "Additionalpoints", });
+    internal_static_evoting_PartialAdditional_descriptor =
+      getDescriptor().getMessageTypes().get(8);
+    internal_static_evoting_PartialAdditional_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_evoting_PartialAdditional_descriptor,
+        new java.lang.String[] { "Additionalpoints", });
     ch.epfl.dedis.lib.proto.OnetProto.getDescriptor();
   }
 

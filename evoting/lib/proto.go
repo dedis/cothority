@@ -13,6 +13,7 @@ import (
 // type :map\[string\]string:map<string, string>
 // type :network.ServerIdentityID:bytes
 // type :ElectionState:uint32
+// type :kyber.Point:bytes
 // import "onet.proto";
 //
 // option java_package = "ch.epfl.dedis.lib.proto";
@@ -123,6 +124,12 @@ type Ballot struct {
 	// ElGamal ciphertext pair.
 	Alpha kyber.Point
 	Beta  kyber.Point
+
+	// Additional ciphertext pairs in case there are more than 9 candidates.
+	// As these are slices, the resulting protobuf is backward compatible with
+	// the old ones.
+	AdditionalAlphas []kyber.Point
+	AdditionalBetas  []kyber.Point
 }
 
 // Mix contains the shuffled ballots.
@@ -147,4 +154,15 @@ type Partial struct {
 	NodeID network.ServerIdentityID
 	// Signature of the public key
 	Signature []byte
+
+	// Additional points from decrypted plaintexts.
+	// To keep backward-compatibility in the resulting protobuf,
+	// these points are added at the end of the structure.
+	AdditionalPoints []PartialAdditional
+}
+
+// PartialAdditional is used because protobuf cannot handle array of array of bytes.
+type PartialAdditional struct {
+	// All additional points from a single voter.
+	AdditionalPoints []kyber.Point
 }

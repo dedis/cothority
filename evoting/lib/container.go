@@ -9,6 +9,13 @@ import (
 	"go.dedis.ch/kyber/v3/util/random"
 )
 
+// CandidatesPerPoint indicates how many candidates fit into an ed25519 Point:
+// As each candidate takes 3 bytes, and an ed25519 Point allows to embed 30 bytes,
+// there is space for 10 candidates in one ed25519 Point.
+// For some obscure reason (off-by-one?) the code checks for 9 candidates, so we
+// keep this for not breaking previous elections.
+const CandidatesPerPoint = 9
+
 // Box is a wrapper around a list of encrypted ballots.
 type Box struct {
 	Ballots []*Ballot
