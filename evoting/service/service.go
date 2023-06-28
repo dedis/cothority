@@ -135,7 +135,7 @@ func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
 	return &evoting.LinkReply{ID: id}, nil
 }
 
-// Open message hander. Create a new election with accompanying skipchain.
+// Open message handler. Create a new election with accompanying skipchain.
 func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 	master, err := lib.GetMaster(s.skipchain, req.ID)
 	if err != nil {
@@ -367,6 +367,8 @@ func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciper
 	return reply, nil
 }
 
+// SECURITY BUG: this authentication is completely bogus and can be replayed by an attacker.
+// See https://github.com/dedis/cothority/issues/2507
 func auth(u uint32, sig []byte, master skipchain.SkipBlockID, pub kyber.Point) error {
 	var message []byte
 	message = append(message, master...)
@@ -664,14 +666,15 @@ func (s *Service) Reconstruct(req *evoting.Reconstruct) (*evoting.ReconstructRep
 		return nil, errors.New("reconstruct error, election not closed yet")
 	}
 
-	points := make([]kyber.Point, 0)
-
 	n := len(election.Roster.List)
-	for i := 0; i < len(partials[0].Points); i++ {
+
+	points := make([]kyber.Point, 0)
+	additionalPoints := make([]evoting.AddPoints, 0)
+	for i := range partials[0].Points {
 		shares := make([]*share.PubShare, n)
 		for _, partial := range partials {
-			j, _ := election.Roster.Search(partial.NodeID)
-			shares[j] = &share.PubShare{I: j, V: partial.Points[i]}
+			id, _ := election.Roster.Search(partial.NodeID)
+			shares[id] = &share.PubShare{I: id, V: partial.Points[i]}
 		}
 
 		log.Lvl3("Recovering commits", i)
@@ -680,9 +683,30 @@ func (s *Service) Reconstruct(req *evoting.Reconstruct) (*evoting.ReconstructRep
 			return nil, err
 		}
 		points = append(points, message)
+
+		// Now take care of eventual additional points.
+		if len(partials[0].AdditionalPoints) == 0 {
+			continue
+		}
+		var ap evoting.AddPoints
+		for j := range partials[0].AdditionalPoints[i].AdditionalPoints {
+			shares := make([]*share.PubShare, n)
+			for _, partial := range partials {
+				id, _ := election.Roster.Search(partial.NodeID)
+				shares[id] = &share.PubShare{I: id, V: partial.AdditionalPoints[i].AdditionalPoints[j]}
+			}
+
+			log.Lvl3("Recovering commits", i)
+			message, err := share.RecoverCommit(cothority.Suite, shares, 2*n/3+1, n)
+			if err != nil {
+				return nil, err
+			}
+			ap.AdditionalPoints = append(ap.AdditionalPoints, message)
+		}
+		additionalPoints = append(additionalPoints, ap)
 	}
 
-	return &evoting.ReconstructReply{Points: points}, nil
+	return &evoting.ReconstructReply{Points: points, AdditionalPoints: additionalPoints}, nil
 }
 
 // NewProtocol hooks non-root nodes into created protocols.

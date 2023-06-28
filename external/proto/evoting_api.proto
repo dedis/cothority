@@ -1,0 +1,31 @@
+syntax = "proto2";
+package evoting_api;
+
+option java_package = "ch.epfl.dedis.lib.proto";
+option java_outer_classname = "EvotingAPI";
+
+// Reconstruct message.
+message Reconstruct {
+  // ID of the election skipchain.
+  required bytes id = 1;
+}
+
+// ReconstructReply message.
+message ReconstructReply {
+  // Points are the decrypted plaintexts.
+  repeated bytes points = 1;
+  // Eventual additional points - only if more than 9 candidates
+  repeated AddPoints additionalpoints = 2;
+}
+
+// AddPoints if maxChoices > 9
+message AddPoints {
+  // The additional Points
+  repeated bytes additionalpoints = 1;
+}
+
+// Ping message.
+message Ping {
+  // Nonce can be any integer.
+  required uint32 nonce = 1;
+}

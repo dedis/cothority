@@ -177,7 +177,7 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 			return errors.New("alpha and beta must be non-nil")
 		}
 		if t.Ballot.Alpha.Equal(null) || t.Ballot.Beta.Equal(null) {
-			return errors.New("alpha and beta must be null points")
+			return errors.New("alpha and beta must be non-null points")
 		}
 
 		// t.User is trusted at this point, so make sure that they did not try to sneak
@@ -211,6 +211,12 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		} else if !election.IsUser(t.User) {
 			return errors.New("cast error: user not part")
 		}
+		if election.MaxChoices > CandidatesPerPoint {
+			addLen := (election.MaxChoices - 1) / CandidatesPerPoint
+			if len(t.Ballot.AdditionalAlphas) != addLen || len(t.Ballot.AdditionalBetas) != addLen {
+				return errors.New("ballot error: not enough Additional{Alphas,Betas}")
+			}
+		}
 		return nil
 	} else if t.Mix != nil {
 		election, err := GetElection(s, genesis, false, t.User)
@@ -230,6 +236,8 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		if err != nil {
 			return err
 		}
+		// BUG: This signature verification doesn't prove anything usable. It should verify that the
+		// t.Mix is valid.
 		err = schnorr.Verify(cothority.Suite, proposer.Public, data, t.Mix.Signature)
 		if err != nil {
 			return err
@@ -256,7 +264,7 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		}
 
 		// check if Mix is valid
-		var x, y []kyber.Point
+		var x, y [][]kyber.Point
 		if len(mixes) == 0 {
 			// verify against Boxes
 			boxes, err := election.Box(s)

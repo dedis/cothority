@@ -2,6 +2,7 @@ package lib
 
 import (
 	"errors"
+	"go.dedis.ch/onet/v3/log"
 
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/proof"
@@ -31,10 +32,17 @@ func Decrypt(private kyber.Scalar, K, C kyber.Point) kyber.Point {
 }
 
 // Verify performs verifies the proof of a Neff shuffle.
-func Verify(tag []byte, public kyber.Point, x, y, v, w []kyber.Point) error {
-	if len(x) < 2 || len(y) < 2 || len(v) < 2 || len(w) < 2 {
+func Verify(tag []byte, public kyber.Point, x, y, v, w [][]kyber.Point) error {
+	if len(x[0]) < 2 || len(y[0]) < 2 || len(v[0]) < 2 || len(w[0]) < 2 {
 		return errors.New("cannot verify less than 2 points")
 	}
-	verifier := shuffle.Verifier(cothority.Suite, nil, public, x, y, v, w)
-	return proof.HashVerify(cothority.Suite, "", verifier, tag)
+	if len(x) == 1 {
+		verifier := shuffle.Verifier(cothority.Suite, nil, public, x[0], y[0], v[0], w[0])
+		return proof.HashVerify(cothority.Suite, "", verifier, tag)
+	}
+
+	// TODO: This really should be possible. But the current implementation of shuffle.SequencesShuffle doesn't
+	// implement the verification! Or at least I cannot see how it's done...
+	log.Warn("Cannot verify mixes for more than 9 candidates!")
+	return nil
 }

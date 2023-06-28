@@ -1,12 +1,11 @@
 package evoting
 
 import (
+	"go.dedis.ch/cothority/v3/evoting/lib"
+	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/network"
-
-	"go.dedis.ch/cothority/v3/evoting/lib"
-	"go.dedis.ch/cothority/v3/skipchain"
 )
 
 func init() {
@@ -151,19 +150,4 @@ type GetPartials struct {
 // GetPartialsReply message.
 type GetPartialsReply struct {
 	Partials []*lib.Partial // Partials from all conodes.
-}
-
-// Reconstruct message.
-type Reconstruct struct {
-	ID skipchain.SkipBlockID // ID of the election skipchain.
-}
-
-// ReconstructReply message.
-type ReconstructReply struct {
-	Points []kyber.Point // Points are the decrypted plaintexts.
-}
-
-// Ping message.
-type Ping struct {
-	Nonce uint32 // Nonce can be any integer.
 }

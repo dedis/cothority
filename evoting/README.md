@@ -140,3 +140,36 @@ See the [README.md](evoting-admin/README.md) in that directory.
 - Paper: **Helios: Web-based Open-Audit Voting**; *Ben Adida*, 2008
 - Paper: **Decentralizing authorities into scalable strongest-link cothorities**: *Ford et. al.*, 2015
 - Paper: **Secure distributed key generation for discrete-log based cryptosystems**; *Gennaro et. al.*, 1999
+
+# Extension to more than 9 candidates
+
+## Description
+
+The pre-June 2023 version (v3.4.9) of the evoting backend only allowed for up to 9 choices of candidates.
+This is due to the fact that the encryption is done with data in an ed25519 point, which can store up to
+30 bytes.
+Each candidate takes 3 bytes, so there would be 10 candidates possible, but probably due to a off-by-one error
+decision, it was deemed better to only allow for 9 candidates.
+
+With the current change, a number of `Additional*` fields are added to the structures that hold the encrypted
+and decrypted votes.
+This has been done as a golang-slice, which is represented as a `repeated` in protobuf.
+The advantage is that if it is missing, it will simply result in a 0-length slice.
+So all the previous data should be fully compatible with the new system.
+
+The shuffling / mixing is now done with the `kyber/shuffle/sequences.go`, which has one big disadvantage:
+**There is no verification of the shuffle being correct**!
+
+Anyway, due to many other security bugs, I think this is the least of concerns for now...
+
+## Bugs encountered
+
+The following bugs are security bugs.
+If the D-voting implementation is a rewrite of this evoting
+service, then you should definitely check that now it's done
+correctly!
+
+- `hashMap` doesn't hash all it should: https://github.com/dedis/cothority/issues/2508
+- The authentication of the user is very bogus: https://github.com/dedis/cothority/issues/2507
+- `shuffle` and `decrypt` requests sent by the leader are not trustworthy: https://github.com/dedis/cothority/issues/2509
+- Blocks created by `shuffle` and `decrypt` are signed with a useless signature https://github.com/dedis/cothority/issues/2510

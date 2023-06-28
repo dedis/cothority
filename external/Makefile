@@ -15,9 +15,14 @@ do-js: check_protoc
 
 
 check_protoc:
-	@which protoc || (echo "Install protoc version 3.17.3. On Mac, run \"brew install protobuf@3.17.3\"" && exit 1)
-	@pv=`protoc --version`; \
+	which protoc || $(MAKE) protoc_instructions
+	pv=`protoc --version`; \
 	if [ "$$pv" != "libprotoc 3.17.3" ]; then \
 		echo "Protoc version $$pv is not supported."; \
-		exit 1; \
+		$(MAKE) protoc_instructions; \
 	fi
+
+protoc_instructions:
+	echo "Please download version 3.17.3 from here:"
+	echo "https://github.com/protocolbuffers/protobuf/releases/tag/v3.17.3"
+	exit 1
