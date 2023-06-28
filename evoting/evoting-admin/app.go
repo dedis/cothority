@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"go.dedis.ch/cothority/v3/evoting/lib"
 	"os"
 	"strconv"
 	"strings"
@@ -23,22 +24,29 @@ import (
 )
 
 var (
-	argRoster       = flag.String("roster", "", "path to roster toml file")
-	argAdmins       = flag.String("admins", "", "list of admin users")
-	argPin          = flag.String("pin", "", "service pin")
-	argKey          = flag.String("key", "", "public key of authentication server")
-	argID           = flag.String("id", "", "ID of the master chain to modify (optional)")
-	argUser         = flag.Int("user", 0, "The SCIPER of an existing admin of this chain")
-	argSig          = flag.String("sig", "", "A signature proving that you can login to Tequila with the given SCIPER.")
-	argShow         = flag.Bool("show", false, "Show the current Master config")
-	argDumpVoters   = flag.Bool("dumpvoters", false, "Dump a list of voters for election skipchain specified with -id (ballot de-duplication has already been taken into account, order is preserved)")
-	argDumpElection = flag.Bool("dumpelection", false, "Dump the current election config for the election specified with -id.")
-	argJSON         = flag.Bool("json", false, "Dump in json mode.")
-	argLoad         = flag.String("load", "", "Load the specified json file to modify the election specified with -id.")
+	argRoster         = flag.String("roster", "", "path to roster toml file")
+	argAdmins         = flag.String("admins", "", "list of admin users")
+	argPin            = flag.String("pin", "", "service pin")
+	argKey            = flag.String("key", "", "public key of authentication server")
+	argPrivate        = flag.String("private", "", "private key of authentication server for voting")
+	argID             = flag.String("id", "", "ID of the master chain to modify (optional)")
+	argUser           = flag.Int("user", 0, "The SCIPER of an existing admin of this chain")
+	argSig            = flag.String("sig", "", "A signature proving that you can login to Tequila with the given SCIPER.")
+	argShow           = flag.Bool("show", false, "Show the current Master config")
+	argDumpVoters     = flag.Bool("dumpvoters", false, "Dump a list of voters for election skipchain specified with -id (ballot de-duplication has already been taken into account, order is preserved)")
+	argDumpElection   = flag.Bool("dumpelection", false, "Dump the current election config for the election specified with -id.")
+	argJSON           = flag.Bool("json", false, "Dump in json mode.")
+	argLoad           = flag.String("load", "", "Load the specified json file to modify the election specified with -id.")
+	argVoteCandidates = flag.String("voteCandidates", "", "Coma delimited list of SCIPERs to vote for")
+	argDebug          = flag.Int("debug", 0, "Debugging level")
 )
 
 func main() {
 	flag.Parse()
+
+	if *argDebug > 0 {
+		log.SetDebugVisible(*argDebug)
+	}
 
 	if *argRoster == "" {
 		log.Fatal("Roster argument (-roster) is required for create, update, or show.")
@@ -47,15 +55,50 @@ func main() {
 	if err != nil {
 		log.Fatal("cannot parse roster: ", err)
 	}
+	client := onet.NewClient(cothority.Suite, evoting.ServiceName)
+	cl := evoting.NewClient(roster)
+
+	var pub kyber.Point
+	var priv kyber.Scalar
+	if *argPrivate != "" {
+		// If we get the private key, calculate the corresponding public key
+		b, err := hex.DecodeString(*argPrivate)
+		log.ErrFatal(err, "while parsing private key")
+
+		log.Lvl1("Setting the private key")
+		priv = cothority.Suite.Scalar()
+		err = priv.UnmarshalBinary(b)
+		log.ErrFatal(err, "while unmarshalling private key")
+		pub = cothority.Suite.Point().Mul(priv, nil)
+	} else if *argKey != "" {
+		// If we only get the public key
+		pub, err = parseKey(*argKey)
+		if err != nil {
+			log.Fatal("cannot parse key: ", err)
+		}
+	} else {
+		// If we get no key, create them again
+		kp := key.NewKeyPair(cothority.Suite)
+		priv = kp.Private
+		pub = kp.Public
+	}
 
 	if *argShow {
+		if *argID == "" {
+			log.Fatal("Please give ID of master chain")
+		}
 		id, err := hex.DecodeString(*argID)
 		if err != nil {
 			log.Fatal("id decode", err)
 		}
 		request := &evoting.GetElections{Master: id}
+		if priv != nil && *argUser > 0 {
+			request.User = uint32(*argUser)
+			request.Signature = lib.GenerateSignature(priv, id, request.User)
+		} else {
+			fmt.Println("You can give '-private PRIVATE_KEY -user ADMINID' for a list of available elections to this user")
+		}
 		reply := &evoting.GetElectionsReply{}
-		client := onet.NewClient(cothority.Suite, evoting.ServiceName)
 		if err = client.SendProtobuf(roster.List[0], request, reply); err != nil {
 			log.Fatal("get elections request: ", err)
 		}
@@ -63,16 +106,22 @@ func main() {
 		fmt.Printf(" Admins: %v\n", m.Admins)
 		fmt.Printf(" Roster: %v\n", m.Roster.List)
 		fmt.Printf("    Key: %v\n", m.Key)
+		for _, election := range reply.Elections {
+			fmt.Printf("\nElection: %s\n", election.Name)
+			fmt.Printf("      ID: %x\n", election.ID)
+		}
 		return
 	}
 
 	if *argDumpVoters {
+		if *argID == "" {
+			log.Fatal("Please give ID of master chain")
+		}
 		id, err := hex.DecodeString(*argID)
 		if err != nil {
 			log.Fatal("id decode", err)
 		}
 		reply := &evoting.GetBoxReply{}
-		client := onet.NewClient(cothority.Suite, evoting.ServiceName)
 		if err = client.SendProtobuf(roster.List[0], &evoting.GetBox{ID: id}, reply); err != nil {
 			log.Fatal("get box request: ", err)
 		}
@@ -84,12 +133,14 @@ func main() {
 	}
 
 	if *argDumpElection {
+		if *argID == "" {
+			log.Fatal("Please give an ID")
+		}
 		id, err := hex.DecodeString(*argID)
 		if err != nil {
 			log.Fatal("id decode", err)
 		}
 		reply := &evoting.GetBoxReply{}
-		client := onet.NewClient(cothority.Suite, evoting.ServiceName)
 		if err = client.SendProtobuf(roster.List[0], &evoting.GetBox{ID: id}, reply); err != nil {
 			log.Fatal("get box request: ", err)
 		}
@@ -123,11 +174,27 @@ func main() {
 			out.WriteTo(os.Stdout)
 		} else {
 			fmt.Println(reply.Election)
+			if reply.Election.Stage == lib.Decrypted {
+				reconstructReply, err := cl.Reconstruct(id)
+				log.ErrFatal(err, "While getting reconstructed votes")
+				for i, p := range reconstructReply.Points {
+					d, _ := p.Data()
+					fmt.Printf("Vote %d with data %x", i, d)
+					for _, p := range reconstructReply.AdditionalPoints[i].AdditionalPoints {
+						d, _ := p.Data()
+						fmt.Printf(",%x", d)
+					}
+					fmt.Println()
+				}
+			}
 		}
 		return
 	}
 
 	if *argLoad != "" {
+		if *argID == "" {
+			log.Fatal("Please give ID of master chain")
+		}
 		id, err := hex.DecodeString(*argID)
 		if err != nil {
 			log.Fatal("id decode", err)
@@ -135,7 +202,6 @@ func main() {
 
 		// Look up the election
 		reply := &evoting.GetBoxReply{}
-		client := onet.NewClient(cothority.Suite, evoting.ServiceName)
 		if err = client.SendProtobuf(roster.List[0], &evoting.GetBox{ID: id}, reply); err != nil {
 			log.Fatal("get box request:", err)
 		}
@@ -194,6 +260,50 @@ func main() {
 		return
 	}
 
+	if len(*argVoteCandidates) > 0 {
+		voteUser := uint32(*argUser)
+		if len(*argID) != 64 {
+			log.Fatal("Need an ID of the election chain in hex form of 32 bytes")
+		}
+		voteID, err := hex.DecodeString(*argID)
+		log.ErrFatal(err, "Wrong ID for election chain")
+
+		log.Lvl1("Getting election information from the chain")
+		reply := &evoting.GetBoxReply{}
+		if err = client.SendProtobuf(roster.List[0], &evoting.GetBox{ID: voteID}, reply); err != nil {
+			log.Fatal("get box request:", err)
+		}
+
+		if len(*argVoteCandidates) < 6 {
+			log.Fatal("Need at least one candidate to vote for")
+		}
+		voteCandidatesStrings := strings.Split(*argVoteCandidates, ",")
+		voteCandidates := make([]uint32, len(voteCandidatesStrings))
+		for i, c := range voteCandidatesStrings {
+			cand, err := strconv.Atoi(c)
+			log.ErrFatal(err, "Wrong SCIPER ID for candidate")
+			voteCandidates[i] = uint32(cand)
+		}
+
+		if priv == nil {
+			log.Fatal("Need the private key to vote")
+		}
+
+		fmt.Printf("Votes are: %+v\n", voteCandidates)
+
+		ballot := lib.CreateBallot(reply.Election.MaxChoices, reply.Election.Key, voteUser, voteCandidates)
+		request := &evoting.Cast{
+			ID:        voteID,
+			User:      voteUser,
+			Ballot:    &ballot,
+			Signature: lib.GenerateSignature(priv, reply.Election.Master, voteUser),
+		}
+		replyCast := &evoting.CastReply{}
+		log.ErrFatal(client.SendProtobuf(roster.List[0], request, replyCast))
+		log.Info("Successfully cast this vote")
+		return
+	}
+
 	if *argAdmins == "" {
 		log.Fatal("Admin list (-admins) must have at least one id.")
 	}
@@ -205,18 +315,6 @@ func main() {
 
 	if *argPin == "" {
 		log.Fatal("pin must be set for create and update operations.")
-	}
-
-	var pub kyber.Point
-	if *argKey != "" {
-		pub, err = parseKey(*argKey)
-		if err != nil {
-			log.Fatal("cannot parse key: ", err)
-		}
-	} else {
-		kp := key.NewKeyPair(cothority.Suite)
-		log.Infof("Auth-server private key: %v", kp.Private)
-		pub = kp.Public
 	}
 
 	request := &evoting.Link{Pin: *argPin, Roster: roster, Key: pub, Admins: admins}
@@ -241,11 +339,11 @@ func main() {
 	}
 	reply := &evoting.LinkReply{}
 
-	client := onet.NewClient(cothority.Suite, evoting.ServiceName)
 	if err = client.SendProtobuf(roster.List[0], request, reply); err != nil {
 		log.Fatal("link request: ", err)
 	}
 
+	log.Infof("Auth-server private key: %v", priv)
 	log.Infof("Auth-server public  key: %v", pub)
 	log.Infof("Master ID: %x", reply.ID)
 }

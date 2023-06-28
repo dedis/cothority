@@ -23,7 +23,7 @@ func TestPing(t *testing.T) {
 
 	_, roster, _ := local.GenTree(3, true)
 
-	c := evoting.NewClient()
-	r, _ := c.Ping(roster, 0)
+	c := evoting.NewClient(roster)
+	r, _ := c.Ping(0)
 	assert.Equal(t, uint32(1), r.Nonce)
 }
