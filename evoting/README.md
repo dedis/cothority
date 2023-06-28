@@ -140,3 +140,17 @@ See the [README.md](evoting-admin/README.md) in that directory.
 - Paper: **Helios: Web-based Open-Audit Voting**; *Ben Adida*, 2008
 - Paper: **Decentralizing authorities into scalable strongest-link cothorities**: *Ford et. al.*, 2015
 - Paper: **Secure distributed key generation for discrete-log based cryptosystems**; *Gennaro et. al.*, 1999
+
+# Extension to more than 9 candidates
+
+## Bugs encountered
+
+The following bugs are security bugs.
+If the D-voting implementation is a rewrite of this evoting
+service, then you should definitely check that now it's done
+correctly!
+
+- `hashMap` doesn't hash all it should: https://github.com/dedis/cothority/issues/2508
+- The authentication of the user is very bogus: https://github.com/dedis/cothority/issues/2507
+- `shuffle` and `decrypt` requests sent by the leader are not trustworthy: https://github.com/dedis/cothority/issues/2509
+- Blocks created by `shuffle` and `decrypt` are signed with a useless signature https://github.com/dedis/cothority/issues/2510

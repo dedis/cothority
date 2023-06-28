@@ -177,7 +177,7 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 			return errors.New("alpha and beta must be non-nil")
 		}
 		if t.Ballot.Alpha.Equal(null) || t.Ballot.Beta.Equal(null) {
-			return errors.New("alpha and beta must be null points")
+			return errors.New("alpha and beta must be non-null points")
 		}
 
 		// t.User is trusted at this point, so make sure that they did not try to sneak
@@ -230,6 +230,8 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		if err != nil {
 			return err
 		}
+		// BUG: This signature verification doesn't prove anything usable. It should verify that the
+		// t.Mix is valid.
 		err = schnorr.Verify(cothority.Suite, proposer.Public, data, t.Mix.Signature)
 		if err != nil {
 			return err

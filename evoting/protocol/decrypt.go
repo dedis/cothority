@@ -73,9 +73,9 @@ func (d *Decrypt) Start() error {
 // There are three parts now:
 //  1. Verification of state - if this fails, it's over and `Done` is called
 //  2. Create decryption block and send it to the leader - if it fails,
-//   `Done` is called
+//     `Done` is called
 //  3. Send the decryption block to the skipchain - also will have `Done`
-//   called if it fails
+//     called if it fails
 func (d *Decrypt) HandlePrompt(prompt MessagePromptDecrypt) error {
 	var mixes []*lib.Mix
 	var partials []*lib.Partial
@@ -124,6 +124,10 @@ func (d *Decrypt) HandlePrompt(prompt MessagePromptDecrypt) error {
 			if err != nil {
 				return d.SendTo(d.Root(), &TerminateDecrypt{Error: err.Error()})
 			}
+
+			// BUG: This signature only proves that at some moment, this node
+			// was here. But a malicious other node could change the data however it wishes.
+			// Or an attacking node could simply copy the signature to a new block.
 			sig, err := schnorr.Sign(cothority.Suite, d.Private(), data)
 			if err != nil {
 				return d.SendTo(d.Root(), &TerminateDecrypt{Error: err.Error()})

@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"errors"
+	"fmt"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/kyber/v3/proof"
@@ -18,7 +19,7 @@ import (
 
 /*
 Each participating node creates a verifiable shuffle with a corresponding proof
-of the last last block in election skipchain. This block is either a box of
+of the last block in the election skipchain. This block is either a box of
 encrypted ballot (in case of the root node) or a mix of the previous node. Every
 newly created shuffle is appended to the chain before the next node is prompted
 to create its shuffle. The leaf node notifies the root upon storing its shuffle,
@@ -70,9 +71,9 @@ func (s *Shuffle) Start() error {
 // LG: rewrote the function to correctly call Done - probably should be
 // rewritten even further. There are three `func() error` now with different
 // error-handling. In case of error:
-//   1. we abort and stop processing
-//   2. will return the error, but first call 3.
-//   3. try to call it and abort if error found
+//  1. we abort and stop processing
+//  2. will return the error, but first call 3.
+//  3. try to call it and abort if error found
 func (s *Shuffle) HandlePrompt(prompt MessagePrompt) error {
 	added := 0
 	var mixes []*lib.Mix
@@ -102,7 +103,7 @@ func (s *Shuffle) HandlePrompt(prompt MessagePrompt) error {
 
 		if len(ballots) < 2 {
 			if err := s.SendTo(s.Root(), &TerminateShuffle{
-				Error: "shuffle error: not enough (> 2) ballots to shuffle",
+				Error: "shuffle error: not enough (< 2) ballots to shuffle",
 			}); err != nil {
 				log.Error(err)
 			}
@@ -144,13 +145,18 @@ func (s *Shuffle) HandlePrompt(prompt MessagePrompt) error {
 		g, d, prov := shuffle.Shuffle(cothority.Suite, nil, s.Election.Key, a, b, random.New())
 		proof, err := proof.HashProve(cothority.Suite, "", prov)
 		if err != nil {
-			return err
+			return fmt.Errorf("while shuffling votes: %v", err)
 		}
+
 		mix = &lib.Mix{
 			Ballots: lib.Combine(g, d),
 			Proof:   proof,
 			NodeID:  s.ServerIdentity().ID,
 		}
+
+		// BUG: This signature only proves that at some moment, this node
+		// was here. But a malicious other node could change the data however it wishes.
+		// Or an attacking node could simply copy the signature to a new block.
 		data, err := s.ServerIdentity().Public.MarshalBinary()
 		if err != nil {
 			return err

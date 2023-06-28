@@ -135,7 +135,7 @@ func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
 	return &evoting.LinkReply{ID: id}, nil
 }
 
-// Open message hander. Create a new election with accompanying skipchain.
+// Open message handler. Create a new election with accompanying skipchain.
 func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 	master, err := lib.GetMaster(s.skipchain, req.ID)
 	if err != nil {
@@ -367,6 +367,8 @@ func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciper
 	return reply, nil
 }
 
+// SECURITY BUG: this authentication is completely bogus and can be replayed by an attacker.
+// See https://github.com/dedis/cothority/issues/2507
 func auth(u uint32, sig []byte, master skipchain.SkipBlockID, pub kyber.Point) error {
 	var message []byte
 	message = append(message, master...)
