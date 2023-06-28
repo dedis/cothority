@@ -3,12 +3,8 @@ package protocol
 import (
 	"errors"
 	"fmt"
-
 	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/kyber/v3/proof"
-	"go.dedis.ch/kyber/v3/shuffle"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
-	"go.dedis.ch/kyber/v3/util/random"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
@@ -130,27 +126,15 @@ func (s *Shuffle) HandlePrompt(prompt MessagePrompt) error {
 			return nil
 		}
 
-		a, b := lib.Split(ballots)
-		// Protect from missing input.
-		for i := range a {
-			if a[i] == nil {
-				a[i] = cothority.Suite.Point().Null()
-			}
-		}
-		for i := range b {
-			if b[i] == nil {
-				b[i] = cothority.Suite.Point().Null()
-			}
-		}
-		g, d, prov := shuffle.Shuffle(cothority.Suite, nil, s.Election.Key, a, b, random.New())
-		proof, err := proof.HashProve(cothority.Suite, "", prov)
+		alphas, betas := lib.Split(ballots)
+		g, d, shuffleProof, err := lib.CreateShuffleProof(alphas, betas, s.Election.Key)
 		if err != nil {
 			return fmt.Errorf("while shuffling votes: %v", err)
 		}
 
 		mix = &lib.Mix{
 			Ballots: lib.Combine(g, d),
-			Proof:   proof,
+			Proof:   shuffleProof,
 			NodeID:  s.ServerIdentity().ID,
 		}
 

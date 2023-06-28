@@ -12,8 +12,6 @@ import (
 	"go.dedis.ch/cothority/v3/evoting/lib"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/kyber/v3/proof"
-	"go.dedis.ch/kyber/v3/shuffle"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
 	"go.dedis.ch/kyber/v3/util/key"
 	"go.dedis.ch/kyber/v3/util/random"
@@ -305,6 +303,193 @@ func TestService(t *testing.T) {
 
 	for _, p := range reconstructReply.Points {
 		log.Lvl2("Point is:", p.String())
+	}
+}
+
+// Tests that the new extension to have more than CandidatesPerPoint candidates works.
+func TestManyCandidates(t *testing.T) {
+	testManyCandidatesFailures(t, 0)
+}
+
+// Tests that the new extension to have more than CandidatesPerPoint candidates works, also in the presence of
+// failing nodes.
+func TestManyCandidatesWithFailures(t *testing.T) {
+	testManyCandidatesFailures(t, 2)
+}
+
+// Helper function to test with and without failures.
+func testManyCandidatesFailures(t *testing.T, failures int) {
+	require.True(t, failures >= 0 && failures <= 2)
+
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+
+	nodeKP := key.NewKeyPair(cothority.Suite)
+
+	nodes, roster, _ := local.GenBigTree(7, 7, 1, true)
+	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
+	sc0 := local.GetServices(nodes, onet.ServiceFactory.ServiceID(skipchain.ServiceName))[0].(*skipchain.Service)
+	// Set a lower timeout for the tests
+	sc0.SetPropTimeout(defaultTimeout / 8)
+
+	// Creating master skipchain
+	replyLink, err := s0.Link(&evoting.Link{
+		Pin:    s0.pin,
+		Roster: roster,
+		Key:    nodeKP.Public,
+		Admins: []uint32{idAdmin},
+	})
+	require.NoError(t, err)
+
+	idAdminSig := generateSignature(nodeKP.Private, replyLink.ID, idAdmin)
+
+	maxChoices := 20
+	totalBufs := (maxChoices-1)/lib.CandidatesPerPoint + 1
+	manyCandidates := make([]uint32, maxChoices)
+	for m := range manyCandidates {
+		manyCandidates[m] = 0x100000 + uint32(m)
+	}
+
+	elec := &lib.Election{
+		Name: map[string]string{
+			"en": "name in english",
+		},
+		Subtitle: map[string]string{
+			"en": "name in english",
+		},
+		MoreInfoLang: map[string]string{
+			"en": "https://epfl.ch/elections",
+		},
+		Creator:    idAdmin,
+		Users:      []uint32{idUser1, idUser2, idUser3, idAdmin},
+		Roster:     roster,
+		Start:      yesterday.Unix(),
+		End:        tomorrow.Unix(),
+		MaxChoices: maxChoices,
+		Candidates: manyCandidates,
+	}
+
+	// Create a new election
+	replyOpen, err := s0.Open(&evoting.Open{
+		ID:        replyLink.ID,
+		Election:  elec,
+		User:      idAdmin,
+		Signature: idAdminSig,
+	})
+	require.NoError(t, err)
+	elec.ID = replyOpen.ID
+
+	for pause := 1; pause <= failures; pause++ {
+		nodes[len(nodes)-pause].Pause()
+	}
+
+	// Cast a vote for only up to nine candidates - should be rejected
+	log.Lvl1("Casting one empty ballot buffer")
+	idUser1Sig := generateSignature(nodeKP.Private, replyLink.ID, idUser1)
+	k0, c0 := lib.Encrypt(replyOpen.Key, []byte{})
+	ballot := &lib.Ballot{
+		User:  idUser1,
+		Alpha: k0,
+		Beta:  c0,
+	}
+	_, err = s0.Cast(&evoting.Cast{
+		ID:        replyOpen.ID,
+		Ballot:    ballot,
+		User:      idUser1,
+		Signature: idUser1Sig,
+	})
+	require.Error(t, err)
+	require.Nil(t, local.WaitDone(time.Second))
+
+	// Prepare a helper for testing voting.
+	vote := func(user uint32, elected []uint32) *evoting.CastReply {
+		ballot := lib.CreateBallot(maxChoices, replyOpen.Key, user, elected)
+		cast, err := s0.Cast(&evoting.Cast{
+			ID:        replyOpen.ID,
+			Ballot:    &ballot,
+			User:      user,
+			Signature: generateSignature(nodeKP.Private, replyLink.ID, user),
+		})
+		require.NoError(t, err)
+		return cast
+	}
+
+	// User votes
+	log.Lvl1("Casting votes for correct users")
+	vote(idUser1, []uint32{})
+	vote(idUser2, manyCandidates[0:lib.CandidatesPerPoint])
+	vote(idUser3, manyCandidates)
+
+	if failures > 0 {
+		log.Lvl1("Unpausing nodes")
+		for pause := 1; pause <= failures; pause++ {
+			nodes[len(nodes)-pause].Unpause()
+			require.NoError(t, nodes[len(nodes)-pause].Service(skipchain.ServiceName).(*skipchain.Service).SyncChain(roster, elec.ID))
+		}
+		log.Lvl1("Should be caught up now")
+	}
+
+	// Shuffle all votes
+	log.Lvl1("Shuffling s0")
+	_, err = s0.Shuffle(&evoting.Shuffle{
+		ID:        replyOpen.ID,
+		User:      idAdmin,
+		Signature: idAdminSig,
+	})
+	require.NoError(t, err)
+	require.Nil(t, local.WaitDone(time.Second))
+
+	// Check that the mixes have the additional proofs set
+	log.Lvl1("Check partials in mixes")
+	mix, err := s0.GetMixes(&evoting.GetMixes{ID: replyOpen.ID})
+	require.NoError(t, err)
+	for i := range nodes[0:5] {
+		for j := range mix.Mixes[i].Ballots {
+			require.Equal(t, totalBufs-1, len(mix.Mixes[i].Ballots[j].AdditionalAlphas))
+			require.Equal(t, totalBufs-1, len(mix.Mixes[i].Ballots[j].AdditionalBetas))
+		}
+	}
+
+	// Decrypt all votes
+	_, err = s0.Decrypt(&evoting.Decrypt{
+		ID:        replyOpen.ID,
+		User:      idAdmin,
+		Signature: idAdminSig,
+	})
+	require.NoError(t, err)
+	require.Nil(t, local.WaitDone(time.Second))
+
+	// Check that the partial decryption have the additional points set
+	log.Lvl1("Check partials in mixes")
+	partials, err := s0.GetPartials(&evoting.GetPartials{ID: replyOpen.ID})
+	require.NoError(t, err)
+	for i := range nodes {
+		require.Equal(t, totalBufs-1, len(partials.Partials[i].AdditionalPoints[0].AdditionalPoints))
+	}
+
+	// Reconstruct votes
+	reconstructReply, err := s0.Reconstruct(&evoting.Reconstruct{
+		ID: replyOpen.ID,
+	})
+	require.NoError(t, err)
+
+	for i, p := range reconstructReply.Points {
+		log.Lvl2("Point is:", p.String())
+		data, err := p.Data()
+		if err != nil {
+			log.Lvl2("Point-data has error")
+		} else {
+			log.Lvlf2("Point-data is: %x", data)
+		}
+		for _, a := range reconstructReply.AdditionalPoints[i].AdditionalPoints {
+			log.Lvl2("And additional points are:", a.String())
+			data, err := a.Data()
+			if err != nil {
+				log.Lvl2("Additional point-data has error")
+			} else {
+				log.Lvlf2("Additional point-data is: %x", data)
+			}
+		}
 	}
 }
 
@@ -844,13 +1029,12 @@ func TestShuffleCatastrophicNodeFailure(t *testing.T) {
 	require.NoError(t, err)
 
 	genMix := func(ballots []*lib.Ballot, election *lib.Election, serverIdentity *network.ServerIdentity, private kyber.Scalar) *lib.Mix {
-		a, b := lib.Split(ballots)
-		g, d, prov := shuffle.Shuffle(cothority.Suite, nil, election.Key, a, b, random.New())
-		proof, err := proof.HashProve(cothority.Suite, "", prov)
+		alphas, betas := lib.Split(ballots)
+		g, d, shuffleProof, err := lib.CreateShuffleProof(alphas, betas, election.Key)
 		require.NoError(t, err)
 		mix := &lib.Mix{
 			Ballots: lib.Combine(g, d),
-			Proof:   proof,
+			Proof:   shuffleProof,
 			NodeID:  serverIdentity.ID,
 		}
 		data, err := serverIdentity.Public.MarshalBinary()

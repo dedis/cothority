@@ -102,9 +102,16 @@ func (d *Decrypt) HandlePrompt(prompt MessagePromptDecrypt) error {
 		err := func() error {
 			mix := mixes[len(mixes)-1]
 			points := make([]kyber.Point, len(mix.Ballots))
+			additionalPoints := make([]lib.PartialAdditional, len(mix.Ballots))
 			for i := range points {
-				points[i] = lib.Decrypt(d.Secret.V, mix.Ballots[i].Alpha, mix.Ballots[i].Beta)
+				ballot := mix.Ballots[i]
+				points[i] = lib.Decrypt(d.Secret.V, ballot.Alpha, ballot.Beta)
+				additionalPoints[i].AdditionalPoints = make([]kyber.Point, len(ballot.AdditionalAlphas))
+				for j := range additionalPoints[i].AdditionalPoints {
+					additionalPoints[i].AdditionalPoints[j] = lib.Decrypt(d.Secret.V, ballot.AdditionalAlphas[j], ballot.AdditionalBetas[j])
+				}
 			}
+
 			index := -1
 			for i, node := range d.Election.Roster.List {
 				if node.Public.Equal(d.Public()) {
@@ -117,8 +124,9 @@ func (d *Decrypt) HandlePrompt(prompt MessagePromptDecrypt) error {
 			}
 
 			partial = &lib.Partial{
-				Points: points,
-				NodeID: d.ServerIdentity().ID,
+				Points:           points,
+				NodeID:           d.ServerIdentity().ID,
+				AdditionalPoints: additionalPoints,
 			}
 			data, err := d.ServerIdentity().Public.MarshalBinary()
 			if err != nil {

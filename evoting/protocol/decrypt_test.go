@@ -6,10 +6,7 @@ import (
 	"time"
 
 	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/kyber/v3/proof"
-	"go.dedis.ch/kyber/v3/shuffle"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
-	"go.dedis.ch/kyber/v3/util/random"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
@@ -109,19 +106,19 @@ func runDecrypt(t *testing.T, n int) {
 	mixes := make([]*lib.Mix, n)
 	x, y := lib.Split(ballots)
 	for i := range mixes {
-		v, w, prover := shuffle.Shuffle(cothority.Suite, nil, key, x, y, random.New())
-		proof, _ := proof.HashProve(cothority.Suite, "", prover)
+		v, w, shuffleProof, err := lib.CreateShuffleProof(x, y, key)
+		require.NoError(t, err)
 		public := roster.Get(i).Public
 		data, _ := public.MarshalBinary()
 		sig, _ := schnorr.Sign(cothority.Suite, local.GetPrivate(nodes[i]), data)
 		mix := &lib.Mix{
 			Ballots:   lib.Combine(v, w),
-			Proof:     proof,
+			Proof:     shuffleProof,
 			NodeID:    roster.Get(i).ID,
 			Signature: sig,
 		}
 		tx = lib.NewTransaction(mix, election.Creator)
-		err := lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
+		err = lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
 		require.NoError(t, err)
 		x, y = v, w
 	}
@@ -194,20 +191,20 @@ func TestDecryptNodeFailure(t *testing.T) {
 	mixes := make([]*lib.Mix, 7)
 	x, y := lib.Split(ballots)
 	for i := range mixes {
-		v, w, prover := shuffle.Shuffle(cothority.Suite, nil, key, x, y, random.New())
-		proof, _ := proof.HashProve(cothority.Suite, "", prover)
+		v, w, shuffleProof, err := lib.CreateShuffleProof(x, y, key)
+		require.NoError(t, err)
 		public := roster.Get(i).Public
 		data, _ := public.MarshalBinary()
 		sig, _ := schnorr.Sign(cothority.Suite, local.GetPrivate(nodes[i]), data)
 		mix := &lib.Mix{
 			Ballots:   lib.Combine(v, w),
-			Proof:     proof,
+			Proof:     shuffleProof,
 			NodeID:    roster.Get(i).ID,
 			Signature: sig,
 		}
 		mixes[i] = mix
 		tx = lib.NewTransaction(mix, election.Creator)
-		err := lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
+		err = lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
 		require.NoError(t, err)
 		x, y = v, w
 	}

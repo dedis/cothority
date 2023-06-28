@@ -211,6 +211,12 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		} else if !election.IsUser(t.User) {
 			return errors.New("cast error: user not part")
 		}
+		if election.MaxChoices > CandidatesPerPoint {
+			addLen := (election.MaxChoices - 1) / CandidatesPerPoint
+			if len(t.Ballot.AdditionalAlphas) != addLen || len(t.Ballot.AdditionalBetas) != addLen {
+				return errors.New("ballot error: not enough Additional{Alphas,Betas}")
+			}
+		}
 		return nil
 	} else if t.Mix != nil {
 		election, err := GetElection(s, genesis, false, t.User)
@@ -258,7 +264,7 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		}
 
 		// check if Mix is valid
-		var x, y []kyber.Point
+		var x, y [][]kyber.Point
 		if len(mixes) == 0 {
 			// verify against Boxes
 			boxes, err := election.Box(s)
